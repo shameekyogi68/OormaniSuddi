@@ -108,6 +108,17 @@ Plain past tense ("the son who killed…") is refused unless you set
 `"involves_minor": true` or `"sexual_offence": true` where they apply and the
 system blocks identifying detail for you.
 
+> **The `headline` and the `reel_line` must each carry their own marker.**
+> They are checked on their own, not as part of the whole story, because that
+> is how they are read — a thumbnail, a WhatsApp forward, a screenshot, a reel
+> scene, with none of the rest of the copy attached. Putting <span>ಆರೋಪಿ</span>
+> in the `deck` does **not** make a guilt-asserting headline acceptable.
+>
+> ```
+> ✗ "headline": "ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ"      ← refused, even with ಆರೋಪಿ in the deck
+> ✓ "headline": "ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ"
+> ```
+
 **A story with no photograph is fine.** Omit `photo` entirely and the card
 draws an editorial plate — a branded graphic, credited ಗ್ರಾಫಿಕ್ಸ್. Do NOT
 attach a loosely related stock image to avoid an empty-looking post; the plate
