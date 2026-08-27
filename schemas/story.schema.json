@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oormanisuddi.local/schemas/story.schema.json",
+  "title": "Story",
+  "description": "One news story. Every field that exists to keep the card honest is required, not optional.",
+  "type": "object",
+  "required": [
+    "headline",
+    "sources"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "headline": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140,
+      "description": "The headline in Kannada. Budget is about 78 characters for a 4:5 card; longer sets smaller."
+    },
+    "category": {
+      "enum": [
+        "breaking",
+        "civic",
+        "crime",
+        "culture",
+        "education",
+        "explainer",
+        "farm",
+        "health",
+        "obituary",
+        "sport",
+        "weather"
+      ],
+      "default": "explainer",
+      "description": "Drives the category rail colour and the Kannada kicker. \"breaking\" is auto-demoted if the story is older than 12 hours."
+    },
+    "deck": {
+      "type": "string",
+      "maxLength": 220,
+      "description": "Standfirst — one or two sentences under the headline. Past ~180 characters it stops being a standfirst."
+    },
+    "points": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 180
+      },
+      "maxItems": 5,
+      "description": "Supporting facts. A 4:5 card carries three comfortably; extras are dropped from the bottom."
+    },
+    "photo": {
+      "type": "object",
+      "description": "A photograph and its provenance. Both are required — the system will not render an uncredited picture.",
+      "required": [
+        "path",
+        "nature",
+        "credit",
+        "licence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path to the image file, relative to the project root."
+        },
+        "nature": {
+          "enum": [
+            "actual",
+            "ai",
+            "file",
+            "graphic",
+            "handout",
+            "representative"
+          ],
+          "description": "What this picture actually is. Use \"actual\" ONLY if it shows the scene being reported. Anything else is labelled on the card and cannot be hidden."
+        },
+        "credit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Photographer, agency, or \"ಊರ್ಮನಿ ಸುದ್ದಿ ವರದಿಗಾರರಿಂದ\" for own reporting."
+        },
+        "licence": {
+          "enum": [
+            "cc",
+            "fair-dealing",
+            "handout",
+            "licensed",
+            "own",
+            "public-domain"
+          ],
+          "description": "Your right to publish it. \"own\" means the channel shot it. Crediting a picture is not the same as having the right to publish it."
+        },
+        "source_url": {
+          "type": "string",
+          "description": "Where it came from. Required unless licence is \"own\"."
+        },
+        "caption": {
+          "type": "string",
+          "description": "What the picture shows. REQUIRED when nature is \"actual\"."
+        },
+        "focal": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Crop focal point [x, y] in 0..1. Default [0.5, 0.42] — above centre, because a centre crop decapitates people."
+        },
+        "taken_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "location": {
+      "type": "string",
+      "description": "Place name in Kannada. Coastal readers scan for this first."
+    },
+    "dateline": {
+      "type": "string",
+      "description": "Bureau, e.g. \"ಬ್ರಹ್ಮಾವರ ವರದಿ\"."
+    },
+    "reporter": {
+      "type": "string"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "description": "Who told you. Own reporting counts, but you have to say so: [\"ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ\"]."
+    },
+    "status": {
+      "enum": [
+        "confirmed",
+        "developing",
+        "official",
+        "unconfirmed"
+      ],
+      "default": "developing",
+      "description": "Verification state. Printed on the card as it stands — a card that admits it is still being checked is worth more than one that pretends."
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 with offset, e.g. \"2026-08-25T09:40:00+05:30\". Drives the dateline AND the breaking calculation."
+    },
+    "live_url": {
+      "type": "string",
+      "description": "A real stream URL. Only this earns a ನೇರ ಪ್ರಸಾರ badge."
+    },
+    "takeaway": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "What the reader should DO — a helpline, a deadline. On weather/health/civic alerts this outranks the facts."
+    },
+    "numbers": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "description": "Pairs of [value, Kannada label] for stat_card."
+    },
+    "quote": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[text, attribution] for quote_card."
+    },
+    "involves_minor": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set when a child is involved as accused or victim. Blocks identifying detail — JJ Act 2015 §74."
+    },
+    "sexual_offence": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set for any sexual offence. Blocks identifying detail — POCSO §23, BNS §72."
+    },
+    "convicted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set ONLY when a court has convicted. Until then the copy must read as an allegation."
+    },
+    "correction": {
+      "type": "string",
+      "description": "If this card corrects an earlier one, say what changed."
+    },
+    "template": {
+      "enum": [
+        "broadsheet",
+        "bulletin",
+        "carousel",
+        "quote_card",
+        "reel",
+        "report_card",
+        "stat_card",
+        "story_card",
+        "text_card",
+        "youtube_thumb"
+      ],
+      "description": "Force a template. Omit to let choose() pick."
+    },
+    "reel_line": {
+      "type": "string",
+      "maxLength": 60,
+      "description": "A SHORT headline for the reel — about 45 characters. A print headline of 75 needs ~11 seconds on screen to be readable, which is most of a scene. Without this the reel still works, it just runs long."
+    },
+    "hook": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "Short line for the YouTube thumbnail. About seven words maximum — it is read at 210 px wide. Put it on the FIRST story; that is the one thumbnailed."
+    }
+  }
+}

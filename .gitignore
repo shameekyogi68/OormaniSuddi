@@ -1,0 +1,23 @@
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ── Rendered deliverables ────────────────────────────────────────────────────
+# out/ is regenerated from editions/*.json by render.py. The inputs are the
+# source of truth; the artwork is not. out/reference/ is the exception — it is
+# the pinned visual baseline the golden tests compare against, so it is tracked.
+out/*
+!out/reference/
+!out/reference/**
+
+# Reel intermediates. Rebuilt on every render.
+build/
+
+# ── Editor / OS noise ────────────────────────────────────────────────────────
+.DS_Store
+*.swp
+.idea/
+.vscode/
