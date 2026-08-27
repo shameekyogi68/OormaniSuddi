@@ -280,9 +280,14 @@ preflight as a failure.
   sprite; only the photograph is recomputed per frame. This is why a 28s reel
   renders in about 40 seconds.
 - **A reel scene carries the headline and usually nothing else.** A supporting
-  line appears only when the headline needs under 5s, capped at 62 characters.
-  Headline plus deck together needed ~25s of reading in a 6s scene — that was
-  the whole reason viewers could not read them.
+  line appears only when the headline needs under 5.5s, is at most 62
+  characters, **and still fits inside `hold_max` once the headline has taken
+  its share**. Headline plus deck together needed ~25s of reading in a 6s
+  scene — that was the whole reason viewers could not read them.
+- **`hold_max` is a backstop, not a budget.** A scene needing more than 12s is
+  reported at render time, never silently truncated: "duration follows reading
+  time" is only true if nothing quietly overrides it. If you see that warning,
+  cut the copy — do not raise the ceiling.
 - Transitions: 0.40s cross-dissolve with a brief gold sweep. A transition you
   notice is too long.
 - A **progress bar** runs across the top. Viewers stay for a bar they can see

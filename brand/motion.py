@@ -73,15 +73,37 @@ def support_line(story: Story, head_secs: float) -> str:
     txt = (story.deck or (story.points[0] if story.points else '')).strip()
     if not txt or len(txt) > Motion.support_budget:
         return ''
+    # …and only if it actually fits. support_budget (62 chars) and hold_max
+    # (12s) were set independently, so a 46-char headline plus a 62-char deck
+    # asks for ~16s of a 12s scene: the automatic path was manufacturing copy
+    # the ceiling then cut off mid-sentence. A support line the viewer cannot
+    # finish is worse than no support line, so it is dropped rather than shown
+    # and truncated. An explicit reel_support is left to the editor — it warns
+    # at render time instead.
+    room = Motion.hold_max - Motion.build_in - Motion.settle - head_secs
+    if reading_seconds(txt) * 0.9 > room:
+        return ''
     return txt
+
+
+def scene_need(story: Story) -> float:
+    """Seconds this scene's copy actually needs, BEFORE the hold_max ceiling.
+
+    Kept separate from scene_seconds() so the renderer can compare the two and
+    report a scene that has been clamped short rather than cutting the viewer
+    off mid-sentence without saying so.
+    """
+    head = reel_line(story)
+    hs = reading_seconds(head)
+    sup = support_line(story, hs)
+    return Motion.build_in + hs + reading_seconds(sup) * 0.9 + Motion.settle
 
 
 def scene_seconds(story: Story) -> tuple[float, str, str]:
     """(duration, headline shown, support shown) — honest about reading time."""
     head = reel_line(story)
-    hs = reading_seconds(head)
-    sup = support_line(story, hs)
-    need = Motion.build_in + hs + reading_seconds(sup) * 0.9 + Motion.settle
+    sup = support_line(story, reading_seconds(head))
+    need = scene_need(story)
     return (max(Motion.hold_min, min(need, Motion.hold_max)), head, sup)
 
 
@@ -639,6 +661,17 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
         print(f'  ⚠ {len(long_ones)} headline(s) over {Motion.reel_line_budget} '
               f'chars with no reel_line — those scenes have to run long to stay '
               f'readable.')
+
+    # hold_max is a ceiling, so a scene needing more than it is silently cut
+    # short and the viewer never finishes reading. That is the exact failure
+    # this module exists to prevent, so it is reported rather than swallowed:
+    # the fix is shorter copy, not a longer reel.
+    for st, shown in zip(stories, holds):
+        need = scene_need(st)
+        if need > shown + 0.05:
+            print(f'  ⚠ "{reel_line(st)[:38]}…" needs {need:.1f}s to read but '
+                  f'the scene caps at {shown:.1f}s — {need - shown:.1f}s short. '
+                  f'Shorten reel_line or reel_support.')
 
     print(f'  building scenes … intro {intro_d:.1f}s + '
           f'{" + ".join(f"{h:.1f}" for h in holds)}s + outro {outro_d:.1f}s')
