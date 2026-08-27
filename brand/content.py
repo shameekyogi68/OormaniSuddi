@@ -266,10 +266,16 @@ class Story:
                     "'actual'; change nature to 'file'.")
         if self.live_url and not self.live_url.startswith('http'):
             raise ContentError('live_url must be a real stream URL, or empty')
+        # The criminal-reporting guards run BEFORE the breaking demotion below.
+        # Demotion is a presentation decision — it drops the red treatment on a
+        # story that has aged out of the window. It must never relax a legal
+        # guard: a card asserting guilt is a defamation exposure whether it is
+        # two hours old or two days old, and checking after the demotion meant
+        # the same copy passed simply because the render happened the next day.
+        self._check_criminal_reporting()
         if self.category == 'breaking' and not self.is_breaking:
             # Not an error — just quietly demote, and say so.
             self.category = 'explainer'
-        self._check_criminal_reporting()
         return self
 
     # ── the criminal-reporting contract ───────────────────────────────────
@@ -291,6 +297,26 @@ class Story:
         # 1 · Guilt may not be asserted before conviction. BNS §356 (defamation)
         #     and contempt once the matter is sub judice.
         if self.category in ('crime', 'breaking') and not self.convicted:
+            # Checked field by field, not over the concatenated copy. An
+            # allegation marker buried in the third bullet does not make a
+            # headline safe: the headline is what travels — a thumbnail, a
+            # WhatsApp forward, a screenshot — and it travels ALONE, without the
+            # bullet that qualified it. The same is true of reel_line, which is
+            # the only text on its scene. Checking the joined string let
+            # "ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ" through because the deck happened to
+            # say ಆರೋಪಿ, which is precisely the exposure this guard exists for.
+            for where, text in (('headline', self.headline),
+                                ('reel_line', self.reel_line)):
+                hits = asserts_guilt(text)
+                if hits:
+                    raise ContentError(
+                        f'the {where} states guilt as fact ({", ".join(hits)}) '
+                        'about someone who has not been convicted. It is read on '
+                        'its own — in a thumbnail, a forward, a search result — '
+                        'so a qualifier elsewhere in the story does not reach it. '
+                        f'Rewrite the {where} itself as an allegation: ಆರೋಪ / '
+                        'ಆರೋಪಿ / ಶಂಕಿತ, or ಪ್ರಕರಣ ದಾಖಲು. Set convicted=True only '
+                        'if a court has actually convicted.')
             hits = asserts_guilt(copy)
             if hits:
                 raise ContentError(
@@ -330,8 +356,6 @@ class Story:
             if _looks_like_name(copy):
                 raise ContentError(
                     'sexual_offence is set: remove names and ages from the copy.')
-        return self
-
         return self
 
     # ── derived, never asserted ───────────────────────────────────────────

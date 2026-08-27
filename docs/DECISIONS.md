@@ -527,7 +527,14 @@ Undithered, the sky banded exactly where the eye goes — the horizon.
 **Decided.** `Story.validate()` refuses to render:
 
 * a **crime** story whose copy asserts guilt with no allegation marker, unless
-  `convicted=True` — BNS §356 (defamation) and contempt once sub judice;
+  `convicted=True` — BNS §356 (defamation) and contempt once sub judice. The
+  `headline` and the `reel_line` are additionally checked **on their own**, not
+  as part of the joined copy: both are displayed alone — a thumbnail, a
+  WhatsApp forward, a screenshot, a reel scene — so a qualifier sitting in the
+  deck or in the third bullet never reaches the reader who only sees the
+  headline. Checking the concatenation let the channel's own sample headline
+  through on the strength of an ಆರೋಪಿ in the deck below it, which is exactly
+  the publication this guard exists to prevent;
 * identifying detail on a story flagged `involves_minor` — JJ Act 2015 §74;
 * identifying detail, an actual-scene photograph, or a granular location on a
   story flagged `sexual_offence` — POCSO §23, BNS §72.

@@ -14,9 +14,10 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 os.chdir(_ROOT)   # so relative asset paths in the content resolve as at render time
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from brand.content import Story, Photo, ContentError, frozen, IST
+from brand.content import (Story, Photo, ContentError, frozen, IST,
+                           BREAKING_WINDOW_H)
 from brand.qa import preflight
 
 
@@ -141,6 +142,29 @@ class CriminalReporting(unittest.TestCase):
 
     def test_non_crime_categories_are_unaffected(self):
         base(headline='ಹಳೆ ಸೇತುವೆ ಕೆಡವಿದ ಪಾಲಿಕೆ', category='civic').validate()
+
+    def test_a_marker_in_the_deck_does_not_clear_the_headline(self):
+        """The headline travels alone — a thumbnail, a forward, a screenshot.
+        A qualifier in the deck never reaches the reader who only sees it."""
+        with self.assertRaisesRegex(ContentError, 'headline'):
+            base(headline='ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ', category='crime',
+                 deck='ಆರೋಪಿ ಪುತ್ರನನ್ನು ವಶಕ್ಕೆ ಪಡೆದ ಪೊಲೀಸರು.').validate()
+
+    def test_a_marker_elsewhere_does_not_clear_the_reel_line(self):
+        """reel_line is the only text on its scene, so it must self-qualify."""
+        with self.assertRaisesRegex(ContentError, 'reel_line'):
+            base(headline='ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ', category='crime',
+                 reel_line='ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ').validate()
+
+    def test_ageing_out_of_breaking_does_not_relax_the_guilt_guard(self):
+        """Demotion is a presentation decision. It must not turn a defamation
+        exposure into a clean render just because the story got older."""
+        pinned = datetime(2026, 8, 25, 9, 40, tzinfo=IST)
+        stale = pinned - timedelta(hours=BREAKING_WINDOW_H + 8)
+        with frozen(pinned):
+            with self.assertRaisesRegex(ContentError, 'guilt'):
+                base(headline='ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ', category='breaking',
+                     published_at=stale).validate()
 
     def test_minor_blocks_an_actual_scene_photo(self):
         with self.assertRaisesRegex(ContentError, 'involves_minor'):

@@ -124,7 +124,8 @@ def preflight(story: Story, format_key: str = 'post', hook: str = '') -> Report:
             'photo licence is fair-dealing — defensible for reporting current '
             'events, but keep a note of why. It is a defence, not a permission.')
 
-    if story.category == 'crime' and not (story.involves_minor or story.convicted):
+    if story.category == 'crime' and not (story.involves_minor
+                                          or story.sexual_offence):
         r.warn.append(
             'crime story: confirm nobody involved is a minor and no sexual '
             'offence is alleged. If either is true, set involves_minor / '

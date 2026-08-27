@@ -30,9 +30,7 @@ if _ROOT not in sys.path:
 os.chdir(_ROOT)   # so relative asset paths in the content resolve as at render time
 import hashlib
 import json
-import os
 import shutil
-import sys
 import tempfile
 import unittest
 
@@ -87,7 +85,8 @@ class Golden(unittest.TestCase):
     def test_output_matches_the_blessed_design(self):
         if not os.path.exists(GOLDEN):
             self.skipTest('no golden.json — run: python3 -m tests.test_golden --bless')
-        expected = json.load(open(GOLDEN))
+        with open(GOLDEN, encoding='utf-8') as f:
+            expected = json.load(f)
         tmp = tempfile.mkdtemp(prefix='oormani-golden-')
         try:
             actual = render_all(tmp)
@@ -123,7 +122,7 @@ def bless():
     out = os.path.join(os.path.dirname(HERE), 'out', '_blessed')
     os.makedirs(out, exist_ok=True)
     hashes = render_all(out)
-    with open(GOLDEN, 'w') as f:
+    with open(GOLDEN, 'w', encoding='utf-8') as f:
         json.dump(hashes, f, indent=1, sort_keys=True)
         f.write('\n')
     print(f'blessed {len(hashes)} templates → tests/golden.json')

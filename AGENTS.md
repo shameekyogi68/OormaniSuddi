@@ -35,7 +35,7 @@ rendering code — nine finished templates already exist.
 
 ---
 
-## Three rules that override anything you might infer
+## Five rules that override anything you might infer
 
 1. **`Story.validate()` is not negotiable.** Every photograph carries a credit
    and declares whether it shows the actual scene. Every story names a source.
@@ -51,10 +51,14 @@ rendering code — nine finished templates already exist.
 4. **Crime copy states allegations, never verdicts** — and every photograph
    carries a licence, not just a credit. Both are enforced by
    `Story.validate()`; see [`docs/DECISIONS.md`](docs/DECISIONS.md) D29–D30.
-5. **Fill in `tokens.Brand.grievance_officer` and `grievance_email`.** IT Rules
-   2021 Part III requires a news publisher to name a Grievance Officer and
-   publish contact details. Until they are set, no card or caption carries them
-   and preflight warns on every run.
+   The `headline` and `reel_line` are checked **on their own**: they travel
+   without the rest of the story, so each must carry its own ಆರೋಪ / ಆರೋಪಿ /
+   ಶಂಕಿತ. A qualifier in the deck does not cover a headline.
+5. **Keep `tokens.Brand.grievance_officer` and `grievance_email` filled in.**
+   IT Rules 2021 Part III requires a news publisher to name a Grievance Officer
+   and publish contact details. Both are set; `compliance()` warns on every run
+   if either is ever cleared, and no card or caption carries the line without
+   them.
 
 ---
 

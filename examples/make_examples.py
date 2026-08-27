@@ -20,7 +20,10 @@ OUT = 'out/reference'
 
 # ── 1 · crime, with a picture that is NOT of the actual scene ───────────────
 crime = Story(
-    headline='ಬ್ರಹ್ಮಾವರ: ಕ್ಷುಲ್ಲಕ ಜಗಳಕ್ಕೆ ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ',
+    # Allegation framing, in the headline itself. The headline travels alone —
+    # a thumbnail, a forward, a screenshot — so it must carry its own ಆರೋಪ
+    # rather than lean on the ಆರೋಪಿ in the deck below it.
+    headline='ಬ್ರಹ್ಮಾವರ: ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ',
     category='crime',
     deck='ಗಾಂಧಿನಗರದ ಮನೆಯಲ್ಲಿ ನಡೆದ ಘಟನೆ; ದಂಪತಿ ಸ್ಥಳದಲ್ಲೇ ಸಾವು. ಆರೋಪಿ ಪುತ್ರನನ್ನು ಕೆಲವೇ ಗಂಟೆಗಳಲ್ಲಿ ವಶಕ್ಕೆ ಪಡೆದ ಪೊಲೀಸರು.',
     points=[
