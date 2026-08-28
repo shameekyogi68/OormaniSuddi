@@ -366,6 +366,18 @@ or it disappears. Headline column 66%, headline to 96px, masthead inside the
 frame (no platform chrome to clear), and the editorial plate recomposed — sun
 right, category word in the upper left — so the frame is not two-thirds empty.
 
+The bulletin is also paced differently, because it is watched rather than
+glanced at. A bulletin scene shows the **print headline and the deck** — the
+carousel's payload, not the reel's single `reel_line` — and may run to 30s
+where a reel scene caps at 12s.
+
+Its **length is derived, never targeted**. Headline plus deck on a four-story
+edition comes to 60-120s on its own; facts are promoted into the body only
+while the total is still under 60s, which is where YouTube stops treating a
+video as a Short and starts using the thumbnail we render. An edition without
+the copy to reach 60s is reported as short and **not padded** — see
+[`docs/DECISIONS.md`](docs/DECISIONS.md) D37.
+
 ### Reproducibility
 
 Identical content plus the same pinned clock gives byte-identical output:

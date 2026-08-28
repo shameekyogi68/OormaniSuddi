@@ -333,6 +333,24 @@ class Motion:
     # Support text is only shown when the headline leaves genuine room.
     support_budget   = 62
 
+    # ── the bulletin is a different viewing contract ──────────────────────
+    # A reel is a glance in a vertical feed: hold_max=12s is right, because
+    # past that the viewer has already swiped. A bulletin is chosen — someone
+    # opened a 16:9 video on YouTube, where watch time is the whole point — so
+    # a scene may run as long as its copy honestly needs. Same engine, same
+    # never-compress-below-reading-speed rule, ceiling raised.
+    #
+    # The real difference is WHAT a scene carries. A reel scene shows the
+    # reel_line alone; a bulletin scene shows the print headline and the deck,
+    # which is the carousel's payload. That is what makes the bulletin run
+    # 60-120s on real copy instead of 43s, without a second of padding.
+    bulletin_hold_max   = 30.0    # a scene that is watched, not glanced at
+    bulletin_deck_lines = 4       # the deck is the payload, so give it room
+    # YouTube treats sub-60s video as a Short and pulls its own frame rather
+    # than using a custom thumbnail, which is why the floor is 60 and not less.
+    bulletin_floor      = 60.0
+    bulletin_ceiling    = 120.0
+
     kb_zoom     = 0.11    # Ken Burns total scale travel
     kb_drift    = 0.035   # lateral drift as a fraction of frame width
 

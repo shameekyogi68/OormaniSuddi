@@ -7,7 +7,8 @@ disable-model-invocation: true
 # Publish an edition
 
 Renders a full package — posts, carousel, 9:16 story, YouTube thumbnail,
-broadsheet, reel, and the copy for each — from one JSON file.
+broadsheet, the 9:16 reel, the 16:9 YouTube bulletin, and the copy for each —
+from one JSON file.
 
 `$ARGUMENTS` is the edition path. Default to the newest file in `editions/`
 when none is given.
@@ -29,6 +30,8 @@ against copy that has not cleared preflight.
 | `needs Ns to read but the scene caps at 12.0s` | the viewer will be cut off mid-sentence | **cut the copy** — do not raise `hold_max` |
 | `crime story: confirm nobody involved is a minor` | fires on every crime story, by design | confirm, then set `involves_minor` / `sexual_offence` if either applies |
 | `photo licence is fair-dealing` | a defence, not a permission | keep a note of why |
+| `Ns is under 60s, so YouTube will treat this as a Short` | the bulletin has too little copy for long-form | add a story or write fuller decks — it is **not** padded |
+| `Ns is over 120s` | a long watch for a local bulletin | fewer stories, or tighter decks |
 
 A `ContentError` is not a warning. `Story.validate()` enforces Indian
 criminal-reporting law — see `docs/DECISIONS.md` D29. Rewrite the copy;
@@ -41,15 +44,22 @@ checked on their own, so each needs its own ಆರೋಪ / ಆರೋಪಿ / ಶ
 python3 render.py "$EDITION"
 ```
 
-Add `--only posts carousel` to skip the reel while iterating on copy.
+Add `--only posts carousel` to skip both videos while iterating on copy.
 Pass `--at <ISO>` to pin the clock for a reproducible render.
+
+The two videos are different products, not two sizes of one. `reel.mp4` is
+9:16 and ~35s, for Instagram. `bulletin.mp4` is 16:9 and 60-120s, and it is
+what `yt_thumbnail.jpg` is the thumbnail *for* — a Short ignores custom
+thumbnails, so without the bulletin that thumbnail has nothing to sit on.
+The bulletin roughly doubles render time; skip it with `--only` while drafting.
 
 ## 3 · Report honestly
 
 Read the OUTPUT AUDIT section back to the user. Say plainly:
 
 - how many files were produced, and where
-- the reel's total length and its per-scene timings
+- the reel's and the bulletin's total length, and their per-scene timings
+- whether the bulletin landed in the 60-120s long-form zone
 - **every warning that fired**, not just a "done" — the warnings are the
   reason this step exists
 

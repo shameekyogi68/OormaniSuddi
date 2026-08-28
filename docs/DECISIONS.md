@@ -695,6 +695,46 @@ inside it. Arithmetic checked before rendering, not after.
 
 ---
 
+## D37 · The bulletin carries the deck, and its length is derived
+
+**Decided.** The 16:9 bulletin is driven by `motion.BULLETIN`, not
+`motion.REEL`. A bulletin scene shows the **print headline and the deck** —
+the carousel's payload — and may run to 30s instead of 12s. Its total length
+is whatever that copy honestly takes: 84s and 97s on the two real editions.
+`plan_bulletin()` promotes facts into the body only while the total is still
+under a 60s floor, and if even that leaves it short it stays short and says so.
+
+**Replaced.** The bulletin rendered the reel at a different aspect ratio: the
+same one-line `reel_line`, the same 12s ceiling, and in landscape only *one*
+supporting line (D36) instead of the reel's two. It ran 43s.
+
+**Why.** A reel and a bulletin are different viewing contracts. A reel is a
+glance in a vertical feed, where 12s is right because past that the viewer has
+already swiped. A bulletin was opened on purpose on YouTube, where watch time
+is the product. Serving the reel's copy into a 16:9 frame produced a video
+that was simultaneously too thin to be worth watching and — at 43s — a Short,
+which YouTube gives its own pulled frame rather than the custom thumbnail the
+system had been carefully rendering all along.
+
+So the fix was not to slow the reel down or pad it out. It was to give the
+bulletin the information the carousel already had. The length then falls out
+of the content, which is what "1-2 minutes" should mean: not a target the
+engine pads to, but the honest reading time of a day's news.
+
+**Why not just raise `hold_max`.** That stretches the same one line over more
+seconds. The viewer finishes reading in 7s and stares at it for 25.
+
+**The floor is not a quota.** 60s is where YouTube stops treating a video as a
+Short. A thin edition that cannot reach it is reported, never inflated — the
+same rule as D29's refusal of an override flag and D-reel's refusal to
+compress below reading speed. Padding a bulletin would be lying about how much
+news there was that day.
+
+`brand/motion.py :: Pace, head_line, body_line, plan_bulletin`
+`brand/tokens.py :: Motion.bulletin_*` · `templates/bulletin.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

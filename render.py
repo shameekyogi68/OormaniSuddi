@@ -119,7 +119,9 @@ def write_copy(subject, outdir: str, name: str) -> str:
 
 
 def render_edition(ed: Edition, outdir: str, only: list[str] | None,
-                   reel_seconds: float | None) -> list[tuple[str, str]]:
+                   reel_seconds: float | None,
+                   bulletin_seconds: float | None = None
+                   ) -> list[tuple[str, str]]:
     made: list[tuple[str, str]] = []
     want = set(only) if only else None
 
@@ -174,6 +176,16 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         write_copy(ed, outdir, 'reel_copy')
         print(f'  ✓ {os.path.basename(p)}  + copy')
 
+    # The 16:9 long-form cut. yt_thumbnail.jpg above is built for THIS video —
+    # without it the channel renders a thumbnail for a video that does not
+    # exist, and a sub-60s vertical reel is a Short, which ignores custom
+    # thumbnails anyway. See templates/bulletin.py and DECISIONS.md D37.
+    if run('bulletin'):
+        p = os.path.join(outdir, 'bulletin.mp4')
+        TP.render('bulletin', ed, p, target_seconds=bulletin_seconds)
+        write_copy(ed, outdir, 'bulletin_copy')
+        print(f'  ✓ {os.path.basename(p)}  + copy')
+
     return made
 
 
@@ -191,6 +203,9 @@ def main() -> int:
     ap.add_argument('--reel-seconds', type=float, default=None,
                     help='ceiling, not a quota. Omit to let the reel be as long '
                          'as the copy needs to stay readable.')
+    ap.add_argument('--bulletin-seconds', type=float, default=None,
+                    help='ceiling for the 16:9 YouTube bulletin. Omit to let it '
+                         'run as long as the decks need — typically 60-120s.')
     ap.add_argument('--at', metavar='ISO',
                     help='pin the clock, e.g. 2026-08-25T09:40:00+05:30')
     ap.add_argument('--check', action='store_true',
@@ -271,7 +286,8 @@ def main() -> int:
     os.makedirs(outdir, exist_ok=True)
     print(f'\nRENDER → {outdir}')
     t0 = time.time()
-    made = render_edition(ed, outdir, args.only, args.reel_seconds)
+    made = render_edition(ed, outdir, args.only, args.reel_seconds,
+                          args.bulletin_seconds)
 
     print('\nOUTPUT AUDIT')
     dirty = 0

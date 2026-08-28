@@ -227,5 +227,67 @@ class Copy(unittest.TestCase):
         self.assertIn('ಗ್ರಾಫಿಕ್ಸ್', self.C.instagram_caption(s))
 
 
+class BulletinPacing(unittest.TestCase):
+    """The 16:9 bulletin is a different viewing contract from the reel.
+
+    A reel is glanced at in a vertical feed; a bulletin was opened on purpose
+    on YouTube. The bulletin therefore carries the deck and lets a scene run
+    longer — but it must never pad to reach a length, and never compress below
+    reading speed. See docs/DECISIONS.md D37.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from brand.content import Edition
+        from brand import motion as M
+        cls.M = M
+        cls.ed = Edition.load('tests/fixture_edition.json')
+
+    def test_a_bulletin_scene_carries_the_deck_and_a_reel_scene_does_not(self):
+        """The whole reason the bulletin reaches long-form length."""
+        st = next(s for s in self.ed.stories if s.deck)
+        _d, _h, reel_body = self.M.scene_seconds(st, self.M.REEL)
+        _d, _h, bull_body = self.M.scene_seconds(st, self.M.BULLETIN)
+        self.assertIn(st.deck.strip(), bull_body)
+        self.assertNotEqual(reel_body, bull_body)
+
+    def test_the_bulletin_shows_the_print_headline_not_the_reel_line(self):
+        """A 16:9 frame has the column for the full headline, and those extra
+        words are information the viewer opened a long-form video to get."""
+        st = base(headline='ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್: ಇಂದು ಭಾರಿ ಮಳೆ ಸಾಧ್ಯತೆ',
+                  reel_line='ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್').validate()
+        self.assertEqual(self.M.head_line(st, self.M.BULLETIN), st.headline)
+        self.assertEqual(self.M.head_line(st, self.M.REEL), st.reel_line)
+        self.assertNotEqual(st.headline, st.reel_line)
+
+    def test_no_bulletin_scene_is_cut_below_its_reading_time(self):
+        """The failure this module exists to prevent, at the new ceiling."""
+        for st in self.ed.stories:
+            need = self.M.scene_need(st, self.M.BULLETIN)
+            shown = self.M.scene_seconds(st, self.M.BULLETIN)[0]
+            self.assertGreaterEqual(
+                shown + 0.05, need,
+                f'{st.headline[:30]!r} is cut {need - shown:.1f}s short')
+
+    def test_length_is_derived_from_the_copy_and_never_padded(self):
+        """A thin edition must come out short and say so, not be inflated."""
+        from brand.content import Edition
+        thin = Edition.load('tests/fixture_edition.json')
+        thin.stories = thin.stories[:1]
+        _p, i, holds, o, _u, total = self.M.plan_bulletin(thin)
+        self.assertAlmostEqual(total, i + sum(holds) + o, places=6)
+        self.assertLess(total, self.M.Motion.bulletin_floor,
+                        'a one-story bulletin should fall short, not be padded')
+
+    def test_the_reel_pace_is_left_exactly_as_it_was(self):
+        """The bulletin must not change a single reel frame — the golden test
+        pins those, and a reel regression would show up there far too late."""
+        self.assertEqual(self.M.REEL.hold_max, self.M.Motion.hold_max)
+        self.assertFalse(self.M.REEL.full_headline)
+        for st in self.ed.stories:
+            self.assertEqual(self.M.head_line(st, self.M.REEL),
+                             self.M.reel_line(st))
+
+
 if __name__ == '__main__':
     unittest.main()

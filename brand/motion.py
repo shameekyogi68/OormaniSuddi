@@ -28,7 +28,7 @@ import os
 import shutil
 import subprocess
 import numpy as np
-from dataclasses import dataclass, field
+from dataclasses import dataclass, replace, field
 from PIL import Image
 
 from . import typo, components as cp
@@ -86,29 +86,88 @@ def support_line(story: Story, head_secs: float) -> str:
     return txt
 
 
-def scene_need(story: Story) -> float:
+@dataclass(frozen=True)
+class Pace:
+    """How a scene is timed, and what copy it carries.
+
+    A reel and a bulletin are the same engine at two different viewing
+    contracts. A reel is a glance in a vertical feed, so it shows the
+    reel_line alone and caps at 12s — past that the viewer has swiped. A
+    bulletin was opened on purpose on YouTube, so it shows the print headline
+    AND the deck (the carousel's payload) and lets a scene run as long as that
+    honestly takes. Neither ever compresses below reading speed.
+    """
+    name: str
+    hold_max: float
+    deck_lines: int
+    full_headline: bool   # bulletin uses the print headline, reel the reel_line
+    body_discount: float  # support skims; a deck that IS the story does not
+    fill: int = 0         # facts promoted into the body to clear the floor
+
+
+REEL = Pace('reel', Motion.hold_max, 2, False, 0.9)
+BULLETIN = Pace('bulletin', Motion.bulletin_hold_max,
+                Motion.bulletin_deck_lines, True, 1.0)
+
+
+def pace_for(format_key: str) -> Pace:
+    return BULLETIN if format_key == 'bulletin' else REEL
+
+
+def head_line(story: Story, pace: Pace = REEL) -> str:
+    """The headline a scene shows.
+
+    A reel gets the short reel_line; a bulletin gets the print headline,
+    because a 16:9 frame has the column for it and the extra words are
+    information the viewer came for.
+    """
+    if pace.full_headline:
+        return story.headline.strip()
+    return reel_line(story)
+
+
+def body_line(story: Story, head_secs: float, pace: Pace = REEL) -> str:
+    """The copy under the headline.
+
+    On a reel this is optional support, shown only when the headline leaves
+    room. On a bulletin it is the point of the format: the deck, plus however
+    many facts `pace.fill` has promoted.
+    """
+    if not pace.full_headline:
+        return support_line(story, head_secs)
+    blocks = [(story.deck or '').strip()]
+    blocks += [p.strip() for p in story.points[:pace.fill]]
+    blocks = [b for b in blocks if b]
+    if not blocks and story.points:
+        blocks = [story.points[0].strip()]
+    return '  '.join(blocks)
+
+
+def scene_need(story: Story, pace: Pace = REEL) -> float:
     """Seconds this scene's copy actually needs, BEFORE the hold_max ceiling.
 
     Kept separate from scene_seconds() so the renderer can compare the two and
     report a scene that has been clamped short rather than cutting the viewer
     off mid-sentence without saying so.
     """
-    head = reel_line(story)
+    head = head_line(story, pace)
     hs = reading_seconds(head)
-    sup = support_line(story, hs)
-    return Motion.build_in + hs + reading_seconds(sup) * 0.9 + Motion.settle
+    body = body_line(story, hs, pace)
+    return (Motion.build_in + hs
+            + reading_seconds(body) * pace.body_discount + Motion.settle)
 
 
-def scene_seconds(story: Story) -> tuple[float, str, str]:
-    """(duration, headline shown, support shown) — honest about reading time."""
-    head = reel_line(story)
-    sup = support_line(story, reading_seconds(head))
-    need = scene_need(story)
-    return (max(Motion.hold_min, min(need, Motion.hold_max)), head, sup)
+def scene_seconds(story: Story,
+                  pace: Pace = REEL) -> tuple[float, str, str]:
+    """(duration, headline shown, body shown) — honest about reading time."""
+    head = head_line(story, pace)
+    body = body_line(story, reading_seconds(head), pace)
+    need = scene_need(story, pace)
+    return (max(Motion.hold_min, min(need, pace.hold_max)), head, body)
 
 
 def plan_durations(edition: Edition, intro: float = 1.9, outro: float = 3.0,
-                   target: float | None = None
+                   target: float | None = None, pace: Pace = REEL
                    ) -> tuple[float, list[float], float, int]:
     """Scene lengths from reading time.
 
@@ -120,12 +179,40 @@ def plan_durations(edition: Edition, intro: float = 1.9, outro: float = 3.0,
     below what it takes to read; if the content will not fit the target, we
     drop stories from the end and say so.
     """
-    holds = [scene_seconds(s)[0] for s in edition.stories]
+    holds = [scene_seconds(s, pace)[0] for s in edition.stories]
     used = len(holds)
     if target:
         while used > 1 and intro + sum(holds[:used]) + outro > target:
             used -= 1
     return intro, holds[:used], outro, used
+
+
+def plan_bulletin(edition: Edition, intro: float = 1.9, outro: float = 3.0,
+                  target: float | None = None
+                  ) -> tuple[Pace, float, list[float], float, int, float]:
+    """Decide how much of each story the bulletin carries.
+
+    Returns (pace, intro, holds, outro, used, total).
+
+    The length is DERIVED, never padded. A bulletin starts with the headline
+    and the deck, which on real four-story copy already runs 84-97s. Facts are
+    promoted into the body only while the whole thing still falls short of the
+    60s floor — a floor that exists because YouTube treats sub-60s video as a
+    Short and pulls its own frame instead of the thumbnail we render.
+
+    If even every fact leaves it short, it stays short and the renderer says
+    so. A thin edition is a thin edition; padding it would be the video
+    equivalent of the guilt-assertion override this project refuses to add.
+    """
+    best = None
+    for fill in (0, 1, 2):
+        pace = replace(BULLETIN, fill=fill)
+        i, holds, o, used = plan_durations(edition, intro, outro, target, pace)
+        total = i + sum(holds) + o
+        best = (pace, i, holds, o, used, total)
+        if total >= Motion.bulletin_floor:
+            break
+    return best
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -305,9 +392,11 @@ class StoryScene(Scene):
     """
 
     def __init__(self, story: Story, W: int, H: int, ss: int, dur: float,
-                 index: int, total: int, safe, direction: int = 1):
+                 index: int, total: int, safe, direction: int = 1,
+                 pace: Pace = REEL):
         self.st, self.W, self.H, self.ss, self.dur = story, W, H, ss, dur
         self.i, self.n, self.safe = index, total, safe
+        self.pace = pace
         self.kb = None
         if story.photo and os.path.exists(story.photo.path):
             self.kb = KenBurns(story.photo.path, W, H, focal=story.photo.focal,
@@ -422,15 +511,16 @@ class StoryScene(Scene):
         # What this scene shows, and for how long, are decided together in
         # scene_seconds() — so the type on screen is never more than the time
         # on screen can carry.
-        _dur, head_txt, sup_txt = scene_seconds(st)
+        _dur, head_txt, sup_txt = scene_seconds(st, self.pace)
         d_blk = None
         if sup_txt:
             dk = int(T.deck[0] * ts)
-            # One supporting line in landscape. The lower-third has a fixed
-            # depth, and a two-line deck simply takes the space the headline
-            # needs — a bulletin with a small headline and a big paragraph is
-            # the wrong way round.
-            dl = 1 if landscape else 2
+            # How many lines the body gets. On a reel the body is optional
+            # support, so it stays out of the headline's way. On a bulletin
+            # the deck IS what the viewer came for — a 16:9 frame that showed
+            # only the headline would be a Short with black bars, which is the
+            # thing this format exists to stop being. See DECISIONS.md D37.
+            dl = self.pace.deck_lines if landscape else 2
             d_blk = typo.fit(sup_txt, 'kn_var', ss * dk, ss * int(dk * 0.8),
                              ss * cw, ss * dk * T.deck[1] * dl, T.deck[1],
                              weight=450, max_lines=dl)
@@ -642,32 +732,47 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
                 target_seconds: float | None = 30.0, ss: int = 2,
                 fps: int = Motion.fps, bgm: str | None = None,
                 sfx_dir: str | None = None, keep_frames: bool = False) -> str:
-    """Render the day's edition as a 9:16 reel and master the audio."""
+    """Render the day's edition as video and master the audio.
+
+    Drives both the 9:16 reel and the 16:9 bulletin: same engine, different
+    `Pace`. See DECISIONS.md D37 for why the bulletin carries the deck.
+    """
     edition.validate()
     F = fmt(format_key)
     W, H, safe = F.w, F.h, F.safe
 
-    intro_d, holds, outro_d, used = plan_durations(edition, target=target_seconds)
+    pace = pace_for(format_key)
+    if pace.name == 'bulletin':
+        pace, intro_d, holds, outro_d, used, _t = plan_bulletin(
+            edition, target=target_seconds)
+    else:
+        intro_d, holds, outro_d, used = plan_durations(
+            edition, target=target_seconds, pace=pace)
     stories = edition.stories[:used]
     XF = Motion.scene_cross
 
     if used < len(edition.stories):
         print(f'  ⚠ {len(edition.stories) - used} storie(s) dropped: they will not '
               f'fit {target_seconds:.0f}s at a readable pace. Shorten the '
-              f'headlines with reel_line, or raise --reel-seconds.')
-    long_ones = [s for s in stories
-                 if not s.reel_line and len(s.headline) > Motion.reel_line_budget]
-    if long_ones:
-        print(f'  ⚠ {len(long_ones)} headline(s) over {Motion.reel_line_budget} '
-              f'chars with no reel_line — those scenes have to run long to stay '
-              f'readable.')
+              f'headlines with reel_line, or raise the target.')
+    # A reel scene shows the reel_line alone, so a long headline with no
+    # reel_line is a real problem there. A bulletin shows the print headline
+    # on purpose, so the same check would be pure noise.
+    if pace.name != 'bulletin':
+        long_ones = [s for s in stories
+                     if not s.reel_line
+                     and len(s.headline) > Motion.reel_line_budget]
+        if long_ones:
+            print(f'  ⚠ {len(long_ones)} headline(s) over '
+                  f'{Motion.reel_line_budget} chars with no reel_line — those '
+                  f'scenes have to run long to stay readable.')
 
     # hold_max is a ceiling, so a scene needing more than it is silently cut
     # short and the viewer never finishes reading. That is the exact failure
     # this module exists to prevent, so it is reported rather than swallowed:
     # the fix is shorter copy, not a longer reel.
     for st, shown in zip(stories, holds):
-        need = scene_need(st)
+        need = scene_need(st, pace)
         if need > shown + 0.05:
             print(f'  ⚠ "{reel_line(st)[:38]}…" needs {need:.1f}s to read but '
                   f'the scene caps at {shown:.1f}s — {need - shown:.1f}s short. '
@@ -679,7 +784,7 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
     scenes: list[Scene] = [BrandSting(edition, W, H, ss, intro_d)]
     for i, (st, d) in enumerate(zip(stories, holds)):
         scenes.append(StoryScene(st, W, H, ss, d, i, len(stories), safe,
-                                 direction=1 if i % 2 == 0 else -1))
+                                 direction=1 if i % 2 == 0 else -1, pace=pace))
     scenes.append(OutroScene(edition, W, H, ss, outro_d, safe))
 
     starts, t0 = [], 0.0
@@ -689,6 +794,20 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
     total = t0 + XF
     n_frames = int(round(total * fps))
     print(f'  total {total:.1f}s · {n_frames} frames · {W}x{H} @{fps}fps')
+    if pace.name == 'bulletin':
+        if pace.fill:
+            print(f'    · {pace.fill} fact(s) per story promoted into the body '
+                  f'to clear the {Motion.bulletin_floor:.0f}s floor')
+        if total < Motion.bulletin_floor:
+            print(f'  ⚠ {total:.1f}s is under {Motion.bulletin_floor:.0f}s, so '
+                  f'YouTube will treat this as a Short and pull its own frame '
+                  f'instead of yt_thumbnail.jpg. This edition does not have '
+                  f'the copy for a long-form bulletin — add a story or write '
+                  f'fuller decks. It has NOT been padded.')
+        elif total > Motion.bulletin_ceiling:
+            print(f'  ⚠ {total:.1f}s is over {Motion.bulletin_ceiling:.0f}s. '
+                  f'Nothing is truncated, but that is a long watch for a local '
+                  f'bulletin — consider fewer stories or tighter decks.')
 
     raw = os.path.join(BASE, 'build', '_reel_video.mp4')
     os.makedirs(os.path.dirname(raw), exist_ok=True)
