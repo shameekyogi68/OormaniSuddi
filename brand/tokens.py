@@ -125,23 +125,21 @@ class Brand:
     sources_kn = 'ಈ ಆವೃತ್ತಿಯ ಮೂಲಗಳು'
 
     # ── Publisher details ────────────────────────────────────────────────
-    # IT Rules 2021 Part III requires a publisher of news and current affairs
-    # content to name a Grievance Officer and publish contact details, to
-    # acknowledge a complaint in 24h and dispose of it in 15 days. Fill these
-    # in before you publish at scale; qa.preflight() warns while they are blank.
-    grievance_officer = 'ಶಮೀಕ್ ಯೋಗಿ'
-    grievance_email   = 'grievance@oormanisuddi.in'
-    contact_email     = 'contact@oormanisuddi.in'
-    corrections_kn    = 'ತಿದ್ದುಪಡಿ ಅಥವಾ ದೂರಿಗೆ ಸಂಪರ್ಕಿಸಿ'
+    grievance_officer = ''
+    grievance_email   = ''
+    contact_email     = ''
+    corrections_kn    = 'ತಿದ್ದುಪಡಿ ಅಥವಾ ಮಾಹಿತಿಗೆ ಸಂಪರ್ಕಿಸಿ'
 
     @classmethod
     def grievance_line(cls) -> str:
-        """The line printed on the closing slide and in every caption."""
+        """The line printed on the closing slide and in captions."""
         if cls.grievance_officer and cls.grievance_email:
             return (f'{cls.corrections_kn}: {cls.grievance_officer} · '
                     f'{cls.grievance_email}')
         if cls.grievance_email:
             return f'{cls.corrections_kn}: {cls.grievance_email}'
+        if cls.handle:
+            return f'{cls.corrections_kn}: Instagram DM {cls.handle}'
         return ''
 
 
@@ -334,6 +332,7 @@ class Motion:
     reel_line_budget = 46          # characters
     # Support text is only shown when the headline leaves genuine room.
     support_budget   = 62
+
     kb_zoom     = 0.11    # Ken Burns total scale travel
     kb_drift    = 0.035   # lateral drift as a fraction of frame width
 
