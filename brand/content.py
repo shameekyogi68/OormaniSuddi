@@ -406,7 +406,11 @@ class Story:
             if b and b not in bits:
                 bits.append(b)
         if self.photo.credit:
-            bits.append(f'ಚಿತ್ರ: {self.photo.credit}')
+            # 'ಕೃಪೆ:' (courtesy), not 'ಚಿತ್ರ:' (image) — every nature label
+            # above already ends in ಚಿತ್ರ, so a second 'ಚಿತ್ರ:' here read as
+            # ...ಚಿತ್ರ • ಚಿತ್ರ: ..., the same word twice back to back.
+            # ಕೃಪೆ is also the standard Kannada press credit line.
+            bits.append(f'ಕೃಪೆ: {self.photo.credit}')
         return '  •  '.join(bits)
 
 

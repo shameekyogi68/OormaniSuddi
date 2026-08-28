@@ -152,9 +152,11 @@ def status_line(story: Story) -> str:
 def photo_note(story: Story) -> str:
     """The image disclosure, in words, for the caption."""
     if not story.photo:
-        return 'ಚಿತ್ರ: ಗ್ರಾಫಿಕ್ಸ್ — ' + Brand.name
+        return 'ಕೃಪೆ: ಗ್ರಾಫಿಕ್ಸ್ — ' + Brand.name
     kn = IMAGE_NATURE[story.photo.nature][0]
-    bits = [b for b in (kn, f'ಚಿತ್ರ: {story.photo.credit}') if b]
+    # 'ಕೃಪೆ:' (courtesy), matching content.py::credit_line — every nature
+    # label already ends in ಚಿತ್ರ, so 'ಚಿತ್ರ: <credit>' repeated the word.
+    bits = [b for b in (kn, f'ಕೃಪೆ: {story.photo.credit}') if b]
     return ' · '.join(bits)
 
 
