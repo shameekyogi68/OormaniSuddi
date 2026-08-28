@@ -29,6 +29,7 @@ import shutil
 import subprocess
 import numpy as np
 from dataclasses import dataclass, replace, field
+from types import SimpleNamespace
 from PIL import Image
 
 from . import typo, components as cp
@@ -397,10 +398,22 @@ class StoryScene(Scene):
         self.st, self.W, self.H, self.ss, self.dur = story, W, H, ss, dur
         self.i, self.n, self.safe = index, total, safe
         self.pace = pace
+        # In landscape the type takes a column on the left and the picture
+        # gets the whole right-hand region at FULL height, rather than being
+        # laid full-bleed and then half-covered. Cropping a 4:3 source to
+        # this near-square region keeps about three quarters of it; the old
+        # full-width-then-cover kept about a third, and threw away the middle
+        # of the frame, which is where the subject usually is.
+        self.panel_w = int(W * Motion.panel_width) if W > H else 0
+        self.photo_x = self.panel_w
+        self.photo_w = W - self.panel_w
         self.kb = None
         if story.photo and os.path.exists(story.photo.path):
-            self.kb = KenBurns(story.photo.path, W, H, focal=story.photo.focal,
-                               direction=direction)
+            self.kb = KenBurns(story.photo.path, self.photo_w, H,
+                               focal=story.photo.focal, direction=direction)
+        # Measured first: in landscape the panel's depth follows the type,
+        # so _over() cannot draw it until the block has been fitted.
+        self._m = self._measure()
         self.bed = self._bed()
         self.over = self._over()
         self.sprites = self._sprites()
@@ -413,7 +426,7 @@ class StoryScene(Scene):
             # cards use: visibly a graphic, and consistent with the rest of the
             # set. An earlier version left these scenes as a bare glow and they
             # read as empty next to the photographed ones.
-            editorial_plate(sf, (0, 0, self.W, self.H),
+            editorial_plate(sf, (self.photo_x, 0, self.W, self.H),
                             category(self.st.category), seed=self.st.headline,
                             show_word=self.W > self.H)
         grain(sf, Grade.grain, Grade.grain_shadow_bias)
@@ -439,38 +452,44 @@ class StoryScene(Scene):
             # Broadcast solves it with a PANEL: the picture stops, the panel
             # begins, and the type is on its own ground. The defined edge is
             # most of what reads as produced rather than overlaid.
-            top = H * 0.470
-            # transition above the panel so the picture is not simply cut
-            scrim(sf, H * 0.26, top, C.ink_950, 0.0, 0.42, curve=1.8)
-            # the panel itself — near solid, with a slight lift toward the foot
-            vgradient(sf, top, H, C.ink_900, C.ink_950, 0.94, 0.985)
-            # the lifted edge: a sliver of light, then the brand rule
-            rule(sf, 0, top - 2, W, alpha(C.paper_50, 0.18), 1.0)
-            rule(sf, 0, top, int(W * 0.42), C.gold_500, 3.0)
-            rule(sf, int(W * 0.42), top, W, alpha(C.gold_500, 0.26), 3.0)
+            # The panel runs the full HEIGHT down the left instead of the
+            # full WIDTH across the bottom. Same reasoning as D36 — the type
+            # gets its own ground and the defined edge is what reads as
+            # produced — but spending the frame's width rather than its
+            # height, so the picture keeps its people whole. See D38.
+            pw = self.panel_w
+            panel(sf, (0, 0, pw, H), alpha(C.ink_950, 0.988))
+            # a sliver of light on the seam, then the brand rule, so the
+            # column does not simply butt against the photograph
+            vrule(sf, pw - 2, 0, H, alpha(C.paper_50, 0.16), 1.0)
+            vrule(sf, pw, 0, H, C.gold_500, 3.0)
 
         if H > W:
             cp.masthead(sf, sl, st_ - 118, W - sl * 2, right_top=self.st.date_kn,
                         right_bot=self.st.time_kn, on_photo=self.kb is not None,
                         scale=0.92)
         else:
-            # Landscape: the lockup sits inside the frame, so it needs its own
-            # ground to stay legible over a bright sky. A contained bug, the way
-            # a broadcaster's DOG is, rather than type floating on a photograph.
-            # A soft top veil rather than a boxed bug: a hard-edged grey
-            # rectangle over a photograph reads as a placeholder.
-            scrim(sf, 0, 190, C.ink_950, 0.72, 0.0, curve=1.6)
+            # Everything that is furniture — lockup, date, time — lives in
+            # the column. It used to be set over the photograph on the right,
+            # where it landed on a hospital signboard and became unreadable
+            # while also obscuring the picture it was sitting on. The column
+            # is a solid ground, so none of it needs a shadow to survive.
+            pw = self.panel_w
             by = st_ - 6
-            cp.masthead(sf, sl, by, int(W * 0.30), on_photo=True,
+            right = pw - Motion.panel_pad
+            cp.masthead(sf, sl, by, int(right - sl), on_photo=False,
                         scale=0.72, rule_below=False)
             fd = typo.font_for(self.st.date_kn, 'kn_var', sf.s(27), weight=650)
             ft = typo.font_for(self.st.time_kn, 'kn_var', sf.s(22), weight=440)
-            sh = (0, sf.s(1), sf.s(8), (0, 0, 0, 200))
-            typo.draw_text(sf.img, self.st.date_kn, sf.s(W - sl), sf.s(by + 32),
-                           fd, Role.text_hi, anchor_x='r', shadow=sh)
-            rule(sf, W - sl - 168, by + 52, W - sl, alpha(C.gold_500, 0.45), 1.0)
-            typo.draw_text(sf.img, self.st.time_kn, sf.s(W - sl), sf.s(by + 88),
-                           ft, Role.text_dim, anchor_x='r', shadow=sh)
+            typo.draw_text(sf.img, self.st.date_kn, sf.s(right), sf.s(by + 32),
+                           fd, Role.text_hi, anchor_x='r')
+            rule(sf, right - 168, by + 52, right, alpha(C.gold_500, 0.45), 1.0)
+            typo.draw_text(sf.img, self.st.time_kn, sf.s(right), sf.s(by + 88),
+                           ft, Role.text_dim, anchor_x='r')
+            # Only the handle sits on the picture now, so the foot veil can
+            # be shallow — enough to carry gold type over a bright desk
+            # without taking another slice out of the photograph.
+            scrim(sf, H * 0.90, H, C.ink_950, 0.0, 0.80, curve=1.8)
         if H > W:
             # Portrait only: the band the platform covers still carries the
             # brand, because it is visible on a paused reel and on every repost.
@@ -488,7 +507,15 @@ class StoryScene(Scene):
                            anchor_x='r', tracking=0.015)
         return sf.img.resize((W, H), Image.Resampling.LANCZOS)
 
-    def _sprites(self) -> list[Sprite]:
+    def _measure(self):
+        """Fit the type, then decide how deep the lower-third has to be.
+
+        Kept out of `_sprites` because in landscape the panel is sized by the
+        block it holds, and `_over()` draws that panel before the sprites are
+        built. Measuring once, here, is what stops the two from disagreeing —
+        a panel that does not match its type is the failure D36 was written
+        about, arriving from the other side.
+        """
         W, H, ss = self.W, self.H, self.ss
         sl, st_, sr, sb = self.safe
         st = self.st
@@ -496,13 +523,13 @@ class StoryScene(Scene):
         # Portrait keeps clear of Instagram's right action rail. Landscape has
         # no chrome, but a headline set the full 1920 wide is unreadable, so it
         # is measured to a column instead.
-        cw = int(W * 0.66) if landscape else (W - sl - sr)
+        cw = (int(self.panel_w - sl - Motion.panel_pad) if landscape
+              else (W - sl - sr))
         # The type scale is calibrated for a 1080-WIDE portrait frame. Most
         # YouTube viewing is on a phone, where a 1920x1080 video plays about
         # 400px wide — so a 19px source line lands at roughly 4px and is simply
         # gone. Everything small gets scaled up in landscape.
         ts = 1.38 if landscape else 1.0
-        out: list[Sprite] = []
 
         bottom = H - sb
         src_y = bottom - T.micro[0] * ts * 1.5
@@ -531,40 +558,98 @@ class StoryScene(Scene):
         # lower-third panel, not near the top of the frame — measuring from the
         # frame top let `fit` choose a headline far too tall for the panel, and
         # the block then overran the meta row at the foot.
-        panel_top = H * 0.470
-        region_top = (panel_top + 44) if landscape else (st_ + 220)
+        # A fixed panel took 53% of the frame however little copy the scene
+        # carried, so a two-line deck still threw away the bottom half of the
+        # photograph — on the Manipal frame the subject sat directly under it.
+        # The headline is fitted against the DEEPEST panel we would ever
+        # allow, so `fit` can never choose a size the panel cannot hold; the
+        # panel is then pulled down to whatever the block actually needs.
+        # See DECISIONS.md D38.
+        # The column is full height, so the block starts under the masthead
+        # rather than inside a slab, and the meta row anchors its foot.
+        region_top = (st_ + 120) if landscape else (st_ + 220)
         # The photo credit belongs on the PHOTO, above the panel, which is also
         # where it reads correctly as a caption.
-        head_room = (block_bottom - region_top - eb_h - 34 * ts
-                     - (0 if landscape else cap_h)
+        # cap_h is reserved in BOTH orientations now. It used to be excluded
+        # in landscape because the credit sat on the photograph; now that it
+        # is in the column, a four-line deck ran straight over it.
+        head_room = (block_bottom - region_top - eb_h - 34 * ts - cap_h
                      - ((d_blk.height / ss + 34 * ts) if d_blk is not None else 0))
-        hi = 84 if landscape else 96
+        # A narrower column needs a slightly smaller headline and more lines
+        # to work with; it has the whole frame height to spend them in.
+        hi = 76 if landscape else 96
         hb = typo.fit(head_txt, 'kn', ss * hi, ss * T.h4[0], ss * cw,
-                      ss * head_room, T.h1[1], max_lines=3 if landscape else 4)
+                      ss * head_room, T.h1[1], max_lines=5 if landscape else 4)
 
-        block_h = (44 + 34 + hb.height / ss
-                   + ((34 + d_blk.height / ss) if d_blk is not None else 0))
+        # These must be the SAME steps _sprites() actually advances by, or
+        # block_h under-measures the block. It used to read `44 + 34`, which
+        # is right only when ts == 1.0 — in landscape ts is 1.38, so the real
+        # block ran ~60px lower than this claimed and anything positioned
+        # from it landed on the deck. Portrait is unaffected: eb_h is 44 and
+        # 34 * 1.0 is 34, exactly the old numbers.
+        block_h = (eb_h + 34 * ts + hb.height / ss
+                   + ((34 * ts + d_blk.height / ss)
+                      if d_blk is not None else 0))
         # Seated at the foot of the safe area whether or not there is a photo,
         # so a mixed reel does not have its headline jumping up and down the
         # frame from scene to scene.
         y = block_bottom - block_h
 
+        # Top-aligned under the masthead: stable from scene to scene, where
+        # centring would make the headline hop about as block heights vary.
+        if landscape:
+            y = region_top
+
+        return SimpleNamespace(
+            landscape=landscape, cw=cw, ts=ts, bottom=bottom, src_y=src_y,
+            block_bottom=block_bottom, head_txt=head_txt, sup_txt=sup_txt,
+            d_blk=d_blk, cap_h=cap_h, eb_h=eb_h,
+            region_top=region_top, hb=hb, block_h=block_h, y=y)
+
+    def _sprites(self) -> list[Sprite]:
+        m = self._m
+        W, H, ss = self.W, self.H, self.ss
+        sl, st_, sr, sb = self.safe
+        st = self.st
+        landscape, cw, ts = m.landscape, m.cw, m.ts
+        bottom, src_y, block_bottom = m.bottom, m.src_y, m.block_bottom
+        head_txt, sup_txt, d_blk = m.head_txt, m.sup_txt, m.d_blk
+        cap_h, eb_h = m.cap_h, m.eb_h
+        region_top = m.region_top
+        hb, block_h, y = m.hb, m.block_h, m.y
+        out: list[Sprite] = []
+
         if cap_h:
-            def cap(sf):
+            # "ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ" is an honesty label, not decoration: it is how
+            # a reader knows this is a representative picture and not the
+            # scene itself. On the photograph it landed on a sunlit desk and
+            # became invisible, and no shadow fixes every frame. So in
+            # landscape it goes in the column, above the meta row, where it
+            # is legible by construction and the picture stays clean.
+            cap_x = sl
+            cap_w = cw
+            # Seated just under the block it belongs to, not at a fixed
+            # offset from the foot: a four-line deck ends far lower than a
+            # two-line one, and a fixed position left the credit jammed
+            # against the last line. Clamped so it can never reach the meta
+            # row, which head_room has already reserved the space for.
+            cap_y = (min(y + block_h + 20,
+                         src_y - 36 * ts - cap_h - 12) if landscape
+                     else (y - cap_h - 22))
+
+            def cap(sf, _w=cap_w):
                 b = typo.layout(st.credit_line,
                                 typo.font('kn_var', sf.s(T.micro[0] * ts),
                                           weight=420),
-                                sf.s(cw), 1.34)
-                # In landscape the caption sits ON the photograph, above the
-                # panel, so it needs a shadow the way all type over pictures
-                # does. In portrait it is already on the scrim.
-                sh = ((0, sf.s(1), sf.s(7), (0, 0, 0, 200)) if landscape
-                      else None)
+                                sf.s(_w), 1.34)
+                # It sits on the solid column in landscape and on the scrim
+                # in portrait, so it needs no shadow of its own either way.
+                sh = None
                 typo.draw_block(sf.img, b, 0, 0, alpha(C.paper_300, 0.94),
-                                shadow=sh, box_w=sf.s(cw))
-            cap_y = (panel_top - cap_h - 18) if landscape else (y - cap_h - 22)
-            out.append(Sprite(_sprite_from(cap, cw, cap_h, ss, 0, 0).img,
-                              sl, int(cap_y), t_in=0.34, dur=0.5, rise=12))
+                                shadow=sh, box_w=sf.s(_w))
+            out.append(Sprite(_sprite_from(cap, cap_w, cap_h, ss, 0, 0).img,
+                              int(cap_x), int(cap_y),
+                              t_in=0.34, dur=0.5, rise=12))
 
         def eb(sf):
             cp.eyebrow(sf, 0, 0, cw, st, scale=ts,
@@ -594,10 +679,9 @@ class StoryScene(Scene):
                 sl, int(y), t_in=0.30 + len(hb.lines) * Motion.text_stagger + 0.14,
                 dur=Motion.text_in, rise=24))
 
-        # Meta row. In landscape it spans the full content width with a
-        # hairline above it, so the panel closes on a defined edge instead of
-        # trailing off into the picture.
-        meta_w = int(W - sl * 2) if landscape else cw
+        # Meta row. It closes the COLUMN now, not the whole frame, with a
+        # hairline above it so the type block ends on a defined edge.
+        meta_w = cw
 
         pad = 36 * ts if landscape else 0
 
@@ -614,7 +698,8 @@ class StoryScene(Scene):
     def frame(self, t: float) -> Image.Image:
         f = self.bed.copy()
         if self.kb:
-            f.alpha_composite(self.kb.frame(t / self.dur).convert('RGBA'), (0, 0))
+            f.alpha_composite(self.kb.frame(t / self.dur).convert('RGBA'),
+                              (self.photo_x, 0))
         f.alpha_composite(self.over, (0, 0))
         for s in self.sprites:
             s.draw(f, t)

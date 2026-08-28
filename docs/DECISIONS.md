@@ -733,6 +733,48 @@ news there was that day.
 `brand/motion.py :: Pace, head_line, body_line, plan_bulletin`
 `brand/tokens.py :: Motion.bulletin_*` · `templates/bulletin.py`
 
+
+---
+
+## D38 · Landscape spends width on the type, not height
+
+**Decided.** In a 16:9 frame the type sits in a **full-height column on the
+left 46%**, and the photograph occupies the right 54% at full height, cropped
+to that near-square region. The seam is a hard edge with a gold rule. Masthead,
+date, time and the photo credit all live in the column; only the handle sits on
+the picture, over a shallow foot veil.
+
+**Replaced.** D36's lower-third, applied to landscape: a full-width panel from
+0.470H down, with the photograph laid full-bleed behind it.
+
+**Why.** D36 is right about portrait and right about *why* — the type needs its
+own ground, and a defined edge is what reads as produced. But a "lower third"
+that starts at 0.470H is not a lower third, it is a half-and-half split, and in
+landscape it cost the picture its middle. A 4:3 source cropped to 16:9 and then
+half-covered kept about **37%** of itself, and the covered half is where the
+subject almost always is: on the Manipal registration photograph the panel
+began exactly at the counter, so the frame kept the ceiling and the signboard
+and threw away every person in it. Cropping the same source to the right-hand
+column instead keeps about **75%**, at full height, so people stay whole.
+
+The deeper point is that a 16:9 frame's surplus is **width**, not height.
+Spending height on furniture is spending the scarce dimension. Portrait is the
+other way round, which is why it keeps the lower-third and this is landscape-only.
+
+**Tried first, and rejected.** Sizing the panel to its type instead of a
+constant. It moved the panel from 47% to 51% — the block is genuinely that
+tall — so the picture was still cut in half. The geometry was wrong, not the
+constant.
+
+**The bug this exposed.** `block_h` was computed as `44 + 34 + …` while
+`_sprites()` advanced by `eb_h + 34 * ts`. Those agree only at `ts == 1.0`, so
+in landscape (`ts = 1.38`) the block ran ~60px lower than its own measurement
+claimed. Nothing had depended on that number in landscape before, so it had
+never shown; the moment the photo credit was positioned from it, the credit
+landed on top of the deck. Measure with the same steps you draw with.
+
+`brand/motion.py :: StoryScene._over, _measure` · `brand/tokens.py :: Motion.panel_width`
+
 ---
 
 ## Changing something here

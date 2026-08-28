@@ -138,8 +138,16 @@ class Brand:
                     f'{cls.grievance_email}')
         if cls.grievance_email:
             return f'{cls.corrections_kn}: {cls.grievance_email}'
+        # No officer is named on purpose. This is a one-person channel, and
+        # the contact that actually gets read is the channel's own inbox, so
+        # that is what gets published: Instagram DM and the WhatsApp number
+        # in the bio. IT Rules 2021 Part III does ask a news publisher to
+        # name a Grievance Officer, and naming one is the change to make if
+        # the channel ever grows past its owner — but a route nobody watches
+        # is worse for the reader than an honest one that is watched.
         if cls.handle:
-            return f'{cls.corrections_kn}: Instagram DM {cls.handle}'
+            return (f'{cls.corrections_kn}: Instagram DM {cls.handle} · '
+                    f'ಬಯೋದಲ್ಲಿರುವ WhatsApp ಸಂಖ್ಯೆ')
         return ''
 
 
@@ -345,11 +353,19 @@ class Motion:
     # which is the carousel's payload. That is what makes the bulletin run
     # 60-120s on real copy instead of 43s, without a second of padding.
     bulletin_hold_max   = 30.0    # a scene that is watched, not glanced at
-    bulletin_deck_lines = 4       # the deck is the payload, so give it room
+    bulletin_deck_lines = 6       # the deck is the payload; the column is narrow
     # YouTube treats sub-60s video as a Short and pulls its own frame rather
     # than using a custom thumbnail, which is why the floor is 60 and not less.
     bulletin_floor      = 60.0
     bulletin_ceiling    = 120.0
+    # Landscape puts the type in a COLUMN and leaves the picture alone.
+    # A full-width slab across the bottom took half the frame's height, so a
+    # 4:3 photograph kept only ~37% of itself and the subject — which sits
+    # near the middle — was the part that got covered. A 16:9 frame is wide,
+    # not tall: spending width on the type and giving the picture the full
+    # height keeps ~75% of the same source. See DECISIONS.md D38.
+    panel_width         = 0.460   # type column, as a fraction of frame width
+    panel_pad           = 44      # breathing room inside the column, in px
 
     kb_zoom     = 0.11    # Ken Burns total scale travel
     kb_drift    = 0.035   # lateral drift as a fraction of frame width

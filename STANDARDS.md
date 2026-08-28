@@ -362,9 +362,14 @@ records what each rule replaced and what breaks without it.
 
 The scale is calibrated for a 1080-wide **portrait** frame. A 16:9 bulletin is
 watched on a phone at ~400px wide, so small type must be scaled up (`ts = 1.38`)
-or it disappears. Headline column 66%, headline to 96px, masthead inside the
-frame (no platform chrome to clear), and the editorial plate recomposed — sun
-right, category word in the upper left — so the frame is not two-thirds empty.
+or it disappears.
+
+Landscape does **not** use the lower-third. The type sits in a full-height
+column on the left 46%; the photograph takes the right 54% at full height. A
+16:9 frame's surplus is width, not height, and spending height on furniture
+cost the picture its middle — see [`docs/DECISIONS.md`](docs/DECISIONS.md) D38.
+Headline to 76px over five lines, masthead / date / time / photo credit all in
+the column, and only the handle on the picture.
 
 The bulletin is also paced differently, because it is watched rather than
 glanced at. A bulletin scene shows the **print headline and the deck** — the

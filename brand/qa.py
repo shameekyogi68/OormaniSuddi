@@ -66,12 +66,18 @@ class Report:
 def compliance() -> Report:
     """Channel-level obligations, checked once per run rather than per story."""
     r = Report()
-    if not (Brand.grievance_officer and Brand.grievance_email):
+    # What matters to a reader with a complaint is that SOME route is
+    # published and answered. The channel publishes its Instagram DM and the
+    # WhatsApp number in its bio, which is what its one person actually
+    # reads; naming an officer who does not exist would look more compliant
+    # and serve the reader less. So this warns when there is no route at all,
+    # not when there is no name. See tokens.Brand.grievance_line.
+    if not Brand.grievance_line():
         r.warn.append(
-            'no Grievance Officer set in tokens.Brand. IT Rules 2021 Part III '
-            'requires a news publisher to name one and publish contact details, '
-            'acknowledge a complaint within 24h and dispose of it in 15 days. '
-            'Until these are filled in, no card or caption carries them.')
+            'no contact route published. IT Rules 2021 Part III requires a '
+            'news publisher to publish contact details, acknowledge a '
+            'complaint within 24h and dispose of it in 15 days. With '
+            'Brand.handle blank, no card or caption carries any route at all.')
     return r
 
 
