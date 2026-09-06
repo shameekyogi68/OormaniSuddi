@@ -32,7 +32,7 @@ python3 render.py edition.json --only report_card carousel
 | [`carousel`](#carousel) | 1080×1080 | edition | One per edition. |
 | [`broadsheet`](#broadsheet) | 1080×1620 | edition | One per edition, for readers who want everything at a glance. |
 | [`bulletin`](#bulletin) | 1920×1080 | edition | One per edition. |
-| [`reel`](#reel) | 1080×1920 | edition | One per edition. |
+| [`reel`](#reel) | 1080×1920 | edition | One per edition — the lead only. |
 
 ---
 
@@ -238,7 +238,7 @@ The day's edition as a single front page.
 |---|---|
 | file | `templates/bulletin.py` → `bulletin()` |
 | takes | a `Edition` |
-| output | 1920×1080 at 1× supersample, file |
+| output | 1920×1080 at 2× supersample, file |
 | safe inset | 96, 72, 96, 84 (L, T, R, B) |
 | format note | YouTube long-form bulletin 16:9 |
 
@@ -254,9 +254,9 @@ The day's edition as a single front page.
 
 ## `reel`
 
-9:16 video of the edition, with mastered audio.
+9:16 Short of the LEAD story, with mastered audio.
 
-**When to use.** One per edition. Scene length follows reading time — give each story a short `reel_line` (~45 chars) or the scenes run long.
+**When to use.** One per edition — the lead only. The carousel and the 16:9 bulletin carry the rest. Opens on the news, not a logo sting.
 
 | | |
 |---|---|
@@ -270,9 +270,9 @@ The day's edition as a single front page.
 
 **Also accepts.** `target_seconds`
 
-**Limits.** `stories` = 5, `reel_line_chars` = 46, `target_seconds_min` = 15, `target_seconds_max` = 90
+**Limits.** `stories` = 1, `reel_line_chars` = 46, `target_seconds_min` = 8, `target_seconds_max` = 45
 
-**Note.** target_seconds is a CEILING, not a quota — scenes are never compressed below reading speed; stories are dropped from the end instead. A 75-char headline needs ~11s on screen, so write a reel_line. Audio is normalised to -14 LUFS / -1.5 dBTP.
+**Note.** A reel is a glance in a vertical feed: one story, no sting, headline on frame 0. Writes reel_cover.jpg — set that as the Instagram / Shorts cover. Write a reel_line of ~45 chars. Audio is normalised to -14 LUFS / -1.5 dBTP.
 
 ---
 

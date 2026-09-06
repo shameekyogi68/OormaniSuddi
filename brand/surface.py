@@ -137,14 +137,34 @@ def radial_glow(sf: Surface, cx: float, cy: float, radius: float, color,
     R = int(radius * ss)
     if R <= 0:
         return
-    yy, xx = np.mgrid[-R:R, -R:R]
+    # Build only the part of the bloom that actually lands on the canvas.
+    # A glow is usually far wider than the frame it lifts — page_base asks for
+    # 1.15× the page width — so the full 2R square is mostly off-canvas waste.
+    # At 1080 that was merely wasteful; at 3840 the square reaches 17664² and
+    # PIL refuses it as a decompression bomb, which is why the 4K bulletin
+    # could not render at all. The falloff is still measured from the true
+    # centre and radius, so on-canvas pixels are unchanged.
+    W, H = sf.img.size
+    x0, y0 = int(cx * ss) - R, int(cy * ss) - R
+    ix0, iy0 = max(0, x0), max(0, y0)
+    ix1, iy1 = min(W, x0 + 2 * R), min(H, y0 + 2 * R)
+    if ix1 <= ix0 or iy1 <= iy0:
+        return
+
+    # float64 throughout, as the unclipped version was: the falloff is raised
+    # to 2.4 and then truncated to uint8, and in float32 a scattering of pixels
+    # lands on the other side of a rounding boundary. That is invisible to the
+    # eye and still a different image to the golden hash.
+    xx = (np.arange(ix0 - x0, ix1 - x0, dtype=np.float64) - R)[None, :]
+    yy = (np.arange(iy0 - y0, iy1 - y0, dtype=np.float64) - R)[:, None]
     d = np.sqrt(xx ** 2 + yy ** 2) / R
     a = np.clip(1.0 - d, 0, 1) ** 2.4 * a_center * 255.0
-    lay = np.zeros((2 * R, 2 * R, 4))
+
+    lay = np.zeros((iy1 - iy0, ix1 - ix0, 4), dtype=np.float64)
     lay[..., 0], lay[..., 1], lay[..., 2] = color[0], color[1], color[2]
     lay[..., 3] = a
     sf.img.alpha_composite(Image.fromarray(lay.astype(np.uint8), 'RGBA'),
-                           (int(cx * ss) - R, int(cy * ss) - R))
+                           (ix0, iy0))
 
 
 def grain(sf: Surface, sigma: float = 4.0, shadow_bias: float = 0.55):

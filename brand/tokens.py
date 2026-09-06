@@ -281,8 +281,13 @@ FORMATS = {
     'forward':   Format('forward', 1080, 1350, 2, (72, 72, 72, 72), 'WhatsApp status/forward'),
     # Landscape video. No platform chrome to dodge, so the safe inset is purely
     # typographic margin.
-    'bulletin':  Format('bulletin', 1920, 1080, 1, (96, 72, 96, 84),
+    # 1080p composes on a 2x canvas like everything else. 2160p is already at
+    # twice the delivery resolution, so a further 2x canvas would be a 4x pixel
+    # bill for antialiasing no one can see — it renders 1:1 instead.
+    'bulletin':  Format('bulletin', 1920, 1080, 2, (96, 72, 96, 84),
                         'YouTube long-form bulletin 16:9'),
+    'bulletin_4k': Format('bulletin_4k', 3840, 2160, 1, (192, 144, 192, 168),
+                          'YouTube long-form bulletin 16:9 4K UHD (2160p)'),
 }
 
 
@@ -323,6 +328,12 @@ class Motion:
     text_stagger= 0.075   # per line
     scene_cross = 0.40
     logo_in     = 0.90
+    # A 9:16 reel opens ON THE STORY. A 1.9s logo sting is a scroll cue —
+    # Instagram and YouTube both decide distribution in the first 1–3 seconds,
+    # and a new account that opens on its ident is swiped past before the
+    # news exists. The masthead already brands every scene. See D39.
+    reel_intro  = 0.0
+    reel_outro  = 1.8     # follow CTA; long enough for the handle to land
 
     # ── reading, measured honestly ────────────────────────────────────────
     # 11 chars/sec was wishful. Kannada is an abugida: one akshara carries a

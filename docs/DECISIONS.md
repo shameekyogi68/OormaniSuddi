@@ -777,6 +777,202 @@ landed on top of the deck. Measure with the same steps you draw with.
 
 ---
 
+## D39 · A reel is the lead story, and it opens on the news
+
+**Decided.** The 9:16 reel is the **lead story only**, with **no brand sting**.
+It opens on the photograph and the `reel_line`. A 1.8s outro still carries the
+follow CTA. `reel_cover.jpg` is written from the first story once the headline
+has arrived — that file is the Instagram / Shorts cover. Captions open on the
+story hook (place + news), not the date; hashtags are 8 hyperlocal tags, not
+12 mega-tags; YouTube titles do not append `#Shorts`.
+
+**Replaced.** A 30s four-story dump that opened on a 1.9s logo sting, with
+edition copy that led "28 ಆಗಸ್ಟ್ · ಕರಾವಳಿ ಬುಲೆಟಿನ್" and a `#Shorts` suffix
+on every YouTube title.
+
+**Why.** After two weeks of posting, reach was weak for reasons the design
+system was manufacturing:
+
+1. **The first three seconds.** Instagram and YouTube both decide whether to
+   distribute a clip in the first 1–3 seconds of watch. A logo sting is a
+   scroll cue — the viewer has not yet been told there is news. D33 made the
+   sting *bright* so it would not look like a dead tile; it did not make it
+   *worth watching*. The masthead already brands every scene.
+2. **Four stories in 30s is a slideshow.** Retention, not impression count, is
+   what the platforms then amplify. A 12–18s single-story reel watched to the
+   end beats a 30s four-headline dump abandoned at 40%. The carousel and the
+   16:9 bulletin already carry the rest of the edition; the reel does not have
+   to.
+3. **Copy was a date stamp.** Instagram indexes the first ~125 characters for
+   search. Opening on the date and the word "bulletin" matches nothing anyone
+   types. Opening on `ಉಡುಪಿ: ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್` matches the people the
+   story is for. Mega-tags (`#Karnataka`, `#BreakingNews`) put a new account
+   in a pool it cannot win; eight place-first tags put it in front of the
+   district.
+4. **`#Shorts` in the title.** YouTube classifies Shorts by aspect ratio and
+   duration. The hashtag wastes the ~60 characters a search result actually
+   shows, and reads as spam.
+
+The 16:9 bulletin is unchanged: it still opens on the sting, still carries
+every story, still has to clear 60s so YouTube will use `yt_thumbnail.jpg`.
+
+`brand/motion.py :: render_reel` · `brand/copy.py` · `brand/tokens.py :: Motion.reel_intro, reel_outro`
+
+---
+
+## D40 · The 4K bulletin is the same design at twice the size, not a bigger canvas
+
+`bulletin_4k` was added as a 3840×2160 format and shipped without ever being
+rendered. It could not be: `page_base` asks for a glow 1.15× the frame width,
+`radial_glow` allocated a square of that DIAMETER regardless of the canvas, and
+at 3840 that is 17664² — which Pillow refuses outright as a decompression bomb.
+The 16:9 YouTube cut, the only output on the realistic monetisation path
+(1,000 subs + 4,000 watch hours), therefore produced nothing at all.
+
+Two things were wrong and both are fixed:
+
+1. **`radial_glow` now builds only the part of the bloom that lands on the
+   canvas.** The falloff is still measured from the true centre and radius, so
+   on-canvas pixels are identical — verified byte-for-byte across all eleven
+   stills before the change was kept. It is computed in float64 as before: in
+   float32 a scattering of pixels crosses a rounding boundary on the way to
+   uint8, which is invisible to the eye and still a different golden hash.
+
+2. **The layout is resolution-independent.** `StoryScene.fs` is the frame scale
+   — 1.0 for a 1080-wide portrait frame and a 1920-wide landscape one — and
+   every fixed measure is multiplied by it. Without this a 3840-wide render kept
+   1920-sized type: the column came out two-thirds empty and the headline read
+   at half its intended size. A 4K frame is now indistinguishable from the 1080p
+   one at the same display size, because it is the same design.
+
+A format that is already at twice the delivery resolution renders at `ss=1`
+rather than composing on a further 2× canvas — a 4× pixel bill for antialiasing
+no one can resolve. `render_reel` takes the supersample from the format instead
+of hard-coding 2, and `bulletin` declares the `ss=2` it was always getting.
+
+An 82s four-story bulletin renders in about 7 minutes at 3840×2160 and masters
+to −14.8 LUFS / −1.4 dBTP. The reason to deliver 2160p rather than 1080p is not
+the pixel count on a phone: it is that YouTube encodes 1440p and above with VP9,
+and this design is very dark — flat ink and slow gradients are exactly where
+1080p H.264 bands.
+
+`brand/surface.py :: radial_glow` · `brand/motion.py :: StoryScene, render_reel`
+· `brand/tokens.py :: FORMATS`
+
+---
+
+## D41 · The thumbnail hook is guarded like a headline, and set like one
+
+Two separate failures in the same file.
+
+**The hook was not checked.** `Story.validate()` refuses a crime headline that
+states guilt before conviction, and the comment in `content.py` explaining why
+names "a thumbnail" as the first place a headline travels alone. But
+`youtube_thumb(hook=…)` *replaces* the headline on exactly that thumbnail, and
+`hook` is not a Story field, so validate() never saw it. A careful headline plus
+a punchy `--hook` under deadline defeated the whole guard. The check now runs in
+the template on the same terms, with no flag to turn it off — the same reasoning
+as D29. `tests/test_contract.py` pins it.
+
+**The hook was set too small to read.** A rewrite had laid the photo full-bleed,
+set the hook on ONE line shrunk to fit, and put the deck beneath it. In a feed a
+thumbnail is about 210px wide: the deck was gone entirely and a long hook had
+shrunk to roughly 40px — about 6px on screen. The 7-word legibility warning had
+been deleted along with it.
+
+The thumbnail is now built in the same frame language as the bulletin it fronts:
+ink column left, photograph full-height right, gold seam between. The type sits
+on solid ground rather than on picture detail, so it is legible by construction
+instead of by luck with a particular photograph — and the thumbnail and the
+video's own frames are recognisably the same publication. The hook is capped at
+three lines and floored at 76px; below that the fix is a shorter hook, not
+smaller type, and the word warning says so.
+
+`templates/youtube_thumb.py` · `brand/components.py :: eyebrow(show_location=)`
+
+---
+
+## D42 · Kannada case markers agglutinate, and the ones we generate are checked
+
+The first comment on every weather post read **"ಉಡುಪಿ ನಲ್ಲಿ ಈಗ ಹೇಗಿದೆ?"**. In
+Kannada a case marker is a bound morpheme — it attaches to the noun and pulls a
+linking stem with it. Written as a free-standing word it is "Udupi in": not a
+typo, a grammatical error, on the copy that is supposed to start a conversation
+with local readers. The default first comment had the same fault with ನಿಂದ.
+
+`copy.locative()` and `copy.belonging()` now form these properly. The linking
+stem follows the noun's final vowel and the same three stems serve every suffix:
+
+| ends | stem | example |
+|---|---|---|
+| ಿ ೀ ೆ ೇ ೈ | + ಯ | ಉಡುಪಿ → ಉಡುಪಿಯಲ್ಲಿ |
+| ು ೂ | + ಿನ (replacing the ು) | ಮಂಗಳೂರು → ಮಂಗಳೂರಿನಲ್ಲಿ |
+| ಾ, or a bare consonant with inherent 'a' | + ದ | ಕುಂದಾಪುರ → ಕುಂದಾಪುರದಲ್ಲಿ |
+
+Only the last word of a place inflects — ಉಡುಪಿ **ಜಿಲ್ಲೆಯಲ್ಲಿ**, not
+ಉಡುಪಿಯಲ್ಲಿ ಜಿಲ್ಲೆ.
+
+**Anything it cannot analyse returns `''` and the caller rephrases** to a
+sentence that needs no case marker. Inventing morphology for an unrecognised
+place would put broken Kannada in front of readers, which is worse than a
+plainer sentence — the same instinct as omitting `photo` rather than reaching
+for a stock image. `tests/test_contract.py` checks every place in `PLACE_TAGS`
+across three categories and asserts no stranded suffix survives.
+
+## D43 · The publishing plan is rendered, not retyped
+
+AGENTS.md has listed a scheduled timetable as a required deliverable since the
+workflow was written, and nothing produced one — so it was retyped by hand every
+morning. That is how the times drift, how a reel gets published without its
+cover set, and how the first comment gets forgotten.
+
+`render.py` now writes `schedule.txt` and `schedule.json` from **what it
+actually rendered**, so the plan can never list a reel that does not exist. Two
+rules carry the reasoning:
+
+* **Reels are spaced ≥2.5h.** Two of ours in one window compete with each other
+  rather than with anyone else. The rule is a constant, and a test enforces it —
+  it caught the first slot table, which claimed 2.5h and shipped 19:00/21:00.
+* **The long-form bulletin goes up first.** It is the only asset on the
+  4,000-watch-hour path; Shorts do not count toward it. Posting it at 08:30
+  gives it the whole day to accumulate.
+
+The times themselves are **starting positions from the shape of the day on this
+coast, not measured truth about this account** — and the file says so, in the
+file. Once there is a month of real analytics they should be moved to whatever
+those say. A plan written down is a plan that can be corrected.
+
+`brand/copy.py :: locative, belonging, publishing_plan, plan_text` · `render.py`
+
+---
+
+## D44 · A bulletin target drops stories; it never rescales scenes
+
+`plan_bulletin` had grown a block that scaled every hold proportionally to land
+exactly on `--bulletin-seconds`. It was wrong in both directions and silent in
+both:
+
+| `--bulletin-seconds` | copy needs | it showed |
+|---|---|---|
+| 60 | 21.5 / 23.1 / 15.9 / 18.8s | 15.5 / 16.6 / 11.5 / 13.5s — every scene cut |
+| 120 | the same | 31.8 / 34.1 / 23.5 / 27.7s — every scene padded 65% |
+
+The only guard was `hold_min`, which is a floor on a scene in the abstract and
+says nothing about whether *this* scene's copy fits in it. And the short-scene
+warning was suppressed whenever a target was set — so the one run that needed
+the warning was the one run that could not produce it.
+
+`target` is a ceiling, exactly as `plan_durations` has always documented it:
+stories are dropped from the end and nothing is compressed below reading time.
+Padding is refused for the same reason a thin edition is reported rather than
+stretched (D37). The warning now fires unconditionally.
+
+The path had no test — which is how it survived. It has one now.
+
+`brand/motion.py :: plan_bulletin, render_reel` · `tests/test_contract.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

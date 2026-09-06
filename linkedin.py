@@ -54,7 +54,7 @@ FACTS = {
     'templates':  '10',      # python3 render.py --describe
     'hashes':     '12',      # tests/golden.json
     'tests':      '41',      # python3 -m unittest discover tests
-    'bulletin_s': '95.1',    # ffprobe out/2026-08-28/bulletin.mp4
+    'bulletin_s': '60.0',    # ffprobe out/2026-08-28/bulletin.mp4
 }
 
 

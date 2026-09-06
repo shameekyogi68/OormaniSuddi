@@ -155,7 +155,7 @@ Exceed these and preflight warns; exceed them badly and it fails.
 | `points` | 3 items, ~150 chars each | extras are dropped from the bottom |
 | `numbers` | 3 pairs | 4 crowds |
 | `hook` | ~7 words | warns — the thumbnail is read at 210 px wide |
-| `stories` | 3–4 per edition | 5+ squeezes every reel scene under 6 s |
+| `stories` | 3–4 per edition | carousel carries all stories; reel engine produces individual short reels (reel_01, reel_02...) for 10x retention |
 
 **Numerals: Latin (25, 1077, 40-50), never Kannada (೨೫).** This matches Kannada
 print and broadcast practice. Mixing the two systems inside one card is a

@@ -1,4 +1,7 @@
-"""Reel / Short — 9:16 video of the day's edition.
+"""Reel / Short — 9:16 video of the LEAD story.
+
+Opens on the news, not a logo sting. The carousel and the 16:9 bulletin
+carry the rest of the edition. See DECISIONS.md D39.
 
 A thin template face over `brand.motion`, which holds the engine: eased
 sprite reveals, Ken Burns, scene timing from reading speed, and the audio

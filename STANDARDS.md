@@ -157,6 +157,8 @@ twenty-word headline both looking designed.
 | `reel` | 1080×1920 | 2 | 72, **230**, **220**, **480** |
 | `thumb` | 1280×720 | 2 | 48, 40, 48, 96 |
 | `broadsheet` | 1080×1620 | 2 | 64, 56, 64, 56 |
+| `bulletin` | 1920×1080 | 2 | 96, 72, 96, 84 |
+| `bulletin_4k` | 3840×2160 | **1** | 192, 144, 192, 168 |
 
 **Reel safe zones are not advisory.** Instagram parks its action rail over the
 right 200px and its caption block over the bottom ~470px. Text placed there is
@@ -165,7 +167,16 @@ reel and everywhere the video is reposted it is visible, so it gets the handle
 and the tagline rather than a rectangle of dead black.
 
 **Everything renders at 2× and downsamples once with Lanczos.** Layout code
-speaks in final delivery pixels; `Surface` handles the rest. JPEG is written at
+speaks in final delivery pixels; `Surface` handles the rest. The exception is a
+format already at twice delivery resolution — `bulletin_4k` — which renders 1:1,
+because composing it on a further 2× canvas is a 4× pixel bill for antialiasing
+no one can resolve.
+
+**The design is drawn for a 1080-wide portrait frame and a 1920-wide landscape
+one. Anything larger is the same design scaled, never a bigger canvas.**
+`StoryScene.fs` is that scale and every fixed measure is multiplied by it. A 4K
+bulletin whose type stayed 1920-sized is not a 4K bulletin — it is a 1080p one
+with three quarters of the column empty. See DECISIONS.md D40. JPEG is written at
 q95 with **4:4:4 chroma** — Kannada matras are thin, and coloured type on a red
 rail turns to mush under default 4:2:0 subsampling.
 
@@ -271,6 +282,11 @@ preflight as a failure.
   moving video runs 3-4 aksharas a second. `target_seconds` is a **ceiling, not
   a quota** — scenes are never compressed below reading speed; stories are
   dropped from the end instead.
+- **A reel is the lead story, and it opens on the news.** No logo sting.
+  Instagram and YouTube decide distribution in the first 1–3 seconds; a 1.9s
+  ident is a scroll cue. The masthead already brands every scene. The carousel
+  and the 16:9 bulletin carry the rest of the edition. `reel_cover.jpg` is the
+  cover — set it; do not leave frame 0 as the default.
 - **Write a `reel_line`.** ~45 characters. A print headline of 75 needs ~11s of
   screen time on its own, which is most of a scene.
 - **Full-bleed picture, type seated over its lower half.** Not a photo band
@@ -315,9 +331,9 @@ preflight as a failure.
 | `stat_card` | 1:1 | when the story *is* the number |
 | `carousel` | 1:1 ×N | the day's bulletin: cover → story per slide → sources & follow |
 | `story_card` | 9:16 | Instagram Story, WhatsApp status |
-| `youtube_thumb` | 16:9 | pass a short `hook=`, not the headline |
+| `youtube_thumb` | 16:9 | pass a short `hook=`, not the headline — ≤7 words, and it is guilt-checked like a headline |
 | `broadsheet` | 2:3 | the day's front page |
-| `render_reel` | 9:16 video | the daily reel / Short |
+| `render_reel` | 9:16 video | the lead story as a Reel / Short — no sting |
 
 ---
 

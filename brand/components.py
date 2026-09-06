@@ -79,7 +79,8 @@ def _ss(sh, sf):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def eyebrow(sf: sfx.Surface, x: float, y: float, w: float, story: Story,
-            scale: float = 1.0, on_photo: bool = False) -> float:
+            scale: float = 1.0, on_photo: bool = False,
+            show_location: bool = True) -> float:
     """▌ ಅಪರಾಧ ವರದಿ   CRIME ·············· ಬ್ರಹ್ಮಾವರ"""
     cat = category(story.category)
     rail_h = 34 * scale
@@ -106,7 +107,11 @@ def eyebrow(sf: sfx.Surface, x: float, y: float, w: float, story: Story,
                         C.gold_500, tracking=T.eyebrow[2],
                         shadow=sh) / sf.ss
 
-    if story.location:
+    # A caller that sets the location somewhere more prominent — the thumbnail
+    # puts it at the foot of the column in the accent, because "which town"
+    # is the reason a local viewer clicks — turns it off here rather than
+    # printing the same words twice on one card.
+    if story.location and show_location:
         typo.draw_text(sf.img, story.location, sf.s(x + w), sf.s(bl),
                        typo.font('kn_var', int(sf.s(T.meta[0] * scale)), weight=500),
                        Role.text if on_photo else Role.text_dim,

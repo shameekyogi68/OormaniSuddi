@@ -112,7 +112,7 @@ BULLETIN = Pace('bulletin', Motion.bulletin_hold_max,
 
 
 def pace_for(format_key: str) -> Pace:
-    return BULLETIN if format_key == 'bulletin' else REEL
+    return BULLETIN if format_key in ('bulletin', 'bulletin_4k') else REEL
 
 
 def head_line(story: Story, pace: Pace = REEL) -> str:
@@ -201,6 +201,20 @@ def plan_bulletin(edition: Edition, intro: float = 1.9, outro: float = 3.0,
     60s floor — a floor that exists because YouTube treats sub-60s video as a
     Short and pulls its own frame instead of the thumbnail we render.
 
+    `target` is a CEILING, exactly as it is everywhere else in this module:
+    stories are dropped from the end to fit it and nothing is ever compressed
+    below the time its copy takes to read.
+
+    An earlier version scaled every hold proportionally to land on the target.
+    It was wrong in both directions and silent in both. At `--bulletin-seconds
+    60` a four-story edition needing 21.5 / 23.1 / 15.9 / 18.8s was shown at
+    15.5 / 16.6 / 11.5 / 13.5 — every scene cut below reading time, guarded
+    only by `hold_min`, which is a floor on a scene and says nothing about
+    whether THIS scene's copy fits. At 120 it padded every scene by 65%, which
+    D37 forbids for the same reason a thin edition is not padded. Worse, the
+    short-scene warning was suppressed whenever a target was set — so the one
+    run that needed the warning was the one run that could not produce it.
+
     If even every fact leaves it short, it stays short and the renderer says
     so. A thin edition is a thin edition; padding it would be the video
     equivalent of the guilt-assertion override this project refuses to add.
@@ -213,6 +227,7 @@ def plan_bulletin(edition: Edition, intro: float = 1.9, outro: float = 3.0,
         best = (pace, i, holds, o, used, total)
         if total >= Motion.bulletin_floor:
             break
+
     return best
 
 
@@ -398,6 +413,11 @@ class StoryScene(Scene):
         self.st, self.W, self.H, self.ss, self.dur = story, W, H, ss, dur
         self.i, self.n, self.safe = index, total, safe
         self.pace = pace
+        # Frame scale. The design is drawn for a 1080-wide portrait frame and
+        # a 1920-wide landscape one; anything larger is the SAME design at a
+        # multiple of that size, so every fixed measure is multiplied by it.
+        # 1.0 for reel and the 1080p bulletin, so those are untouched.
+        self.fs = (W / 1920.0) if W > H else (W / 1080.0)
         # In landscape the type takes a column on the left and the picture
         # gets the whole right-hand region at FULL height, rather than being
         # laid full-bleed and then half-covered. Cropping a 4:3 source to
@@ -436,8 +456,9 @@ class StoryScene(Scene):
         """Scrims and masthead — everything that sits on the moving picture."""
         W, H, ss = self.W, self.H, self.ss
         sl, st_, sr, sb = self.safe
+        fs = self.fs
         sf = Surface(W, H, ss, bg=(0, 0, 0, 0))
-        scrim(sf, 0, st_ + 30, C.ink_950, 0.88 if self.kb else 0.62, 0.0, curve=1.5)
+        scrim(sf, 0, st_ + 30 * fs, C.ink_950, 0.88 if self.kb else 0.62, 0.0, curve=1.5)
         if H > W:
             if self.kb is not None:
                 scrim(sf, H * 0.30, H * 0.86, C.ink_950, 0.0, 0.94, curve=1.6)
@@ -461,13 +482,13 @@ class StoryScene(Scene):
             panel(sf, (0, 0, pw, H), alpha(C.ink_950, 0.988))
             # a sliver of light on the seam, then the brand rule, so the
             # column does not simply butt against the photograph
-            vrule(sf, pw - 2, 0, H, alpha(C.paper_50, 0.16), 1.0)
-            vrule(sf, pw, 0, H, C.gold_500, 3.0)
+            vrule(sf, pw - 2 * fs, 0, H, alpha(C.paper_50, 0.16), 1.0 * fs)
+            vrule(sf, pw, 0, H, C.gold_500, 3.0 * fs)
 
         if H > W:
-            cp.masthead(sf, sl, st_ - 118, W - sl * 2, right_top=self.st.date_kn,
+            cp.masthead(sf, sl, st_ - 118 * fs, W - sl * 2, right_top=self.st.date_kn,
                         right_bot=self.st.time_kn, on_photo=self.kb is not None,
-                        scale=0.92)
+                        scale=0.92 * fs)
         else:
             # Everything that is furniture — lockup, date, time — lives in
             # the column. It used to be set over the photograph on the right,
@@ -475,16 +496,17 @@ class StoryScene(Scene):
             # while also obscuring the picture it was sitting on. The column
             # is a solid ground, so none of it needs a shadow to survive.
             pw = self.panel_w
-            by = st_ - 6
-            right = pw - Motion.panel_pad
+            by = st_ - 6 * fs
+            right = pw - Motion.panel_pad * fs
             cp.masthead(sf, sl, by, int(right - sl), on_photo=False,
-                        scale=0.72, rule_below=False)
-            fd = typo.font_for(self.st.date_kn, 'kn_var', sf.s(27), weight=650)
-            ft = typo.font_for(self.st.time_kn, 'kn_var', sf.s(22), weight=440)
-            typo.draw_text(sf.img, self.st.date_kn, sf.s(right), sf.s(by + 32),
+                        scale=0.72 * fs, rule_below=False)
+            fd = typo.font_for(self.st.date_kn, 'kn_var', sf.s(27 * fs), weight=650)
+            ft = typo.font_for(self.st.time_kn, 'kn_var', sf.s(22 * fs), weight=440)
+            typo.draw_text(sf.img, self.st.date_kn, sf.s(right), sf.s(by + 32 * fs),
                            fd, Role.text_hi, anchor_x='r')
-            rule(sf, right - 168, by + 52, right, alpha(C.gold_500, 0.45), 1.0)
-            typo.draw_text(sf.img, self.st.time_kn, sf.s(right), sf.s(by + 88),
+            rule(sf, right - 168 * fs, by + 52 * fs, right,
+                 alpha(C.gold_500, 0.45), 1.0 * fs)
+            typo.draw_text(sf.img, self.st.time_kn, sf.s(right), sf.s(by + 88 * fs),
                            ft, Role.text_dim, anchor_x='r')
             # Only the handle sits on the picture now, so the foot veil can
             # be shallow — enough to carry gold type over a bright desk
@@ -494,16 +516,16 @@ class StoryScene(Scene):
             # Portrait only: the band the platform covers still carries the
             # brand, because it is visible on a paused reel and on every repost.
             band = H - sb
-            rule(sf, sl, band + 54, W - sl, Role.hairline_soft, 1.0)
-            typo.draw_text(sf.img, Brand.handle, sf.s(W / 2), sf.s(band + 122),
-                           typo.font('latin', sf.s(40), weight=760), C.gold_500,
+            rule(sf, sl, band + 54 * fs, W - sl, Role.hairline_soft, 1.0 * fs)
+            typo.draw_text(sf.img, Brand.handle, sf.s(W / 2), sf.s(band + 122 * fs),
+                           typo.font('latin', sf.s(40 * fs), weight=760), C.gold_500,
                            anchor_x='c', tracking=0.015)
-            typo.draw_text(sf.img, Brand.tagline, sf.s(W / 2), sf.s(band + 168),
-                           typo.font('kn_var', sf.s(26), weight=520),
+            typo.draw_text(sf.img, Brand.tagline, sf.s(W / 2), sf.s(band + 168 * fs),
+                           typo.font('kn_var', sf.s(26 * fs), weight=520),
                            Role.text_dim, anchor_x='c')
         else:
-            typo.draw_text(sf.img, Brand.handle, sf.s(W - sl), sf.s(H - sb + 34),
-                           typo.font('latin', sf.s(26), weight=740), C.gold_500,
+            typo.draw_text(sf.img, Brand.handle, sf.s(W - sl), sf.s(H - sb + 34 * fs),
+                           typo.font('latin', sf.s(26 * fs), weight=740), C.gold_500,
                            anchor_x='r', tracking=0.015)
         return sf.img.resize((W, H), Image.Resampling.LANCZOS)
 
@@ -520,16 +542,23 @@ class StoryScene(Scene):
         sl, st_, sr, sb = self.safe
         st = self.st
         landscape = W > H
+        fs = self.fs
         # Portrait keeps clear of Instagram's right action rail. Landscape has
         # no chrome, but a headline set the full 1920 wide is unreadable, so it
         # is measured to a column instead.
-        cw = (int(self.panel_w - sl - Motion.panel_pad) if landscape
+        cw = (int(self.panel_w - sl - Motion.panel_pad * fs) if landscape
               else (W - sl - sr))
         # The type scale is calibrated for a 1080-WIDE portrait frame. Most
         # YouTube viewing is on a phone, where a 1920x1080 video plays about
         # 400px wide — so a 19px source line lands at roughly 4px and is simply
         # gone. Everything small gets scaled up in landscape.
-        ts = 1.38 if landscape else 1.0
+        #
+        # `self.fs` is the FRAME scale on top of that: a 4K bulletin is the
+        # same design at twice the size, so every fixed measure doubles with
+        # it. Without this a 3840-wide render kept 1920-sized type and the
+        # column came out two-thirds empty — which is what the first
+        # `bulletin_4k` cut actually did.
+        ts = (1.38 if landscape else 1.0) * fs
 
         bottom = H - sb
         src_y = bottom - T.micro[0] * ts * 1.5
@@ -567,7 +596,7 @@ class StoryScene(Scene):
         # See DECISIONS.md D38.
         # The column is full height, so the block starts under the masthead
         # rather than inside a slab, and the meta row anchors its foot.
-        region_top = (st_ + 120) if landscape else (st_ + 220)
+        region_top = (st_ + 120 * fs) if landscape else (st_ + 220 * fs)
         # The photo credit belongs on the PHOTO, above the panel, which is also
         # where it reads correctly as a caption.
         # cap_h is reserved in BOTH orientations now. It used to be excluded
@@ -577,8 +606,8 @@ class StoryScene(Scene):
                      - ((d_blk.height / ss + 34 * ts) if d_blk is not None else 0))
         # A narrower column needs a slightly smaller headline and more lines
         # to work with; it has the whole frame height to spend them in.
-        hi = 76 if landscape else 96
-        hb = typo.fit(head_txt, 'kn', ss * hi, ss * T.h4[0], ss * cw,
+        hi = int((76 if landscape else 96) * fs)
+        hb = typo.fit(head_txt, 'kn', ss * hi, ss * int(T.h4[0] * fs), ss * cw,
                       ss * head_room, T.h1[1], max_lines=5 if landscape else 4)
 
         # These must be the SAME steps _sprites() actually advances by, or
@@ -601,7 +630,7 @@ class StoryScene(Scene):
             y = region_top
 
         return SimpleNamespace(
-            landscape=landscape, cw=cw, ts=ts, bottom=bottom, src_y=src_y,
+            landscape=landscape, cw=cw, ts=ts, fs=fs, bottom=bottom, src_y=src_y,
             block_bottom=block_bottom, head_txt=head_txt, sup_txt=sup_txt,
             d_blk=d_blk, cap_h=cap_h, eb_h=eb_h,
             region_top=region_top, hb=hb, block_h=block_h, y=y)
@@ -611,7 +640,7 @@ class StoryScene(Scene):
         W, H, ss = self.W, self.H, self.ss
         sl, st_, sr, sb = self.safe
         st = self.st
-        landscape, cw, ts = m.landscape, m.cw, m.ts
+        landscape, cw, ts, fs = m.landscape, m.cw, m.ts, m.fs
         bottom, src_y, block_bottom = m.bottom, m.src_y, m.block_bottom
         head_txt, sup_txt, d_blk = m.head_txt, m.sup_txt, m.d_blk
         cap_h, eb_h = m.cap_h, m.eb_h
@@ -633,9 +662,9 @@ class StoryScene(Scene):
             # two-line one, and a fixed position left the credit jammed
             # against the last line. Clamped so it can never reach the meta
             # row, which head_room has already reserved the space for.
-            cap_y = (min(y + block_h + 20,
-                         src_y - 36 * ts - cap_h - 12) if landscape
-                     else (y - cap_h - 22))
+            cap_y = (min(y + block_h + 20 * fs,
+                         src_y - 36 * ts - cap_h - 12 * fs) if landscape
+                     else (y - cap_h - 22 * fs))
 
             def cap(sf, _w=cap_w):
                 b = typo.layout(st.credit_line,
@@ -649,13 +678,13 @@ class StoryScene(Scene):
                                 shadow=sh, box_w=sf.s(_w))
             out.append(Sprite(_sprite_from(cap, cap_w, cap_h, ss, 0, 0).img,
                               int(cap_x), int(cap_y),
-                              t_in=0.34, dur=0.5, rise=12))
+                              t_in=0.34, dur=0.5, rise=12 * fs))
 
         def eb(sf):
             cp.eyebrow(sf, 0, 0, cw, st, scale=ts,
                        on_photo=self.kb is not None)
-        out.append(Sprite(_sprite_from(eb, cw, eb_h + 6, ss, 0, 0).img, sl, int(y),
-                          t_in=0.08, dur=0.5, rise=14, wipe=True))
+        out.append(Sprite(_sprite_from(eb, cw, int(eb_h + 6 * fs), ss, 0, 0).img, sl, int(y),
+                          t_in=0.08, dur=0.5, rise=14 * fs, wipe=True))
         y += eb_h + 34 * ts
 
         lh = hb.lh / ss
@@ -665,9 +694,9 @@ class StoryScene(Scene):
                                typo.font('kn', _b.f.size), Role.text_hi,
                                shadow=(0, sf.s(3), sf.s(16), (0, 0, 0, 190)))
             out.append(Sprite(
-                _sprite_from(one, cw, int(lh + hb.first_rise / ss) + 14, ss, 0, 0).img,
+                _sprite_from(one, cw, int(lh + hb.first_rise / ss) + int(14 * fs), ss, 0, 0).img,
                 sl, int(y + k * lh),
-                t_in=0.28 + k * Motion.text_stagger, dur=Motion.text_in, rise=34))
+                t_in=0.28 + k * Motion.text_stagger, dur=Motion.text_in, rise=34 * fs))
         y += hb.height / ss + 34 * ts
 
         if d_blk is not None:
@@ -675,9 +704,9 @@ class StoryScene(Scene):
                 typo.draw_block(sf.img, _b, 0, 0, C.paper_200, box_w=sf.s(cw),
                                 shadow=(0, sf.s(2), sf.s(12), (0, 0, 0, 170)))
             out.append(Sprite(
-                _sprite_from(dk, cw, int(d_blk.height / ss) + 12, ss, 0, 0).img,
+                _sprite_from(dk, cw, int(d_blk.height / ss) + int(12 * fs), ss, 0, 0).img,
                 sl, int(y), t_in=0.30 + len(hb.lines) * Motion.text_stagger + 0.14,
-                dur=Motion.text_in, rise=24))
+                dur=Motion.text_in, rise=24 * fs))
 
         # Meta row. It closes the COLUMN now, not the whole frame, with a
         # hairline above it so the type block ends on a defined edge.
@@ -687,12 +716,12 @@ class StoryScene(Scene):
 
         def src(sf):
             if landscape:
-                rule(sf, 0, 0, meta_w, alpha(C.paper_50, 0.13), 1.0)
+                rule(sf, 0, 0, meta_w, alpha(C.paper_50, 0.13), 1.0 * fs)
             cp.sourceline(sf, 0, pad, meta_w, st, scale=ts)
         out.append(Sprite(
             _sprite_from(src, meta_w, int(T.micro[0] * ts * 1.9 + pad),
                          ss, 0, 0).img,
-            sl, int(src_y - pad), t_in=0.95, dur=0.5, rise=10))
+            sl, int(src_y - pad), t_in=0.95, dur=0.5, rise=10 * fs))
         return out
 
     def frame(self, t: float) -> Image.Image:
@@ -798,15 +827,19 @@ def _sweep(frame: Image.Image, p: float, W: int, H: int) -> Image.Image:
     return out
 
 
-def _progress_bar(frame: Image.Image, p: float, W: int, y: int = 0):
+def _progress_bar(frame: Image.Image, p: float, W: int, y: int = 0,
+                  fs: float = 1.0):
     """A thin gold rule that fills across the video, flush to the top edge.
 
     It used to sit at y=58, which is clear of the masthead in a 9:16 frame and
     runs straight through the logo in a 16:9 one, because landscape has no
     platform chrome to clear and so places the masthead much higher. Flush to
     the edge is both safe at every aspect and how broadcast does it.
+
+    `fs` is the frame scale, so the bar keeps its weight relative to the frame
+    rather than thinning to a hairline on a 4K master.
     """
-    h = 4
+    h = max(2, int(round(4 * fs)))
     d = Image.new('RGBA', (W, h), (0, 0, 0, 0))
     d.paste((*C.paper_50, 34), (0, 0, W, h))
     d.paste((*C.gold_500, 255), (0, 0, max(1, int(W * clamp01(p))), h))
@@ -814,29 +847,49 @@ def _progress_bar(frame: Image.Image, p: float, W: int, y: int = 0):
 
 
 def render_reel(edition: Edition, path: str, format_key: str = 'reel',
-                target_seconds: float | None = 30.0, ss: int = 2,
+                target_seconds: float | None = None, ss: int | None = None,
                 fps: int = Motion.fps, bgm: str | None = None,
                 sfx_dir: str | None = None, keep_frames: bool = False) -> str:
     """Render the day's edition as video and master the audio.
 
     Drives both the 9:16 reel and the 16:9 bulletin: same engine, different
-    `Pace`. See DECISIONS.md D37 for why the bulletin carries the deck.
+    `Pace`. See DECISIONS.md D37 for why the bulletin carries the deck, and
+    D39 for why a reel is the lead story with no logo sting.
     """
     edition.validate()
     F = fmt(format_key)
     W, H, safe = F.w, F.h, F.safe
+    # The design is drawn for a 1080-wide portrait frame and a 1920-wide
+    # landscape one; a larger format is the same design scaled up.
+    frame_scale = (W / 1920.0) if W > H else (W / 1080.0)
+    # A format that is already at 2x delivery resolution does not also need a
+    # 2x supersampled canvas — that is a 4x pixel bill for antialiasing the
+    # eye cannot resolve. `bulletin_4k` declares ss=1 for exactly this reason;
+    # honour it rather than overriding it with the parameter default.
+    if ss is None:
+        ss = F.ss
 
     pace = pace_for(format_key)
     if pace.name == 'bulletin':
         pace, intro_d, holds, outro_d, used, _t = plan_bulletin(
             edition, target=target_seconds)
+        stories = edition.stories[:used]
     else:
+        # D39: a reel is ONE story. The carousel and the 16:9 bulletin carry
+        # the rest of the edition. Four headlines in 30s is a slideshow the
+        # viewer swipes off; a 12–18s lead with the news on frame 0 is what
+        # the platforms actually distribute.
+        lead_ed = replace(edition, stories=edition.stories[:1])
         intro_d, holds, outro_d, used = plan_durations(
-            edition, target=target_seconds, pace=pace)
-    stories = edition.stories[:used]
+            lead_ed, intro=Motion.reel_intro, outro=Motion.reel_outro,
+            target=target_seconds, pace=pace)
+        stories = edition.stories[:used]
+        if used < len(edition.stories):
+            print(f'  · reel is the lead story only '
+                  f'({len(edition.stories) - used} more on the carousel / bulletin)')
     XF = Motion.scene_cross
 
-    if used < len(edition.stories):
+    if pace.name == 'bulletin' and used < len(edition.stories):
         print(f'  ⚠ {len(edition.stories) - used} storie(s) dropped: they will not '
               f'fit {target_seconds:.0f}s at a readable pace. Shorten the '
               f'headlines with reel_line, or raise the target.')
@@ -856,6 +909,9 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
     # short and the viewer never finishes reading. That is the exact failure
     # this module exists to prevent, so it is reported rather than swallowed:
     # the fix is shorter copy, not a longer reel.
+    # Unconditionally. A target is exactly when a scene is most likely to be
+    # short, so suppressing this under a target silenced the only case it was
+    # written for.
     for st, shown in zip(stories, holds):
         need = scene_need(st, pace)
         if need > shown + 0.05:
@@ -866,11 +922,14 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
     print(f'  building scenes … intro {intro_d:.1f}s + '
           f'{" + ".join(f"{h:.1f}" for h in holds)}s + outro {outro_d:.1f}s')
 
-    scenes: list[Scene] = [BrandSting(edition, W, H, ss, intro_d)]
+    scenes: list[Scene] = []
+    if intro_d > 0.05:
+        scenes.append(BrandSting(edition, W, H, ss, intro_d))
     for i, (st, d) in enumerate(zip(stories, holds)):
         scenes.append(StoryScene(st, W, H, ss, d, i, len(stories), safe,
                                  direction=1 if i % 2 == 0 else -1, pace=pace))
-    scenes.append(OutroScene(edition, W, H, ss, outro_d, safe))
+    if outro_d > 0.05:
+        scenes.append(OutroScene(edition, W, H, ss, outro_d, safe))
 
     starts, t0 = [], 0.0
     for sc in scenes:
@@ -893,6 +952,26 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
             print(f'  ⚠ {total:.1f}s is over {Motion.bulletin_ceiling:.0f}s. '
                   f'Nothing is truncated, but that is a long watch for a local '
                   f'bulletin — consider fewer stories or tighter decks.')
+
+    # Cover frame: the first story with its headline up, not frame 0 of a
+    # sting. Instagram and YouTube Shorts both use this as the shelf tile
+    # if you set it; leaving the default (a logo) is a scroll-past.
+    story_scenes = [sc for sc in scenes if isinstance(sc, StoryScene)]
+    if story_scenes:
+        sc0 = story_scenes[0]
+        t_cover = min(max(1.35, Motion.build_in), max(0.4, sc0.dur * 0.55))
+        cover_path = os.path.splitext(path)[0] + '_cover.jpg'
+        os.makedirs(os.path.dirname(os.path.abspath(cover_path)) or '.',
+                    exist_ok=True)
+        sc0.frame(t_cover).convert('RGB').save(
+            cover_path, quality=92, subsampling=0, optimize=True)
+        # A 16:9 bulletin already has a purpose-built thumbnail — yt_thumbnail
+        # .jpg, set at a size that survives the feed. Telling an editor to use
+        # this landscape frame as "the IG / Shorts cover" would send them to
+        # the wrong file for the wrong platform, so the note follows the aspect.
+        where = ('IG / Shorts cover' if H > W
+                 else 'in-video still — the YouTube thumbnail is yt_thumbnail.jpg')
+        print(f'  ✓ cover {os.path.basename(cover_path)}  ({where})')
 
     raw = os.path.join(BASE, 'build', '_reel_video.mp4')
     os.makedirs(os.path.dirname(raw), exist_ok=True)
@@ -930,7 +1009,7 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
             if 0.12 < p < 0.88:
                 f = _sweep(f, (p - 0.12) / 0.76, W, H)
 
-        _progress_bar(f, t / total, W)
+        _progress_bar(f, t / total, W, fs=frame_scale)
         enc.stdin.write(f.convert('RGB').tobytes())
         if k % 60 == 0 or k == n_frames - 1:
             print(f'    frame {k + 1}/{n_frames}  ({t:5.1f}s)', end='\r')
@@ -988,8 +1067,11 @@ def _master_audio(total: float, starts: list[float], holds: list[float],
     k = 0
     if hits:
         hit(1, 0.02, 1.0, f'h{k}'); k += 1          # opener
-    for j, s0 in enumerate(starts[1:-1]):
-        if len(hits) >= 2:
+    # Story scene starts: skip the sting (when there is one) and the outro.
+    # A reel with no sting still needs the headline ping on frame 0.
+    story_starts = starts[1:-1] if intro_d > 0.05 else starts[:-1]
+    for j, s0 in enumerate(story_starts):
+        if len(hits) >= 2 and (intro_d > 0.05 or j > 0):
             hit(2, max(0, s0 - 0.18), 0.9, f'h{k}'); k += 1     # whoosh into scene
         if len(hits) >= 3:
             hit(3, s0 + 0.30, 0.55, f'h{k}'); k += 1            # ping on headline

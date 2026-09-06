@@ -62,6 +62,25 @@ rendering code — nine finished templates already exist.
 
 ---
 
+## Standard Publishing Workflow: Carousel + Individual Reels (10x Reach)
+
+Whenever raw news copy is provided for a bulletin:
+1. **Flawless Kannada Copy**: Natural, concise, grammatically verified Kannada. Numbers must always use Latin numerals (`25`, `29.6`), never Kannada numerals (`೨೫`). Headlines stay under 78 characters; punchy `reel_line` under 46 characters. Crime copy must strictly use allegation markers (ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ).
+2. **Editorial Images**: Generate high-quality photojournalistic images for each story using `generate_image` (or real photographs). Every image carries `nature` (e.g. `'ai'`, `'representative'`), `credit`, `licence: 'own'`, and an honest `caption`.
+3. **Edition JSON**: Save to `editions/YYYY-MM-DD.json`.
+4. **Deliverables Required**:
+   - **Carousel** (`carousel_01_cover.jpg` .. `05`) for complete, swipeable daily coverage.
+   - **Individual Reels for EVERY Story** (`reel_01.mp4`, `reel_02.mp4`, `reel_03.mp4`, etc.) with their respective cover frames (`reel_*_cover.jpg`). Keeping each reel short (9–12s) achieves near 100%+ completion rate and maximum algorithmic reach.
+5. **Complete Copy & Schedule Plan**:
+   - The time-scheduled publishing timetable is **generated** — `render.py`
+     writes `schedule.txt` and `schedule.json` from what it actually rendered.
+     Do not retype it; if a window is wrong, change `copy.REEL_SLOTS` so it is
+     right for every future edition too. See DECISIONS.md D43.
+   - Ready-to-copy Instagram captions with First Comments (pinned questions).
+   - Ready-to-copy YouTube Shorts Titles (<60 chars, mobile search optimized), Descriptions (with snippet and timestamps), and Tags for every single reel.
+
+---
+
 ## Layout of the project
 
 ```

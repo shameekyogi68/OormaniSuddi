@@ -28,8 +28,8 @@ from brand.motion import render_reel
 
 
 def bulletin(edition: Edition, path: str, target_seconds: float | None = None,
-             **kw) -> str:
-    """Render the edition as a 16:9 bulletin.
+             format_key: str = 'bulletin_4k', **kw) -> str:
+    """Render the edition as a 16:9 bulletin in 4K UHD (2160p: 3840x2160).
 
     `target_seconds` is a ceiling as it is everywhere else — scenes are never
     compressed below reading speed. Left as None (the normal case) the bulletin
@@ -37,7 +37,7 @@ def bulletin(edition: Edition, path: str, target_seconds: float | None = None,
     roughly 60-120s. Under 60s it says so rather than padding: YouTube treats
     sub-60s video as a Short and pulls its own frame instead of the thumbnail.
     """
-    return render_reel(edition, path, format_key='bulletin',
+    return render_reel(edition, path, format_key=format_key,
                        target_seconds=target_seconds, **kw)
 
 

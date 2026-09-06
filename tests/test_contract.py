@@ -156,6 +156,19 @@ class CriminalReporting(unittest.TestCase):
             base(headline='ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ', category='crime',
                  reel_line='ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ').validate()
 
+    def test_a_thumbnail_hook_cannot_assert_guilt(self):
+        """`hook` replaces the headline on the thumbnail, so it carries the
+        headline's exposure. Story.validate() cannot see it — it is not a Story
+        field — so the template enforces it on the same terms. Without this the
+        guard is one `--hook` away from being decoration."""
+        import tempfile
+        from templates.youtube_thumb import youtube_thumb
+        st = base(headline='ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ', category='crime')
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(ContentError, 'hook'):
+                youtube_thumb(st, os.path.join(d, 't.jpg'),
+                              hook='ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ')
+
     def test_ageing_out_of_breaking_does_not_relax_the_guilt_guard(self):
         """Demotion is a presentation decision. It must not turn a defamation
         exposure into a clean render just because the story got older."""
@@ -193,6 +206,68 @@ class Copy(unittest.TestCase):
         import brand.copy as C
         self.C = C
 
+    # ── Kannada case marking ────────────────────────────────────────────
+    # Case markers are bound morphemes. "ಉಡುಪಿ ನಲ್ಲಿ" is "Udupi in", and it
+    # was going out on the first comment of every weather post.
+
+    def test_locative_agglutinates_and_never_leaves_a_loose_suffix(self):
+        for place, want in [
+                ('ಉಡುಪಿ', 'ಉಡುಪಿಯಲ್ಲಿ'),            # ends -i  → ಯ
+                ('ಮಲ್ಪೆ', 'ಮಲ್ಪೆಯಲ್ಲಿ'),            # ends -e  → ಯ
+                ('ಮಂಗಳೂರು', 'ಮಂಗಳೂರಿನಲ್ಲಿ'),        # ends -u  → ಿನ
+                ('ಬೈಂದೂರು', 'ಬೈಂದೂರಿನಲ್ಲಿ'),
+                ('ಕುಂದಾಪುರ', 'ಕುಂದಾಪುರದಲ್ಲಿ'),      # inherent -a → ದ
+                ('ಕುಮಟಾ', 'ಕುಮಟಾದಲ್ಲಿ'),            # ends -aa → ದ
+                ('ಉಡುಪಿ ಜಿಲ್ಲೆ', 'ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ'),   # last word only
+        ]:
+            got = self.C.locative(place)
+            self.assertEqual(got, want, f'{place} → {got}')
+            self.assertNotIn(' ನಲ್ಲಿ', got)
+            self.assertNotIn(' ಯಲ್ಲಿ', got)
+
+    def test_inflection_refuses_a_name_it_cannot_analyse(self):
+        """Better a plainer sentence than invented Kannada morphology."""
+        for bad in ('Udupi', 'Mangaluru', '', '2026'):
+            self.assertEqual(self.C.locative(bad), '')
+            self.assertEqual(self.C.belonging(bad), '')
+
+    def test_first_comment_is_grammatical_for_every_place_we_cover(self):
+        for place in list(self.C.PLACE_TAGS) + ['ಕರಾವಳಿ']:
+            for cat in ('weather', 'civic', 'crime'):
+                fc = self.C.first_comment(
+                    base(category=cat, location=place,
+                         headline='ಪ್ರಕರಣ ದಾಖಲು' if cat == 'crime' else 'ಸುದ್ದಿ'))
+                self.assertTrue(fc)
+                # a case marker stranded as its own word is the bug
+                for loose in (' ನಲ್ಲಿ', ' ನಿಂದ', ' ಯಲ್ಲಿ', ' ದಲ್ಲಿ', ' ವರಾ'):
+                    self.assertNotIn(loose, fc, f'{place}/{cat}: {fc}')
+
+    # ── Publishing plan ─────────────────────────────────────────────────
+
+    def test_plan_never_lists_an_asset_that_was_not_rendered(self):
+        plan = self.C.publishing_plan(n_reels=0, has_bulletin=False,
+                                      has_carousel=False, has_story_card=False,
+                                      has_broadsheet=True)
+        assets = ' '.join(s.asset for s in plan)
+        self.assertIn('broadsheet', assets)
+        for absent in ('bulletin.mp4', 'carousel', 'reel_', 'story_9x16'):
+            self.assertNotIn(absent, assets)
+
+    def test_plan_spaces_reels_so_they_do_not_compete_with_each_other(self):
+        plan = self.C.publishing_plan(n_reels=4)
+        mins = sorted(int(s.at[:2]) * 60 + int(s.at[3:])
+                      for s in plan if 'Reels' in s.platform)
+        self.assertEqual(len(mins), 4)
+        for a, b in zip(mins, mins[1:]):
+            self.assertGreaterEqual(b - a, 150, 'reels closer than 2.5h')
+
+    def test_the_long_form_bulletin_is_scheduled_before_the_shorts(self):
+        """It is the only asset on the 4,000-hour path, so it gets the day."""
+        plan = self.C.publishing_plan(n_reels=3)
+        bulletin = next(s for s in plan if 'bulletin.mp4' in s.asset)
+        reels = [s for s in plan if 'Reels' in s.platform]
+        self.assertTrue(all(bulletin.at < r.at for r in reels))
+
     def test_hook_stays_inside_the_instagram_fold(self):
         s = base(headline='ಅ' * 400)
         self.assertLessEqual(len(self.C.hook(s)), self.C.FOLD + 1)
@@ -222,9 +297,73 @@ class Copy(unittest.TestCase):
         self.assertLessEqual(len(tags), 12)
         self.assertEqual(len(tags), len({t.lower() for t in tags}))
 
+    def test_hashtags_lead_with_the_place_not_a_mega_tag(self):
+        """A 15-day-old account cannot win #Karnataka. Place first."""
+        s = base(location='ಉಡುಪಿ', category='weather').validate()
+        tags = self.C.hashtags(s)
+        self.assertIn('Udupi', tags)
+        self.assertIn('UdupiNews', tags)
+        self.assertLess(tags.index('Udupi'), tags.index('OormaniSuddi'))
+
+    def test_caption_opens_on_the_news_and_asks_for_a_signal(self):
+        s = base(location='ಉಡುಪಿ', category='weather',
+                 reel_line='ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್').validate()
+        cap = self.C.instagram_caption(s)
+        self.assertTrue(cap.startswith('ಉಡುಪಿ: ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್')
+                        or cap.startswith('ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್'))
+        self.assertTrue('ಕಾಮೆಂಟ್' in cap or 'ಶೇರ್' in cap or 'ಫಾಲೋ' in cap)
+
+    def test_edition_caption_does_not_open_on_the_date(self):
+        from brand.content import Edition
+        ed = Edition.load('tests/fixture_edition.json')
+        cap = self.C.for_edition(ed).instagram
+        self.assertFalse(cap.startswith(ed.date_kn))
+        self.assertIn('ಸ್ವೈಪ್', cap)
+
+    def test_youtube_title_does_not_append_shorts(self):
+        s = base(location='ಉಡುಪಿ', reel_line='ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್').validate()
+        title = self.C.youtube_title(s, 'short')
+        self.assertNotIn('#Shorts', title)
+        self.assertNotIn('#shorts', title.lower())
+
+    def test_youtube_description_opens_on_the_story_not_the_brand(self):
+        s = base(location='ಉಡುಪಿ', reel_line='ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್',
+                 deck='ಜಿಲ್ಲೆಗೆ ಎಚ್ಚರಿಕೆ.').validate()
+        desc = self.C.youtube_description(s)
+        self.assertNotEqual(desc.split('\n', 1)[0],
+                            'ಊರ್ಮನಿ ಸುದ್ದಿ · ನಮ್ಮ ಊರು  •  ನಮ್ಮ ಧ್ವನಿ')
+        self.assertIn('ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್', desc.split('\n', 1)[0])
+
     def test_story_with_no_photo_still_discloses(self):
         s = base().validate()
         self.assertIn('ಗ್ರಾಫಿಕ್ಸ್', self.C.instagram_caption(s))
+
+    def test_copy_dictionary_only_has_instagram_and_youtube(self):
+        s = base().validate()
+        copy = self.C.for_story(s)
+        d = copy.to_dict()
+        self.assertEqual(set(d.keys()), {'instagram', 'youtube_title', 'youtube_description', 'youtube_tags'})
+        self.assertNotIn('whatsapp', d)
+        self.assertNotIn('x_post', d)
+        self.assertNotIn('alt_text', d)
+
+    def test_write_copy_text_only_contains_instagram_and_youtube(self):
+        import tempfile
+        import render
+        s = base().validate()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            txt_path = render.write_copy(s, tmpdir, 'test_copy')
+            with open(txt_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            self.assertIn('═══ INSTAGRAM CAPTION ═══', content)
+            self.assertIn('═══ INSTAGRAM FIRST COMMENT', content)
+            self.assertIn('═══ YOUTUBE TITLE ═══', content)
+            self.assertIn('═══ YOUTUBE DESCRIPTION ═══', content)
+            self.assertIn('═══ YOUTUBE TAGS ═══', content)
+            self.assertNotIn('WHATSAPP', content)
+            self.assertNotIn('X / TWITTER', content)
+            self.assertNotIn('ALT TEXT', content)
+
 
 
 class BulletinPacing(unittest.TestCase):
@@ -269,6 +408,29 @@ class BulletinPacing(unittest.TestCase):
                 shown + 0.05, need,
                 f'{st.headline[:30]!r} is cut {need - shown:.1f}s short')
 
+    def test_a_bulletin_target_is_a_ceiling_not_a_quota(self):
+        """`--bulletin-seconds` must drop stories, never rescale scenes.
+
+        This path had no test, and a proportional-scaling version of
+        plan_bulletin was wrong in both directions: at 60s it cut every scene
+        below its reading time, at 120s it padded every scene by 65%. Both are
+        the failure the whole module exists to prevent. See DECISIONS.md D44.
+        """
+        for target in (60, 90, 120):
+            pace, i, holds, o, used, _t = self.M.plan_bulletin(
+                self.ed, target=target)
+            for st, shown in zip(self.ed.stories[:used], holds):
+                need = self.M.scene_need(st, pace)
+                # never longer than the copy needs — that is padding
+                self.assertLessEqual(
+                    shown, need + 0.05,
+                    f'target={target}: scene padded to {shown:.1f}s for '
+                    f'{need:.1f}s of copy')
+                # and never shorter, unless it is the documented hold_max
+                # backstop, which the renderer reports rather than hides
+                if shown + 0.05 < need:
+                    self.assertAlmostEqual(shown, pace.hold_max, delta=0.05)
+
     def test_length_is_derived_from_the_copy_and_never_padded(self):
         """A thin edition must come out short and say so, not be inflated."""
         from brand.content import Edition
@@ -287,6 +449,11 @@ class BulletinPacing(unittest.TestCase):
         for st in self.ed.stories:
             self.assertEqual(self.M.head_line(st, self.M.REEL),
                              self.M.reel_line(st))
+
+    def test_a_reel_opens_on_the_story_not_a_sting(self):
+        """D39: logo sting is a scroll cue. Bulletin still has one."""
+        self.assertEqual(self.M.Motion.reel_intro, 0.0)
+        self.assertLess(self.M.Motion.reel_outro, 3.0)
 
 
 if __name__ == '__main__':

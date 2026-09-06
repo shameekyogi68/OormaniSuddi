@@ -26,8 +26,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 import time
+from dataclasses import asdict, replace
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -107,9 +109,10 @@ def write_copy(subject, outdir: str, name: str) -> str:
     with open(txt, 'w', encoding='utf-8') as f:
         f.write('═══ INSTAGRAM CAPTION ' + '═' * 46 + '\n\n')
         f.write(c.instagram + '\n\n')
-        f.write('═══ ALT TEXT ' + '═' * 55 + '\n\n' + c.alt_text + '\n\n')
-        f.write('═══ WHATSAPP ' + '═' * 55 + '\n\n' + c.whatsapp + '\n\n')
-        f.write('═══ X / TWITTER ' + '═' * 52 + '\n\n' + c.x_post + '\n\n')
+        if getattr(c, 'first_comment', ''):
+            f.write('═══ INSTAGRAM FIRST COMMENT '
+                    '(paste the moment you post) ' + '═' * 8 + '\n\n')
+            f.write(c.first_comment + '\n\n')
         f.write('═══ YOUTUBE TITLE ' + '═' * 50 + '\n\n' + c.youtube_title + '\n\n')
         f.write('═══ YOUTUBE DESCRIPTION ' + '═' * 44 + '\n\n')
         f.write(c.youtube_description + '\n\n')
@@ -171,10 +174,36 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         print(f'  ✓ {os.path.basename(p)}')
 
     if run('reel'):
-        p = os.path.join(outdir, 'reel.mp4')
-        TP.render('reel', ed, p, target_seconds=reel_seconds)
-        write_copy(ed, outdir, 'reel_copy')
-        print(f'  ✓ {os.path.basename(p)}  + copy')
+        if len(ed.stories) > 1:
+            for i, st in enumerate(ed.stories, 1):
+                sub_ed = replace(ed, stories=[st])
+                p = os.path.join(outdir, f'reel_{i:02d}.mp4')
+                TP.render('reel', sub_ed, p, target_seconds=reel_seconds)
+                write_copy(st, outdir, f'reel_{i:02d}_copy')
+                cov = os.path.join(outdir, f'reel_{i:02d}_cover.jpg')
+                if os.path.exists(cov):
+                    made.append((cov, 'story'))
+                print(f'  ✓ {os.path.basename(p)}  + copy')
+                if i == 1:
+                    # Keep canonical reel.mp4, reel_cover.jpg, reel_copy for backwards compatibility
+                    p_canon = os.path.join(outdir, 'reel.mp4')
+                    if os.path.exists(p):
+                        shutil.copy2(p, p_canon)
+                    c_named = os.path.join(outdir, f'reel_{i:02d}_cover.jpg')
+                    c_canon = os.path.join(outdir, 'reel_cover.jpg')
+                    if os.path.exists(c_named):
+                        shutil.copy2(c_named, c_canon)
+                    write_copy(st, outdir, 'reel_copy')
+            print('    · set each reel_*_cover.jpg as the Instagram / Shorts cover')
+        else:
+            p = os.path.join(outdir, 'reel.mp4')
+            TP.render('reel', ed, p, target_seconds=reel_seconds)
+            write_copy(ed.stories[0], outdir, 'reel_copy')
+            cov = os.path.join(outdir, 'reel_cover.jpg')
+            if os.path.exists(cov):
+                made.append((cov, 'story'))
+            print(f'  ✓ {os.path.basename(p)}  + copy')
+            print('    · set reel_cover.jpg as the Instagram / Shorts cover')
 
     # The 16:9 long-form cut. yt_thumbnail.jpg above is built for THIS video —
     # without it the channel renders a thumbnail for a video that does not
@@ -185,6 +214,29 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         TP.render('bulletin', ed, p, target_seconds=bulletin_seconds)
         write_copy(ed, outdir, 'bulletin_copy')
         print(f'  ✓ {os.path.basename(p)}  + copy')
+
+    # The publishing plan. AGENTS.md has asked for a scheduled timetable as a
+    # deliverable since the workflow was written, and it was being retyped by
+    # hand every morning — which is exactly how the times drift and the first
+    # comment gets forgotten. Derived from what was actually rendered, so it
+    # can never list a reel that does not exist.
+    kinds = [k for _f, k in made]
+    n_reels = len([f for f, _k in made
+                   if os.path.basename(f).startswith('reel_')
+                   and f.endswith('_cover.jpg')])
+    plan = copywriter.publishing_plan(
+        n_reels=n_reels,
+        has_bulletin=os.path.exists(os.path.join(outdir, 'bulletin.mp4')),
+        has_carousel=os.path.exists(os.path.join(outdir, 'carousel_01_cover.jpg')),
+        has_story_card=os.path.exists(os.path.join(outdir, 'story_9x16.jpg')),
+        has_broadsheet=os.path.exists(os.path.join(outdir, 'broadsheet.jpg')))
+    if plan:
+        with open(os.path.join(outdir, 'schedule.txt'), 'w', encoding='utf-8') as f:
+            f.write(copywriter.plan_text(plan, ed.date_kn))
+        with open(os.path.join(outdir, 'schedule.json'), 'w', encoding='utf-8') as f:
+            json.dump([asdict(x) for x in plan], f, indent=2, ensure_ascii=False)
+            f.write('\n')
+        print(f'  ✓ schedule.txt  ({len(plan)} slots) + schedule.json')
 
     return made
 

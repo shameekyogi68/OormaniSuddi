@@ -166,17 +166,17 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
 
     Spec(key='reel', module='reel', entry='render_reel',
          takes='edition', format='reel', size=(1080, 1920), produces='file',
-         summary='9:16 video of the edition, with mastered audio.',
-         when='One per edition. Scene length follows reading time — give each '
-              'story a short `reel_line` (~45 chars) or the scenes run long.',
+         summary='9:16 Short of the LEAD story, with mastered audio.',
+         when='One per edition — the lead only. The carousel and the 16:9 '
+              'bulletin carry the rest. Opens on the news, not a logo sting.',
          requires=['stories', 'date', 'edition_no', 'strapline'],
          accepts=['target_seconds'],
-         limits={'stories': 5, 'reel_line_chars': 46,
-                 'target_seconds_min': 15, 'target_seconds_max': 90},
-         notes='target_seconds is a CEILING, not a quota — scenes are never '
-               'compressed below reading speed; stories are dropped from the '
-               'end instead. A 75-char headline needs ~11s on screen, so write '
-               'a reel_line. Audio is normalised to -14 LUFS / -1.5 dBTP.'),
+         limits={'stories': 1, 'reel_line_chars': 46,
+                 'target_seconds_min': 8, 'target_seconds_max': 45},
+         notes='A reel is a glance in a vertical feed: one story, no sting, '
+               'headline on frame 0. Writes reel_cover.jpg — set that as the '
+               'Instagram / Shorts cover. Write a reel_line of ~45 chars. '
+               'Audio is normalised to -14 LUFS / -1.5 dBTP.'),
 ]}
 
 
