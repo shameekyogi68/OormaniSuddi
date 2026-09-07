@@ -16,6 +16,12 @@ out/*
 # Reel intermediates. Rebuilt on every render.
 build/
 
+# ── Local secrets ─────────────────────────────────────────────────────────────
+.env
+.env.*
+.gemini_key
+*.secret
+
 # ── Editor / OS noise ────────────────────────────────────────────────────────
 .DS_Store
 *.swp

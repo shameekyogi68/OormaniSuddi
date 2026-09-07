@@ -35,11 +35,15 @@ That is not automatically a bug — but do not re-bless it without looking at
   missing `reel_line` on a long headline is a real note worth acting on.
 
 ## Things that are genuinely load-bearing
+ 
+* **Strict Workspace Isolation**: All actions, file operations, searches, and
+  process executions are strictly jailed within this repository. Never read,
+  write, or execute outside `/Users/shameekyogi/Oormani Suddi`.
+* `Story.validate()` enforces Indian criminal-reporting law, not house style.
+  `headline` and `reel_line` are checked for guilt assertion **on their own**,
+  because each is displayed with no other copy around it. Never add an override
+  flag — see DECISIONS.md D29 for why, and what was published before it existed.
 
-`Story.validate()` enforces Indian criminal-reporting law, not house style.
-`headline` and `reel_line` are checked for guilt assertion **on their own**,
-because each is displayed with no other copy around it. Never add an override
-flag — see DECISIONS.md D29 for why, and what was published before it existed.
 
 Regenerate derived files after touching the registry, categories, or Story
 fields — they cannot be edited by hand:

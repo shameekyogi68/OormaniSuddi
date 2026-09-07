@@ -93,7 +93,7 @@ def load(path: str):
 #  RENDER
 # ─────────────────────────────────────────────────────────────────────────────
 
-def write_copy(subject, outdir: str, name: str) -> str:
+def write_copy(subject, outdir: str, name: str, voice_script: str | None = None) -> str:
     """Write the post copy next to the artwork.
 
     Artwork on its own is not a post. Every render gets a .txt you can paste
@@ -102,6 +102,8 @@ def write_copy(subject, outdir: str, name: str) -> str:
     c = (copywriter.for_edition(subject) if isinstance(subject, Edition)
          else copywriter.for_story(subject))
     d = c.to_dict()
+    if voice_script:
+        d['voiceover_script'] = voice_script
     with open(os.path.join(outdir, f'{name}.json'), 'w', encoding='utf-8') as f:
         json.dump(d, f, indent=2, ensure_ascii=False)
         f.write('\n')
@@ -118,6 +120,9 @@ def write_copy(subject, outdir: str, name: str) -> str:
         f.write(c.youtube_description + '\n\n')
         f.write('═══ YOUTUBE TAGS ' + '═' * 51 + '\n\n')
         f.write(', '.join(c.youtube_tags) + '\n')
+        if voice_script:
+            f.write('\n═══ KANNADA VOICEOVER NARRATION SCRIPT (READ-OVER) ' + '═' * 20 + '\n\n')
+            f.write(voice_script + '\n')
     return txt
 
 
@@ -174,36 +179,70 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         print(f'  ✓ {os.path.basename(p)}')
 
     if run('reel'):
+        # Editorial filter: only stories meeting the 10/10 standard (is_reel=True)
+        # get rendered as vertical reels. Routine or low-visual stories stay in
+        # carousel/posts to preserve channel retention and algorithmic health.
+        reel_stories = [(orig_idx, st) for orig_idx, st in enumerate(ed.stories, 1)
+                        if getattr(st, 'is_reel', True)]
+
         if len(ed.stories) > 1:
-            for i, st in enumerate(ed.stories, 1):
+            if not reel_stories:
+                print('  · no stories qualified for reels (is_reel=false on all)')
+            for r, (orig_idx, st) in enumerate(reel_stories, 1):
                 sub_ed = replace(ed, stories=[st])
-                p = os.path.join(outdir, f'reel_{i:02d}.mp4')
-                TP.render('reel', sub_ed, p, target_seconds=reel_seconds)
-                write_copy(st, outdir, f'reel_{i:02d}_copy')
-                cov = os.path.join(outdir, f'reel_{i:02d}_cover.jpg')
+                p = os.path.join(outdir, f'reel_{r:02d}.mp4')
+                vo_path = os.path.join(outdir, f'reel_{r:02d}_voiceover.mp3')
+                vo_script = None
+                try:
+                    from brand.voice import synthesize_narration
+                    _, vo_dur, vo_script = synthesize_narration(st, vo_path)
+                    print(f'    · voiceover synthesized ({vo_dur:.1f}s)')
+                except Exception as e:
+                    print(f'    ! voiceover synthesis failed: {e}')
+                    vo_path = None
+                TP.render('reel', sub_ed, p, target_seconds=reel_seconds, voiceover=vo_path)
+                write_copy(st, outdir, f'reel_{r:02d}_copy', voice_script=vo_script)
+                cov = os.path.join(outdir, f'reel_{r:02d}_cover.jpg')
                 if os.path.exists(cov):
                     made.append((cov, 'story'))
-                print(f'  ✓ {os.path.basename(p)}  + copy')
-                if i == 1:
+                print(f'  ✓ {os.path.basename(p)}  (story {orig_idx:02d}) + copy')
+                if r == 1:
                     # Keep canonical reel.mp4, reel_cover.jpg, reel_copy for backwards compatibility
                     p_canon = os.path.join(outdir, 'reel.mp4')
                     if os.path.exists(p):
                         shutil.copy2(p, p_canon)
-                    c_named = os.path.join(outdir, f'reel_{i:02d}_cover.jpg')
+                    c_named = os.path.join(outdir, f'reel_{r:02d}_cover.jpg')
                     c_canon = os.path.join(outdir, 'reel_cover.jpg')
                     if os.path.exists(c_named):
                         shutil.copy2(c_named, c_canon)
-                    write_copy(st, outdir, 'reel_copy')
-            print('    · set each reel_*_cover.jpg as the Instagram / Shorts cover')
+                    vo_canon = os.path.join(outdir, 'reel_voiceover.mp3')
+                    if vo_path and os.path.exists(vo_path):
+                        shutil.copy2(vo_path, vo_canon)
+                    write_copy(st, outdir, 'reel_copy', voice_script=vo_script)
+            if reel_stories:
+                print('    · set each reel_*_cover.jpg as the Instagram / Shorts cover')
         else:
-            p = os.path.join(outdir, 'reel.mp4')
-            TP.render('reel', ed, p, target_seconds=reel_seconds)
-            write_copy(ed.stories[0], outdir, 'reel_copy')
-            cov = os.path.join(outdir, 'reel_cover.jpg')
-            if os.path.exists(cov):
-                made.append((cov, 'story'))
-            print(f'  ✓ {os.path.basename(p)}  + copy')
-            print('    · set reel_cover.jpg as the Instagram / Shorts cover')
+            lead = ed.stories[0]
+            if getattr(lead, 'is_reel', True):
+                p = os.path.join(outdir, 'reel.mp4')
+                vo_path = os.path.join(outdir, 'reel_voiceover.mp3')
+                vo_script = None
+                try:
+                    from brand.voice import synthesize_narration
+                    _, vo_dur, vo_script = synthesize_narration(lead, vo_path)
+                    print(f'    · voiceover synthesized ({vo_dur:.1f}s)')
+                except Exception as e:
+                    print(f'    ! voiceover synthesis failed: {e}')
+                    vo_path = None
+                TP.render('reel', ed, p, target_seconds=reel_seconds, voiceover=vo_path)
+                write_copy(lead, outdir, 'reel_copy', voice_script=vo_script)
+                cov = os.path.join(outdir, 'reel_cover.jpg')
+                if os.path.exists(cov):
+                    made.append((cov, 'story'))
+                print(f'  ✓ {os.path.basename(p)}  + copy')
+                print('    · set reel_cover.jpg as the Instagram / Shorts cover')
+            else:
+                print('  · lead story is_reel=false; skipping reel.')
 
     # The 16:9 long-form cut. yt_thumbnail.jpg above is built for THIS video —
     # without it the channel renders a thumbnail for a video that does not

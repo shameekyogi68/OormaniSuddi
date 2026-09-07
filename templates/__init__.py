@@ -170,7 +170,7 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
          when='One per edition — the lead only. The carousel and the 16:9 '
               'bulletin carry the rest. Opens on the news, not a logo sting.',
          requires=['stories', 'date', 'edition_no', 'strapline'],
-         accepts=['target_seconds'],
+         accepts=['target_seconds', 'voiceover'],
          limits={'stories': 1, 'reel_line_chars': 46,
                  'target_seconds_min': 8, 'target_seconds_max': 45},
          notes='A reel is a glance in a vertical feed: one story, no sting, '

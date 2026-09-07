@@ -159,6 +159,26 @@ def preflight(story: Story, format_key: str = 'post', hook: str = '') -> Report:
             and not story.photo.caption:
         r.warn.append('a photograph of the actual scene should say what it shows.')
 
+    # ─────────────────────────────────────────────────────────────────────────
+    # YouTube Monetization (AdSense Green Dollar) & Legal Safeguards
+    # ─────────────────────────────────────────────────────────────────────────
+    DEMONETIZATION_TRIGGERS = [
+        'ರಕ್ತಸಿಕ್ತ', 'ಘೋರ ರಕ್ತಪಾತ', 'ರುಂಡಚೆಂಡಾಡಿದ', 'ತುಂಡು ತುಂಡಾಗಿ ಕತ್ತರಿಸಿದ',
+        'ಬರ್ಬರ ಹತ್ಯೆ', 'ಕ್ರೂರವಾಗಿ ಕೊಚ್ಚಿ', 'ಹೆಣಗಳ ರಾಶಿ',
+    ]
+    for trig in DEMONETIZATION_TRIGGERS:
+        if trig in joined:
+            r.warn.append(
+                f'YouTube Monetization Guard: "{trig}" detected in story copy. '
+                'Sensationalized/graphic violence terms can trigger YouTube Yellow Dollar '
+                '(limited ads). Use sober journalistic language.')
+
+    MINOR_TERMS = ['ಬಾಲಕ', 'ಬಾಲಕಿ', 'ಅಪ್ರಾಪ್ತ', 'ಶಾಲಾ ವಿದ್ಯಾರ್ಥಿ', 'ಮಗು']
+    if story.category == 'crime' and any(term in joined for term in MINOR_TERMS) and not story.involves_minor:
+        r.warn.append(
+            'Legal Guard (POCSO / JJ Act): Story mentions minors/children in a crime context '
+            'but involves_minor is not set to true. Set involves_minor: true to protect legal compliance.')
+
     return r
 
 

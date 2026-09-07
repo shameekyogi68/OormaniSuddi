@@ -155,7 +155,9 @@ Exceed these and preflight warns; exceed them badly and it fails.
 | `points` | 3 items, ~150 chars each | extras are dropped from the bottom |
 | `numbers` | 3 pairs | 4 crowds |
 | `hook` | ~7 words | warns — the thumbnail is read at 210 px wide |
-| `stories` | 3–4 per edition | carousel carries all stories; reel engine produces individual short reels (reel_01, reel_02...) for 10x retention |
+| `stories` | 3–4 per edition | carousel carries all stories; reel engine produces individual short reels (reel_01, reel_02...) ONLY for 10/10 reel-worthy stories (`is_reel: true`) |
+
+**`is_reel`: set `false` on routine, dry, or non-visual news.** Carousel and Posts cover every story in the edition so the audience has full news coverage. But vertical video algorithms severely punish low completion rates: only stories that score 10/10 in visual drama, public urgency, high stakes, or viral regional talkability should become reels (`is_reel: true`). Routine administrative circulars, holiday notices, tenders, or date extensions should set `"is_reel": false` to protect channel watch time and distribution.
 
 **Numerals: Latin (25, 1077, 40-50), never Kannada (೨೫).** This matches Kannada
 print and broadcast practice. Mixing the two systems inside one card is a

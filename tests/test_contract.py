@@ -29,7 +29,7 @@ def base(**kw):
 
 
 def pic(**kw):
-    d = dict(path='assets/monsoon_alert.jpg', credit='ವರದಿಗಾರರಿಂದ', licence='own')
+    d = dict(path='assets/udupi_coastal_storm.jpg', credit='ವರದಿಗಾರರಿಂದ', licence='own')
     d.update(kw)
     return Photo(**d)
 
@@ -87,12 +87,23 @@ class JsonDoor(unittest.TestCase):
             Story.from_dict({'headline': 'x', 'source': ['a']})
 
     def test_round_trip_is_stable(self):
-        s = base(deck='ಪರೀಕ್ಷೆ', points=['ಒಂದು', 'ಎರಡು'], photo=pic(credit='ಸಂಗ್ರಹ'))
+        s = base(deck='ಪರೀಕ್ಷೆ', points=['ಒಂದು', 'ಎರಡು'], photo=pic(credit='ಸಂಗ್ರಹ'), is_reel=False)
         again = Story.from_dict(s.to_dict())
         self.assertEqual(again.headline, s.headline)
         self.assertEqual(again.points, s.points)
         self.assertEqual(again.photo.credit, s.photo.credit)
         self.assertEqual(again.published_at, s.published_at)
+        self.assertEqual(again.is_reel, False)
+
+    def test_is_reel_default_and_aliases(self):
+        s_default = Story.from_dict({'headline': 'ಪರೀಕ್ಷೆ', 'sources': ['ಮೂಲ']})
+        self.assertTrue(s_default.is_reel)
+
+        s_false = Story.from_dict({'headline': 'ಪರೀಕ್ಷೆ', 'sources': ['ಮೂಲ'], 'is_reel': False})
+        self.assertFalse(s_false.is_reel)
+
+        s_alias = Story.from_dict({'headline': 'ಪರೀಕ್ಷೆ', 'sources': ['ಮೂಲ'], 'reel': False})
+        self.assertFalse(s_alias.is_reel)
 
 
 class Preflight(unittest.TestCase):

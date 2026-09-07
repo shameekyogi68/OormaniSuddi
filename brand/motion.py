@@ -30,7 +30,7 @@ import subprocess
 import numpy as np
 from dataclasses import dataclass, replace, field
 from types import SimpleNamespace
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from . import typo, components as cp
 from .surface import (Surface, scrim, rule, panel, vgradient,
@@ -397,6 +397,60 @@ class BrandSting(Scene):
         return f
 
 
+def _draw_chapter_ticker(sf: Surface, x: float, y: float, w: float,
+                         cur_idx: int, names: list[str], fs: float = 1.0):
+    """Draws a sleek broadcast chapter indicator across the safe width."""
+    if not names or len(names) <= 1:
+        return
+    draw = ImageDraw.Draw(sf.img)
+    n = len(names)
+    f_txt = typo.font('kn_var', int(sf.s(18 * fs)), weight=650)
+
+    items = []
+    for k, nm in enumerate(names):
+        lbl = f"{k+1}. {nm}"
+        tw = typo.text_width(lbl, f_txt)
+        pw = tw + sf.s(22 * fs)
+        items.append((lbl, pw))
+
+    sep_w = sf.s(14 * fs)
+    total_w = sum(pw for _, pw in items) + (n - 1) * sep_w
+    start_x = sf.s(x) + max(0, (sf.s(w) - total_w) / 2)
+    h_pill = sf.s(30 * fs)
+
+    cx = start_x
+    for k, (lbl, pw) in enumerate(items):
+        is_active = (k == cur_idx)
+        is_past = (k < cur_idx)
+
+        if is_active:
+            fill_col = (*C.gold_500, 235)
+            outline_col = (*C.gold_400, 255)
+            text_col = C.ink_950
+        elif is_past:
+            fill_col = (*C.paper_50, 32)
+            outline_col = (*C.gold_500, 80)
+            text_col = C.paper_200
+        else:
+            fill_col = (*C.paper_50, 16)
+            outline_col = (*C.paper_50, 40)
+            text_col = C.paper_300
+
+        draw.rounded_rectangle((cx, sf.s(y), cx + pw, sf.s(y) + h_pill),
+                               radius=int(h_pill * 0.5),
+                               fill=fill_col, outline=outline_col, width=max(1, int(sf.s(1.0 * fs))))
+        rise, _ = typo.ink_extents(lbl, f_txt)
+        typo.draw_text(sf.img, lbl, cx + pw / 2, sf.s(y) + (h_pill + rise) * 0.50, f_txt,
+                       text_col, anchor_x='c')
+        cx += pw
+        if k < n - 1:
+            f_sep = typo.font('latin', int(sf.s(15 * fs)), weight=700)
+            rise_sep, _ = typo.ink_extents("▸", f_sep)
+            typo.draw_text(sf.img, "▸", cx + sep_w / 2, sf.s(y) + (h_pill + rise_sep) * 0.50,
+                           f_sep, C.paper_300, anchor_x='c')
+            cx += sep_w
+
+
 class StoryScene(Scene):
     """Full-bleed picture with the type seated over its lower half.
 
@@ -409,10 +463,13 @@ class StoryScene(Scene):
 
     def __init__(self, story: Story, W: int, H: int, ss: int, dur: float,
                  index: int, total: int, safe, direction: int = 1,
-                 pace: Pace = REEL):
+                 pace: Pace = REEL, chapter_idx: int = 0,
+                 chapter_names: list[str] | None = None):
         self.st, self.W, self.H, self.ss, self.dur = story, W, H, ss, dur
         self.i, self.n, self.safe = index, total, safe
         self.pace = pace
+        self.chapter_idx = chapter_idx
+        self.chapter_names = chapter_names
         # Frame scale. The design is drawn for a 1080-wide portrait frame and
         # a 1920-wide landscape one; anything larger is the SAME design at a
         # multiple of that size, so every fixed measure is multiplied by it.
@@ -735,6 +792,189 @@ class StoryScene(Scene):
         return f
 
 
+class ChapterScene(Scene):
+    """Deep-dive chapter scene: focuses on a key fact or public advisory.
+
+    Shows Ken Burns camera motion (alternating angle or gallery photo),
+    top masthead with chapter tracker, and a structured lower-third card
+    with a badge pill and high-legibility Kannada text.
+    """
+
+    def __init__(self, story: Story, W: int, H: int, ss: int, dur: float,
+                 badge: str, text: str, chapter_idx: int, total_chapters: int,
+                 chapter_names: list[str] | None = None, safe=None,
+                 photo_path: str | None = None, direction: int = 1,
+                 is_alert: bool = False, pace: Pace = REEL,
+                 photo=None):
+        self.st, self.W, self.H, self.ss, self.dur = story, W, H, ss, dur
+        self.badge = badge
+        self.text = text
+        self.chapter_idx = chapter_idx
+        self.total_chapters = total_chapters
+        self.chapter_names = chapter_names
+        self.safe = safe
+        self.is_alert = is_alert
+        self.pace = pace
+        self.fs = (W / 1920.0) if W > H else (W / 1080.0)
+        self.panel_w = int(W * Motion.panel_width) if W > H else 0
+        self.photo_x = self.panel_w
+        self.photo_w = W - self.panel_w
+
+        pic = photo_path if (photo_path and os.path.exists(photo_path)) else (
+            self.st.photo.path if self.st.photo and os.path.exists(self.st.photo.path) else None)
+        self.kb = None
+        if pic:
+            focal = photo.focal if (photo and photo.focal) else (
+                self.st.photo.focal if self.st.photo else (0.5, 0.45))
+            self.kb = KenBurns(pic, self.photo_w, H, focal=focal, direction=direction)
+
+        self.bed = self._bed()
+        self.over = self._over()
+        self.sprites = self._sprites()
+
+    def _bed(self) -> Image.Image:
+        sf = Surface(self.W, self.H, self.ss)
+        cp.page_base(sf, 0.5)
+        if self.kb is None:
+            editorial_plate(sf, (self.photo_x, 0, self.W, self.H),
+                            category(self.st.category), seed=self.badge + self.text,
+                            show_word=self.W > self.H)
+        grain(sf, Grade.grain, Grade.grain_shadow_bias)
+        return sf.img.resize((self.W, self.H), Image.Resampling.LANCZOS).convert('RGBA')
+
+    def _over(self) -> Image.Image:
+        W, H, ss = self.W, self.H, self.ss
+        sl, st_, sr, sb = self.safe
+        fs = self.fs
+        sf = Surface(W, H, ss, bg=(0, 0, 0, 0))
+        scrim(sf, 0, st_ + 30 * fs, C.ink_950, 0.88 if self.kb else 0.62, 0.0, curve=1.5)
+
+        if H > W:
+            # Portrait: deep gradient at lower half to frame fact card cleanly
+            if self.kb is not None:
+                scrim(sf, H * 0.36, H * 0.88, C.ink_950, 0.0, 0.95, curve=1.6)
+                scrim(sf, H * 0.88, H, C.ink_950, 0.95, 0.99, curve=1.0)
+            else:
+                scrim(sf, H * 0.42, H * 0.90, C.ink_950, 0.0, 0.90, curve=1.5)
+            cp.masthead(sf, sl, st_ - 118 * fs, W - sl * 2, right_top=self.st.date_kn,
+                        right_bot=self.st.time_kn, on_photo=self.kb is not None,
+                        scale=0.92 * fs)
+            band = H - sb
+            rule(sf, sl, band + 54 * fs, W - sl, Role.hairline_soft, 1.0 * fs)
+            typo.draw_text(sf.img, Brand.handle, sf.s(W / 2), sf.s(band + 122 * fs),
+                           typo.font('latin', sf.s(40 * fs), weight=760), C.gold_500,
+                           anchor_x='c', tracking=0.015)
+            typo.draw_text(sf.img, Brand.tagline, sf.s(W / 2), sf.s(band + 168 * fs),
+                           typo.font('kn_var', sf.s(26 * fs), weight=520),
+                           Role.text_dim, anchor_x='c')
+        else:
+            # Landscape
+            pw = self.panel_w
+            panel(sf, (0, 0, pw, H), alpha(C.ink_950, 0.988))
+            vrule(sf, pw - 2 * fs, 0, H, alpha(C.paper_50, 0.16), 1.0 * fs)
+            vrule(sf, pw, 0, H, C.gold_500, 3.0 * fs)
+            by = st_ - 6 * fs
+            right = pw - Motion.panel_pad * fs
+            cp.masthead(sf, sl, by, int(right - sl), on_photo=False,
+                        scale=0.72 * fs, rule_below=False)
+            fd = typo.font_for(self.st.date_kn, 'kn_var', sf.s(27 * fs), weight=650)
+            ft = typo.font_for(self.st.time_kn, 'kn_var', sf.s(22 * fs), weight=440)
+            typo.draw_text(sf.img, self.st.date_kn, sf.s(right), sf.s(by + 32 * fs),
+                           fd, Role.text_hi, anchor_x='r')
+            rule(sf, right - 168 * fs, by + 52 * fs, right,
+                 alpha(C.gold_500, 0.45), 1.0 * fs)
+            typo.draw_text(sf.img, self.st.time_kn, sf.s(right), sf.s(by + 88 * fs),
+                           ft, Role.text_dim, anchor_x='r')
+            scrim(sf, H * 0.90, H, C.ink_950, 0.0, 0.80, curve=1.8)
+            typo.draw_text(sf.img, Brand.handle, sf.s(W - sl), sf.s(H - sb + 34 * fs),
+                           typo.font('latin', sf.s(26 * fs), weight=740), C.gold_500,
+                           anchor_x='r', tracking=0.015)
+        return sf.img.resize((W, H), Image.Resampling.LANCZOS)
+
+    def _sprites(self) -> list[Sprite]:
+        W, H, ss = self.W, self.H, self.ss
+        sl, st_, sr, sb = self.safe
+        fs = self.fs
+        landscape = W > H
+        cw = (int(self.panel_w - sl - Motion.panel_pad * fs) if landscape else (W - sl - sr))
+        ts = (1.38 if landscape else 1.0) * fs
+
+        out: list[Sprite] = []
+
+        bottom = H - sb
+        src_y = bottom - T.micro[0] * ts * 1.5
+
+        # Fit text block with comfortable, large reading size
+        avail_h = int(340 * ts)
+        blk = typo.fit(self.text, 'kn_var', size_hi=int(46 * ts), size_lo=int(26 * ts),
+                       max_w=cw, max_h=avail_h, leading=1.42, weight=620)
+
+        badge_h = int(36 * ts)
+        gap = int(22 * ts)
+        total_block_h = badge_h + gap + blk.height + gap
+
+        y = src_y - total_block_h - 20 * ts
+
+        # 1. Badge Pill
+        def draw_badge(sf):
+            f_bd = typo.font('kn_var', int(sf.s(20 * ts)), weight=700)
+            bw = typo.text_width(self.badge, f_bd) + sf.s(32 * ts)
+            bh = sf.s(badge_h)
+            d = ImageDraw.Draw(sf.img)
+            if self.is_alert:
+                fill_col = (195, 45, 30, 235)
+                out_col = (255, 90, 75, 255)
+                txt_col = C.paper_50
+            else:
+                fill_col = (*C.gold_500, 235)
+                out_col = (*C.gold_400, 255)
+                txt_col = C.ink_950
+            d.rounded_rectangle((0, 0, bw, bh), radius=int(bh * 0.4),
+                                fill=fill_col, outline=out_col,
+                                width=max(1, int(sf.s(1.0 * fs))))
+            rise_bd, _ = typo.ink_extents(self.badge, f_bd)
+            typo.draw_text(sf.img, self.badge, bw / 2, (bh + rise_bd) * 0.50, f_bd, txt_col,
+                           anchor_x='c')
+
+        out.append(Sprite(_sprite_from(draw_badge, cw, badge_h + int(8 * fs), ss, 0, 0).img,
+                          sl, int(y), t_in=0.10, dur=0.45, rise=16 * fs, wipe=True))
+
+        # 2. Text Block Sprites (cinematic line stagger)
+        y_text = y + badge_h + gap
+        lh = blk.lh / ss
+        for k, line in enumerate(blk.lines):
+            def one_line(sf, _l=line, _b=blk):
+                typo.draw_text(sf.img, _l, 0, sf.s(_b.first_rise / ss),
+                               typo.font('kn_var', _b.f.size, weight=620), Role.text_hi,
+                               shadow=(0, sf.s(3), sf.s(16), (0, 0, 0, 195)))
+            out.append(Sprite(
+                _sprite_from(one_line, cw, int(lh + blk.first_rise / ss) + int(14 * fs), ss, 0, 0).img,
+                sl, int(y_text + k * lh),
+                t_in=0.22 + k * Motion.text_stagger, dur=Motion.text_in, rise=28 * fs))
+
+        # 3. Sourceline Sprite
+        pad = 36 * ts if landscape else 0
+        def src(sf):
+            if landscape:
+                rule(sf, 0, 0, cw, alpha(C.paper_50, 0.13), 1.0 * fs)
+            cp.sourceline(sf, 0, pad, cw, self.st, scale=ts)
+        out.append(Sprite(
+            _sprite_from(src, cw, int(T.micro[0] * ts * 1.9 + pad), ss, 0, 0).img,
+            sl, int(src_y - pad), t_in=0.85, dur=0.45, rise=10 * fs))
+
+        return out
+
+    def frame(self, t: float) -> Image.Image:
+        f = self.bed.copy()
+        if self.kb:
+            f.alpha_composite(self.kb.frame(t / self.dur).convert('RGBA'),
+                              (self.photo_x, 0))
+        f.alpha_composite(self.over, (0, 0))
+        for s in self.sprites:
+            s.draw(f, t)
+        return f
+
+
 class OutroScene(Scene):
     def __init__(self, edition: Edition, W: int, H: int, ss: int, dur: float, safe):
         self.W, self.H, self.ss, self.dur, self.safe = W, H, ss, dur, safe
@@ -793,10 +1033,14 @@ class OutroScene(Scene):
 
     def frame(self, t: float) -> Image.Image:
         f = self.bed.copy()
-        p = phase(t, 0.0, 0.8, Ease.out_back)
-        size = int(230 * (0.80 + 0.20 * p))
-        lg = Image.open(os.path.join(BASE, 'assets', 'logo_clean_circle.png')) \
-            .convert('RGBA').resize((size, size), Image.Resampling.LANCZOS)
+        p = phase(t, 0.0, 0.70, Ease.out_back)
+        p_live = clamp01(t / max(0.1, self.dur))
+        # Subtle continuous cinematic expansion (1.0 -> 1.035) ensures the frame never freezes or feels stuck
+        scale = (0.82 + 0.18 * p) * (1.0 + 0.035 * p_live)
+        size = int(round(230 * scale))
+        if not hasattr(self, '_logo_cached'):
+            self._logo_cached = Image.open(os.path.join(BASE, 'assets', 'logo_clean_circle.png')).convert('RGBA')
+        lg = self._logo_cached.resize((size, size), Image.Resampling.LANCZOS)
         if p < 1:
             lg.putalpha(lg.getchannel('A').point(lambda v: int(v * clamp01(p * 1.5))))
         f.alpha_composite(lg, ((self.W - size) // 2, int(self.H * 0.30) - size // 2))
@@ -846,10 +1090,37 @@ def _progress_bar(frame: Image.Image, p: float, W: int, y: int = 0,
     frame.alpha_composite(d, (0, y))
 
 
+def _story_chapter_defs(st: Story) -> list[tuple[str, str, str, bool]]:
+    """Build (chapter_name, badge_label, text, is_alert) for multi-chapter breakdown."""
+    cat = st.category
+    defs = [("ಮುಖ್ಯಾಂಶ", "▪ ಬ್ರೇಕಿಂಗ್ ಮುಖ್ಯಾಂಶ", st.headline, False)]
+
+    pts = st.points or []
+    if len(pts) >= 1:
+        c1_name = "ಸ್ಥಳ ವಿವರ" if cat in ('civic', 'crime', 'accident') else "ಪ್ರಮುಖ ವಿವರ"
+        c1_badge = "▪ ಘಟನಾ ಸ್ಥಳದ ವಿವರ" if cat in ('civic', 'crime', 'accident') else "▪ ಪ್ರಮುಖ ವಿದ್ಯಮಾನ"
+        defs.append((c1_name, c1_badge, pts[0], False))
+
+    if len(pts) >= 2:
+        c2_name = "ತನಿಖಾ ವಿವರ" if cat in ('civic', 'crime') else "ಮುಖ್ಯ ಅಂಶ"
+        c2_badge = "▪ ತನಿಖಾ ಪ್ರಗತಿ & ಕ್ರಮ" if cat in ('civic', 'crime') else "▪ ಉತ್ಸವದ ಹಿನ್ನೆಲೆ & ಮೆರುಗು"
+        defs.append((c2_name, c2_badge, pts[1], False))
+
+    if st.takeaway:
+        defs.append(("ಜಾಗೃತಿ", "⚠ ಸಾರ್ವಜನಿಕ ಎಚ್ಚರಿಕೆ", st.takeaway, True))
+    elif len(pts) >= 3:
+        c3_name = "ಜಾಗೃತಿ" if cat in ('civic', 'crime') else "ವಿಶೇಷ ಮಾಹಿತಿ"
+        c3_badge = "▪ ಸಾರ್ವಜನಿಕ ಗಮನಕ್ಕೆ" if cat in ('civic', 'crime') else "▪ ವಿಶೇಷ ಮಾಹಿತಿ"
+        defs.append((c3_name, c3_badge, pts[2], False))
+
+    return defs
+
+
 def render_reel(edition: Edition, path: str, format_key: str = 'reel',
                 target_seconds: float | None = None, ss: int | None = None,
                 fps: int = Motion.fps, bgm: str | None = None,
-                sfx_dir: str | None = None, keep_frames: bool = False) -> str:
+                sfx_dir: str | None = None, keep_frames: bool = False,
+                voiceover: str | None = None) -> str:
     """Render the day's edition as video and master the audio.
 
     Drives both the 9:16 reel and the 16:9 bulletin: same engine, different
@@ -880,9 +1151,22 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
         # viewer swipes off; a 12–18s lead with the news on frame 0 is what
         # the platforms actually distribute.
         lead_ed = replace(edition, stories=edition.stories[:1])
-        intro_d, holds, outro_d, used = plan_durations(
-            lead_ed, intro=Motion.reel_intro, outro=Motion.reel_outro,
-            target=target_seconds, pace=pace)
+        if voiceover and os.path.exists(voiceover):
+            from .voice import get_audio_duration
+            vdur = get_audio_duration(voiceover)
+            if vdur > 1.0:
+                intro_d = Motion.reel_intro
+                outro_d = Motion.reel_outro
+                holds = [round(vdur + 0.85, 2)]
+                used = 1
+            else:
+                intro_d, holds, outro_d, used = plan_durations(
+                    lead_ed, intro=Motion.reel_intro, outro=Motion.reel_outro,
+                    target=target_seconds, pace=pace)
+        else:
+            intro_d, holds, outro_d, used = plan_durations(
+                lead_ed, intro=Motion.reel_intro, outro=Motion.reel_outro,
+                target=target_seconds, pace=pace)
         stories = edition.stories[:used]
         if used < len(edition.stories):
             print(f'  · reel is the lead story only '
@@ -925,9 +1209,50 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
     scenes: list[Scene] = []
     if intro_d > 0.05:
         scenes.append(BrandSting(edition, W, H, ss, intro_d))
-    for i, (st, d) in enumerate(zip(stories, holds)):
-        scenes.append(StoryScene(st, W, H, ss, d, i, len(stories), safe,
-                                 direction=1 if i % 2 == 0 else -1, pace=pace))
+
+    is_deep_reel = (pace.name != 'bulletin' and len(stories) == 1 and holds[0] > 18.0)
+    if is_deep_reel:
+        st = stories[0]
+        ch_defs = _story_chapter_defs(st)
+        K = len(ch_defs)
+        if K >= 2:
+            # Preserve total hold by accounting for (K - 1) additional crossfades
+            sum_dur = holds[0] + (K - 1) * XF
+            ch0_dur = min(18.0, max(12.0, sum_dur * 0.28))
+            rem_dur = (sum_dur - ch0_dur) / (K - 1)
+            ch_durs = [ch0_dur] + [rem_dur] * (K - 1)
+            ch_names = [name for name, _, _, _ in ch_defs]
+            dirs = [1, 2, -1, -2]
+            gallery = getattr(st, 'gallery', []) or []
+
+            # Chapter 0: Hook / Headline
+            scenes.append(StoryScene(st, W, H, ss, ch_durs[0], 0, 1, safe,
+                                     direction=dirs[0], pace=pace,
+                                     chapter_idx=0, chapter_names=ch_names))
+
+            # Chapters 1..K-1: Deep dive cards
+            for k in range(1, K):
+                name, badge, text, is_alert = ch_defs[k]
+                pic = None
+                photo_obj = None
+                if k - 1 < len(gallery) and os.path.exists(gallery[k - 1].path):
+                    photo_obj = gallery[k - 1]
+                    pic = photo_obj.path
+                scenes.append(ChapterScene(
+                    st, W, H, ss, ch_durs[k], badge=badge, text=text,
+                    chapter_idx=k, total_chapters=K, chapter_names=ch_names,
+                    safe=safe, photo_path=pic, direction=dirs[k % len(dirs)],
+                    is_alert=is_alert, pace=pace, photo=photo_obj))
+            print(f'  ✓ dynamic multi-chapter breakdown: {K} chapters '
+                  f'({" ▸ ".join(ch_names)})')
+        else:
+            scenes.append(StoryScene(st, W, H, ss, holds[0], 0, 1, safe,
+                                     direction=1, pace=pace))
+    else:
+        for i, (st, d) in enumerate(zip(stories, holds)):
+            scenes.append(StoryScene(st, W, H, ss, d, i, len(stories), safe,
+                                     direction=1 if i % 2 == 0 else -1, pace=pace))
+
     if outro_d > 0.05:
         scenes.append(OutroScene(edition, W, H, ss, outro_d, safe))
 
@@ -992,22 +1317,29 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
 
     for k in range(n_frames):
         t = k / fps
-        # which scene(s) are live
-        cur = 0
-        for i, s0 in enumerate(starts):
-            if t >= s0:
-                cur = i
-        sc = scenes[cur]
-        lt = t - starts[cur]
-        f = sc.frame(min(lt, sc.dur))
 
-        nxt = cur + 1
-        if nxt < len(scenes) and t >= starts[nxt]:
-            p = clamp01((t - starts[nxt]) / XF)
-            g = scenes[nxt].frame(t - starts[nxt])
-            f = Image.blend(f, g, Ease.in_out_cubic(p))
-            if 0.12 < p < 0.88:
-                f = _sweep(f, (p - 0.12) / 0.76, W, H)
+        # Check if currently in a cross-transition between scene i-1 and scene i
+        in_trans = False
+        for i in range(1, len(scenes)):
+            s_tr = starts[i]
+            if s_tr <= t < s_tr + XF:
+                p = clamp01((t - s_tr) / XF)
+                f_prev = scenes[i - 1].frame(min(t - starts[i - 1], scenes[i - 1].dur))
+                f_next = scenes[i].frame(min(t - s_tr, scenes[i].dur))
+                f = Image.blend(f_prev, f_next, Ease.in_out_cubic(p))
+                if 0.10 < p < 0.90:
+                    f = _sweep(f, (p - 0.10) / 0.80, W, H)
+                in_trans = True
+                break
+
+        if not in_trans:
+            cur = 0
+            for i, s0 in enumerate(starts):
+                if t >= s0:
+                    cur = i
+            sc = scenes[cur]
+            lt = t - starts[cur]
+            f = sc.frame(min(lt, sc.dur))
 
         _progress_bar(f, t / total, W, fs=frame_scale)
         enc.stdin.write(f.convert('RGB').tobytes())
@@ -1017,7 +1349,7 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
     enc.wait()
     print(f'\n  ✓ picture locked')
 
-    audio = _master_audio(total, starts, holds, intro_d, bgm, sfx_dir)
+    audio = _master_audio(total, starts, holds, intro_d, bgm, sfx_dir, voiceover=voiceover)
     out = _mux(raw, audio, path)
     if not keep_frames and os.path.exists(raw):
         os.remove(raw)
@@ -1029,54 +1361,103 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _master_audio(total: float, starts: list[float], holds: list[float],
-                  intro_d: float, bgm: str | None, sfx_dir: str | None) -> str:
-    """Score + hits, ducked under each headline, normalised for the platforms."""
+                  intro_d: float, bgm: str | None, sfx_dir: str | None,
+                  voiceover: str | None = None) -> str:
+    """Score + hits + optional voiceover, ducked under speech, normalised for platforms."""
     bgm = bgm or os.path.join(BASE, 'assets', 'news_bgm.mp3')
     sfx_dir = sfx_dir or os.path.join(BASE, 'sfx')
     out = os.path.join(BASE, 'build', '_reel_audio.wav')
 
-    hits = [os.path.join(sfx_dir, n) for n in
-            ('news_impact.wav', 'whoosh.wav', 'tech_ping.wav')]
-    hits = [h for h in hits if os.path.exists(h)]
+    sfx_impact = os.path.join(sfx_dir, 'pro_impact.wav')
+    if not os.path.exists(sfx_impact):
+        sfx_impact = os.path.join(sfx_dir, 'news_impact.wav')
+
+    sfx_whoosh = os.path.join(sfx_dir, 'pro_whoosh.wav')
+    if not os.path.exists(sfx_whoosh):
+        sfx_whoosh = os.path.join(sfx_dir, 'whoosh.wav')
+
+    sfx_ping = os.path.join(sfx_dir, 'tech_ping.wav')
+
+    sfx_outro = os.path.join(sfx_dir, 'pro_outro_hit.wav')
+    if not os.path.exists(sfx_outro):
+        sfx_outro = os.path.join(sfx_dir, 'pro_news_ident.wav')
+    if not os.path.exists(sfx_outro):
+        sfx_outro = sfx_impact
+
+    sfx_candidates = [sfx_impact, sfx_whoosh, sfx_ping, sfx_outro]
+    sfx_files = []
+    sfx_map = {}
+    for s in sfx_candidates:
+        if s and os.path.exists(s) and s not in sfx_map:
+            sfx_map[s] = 1 + len(sfx_files)
+            sfx_files.append(s)
+
     if not os.path.exists(bgm):
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'lavfi',
                         '-i', f'anullsrc=r=48000:cl=stereo', '-t', str(total),
                         out], check=True)
         return out
 
-    ins = ['-i', bgm] + [x for h in hits for x in ('-i', h)]
+    ins = ['-i', bgm] + [x for s in sfx_files for x in ('-i', s)]
+    has_vo = bool(voiceover and os.path.exists(voiceover))
+    vo_idx = -1
+    if has_vo:
+        ins += ['-i', voiceover]
+        vo_idx = (len(ins) // 2) - 1
+
     parts, mixes = [], []
 
-    # Score: trimmed, faded, and pulled down a little under every scene change
-    # so the hit and the headline have room to land.
+    vo_delay = 0.25
+    vo_dur = 0.0
+    if has_vo:
+        from .voice import get_audio_duration
+        vo_dur = get_audio_duration(voiceover)
+    vo_end = vo_delay + vo_dur if has_vo else 0.0
+
     duck = ''
-    for s0 in starts[1:]:
+    if has_vo and vo_end > 0.5:
+        duck = f",volume=enable='between(t,0.15,{vo_end:.2f})':volume=0.22"
+    for s0 in (starts[1:-1] if len(starts) > 2 else starts[1:]):
         duck += (f",volume=enable='between(t,{max(0, s0 - 0.15):.2f},"
-                 f"{s0 + 0.85:.2f})':volume=0.42")
+                 f"{s0 + 0.85:.2f})':volume=0.45")
+
+    # BGM: smooth fade in, natural swell after speech finishes, and smooth 0.6s fade out at the end
+    bgm_fade_start = max(0.0, total - 0.60)
     parts.append(f'[0:a]atrim=0:{total:.2f},asetpts=N/SR/TB,'
-                 f'afade=t=in:st=0:d=0.6,'
-                 f'afade=t=out:st={max(0, total - 1.8):.2f}:d=1.8,'
-                 f'volume=0.62{duck}[bgm]')
+                 f'afade=t=in:st=0:d=0.5,'
+                 f'afade=t=out:st={bgm_fade_start:.2f}:d=0.60,'
+                 f'volume=0.65{duck}[bgm]')
     mixes.append('[bgm]')
 
-    def hit(idx: int, at: float, gain: float, tag: str):
-        parts.append(f'[{idx}:a]adelay={int(at * 1000)}|{int(at * 1000)},'
-                     f'volume={gain}[{tag}]')
-        mixes.append(f'[{tag}]')
+    if has_vo:
+        parts.append(f'[{vo_idx}:a]adelay={int(vo_delay * 1000)}|{int(vo_delay * 1000)},volume=1.28[vo]')
+        mixes.append('[vo]')
+
+    def hit(s_file: str, at: float, gain: float, tag: str):
+        if s_file in sfx_map:
+            idx = sfx_map[s_file]
+            parts.append(f'[{idx}:a]adelay={int(at * 1000)}|{int(at * 1000)},'
+                         f'volume={gain}[{tag}]')
+            mixes.append(f'[{tag}]')
 
     k = 0
-    if hits:
-        hit(1, 0.02, 1.0, f'h{k}'); k += 1          # opener
-    # Story scene starts: skip the sting (when there is one) and the outro.
-    # A reel with no sting still needs the headline ping on frame 0.
+    # 1. Opener hit
+    hit(sfx_impact, 0.02, 0.95, f'h{k}'); k += 1
+
+    # 2. Story transitions
     story_starts = starts[1:-1] if intro_d > 0.05 else starts[:-1]
     for j, s0 in enumerate(story_starts):
-        if len(hits) >= 2 and (intro_d > 0.05 or j > 0):
-            hit(2, max(0, s0 - 0.18), 0.9, f'h{k}'); k += 1     # whoosh into scene
-        if len(hits) >= 3:
-            hit(3, s0 + 0.30, 0.55, f'h{k}'); k += 1            # ping on headline
-    if hits:
-        hit(1, max(0, starts[-1] - 0.10), 0.85, f'h{k}'); k += 1
+        if intro_d > 0.05 or j > 0:
+            hit(sfx_whoosh, max(0, s0 - 0.18), 0.85, f'h{k}'); k += 1
+        hit(sfx_ping, s0 + 0.30, 0.50, f'h{k}'); k += 1
+
+    # 3. Outro transition
+    if len(starts) > 1:
+        outro_start = starts[-1]
+        # Whoosh as the gold sweep cross-fade begins
+        hit(sfx_whoosh, max(0, outro_start - 0.18), 0.85, f'h{k}'); k += 1
+        # Resonant broadcast outro hit as "ಊರ್ಮನಿ ಸುದ್ದಿ" lands
+        hit(sfx_outro, outro_start + 0.10, 0.95, f'h{k}'); k += 1
 
     # -14 LUFS / -1.5 dBTP is what Instagram and YouTube normalise to. Delivering
     # hotter than that just means the platform turns it down, and loud material

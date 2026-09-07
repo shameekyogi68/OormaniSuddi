@@ -333,7 +333,7 @@ class Motion:
     # and a new account that opens on its ident is swiped past before the
     # news exists. The masthead already brands every scene. See D39.
     reel_intro  = 0.0
-    reel_outro  = 1.8     # follow CTA; long enough for the handle to land
+    reel_outro  = 2.4     # follow CTA; long enough for the handle and brand to land smoothly
 
     # ── reading, measured honestly ────────────────────────────────────────
     # 11 chars/sec was wishful. Kannada is an abugida: one akshara carries a

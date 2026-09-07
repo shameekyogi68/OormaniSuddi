@@ -220,6 +220,7 @@ class Story:
     deck: str = ''                       # standfirst, 1–2 lines
     points: list[str] = field(default_factory=list)
     photo: Photo | None = None
+    gallery: list[Photo] = field(default_factory=list)  # additional photos for dynamic multi-scene video
     location: str = ''
     dateline: str = ''                   # bureau, e.g. "ಬ್ರಹ್ಮಾವರ ವರದಿ"
     reporter: str = ''
@@ -233,6 +234,8 @@ class Story:
     correction: str = ''                 # if this card corrects an earlier one
     reel_line: str = ''                  # short headline for video; see AI_BRIEF
     reel_support: str = ''               # supporting sentence for reel scene
+    is_reel: bool = True                 # whether to produce an individual reel (10/10 editorial score)
+    narration_script: str = ''           # broadcast-grade spoken news anchor script
 
     # ── criminal-reporting flags ──────────────────────────────────────────
     # Set these and the system refuses to render identifying detail. They are
@@ -264,6 +267,8 @@ class Story:
                 raise ContentError(
                     'photo is older than the file-photo window but is marked '
                     "'actual'; change nature to 'file'.")
+        for p in self.gallery:
+            p.validate()
         if self.live_url and not self.live_url.startswith('http'):
             raise ContentError('live_url must be a real stream URL, or empty')
         # The criminal-reporting guards run BEFORE the breaking demotion below.
@@ -423,6 +428,8 @@ class Story:
         a typo'd `source` that leaves `sources` empty would otherwise render a
         card with no attribution."""
         d = dict(d)
+        if 'reel' in d and 'is_reel' not in d:
+            d['is_reel'] = d.pop('reel')
         known = {f for f in cls.__dataclass_fields__}
         extra = set(d) - known - {'photo', 'template', 'hook'}
         if extra:
@@ -433,6 +440,8 @@ class Story:
         hook = d.pop('hook', '')
         if d.get('photo'):
             d['photo'] = Photo.from_dict(d['photo'])
+        if d.get('gallery'):
+            d['gallery'] = [Photo.from_dict(p) for p in d['gallery']]
         if 'published_at' in d and d['published_at'] is not None:
             d['published_at'] = parse_dt(d['published_at'])
         if d.get('quote') is not None:

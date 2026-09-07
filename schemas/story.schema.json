@@ -223,6 +223,11 @@
       "type": "string",
       "maxLength": 40,
       "description": "Short line for the YouTube thumbnail. About seven words maximum — it is read at 210 px wide. Put it on the FIRST story; that is the one thumbnailed."
+    },
+    "is_reel": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this story qualifies as a 10/10 story for an individual vertical reel. High-impact, visual, or breaking stories should set true; routine or bureaucratic updates set false."
     }
   }
 }

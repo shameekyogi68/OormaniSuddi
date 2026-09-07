@@ -35,7 +35,7 @@ rendering code — nine finished templates already exist.
 
 ---
 
-## Five rules that override anything you might infer
+## Six rules that override anything you might infer
 
 1. **`Story.validate()` is not negotiable.** Every photograph carries a credit
    and declares whether it shows the actual scene. Every story names a source.
@@ -59,6 +59,13 @@ rendering code — nine finished templates already exist.
    and publish contact details. Both are set; `compliance()` warns on every run
    if either is ever cleared, and no card or caption carries the line without
    them.
+6. **Strict Workspace Isolation & AI Boundary Containment.** This repository is an
+   isolated environment. No AI model, agent, subagent, script, or automated tool
+   shall ever read, write, execute commands in, inspect, or operate outside this
+   project folder (`/Users/shameekyogi/Oormani Suddi`). All task execution, file
+   access, and shell contexts are strictly confined within this directory. Cross-project
+   access or path traversal outside this perimeter is prohibited and must fail-closed.
+
 
 ---
 
@@ -66,16 +73,26 @@ rendering code — nine finished templates already exist.
 
 Whenever raw news copy is provided for a bulletin:
 1. **Flawless Kannada Copy**: Natural, concise, grammatically verified Kannada. Numbers must always use Latin numerals (`25`, `29.6`), never Kannada numerals (`೨೫`). Headlines stay under 78 characters; punchy `reel_line` under 46 characters. Crime copy must strictly use allegation markers (ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ).
-2. **Editorial Images**: Generate high-quality photojournalistic images for each story using `generate_image` (or real photographs). Every image carries `nature` (e.g. `'ai'`, `'representative'`), `credit`, `licence: 'own'`, and an honest `caption`.
+2. **Editorial Images & 10/10 Cultural/Legal Cross-Check**:
+   - Generate high-quality photojournalistic hero and multi-scene gallery images using `generate_image`.
+   - Every image carries `nature: 'ai'`, `credit: 'AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ'`, `licence: 'own'`, and an honest `caption`.
+   - **Mandatory 10/10 Cultural & Legal Cross-Check**: The Visual Culture & Legal Expert inspects every image. Zero tolerance for distortions or mockery of sacred coastal traditions (Yakshagana, Hulivesha, Daivaradhane, temple rituals). Zero minor faces, victim trauma, or gore. Must score a verified 10/10 before layout; otherwise regenerate on loop.
 3. **Edition JSON**: Save to `editions/YYYY-MM-DD.json`.
 4. **Deliverables Required**:
    - **Carousel** (`carousel_01_cover.jpg` .. `05`) for complete, swipeable daily coverage.
-   - **Individual Reels for EVERY Story** (`reel_01.mp4`, `reel_02.mp4`, `reel_03.mp4`, etc.) with their respective cover frames (`reel_*_cover.jpg`). Keeping each reel short (9–12s) achieves near 100%+ completion rate and maximum algorithmic reach.
-5. **Complete Copy & Schedule Plan**:
-   - The time-scheduled publishing timetable is **generated** — `render.py`
-     writes `schedule.txt` and `schedule.json` from what it actually rendered.
-     Do not retype it; if a window is wrong, change `copy.REEL_SLOTS` so it is
-     right for every future edition too. See DECISIONS.md D43.
+   - **Individual Reels ONLY for 10/10 Reel-Worthy Stories** (`reel_01.mp4`, `reel_02.mp4`, etc.) with their respective cover frames (`reel_*_cover.jpg`).
+     - **Think like a news expert**: The Carousel and Post cards carry the complete edition so nothing is missed.
+     - **Short-Form Audience Retention & 10/10 Algorithm Gate**:
+       - Only stories scoring 10/10 in visual drama, public urgency, high stakes, or viral regional talkability become reels (`is_reel: true`).
+       - Multi-image chapter breakdown (cutting to fresh scene photos every 12–15s) guarantees dynamic visual rhythm without static freezes.
+       - The Audience Retention Expert audits the final video (3-second hook, audio ducking, text legibility, living outro). If rating < 10/10, loop back to polish until 10/10 perfection is reached.
+5. **Legal, Copyright & YouTube Monetization Guardrails (10/10 Ad-Safe)**:
+   - **AdSense Green Dollar Clearance**: Zero depictions of blood, open wounds, gore, or trapped victims in imagery or thumbnails. Sober, objective reporting without sensationalized clickbait.
+   - **Content ID & Copyright Shield**: In-house royalty-free music (`assets/news_bgm.mp3`), open/proprietary broadcast SFX (`sfx/`), and verified `own` licenses. Zero risk of copyright claims or audio mutes.
+   - **Indian Media Law Compliance**: IT Rules 2021 publisher transparency, POCSO minor privacy protection, Section 228A IPC/BNS victim privacy, and strict allegation markers (*ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ*).
+   - The Legal & Monetization Expert audits the full package; zero tolerance for ad-limitation or legal risks.
+6. **Complete Copy & Schedule Plan**:
+   - The time-scheduled publishing timetable is **generated** — `render.py` writes `schedule.txt` and `schedule.json` from what it actually rendered.
    - Ready-to-copy Instagram captions with First Comments (pinned questions).
    - Ready-to-copy YouTube Shorts Titles (<60 chars, mobile search optimized), Descriptions (with snippet and timestamps), and Tags for every single reel.
 
