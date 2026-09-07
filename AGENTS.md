@@ -78,10 +78,10 @@ Whenever raw news copy is provided for a bulletin:
    - Every image carries `nature: 'ai'`, `credit: 'AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ'`, `licence: 'own'`, and an honest `caption`.
    - **Mandatory 10/10 Cultural & Legal Cross-Check**: The Visual Culture & Legal Expert inspects every image. Zero tolerance for distortions or mockery of sacred coastal traditions (Yakshagana, Hulivesha, Daivaradhane, temple rituals). Zero minor faces, victim trauma, or gore. Must score a verified 10/10 before layout; otherwise regenerate on loop.
 3. **Edition JSON**: Save to `editions/YYYY-MM-DD.json`.
-4. **Deliverables Required**:
-   - **Carousel** (`carousel_01_cover.jpg` .. `05`) for complete, swipeable daily coverage.
+4. **Targeted Deliverables on Demand (Zero Clutter)**:
+   - Deliver **ONLY** what the user actually requests (e.g. `--only carousel reel`). Do not waste render time or clutter output with formats not requested (bulletin, broadsheet, individual post cards, etc.).
+   - **Carousel** (`carousel_01_cover.jpg` .. `06`) for swipeable daily coverage.
    - **Individual Reels ONLY for 10/10 Reel-Worthy Stories** (`reel_01.mp4`, `reel_02.mp4`, etc.) with their respective cover frames (`reel_*_cover.jpg`).
-     - **Think like a news expert**: The Carousel and Post cards carry the complete edition so nothing is missed.
      - **Short-Form Audience Retention & 10/10 Algorithm Gate**:
        - Only stories scoring 10/10 in visual drama, public urgency, high stakes, or viral regional talkability become reels (`is_reel: true`).
        - Multi-image chapter breakdown (cutting to fresh scene photos every 12–15s) guarantees dynamic visual rhythm without static freezes.

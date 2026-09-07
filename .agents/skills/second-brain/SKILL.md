@@ -43,6 +43,17 @@ EDITION_FILE = editions/{DATE}.json
 EDITION_NO   = (last edition_no in editions/) + 1
 ```
 
+### Deliverable Scope & Targeted Output (Deliver ONLY what the user asks for)
+
+- **Default / Daily Focus**: Everyday publishing primarily focuses on **Carousel + Reels**.
+- **Deliverable Filtering**:
+  - If the user specifies formats (e.g. *"only carousel and reel"*, *"just reels"*, *"only carousel"*):
+    - **Carousel + Reels**: `python3 render.py editions/{DATE}.json --only carousel reel --out out/{DATE}`
+    - **Reels only**: `python3 render.py editions/{DATE}.json --only reel --out out/{DATE}`
+    - **Carousel only**: `python3 render.py editions/{DATE}.json --only carousel --out out/{DATE}`
+  - If user explicitly requests the entire package (*"all"* / *"full package"*): run without `--only` (adds bulletin, broadsheet, story card, posts).
+- **Zero Clutter Output**: Do NOT render, build, or present copy for formats not requested. In `MASTER_COPY.md` and the final response, present **ONLY** the copy, captions, and schedules for the specific deliverables requested.
+
 ---
 
 ### STEP 1 — ಕನ್ನಡ ಭಾಷಾ ತಜ್ಞ (Kannada Language Expert)
@@ -217,32 +228,28 @@ python3 render.py --check editions/{DATE}.json
 
 ### STEP 6 — ವಿಷಯ ವ್ಯವಸ್ಥಾಪಕ (Content Manager)
 
-**Role**: Run the full render and verify all deliverables.
+**Role**: Run targeted render for the requested formats and verify deliverables.
 
 **Actions:**
 
 ```bash
-# Full render
+# Targeted render (e.g. only carousel and reel, or as requested):
+python3 render.py editions/{DATE}.json --only carousel reel --out out/{DATE}
+
+# Or full render if explicitly asked:
 python3 render.py editions/{DATE}.json --out out/{DATE}
 ```
 
-**Verify these files exist:**
+**Verify requested files exist (based on --only scope):**
 
 ```
 out/{DATE}/
-├── post_01.jpg .. post_NN.jpg          # individual story cards
-├── post_01_copy.txt .. post_NN_copy.*  # per-card copy
-├── carousel_01_cover.jpg               # carousel slides
-├── carousel_02_*.jpg .. carousel_06_sources.jpg
-├── carousel_copy.txt + .json           # carousel caption
-├── story_9x16.jpg                      # Instagram story card
-├── yt_thumbnail.jpg                    # YouTube thumbnail
-├── broadsheet.jpg                      # WhatsApp/Telegram forward
-├── reel_01.mp4 + reel_01_cover.jpg + reel_01_copy.txt   # ONLY for stories marked is_reel=true (10/10)
-├── reel_02.mp4 + reel_02_cover.jpg + reel_02_copy.txt   # (sequential numbering for 10/10 stories)
-├── bulletin.mp4 + bulletin_copy.txt    # 16:9 long-form
-├── schedule.txt                        # human-readable timetable
-└── schedule.json                       # machine-readable timetable
+├── carousel_01_cover.jpg .. carousel_06_sources.jpg     # if carousel requested
+├── carousel_copy.txt + .json
+├── reel_01.mp4 + reel_01_cover.jpg + reel_01_copy.txt   # if reels requested (10/10 stories)
+├── reel_02.mp4 + reel_02_cover.jpg + reel_02_copy.txt
+├── schedule.txt + schedule.json                         # generated timetable for rendered assets
+└── MASTER_COPY.md                                       # targeted copy for requested assets only
 ```
 
 **Output audit** (printed by render.py):
@@ -445,8 +452,8 @@ IF any item fails:
     Return to Step 12
 
 IF all items pass:
-    Declare: "✅ 10/10 — ಎಲ್ಲಾ ಸಿದ್ಧ. out/{DATE}/ ರಲ್ಲಿ ಎಲ್ಲವೂ ಇದೆ."
-    Present MASTER_COPY.md summary to user
+    Declare: "✅ 10/10 — ಎಲ್ಲಾ ಸಿದ್ಧ. out/{DATE}/ ರಲ್ಲಿ ನೀವು ಕೇಳಿದ ಕಂಟೆಂಟ್ ಮಾತ್ರ ಸಿದ್ಧವಾಗಿದೆ."
+    Present MASTER_COPY.md summary to user with ONLY the requested formats (e.g. Carousel and Reels)
     STOP — wait for "close" or new instructions
 ```
 
