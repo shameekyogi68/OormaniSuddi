@@ -397,58 +397,26 @@ class BrandSting(Scene):
         return f
 
 
-def _draw_chapter_ticker(sf: Surface, x: float, y: float, w: float,
-                         cur_idx: int, names: list[str], fs: float = 1.0):
-    """Draws a sleek broadcast chapter indicator across the safe width."""
-    if not names or len(names) <= 1:
-        return
-    draw = ImageDraw.Draw(sf.img)
-    n = len(names)
-    f_txt = typo.font('kn_var', int(sf.s(18 * fs)), weight=650)
+def _badge_mark(d: ImageDraw.ImageDraw, cx: float, cy: float, r: float,
+                colour, alert: bool):
+    """The mark at the head of a badge pill — DRAWN, never typed.
 
-    items = []
-    for k, nm in enumerate(names):
-        lbl = f"{k+1}. {nm}"
-        tw = typo.text_width(lbl, f_txt)
-        pw = tw + sf.s(22 * fs)
-        items.append((lbl, pw))
-
-    sep_w = sf.s(14 * fs)
-    total_w = sum(pw for _, pw in items) + (n - 1) * sep_w
-    start_x = sf.s(x) + max(0, (sf.s(w) - total_w) / 2)
-    h_pill = sf.s(30 * fs)
-
-    cx = start_x
-    for k, (lbl, pw) in enumerate(items):
-        is_active = (k == cur_idx)
-        is_past = (k < cur_idx)
-
-        if is_active:
-            fill_col = (*C.gold_500, 235)
-            outline_col = (*C.gold_400, 255)
-            text_col = C.ink_950
-        elif is_past:
-            fill_col = (*C.paper_50, 32)
-            outline_col = (*C.gold_500, 80)
-            text_col = C.paper_200
-        else:
-            fill_col = (*C.paper_50, 16)
-            outline_col = (*C.paper_50, 40)
-            text_col = C.paper_300
-
-        draw.rounded_rectangle((cx, sf.s(y), cx + pw, sf.s(y) + h_pill),
-                               radius=int(h_pill * 0.5),
-                               fill=fill_col, outline=outline_col, width=max(1, int(sf.s(1.0 * fs))))
-        rise, _ = typo.ink_extents(lbl, f_txt)
-        typo.draw_text(sf.img, lbl, cx + pw / 2, sf.s(y) + (h_pill + rise) * 0.50, f_txt,
-                       text_col, anchor_x='c')
-        cx += pw
-        if k < n - 1:
-            f_sep = typo.font('latin', int(sf.s(15 * fs)), weight=700)
-            rise_sep, _ = typo.ink_extents("▸", f_sep)
-            typo.draw_text(sf.img, "▸", cx + sep_w / 2, sf.s(y) + (h_pill + rise_sep) * 0.50,
-                           f_sep, C.paper_300, anchor_x='c')
-            cx += sep_w
+    This exists because the typed version did not work and could not be made
+    to work. "▪" is in none of the four house faces and not in SF either; "⚠"
+    is in SF alone, and a badge carrying Kannada is set in a Kannada face by
+    `font_for`, so it never reached SF. Both shipped as empty boxes on every
+    reel. A drawn shape has no font to be missing from.
+    """
+    if alert:
+        # A warning triangle with its bar and dot, drawn to the same optical
+        # weight as the square so the two badges sit on one baseline.
+        h = r * 2.05
+        w = r * 2.25
+        d.polygon([(cx, cy - h * 0.52), (cx + w * 0.5, cy + h * 0.46),
+                   (cx - w * 0.5, cy + h * 0.46)], fill=colour)
+    else:
+        d.rounded_rectangle((cx - r, cy - r, cx + r, cy + r),
+                            radius=max(1.0, r * 0.28), fill=colour)
 
 
 class StoryScene(Scene):
@@ -517,9 +485,14 @@ class StoryScene(Scene):
         sf = Surface(W, H, ss, bg=(0, 0, 0, 0))
         scrim(sf, 0, st_ + 30 * fs, C.ink_950, 0.88 if self.kb else 0.62, 0.0, curve=1.5)
         if H > W:
+            # Same ramp as the fact cards, so a cut between the two does not
+            # change how dark the bottom of the frame is. They used to differ
+            # (0.30→0.86 here, 0.36→0.88 there) and the mismatch showed as a
+            # small brightness jump on every transition.
             if self.kb is not None:
-                scrim(sf, H * 0.30, H * 0.86, C.ink_950, 0.0, 0.94, curve=1.6)
-                scrim(sf, H * 0.86, H, C.ink_950, 0.94, 0.99, curve=1.0)
+                scrim(sf, H * 0.30, H * 0.62, C.ink_950, 0.0, 0.72, curve=1.5)
+                scrim(sf, H * 0.62, H * 0.90, C.ink_950, 0.72, 0.97, curve=1.2)
+                scrim(sf, H * 0.90, H, C.ink_950, 0.97, 0.99, curve=1.0)
             else:
                 scrim(sf, H * 0.42, H * 0.90, C.ink_950, 0.0, 0.90, curve=1.5)
         else:
@@ -638,7 +611,24 @@ class StoryScene(Scene):
                              ss * cw, ss * dk * T.deck[1] * dl, T.deck[1],
                              weight=450, max_lines=dl)
 
-        cap_h = int(T.micro[0] * ts * 1.5) + 6 if st.credit_line else 0
+        # The credit is LAID OUT, not assumed to be one line. It was given a
+        # fixed one-line tile — `micro * ts * 1.5 + 6` — while being wrapped to
+        # the full column width, so a credit long enough to wrap (an AI label
+        # plus a caption is easily 60 characters) had its second line sliced
+        # through the middle by the edge of its own sprite. Over a busy
+        # photograph the sliced line read as noise rather than as text, which
+        # is why it survived this long.
+        c_blk = None
+        if st.credit_line:
+            c_blk = typo.layout(
+                st.credit_line,
+                typo.font('kn_var', int(ss * T.micro[0] * ts * 1.05), weight=470),
+                ss * cw, 1.34)
+            if c_blk.n > 2:      # never let the label push the headline down
+                c_blk = typo.layout(
+                    typo.ellipsize(st.credit_line, c_blk.f, ss * cw * 2),
+                    c_blk.f, ss * cw, 1.34)
+        cap_h = int(c_blk.height / ss) + 8 if c_blk is not None else 0
         eb_h = int(44 * ts)
         # Where the block can actually begin. In landscape that is inside the
         # lower-third panel, not near the top of the frame — measuring from the
@@ -689,7 +679,7 @@ class StoryScene(Scene):
         return SimpleNamespace(
             landscape=landscape, cw=cw, ts=ts, fs=fs, bottom=bottom, src_y=src_y,
             block_bottom=block_bottom, head_txt=head_txt, sup_txt=sup_txt,
-            d_blk=d_blk, cap_h=cap_h, eb_h=eb_h,
+            d_blk=d_blk, cap_h=cap_h, c_blk=c_blk, eb_h=eb_h,
             region_top=region_top, hb=hb, block_h=block_h, y=y)
 
     def _sprites(self) -> list[Sprite]:
@@ -723,15 +713,18 @@ class StoryScene(Scene):
                          src_y - 36 * ts - cap_h - 12 * fs) if landscape
                      else (y - cap_h - 22 * fs))
 
-            def cap(sf, _w=cap_w):
-                b = typo.layout(st.credit_line,
-                                typo.font('kn_var', sf.s(T.micro[0] * ts),
-                                          weight=420),
-                                sf.s(_w), 1.34)
-                # It sits on the solid column in landscape and on the scrim
-                # in portrait, so it needs no shadow of its own either way.
-                sh = None
-                typo.draw_block(sf.img, b, 0, 0, alpha(C.paper_300, 0.94),
+            def cap(sf, _w=cap_w, _b=m.c_blk):
+                b = _b          # the block _measure() sized this tile for
+                # In landscape it sits on the solid column and needs nothing.
+                # In portrait it sits ABOVE the copy block — high enough that
+                # the scrim has barely begun — so on a bright, busy frame it
+                # was 19px of dim grey over a sunlit crowd and simply could
+                # not be read. It is an honesty label ("ಎಐ ರಚಿತ ಚಿತ್ರ",
+                # "ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ"); a label the reader cannot read does not
+                # discharge the obligation it exists for.
+                sh = None if landscape else (0, sf.s(1), sf.s(9), (0, 0, 0, 215))
+                typo.draw_block(sf.img, b, 0, 0,
+                                alpha(C.paper_300, 0.94 if landscape else 1.0),
                                 shadow=sh, box_w=sf.s(_w))
             out.append(Sprite(_sprite_from(cap, cap_w, cap_h, ss, 0, 0).img,
                               int(cap_x), int(cap_y),
@@ -850,10 +843,16 @@ class ChapterScene(Scene):
         scrim(sf, 0, st_ + 30 * fs, C.ink_950, 0.88 if self.kb else 0.62, 0.0, curve=1.5)
 
         if H > W:
-            # Portrait: deep gradient at lower half to frame fact card cleanly
+            # Portrait: the copy block sits over the lower third, so the veil
+            # has to be dense enough there to carry white Kannada over ANY
+            # frame — wet sand at midday and a lit shopfront included, which
+            # are the two the old 0.0→0.95 ramp lost. The ramp starts higher
+            # and reaches full depth before the badge, so contrast is a
+            # property of the layout rather than a property of the photograph.
             if self.kb is not None:
-                scrim(sf, H * 0.36, H * 0.88, C.ink_950, 0.0, 0.95, curve=1.6)
-                scrim(sf, H * 0.88, H, C.ink_950, 0.95, 0.99, curve=1.0)
+                scrim(sf, H * 0.30, H * 0.62, C.ink_950, 0.0, 0.72, curve=1.5)
+                scrim(sf, H * 0.62, H * 0.90, C.ink_950, 0.72, 0.97, curve=1.2)
+                scrim(sf, H * 0.90, H, C.ink_950, 0.97, 0.99, curve=1.0)
             else:
                 scrim(sf, H * 0.42, H * 0.90, C.ink_950, 0.0, 0.90, curve=1.5)
             cp.masthead(sf, sl, st_ - 118 * fs, W - sl * 2, right_top=self.st.date_kn,
@@ -904,39 +903,62 @@ class ChapterScene(Scene):
         bottom = H - sb
         src_y = bottom - T.micro[0] * ts * 1.5
 
-        # Fit text block with comfortable, large reading size
-        avail_h = int(340 * ts)
-        blk = typo.fit(self.text, 'kn_var', size_hi=int(46 * ts), size_lo=int(26 * ts),
-                       max_w=cw, max_h=avail_h, leading=1.42, weight=620)
+        # Type scale. A fact card is read at arm's length on a phone in a
+        # scrolling feed, exactly like the headline card that precedes it —
+        # so it is set at a comparable size. The previous ceiling of 46px
+        # against a 96px headline made every card after the first look like a
+        # caption, which is the "fonts are not on size" complaint: not one
+        # wrong value, but two scenes drawn to two different scales.
+        #
+        # Bounded by the space between the masthead and the meta row rather
+        # than by a fixed 340px, so a short fact is set BIG instead of small
+        # in a half-empty block.
+        region_top = st_ + (120 * fs if landscape else 300 * fs)
+        avail_h = max(int(180 * ts), int(src_y - region_top - 96 * ts))
+        blk = typo.fit(self.text, 'kn_var',
+                       size_hi=int(Motion.reel_card_hi * ts),
+                       size_lo=int(Motion.reel_card_lo * ts),
+                       max_w=cw, max_h=avail_h, leading=1.38, weight=600,
+                       max_lines=Motion.reel_card_lines)
 
-        badge_h = int(36 * ts)
-        gap = int(22 * ts)
-        total_block_h = badge_h + gap + blk.height + gap
+        badge_h = int(52 * ts)
+        gap = int(30 * ts)
+        total_block_h = badge_h + gap + blk.height
 
-        y = src_y - total_block_h - 20 * ts
+        # Seated on the meta row, so the block always closes on the same edge
+        # however many lines it runs to. Anchoring the TOP instead let a short
+        # card float with a hole beneath it and a long one crowd the source
+        # line — the cards visibly disagreed with each other from scene to
+        # scene, which is most of why the sequence read as unfinished.
+        y = src_y - Motion.reel_block_foot * ts - total_block_h
 
-        # 1. Badge Pill
+        # 1. Badge pill
         def draw_badge(sf):
-            f_bd = typo.font('kn_var', int(sf.s(20 * ts)), weight=700)
-            bw = typo.text_width(self.badge, f_bd) + sf.s(32 * ts)
+            f_bd = typo.font('kn_var', int(sf.s(Motion.reel_badge_size * ts)), weight=700)
+            pad_x = sf.s(26 * ts)
+            mark_r = sf.s(7.0 * ts)
+            mark_gap = sf.s(14 * ts)
+            tw = typo.text_width(self.badge, f_bd)
+            bw = pad_x * 2 + mark_r * 2 + mark_gap + tw
             bh = sf.s(badge_h)
             d = ImageDraw.Draw(sf.img)
             if self.is_alert:
-                fill_col = (195, 45, 30, 235)
+                fill_col = (195, 45, 30, 240)
                 out_col = (255, 90, 75, 255)
                 txt_col = C.paper_50
             else:
-                fill_col = (*C.gold_500, 235)
+                fill_col = (*C.gold_500, 240)
                 out_col = (*C.gold_400, 255)
                 txt_col = C.ink_950
-            d.rounded_rectangle((0, 0, bw, bh), radius=int(bh * 0.4),
+            d.rounded_rectangle((0, 0, bw, bh), radius=int(bh * 0.5),
                                 fill=fill_col, outline=out_col,
-                                width=max(1, int(sf.s(1.0 * fs))))
+                                width=max(1, int(sf.s(1.2 * fs))))
+            _badge_mark(d, pad_x + mark_r, bh * 0.5, mark_r, txt_col, self.is_alert)
             rise_bd, _ = typo.ink_extents(self.badge, f_bd)
-            typo.draw_text(sf.img, self.badge, bw / 2, (bh + rise_bd) * 0.50, f_bd, txt_col,
-                           anchor_x='c')
+            typo.draw_text(sf.img, self.badge, pad_x + mark_r * 2 + mark_gap,
+                           (bh + rise_bd) * 0.50, f_bd, txt_col)
 
-        out.append(Sprite(_sprite_from(draw_badge, cw, badge_h + int(8 * fs), ss, 0, 0).img,
+        out.append(Sprite(_sprite_from(draw_badge, cw, badge_h + int(10 * fs), ss, 0, 0).img,
                           sl, int(y), t_in=0.10, dur=0.45, rise=16 * fs, wipe=True))
 
         # 2. Text Block Sprites (cinematic line stagger)
@@ -944,9 +966,13 @@ class ChapterScene(Scene):
         lh = blk.lh / ss
         for k, line in enumerate(blk.lines):
             def one_line(sf, _l=line, _b=blk):
+                # weight 600, the same weight `fit` measured this block at. It
+                # used to draw at 620, so every line was set slightly wider
+                # than the width the wrap was computed against and long lines
+                # crept past the measure.
                 typo.draw_text(sf.img, _l, 0, sf.s(_b.first_rise / ss),
-                               typo.font('kn_var', _b.f.size, weight=620), Role.text_hi,
-                               shadow=(0, sf.s(3), sf.s(16), (0, 0, 0, 195)))
+                               typo.font('kn_var', _b.f.size, weight=600), Role.text_hi,
+                               shadow=(0, sf.s(3), sf.s(18), (0, 0, 0, 205)))
             out.append(Sprite(
                 _sprite_from(one_line, cw, int(lh + blk.first_rise / ss) + int(14 * fs), ss, 0, 0).img,
                 sl, int(y_text + k * lh),
@@ -976,10 +1002,27 @@ class ChapterScene(Scene):
 
 
 class OutroScene(Scene):
-    def __init__(self, edition: Edition, W: int, H: int, ss: int, dur: float, safe):
+    """The end card.
+
+    It used to be 2.4 seconds of a near-black panel, which was survivable. On
+    a narrated reel it carries the whole spoken sign-off — eight or nine
+    seconds — and nine seconds of a dead black frame at the end of a video is
+    where the retention graph falls off a cliff. So it keeps the story's
+    photograph behind it, pushed in slowly and held well down, and the brand
+    sits on a picture rather than on nothing.
+    """
+
+    def __init__(self, edition: Edition, W: int, H: int, ss: int, dur: float,
+                 safe, photo=None):
         self.W, self.H, self.ss, self.dur, self.safe = W, H, ss, dur, safe
         self.ed = edition
+        self.kb = None
+        if photo is not None and os.path.exists(getattr(photo, 'path', '')):
+            self.kb = KenBurns(photo.path, W, H,
+                               focal=getattr(photo, 'focal', (0.5, 0.45)),
+                               zoom=Motion.kb_zoom * 0.7, direction=1)
         self.bed = self._bed()
+        self.veil = self._veil()
         self.sprites = self._sprites()
 
     def _bed(self):
@@ -987,6 +1030,20 @@ class OutroScene(Scene):
         cp.page_base(sf, 0.8)
         cp.horizon(sf, self.H * 0.74, 1.0)
         radial_glow(sf, self.W * 0.5, self.H * 0.76, self.W * 0.8, C.gold_600, 0.14)
+        if self.kb is None:
+            grain(sf, Grade.grain, Grade.grain_shadow_bias)
+        return sf.img.resize((self.W, self.H), Image.Resampling.LANCZOS).convert('RGBA')
+
+    def _veil(self):
+        """What sits over the photograph so the wordmark reads cleanly."""
+        if self.kb is None:
+            return None
+        sf = Surface(self.W, self.H, self.ss, bg=(0, 0, 0, 0))
+        # Deep and even: this is a brand card, not a news card, so the picture
+        # is atmosphere and must never compete with the handle.
+        scrim(sf, 0, self.H * 0.34, C.ink_950, 0.93, 0.80, curve=1.2)
+        scrim(sf, self.H * 0.34, self.H, C.ink_950, 0.80, 0.95, curve=1.1)
+        radial_glow(sf, self.W * 0.5, self.H * 0.30, self.W * 0.85, C.gold_600, 0.13)
         grain(sf, Grade.grain, Grade.grain_shadow_bias)
         return sf.img.resize((self.W, self.H), Image.Resampling.LANCZOS).convert('RGBA')
 
@@ -1023,16 +1080,24 @@ class OutroScene(Scene):
                           t_in=0.52, dur=0.55, rise=22))
 
         def where(sf):
+            # A gold hairline over the coverage word, so the card closes on a
+            # defined edge instead of trailing off into the dark. At 28px dim
+            # grey with 140px of nothing above it, this line simply read as
+            # something left over rather than as the last line of a card.
+            rule(sf, cw * 0.5 - 54, 8, cw * 0.5 + 54, alpha(C.gold_500, 0.55), 2.0)
             typo.draw_text(sf.img, Brand.coverage,
-                           sf.s(cw / 2), sf.s(34),
-                           typo.font('kn_var', sf.s(28), weight=480),
-                           Role.text_dim, anchor_x='c')
-        out.append(Sprite(_sprite_from(where, cw, 60, ss, 0, 0).img, sl, y + 366,
+                           sf.s(cw / 2), sf.s(58),
+                           typo.font('kn_var', sf.s(31), weight=520),
+                           C.paper_200, anchor_x='c')
+        out.append(Sprite(_sprite_from(where, cw, 84, ss, 0, 0).img, sl, y + 344,
                           t_in=0.70, dur=0.5, rise=14))
         return out
 
     def frame(self, t: float) -> Image.Image:
         f = self.bed.copy()
+        if self.kb is not None:
+            f.alpha_composite(self.kb.frame(t / self.dur).convert('RGBA'), (0, 0))
+            f.alpha_composite(self.veil, (0, 0))
         p = phase(t, 0.0, 0.70, Ease.out_back)
         p_live = clamp01(t / max(0.1, self.dur))
         # Subtle continuous cinematic expansion (1.0 -> 1.035) ensures the frame never freezes or feels stuck
@@ -1053,21 +1118,43 @@ class OutroScene(Scene):
 #  TIMELINE & RENDER
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _sweep(frame: Image.Image, p: float, W: int, H: int) -> Image.Image:
-    """A gold light-sweep wipe. Used only between scenes, and only for a few
-    frames — a transition you notice is a transition that is too long."""
+def _transition(prev: Image.Image, nxt: Image.Image, p: float,
+                W: int, H: int) -> Image.Image:
+    """The cut between two scenes.
+
+    A soft-edged WIPE, not a dissolve. A dissolve superimposes two
+    photographs, and for its whole length the frame is a double exposure of
+    two crowds — the single thing that most made these read as auto-generated
+    rather than edited. A wipe shows one picture or the other at every pixel,
+    which is what a news cutting room actually does.
+
+    The leading edge carries a narrow gold rim: enough to read as a deliberate
+    device at 30fps, far short of the full-frame gold wash that used to flash
+    over the whole picture and crush the photograph underneath it.
+    """
     e = Ease.in_out_cubic(clamp01(p))
-    x = int((-0.35 + 1.7 * e) * W)
-    band = int(W * 0.30)
-    lay = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-    a = np.zeros((1, W, 4), np.float32)
-    xs = np.arange(W)
-    d = np.clip(1.0 - np.abs(xs - x) / band, 0, 1) ** 2
-    a[0, :, 0], a[0, :, 1], a[0, :, 2] = C.gold_400
-    a[0, :, 3] = d * 190
-    lay = Image.fromarray(np.repeat(a, H, 0).astype('uint8'), 'RGBA')
-    out = frame.copy()
-    out.alpha_composite(lay)
+    soft = max(2.0, W * 0.038)              # the wipe's soft edge, in px
+    edge = -soft + e * (W + 2 * soft)       # where the boundary is now
+
+    xs = np.arange(W, dtype=np.float32)
+    # 1 where the new frame is fully in, 0 where the old one still is.
+    m = np.clip((edge - xs) / soft + 0.5, 0.0, 1.0)
+    # Smoothstep, so the boundary has no visible hard line.
+    m = m * m * (3.0 - 2.0 * m)
+
+    mask = Image.fromarray(
+        np.repeat((m * 255).astype(np.uint8)[None, :], H, 0), 'L')
+    out = Image.composite(nxt, prev, mask)
+
+    # A rim of light riding the boundary — brightest at mid-wipe, gone by the
+    # ends so the transition never announces itself at a cut point.
+    rim = np.exp(-((xs - edge) / (soft * 0.70)) ** 2)
+    strength = np.sin(np.pi * clamp01(p)) ** 0.85
+    lay = np.zeros((1, W, 4), np.float32)
+    lay[0, :, 0], lay[0, :, 1], lay[0, :, 2] = C.gold_400
+    lay[0, :, 3] = rim * 108.0 * strength
+    out.alpha_composite(Image.fromarray(
+        np.repeat(lay, H, 0).astype('uint8'), 'RGBA'))
     return out
 
 
@@ -1090,42 +1177,314 @@ def _progress_bar(frame: Image.Image, p: float, W: int, y: int = 0,
     frame.alpha_composite(d, (0, y))
 
 
-def _story_chapter_defs(st: Story) -> list[tuple[str, str, str, bool]]:
-    """Build (chapter_name, badge_label, text, is_alert) for multi-chapter breakdown."""
-    cat = st.category
-    defs = [("ಮುಖ್ಯಾಂಶ", "▪ ಬ್ರೇಕಿಂಗ್ ಮುಖ್ಯಾಂಶ", st.headline, False)]
+@dataclass
+class Card:
+    """One card of a reel: one picture, one badge, one thought, one beat.
 
-    pts = st.points or []
-    if len(pts) >= 1:
-        c1_name = "ಸ್ಥಳ ವಿವರ" if cat in ('civic', 'crime', 'accident') else "ಪ್ರಮುಖ ವಿವರ"
-        c1_badge = "▪ ಘಟನಾ ಸ್ಥಳದ ವಿವರ" if cat in ('civic', 'crime', 'accident') else "▪ ಪ್ರಮುಖ ವಿದ್ಯಮಾನ"
-        defs.append((c1_name, c1_badge, pts[0], False))
+    This is the single spine the whole reel is built on. `brand.voice` reads
+    it to decide how many spoken beats to synthesize; this module reads it to
+    decide how many scenes to draw. Because both come from the same list, the
+    sentence being spoken is always the sentence on screen — which is exactly
+    what the previous design could not guarantee, since it derived the picture
+    from a total duration and the speech from the story separately.
 
-    if len(pts) >= 2:
-        c2_name = "ತನಿಖಾ ವಿವರ" if cat in ('civic', 'crime') else "ಮುಖ್ಯ ಅಂಶ"
-        c2_badge = "▪ ತನಿಖಾ ಪ್ರಗತಿ & ಕ್ರಮ" if cat in ('civic', 'crime') else "▪ ಉತ್ಸವದ ಹಿನ್ನೆಲೆ & ಮೆರುಗು"
-        defs.append((c2_name, c2_badge, pts[1], False))
+    `key` matches brand.voice.card_keys() one for one. Do not change one
+    without the other.
+    """
+    key: str
+    kind: str              # 'lead' | 'fact' | 'advisory' | 'outro'
+    text: str = ''
+    badge: str = ''
+    is_alert: bool = False
+    photo: object = None   # a Photo for this card's picture, or None
 
-    if st.takeaway:
-        defs.append(("ಜಾಗೃತಿ", "⚠ ಸಾರ್ವಜನಿಕ ಎಚ್ಚರಿಕೆ", st.takeaway, True))
-    elif len(pts) >= 3:
-        c3_name = "ಜಾಗೃತಿ" if cat in ('civic', 'crime') else "ವಿಶೇಷ ಮಾಹಿತಿ"
-        c3_badge = "▪ ಸಾರ್ವಜನಿಕ ಗಮನಕ್ಕೆ" if cat in ('civic', 'crime') else "▪ ವಿಶೇಷ ಮಾಹಿತಿ"
-        defs.append((c3_name, c3_badge, pts[2], False))
 
-    return defs
+# Badge wording per category. No decorative characters: the marker in front of
+# a badge is DRAWN as a shape by `_badge_mark`, never typed. Every glyph that
+# was previously typed there — ▪ and ⚠ — is absent from all four house faces
+# AND from SF, so each of them shipped as an empty box on every reel.
+_BADGE = {
+    'incident': ('ಘಟನಾ ಸ್ಥಳದ ವಿವರ', 'ತನಿಖಾ ಪ್ರಗತಿ ಹಾಗೂ ಕ್ರಮ', 'ಸಾರ್ವಜನಿಕ ಗಮನಕ್ಕೆ'),
+    'default':  ('ಪ್ರಮುಖ ವಿದ್ಯಮಾನ', 'ಹಿನ್ನೆಲೆ ಹಾಗೂ ವಿವರ', 'ವಿಶೇಷ ಮಾಹಿತಿ'),
+}
+
+
+def reel_cards(story: Story) -> list[Card]:
+    """The cards this story becomes, in order — including the outro.
+
+    Mirrors brand.voice.card_keys() exactly.
+    """
+    incident = story.category in ('civic', 'crime', 'accident')
+    labels = _BADGE['incident' if incident else 'default']
+    gallery = list(getattr(story, 'gallery', []) or [])
+
+    cards = [Card(key='lead', kind='lead', text=head_line(story, REEL),
+                  badge='', photo=story.photo)]
+
+    facts = [p.strip() for p in story.points if p.strip()]
+    for i, p in enumerate(facts):
+        pic = gallery[i] if i < len(gallery) else None
+        cards.append(Card(key=f'fact{i}', kind='fact', text=p,
+                          badge=labels[min(i, len(labels) - 1)], photo=pic))
+
+    if (story.takeaway or '').strip():
+        pic = gallery[len(facts)] if len(facts) < len(gallery) else None
+        cards.append(Card(key='advisory', kind='advisory',
+                          text=story.takeaway.strip(),
+                          badge='ಸಾರ್ವಜನಿಕ ಎಚ್ಚರಿಕೆ', is_alert=True, photo=pic))
+
+    cards.append(Card(key='signoff', kind='outro'))
+    return cards
+
+
+def card_read_seconds(card: Card) -> float:
+    """How long this card must stay up for its Kannada to be readable.
+
+    Passed to the voice engine as a floor on the beat, because a TTS voice
+    reads Kannada far faster than a viewer meeting the sentence for the first
+    time on a moving picture. Without it the cut lands the moment the voice
+    stops and the reel feels rushed even when it is perfectly in sync.
+    """
+    if card.kind == 'outro':
+        return Motion.reel_outro
+    return (Motion.build_in + reading_seconds(card.text) * Motion.reel_read_ease
+            + Motion.settle)
+
+
+def reel_min_spans(story: Story) -> dict[str, float]:
+    """{beat key: seconds it needs on screen} — the contract with brand.voice."""
+    return {c.key: card_read_seconds(c) for c in reel_cards(story)}
+
+
+def audit_sync(video: str, cuts: list[float], vo_path: str,
+               tol: float = 0.12) -> tuple[bool, list[str]]:
+    """Check, on the FINISHED file, that every cut lands between sentences.
+
+    This module's whole claim is that the card on screen is the sentence being
+    spoken. A claim nobody measures is a wish, so it is measured: the rendered
+    narration is scanned for its actual silences, and every cut time is
+    required to fall inside one. A cut in the middle of a word is then a test
+    failure rather than something a viewer notices after publication.
+
+    Returns (ok, notes).
+    """
+    notes: list[str] = []
+    try:
+        vd = float(subprocess.run(
+            ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+             '-of', 'csv=p=0', video], capture_output=True, text=True,
+            check=True).stdout.strip())
+        out = subprocess.run(
+            ['ffmpeg', '-hide_banner', '-i', vo_path, '-af',
+             'silencedetect=n=-45dB:d=0.35', '-f', 'null', '-'],
+            capture_output=True, text=True).stderr
+    except Exception as e:
+        return True, [f'sync audit skipped ({e})']
+
+    import re as _re
+    starts = [float(x) for x in _re.findall(r'silence_start: ([\d.]+)', out)]
+    ends = [float(x) for x in _re.findall(r'silence_end: ([\d.]+)', out)]
+    pauses = list(zip(starts, ends))
+    if not pauses:
+        return True, ['sync audit: no pauses detected in the narration']
+
+    bad = []
+    for i, c in enumerate(cuts, 1):
+        if not any(a - tol <= c <= b + tol for a, b in pauses):
+            near = min(pauses, key=lambda p: min(abs(c - p[0]), abs(c - p[1])))
+            bad.append(f'cut {i} at {c:.2f}s is mid-sentence '
+                       f'(nearest pause {near[0]:.2f}–{near[1]:.2f}s)')
+    if bad:
+        notes += bad
+    else:
+        notes.append(f'sync audit: all {len(cuts)} cuts land between sentences')
+    notes.append(f'picture {vd:.2f}s')
+    return (not bad), notes
+
+
+def _write_cover(scenes: list, path: str, H: int, W: int):
+    """The shelf tile: the first story card with its headline up.
+
+    Instagram and YouTube Shorts both use this if you set it; leaving the
+    default (frame 0, a logo) is a scroll-past.
+    """
+    story_scenes = [sc for sc in scenes if isinstance(sc, StoryScene)]
+    if not story_scenes:
+        return
+    sc0 = story_scenes[0]
+    t_cover = min(max(1.35, Motion.build_in), max(0.4, sc0.dur * 0.55))
+    cover_path = os.path.splitext(path)[0] + '_cover.jpg'
+    os.makedirs(os.path.dirname(os.path.abspath(cover_path)) or '.', exist_ok=True)
+    sc0.frame(t_cover).convert('RGB').save(
+        cover_path, quality=92, subsampling=0, optimize=True)
+    # A 16:9 bulletin already has a purpose-built thumbnail — yt_thumbnail.jpg,
+    # set at a size that survives the feed. Telling an editor to use this
+    # landscape frame as "the IG / Shorts cover" would send them to the wrong
+    # file for the wrong platform, so the note follows the aspect.
+    where = ('IG / Shorts cover' if H > W
+             else 'in-video still — the YouTube thumbnail is yt_thumbnail.jpg')
+    print(f'  ✓ cover {os.path.basename(cover_path)}  ({where})')
+
+
+def _encode_frames(scenes: list, starts: list[float], total: float,
+                   n_frames: int, fps: int, W: int, H: int,
+                   frame_scale: float, XF: float) -> str:
+    """Draw every frame and pipe it into x264. Shared by both reel paths."""
+    raw = os.path.join(BASE, 'build', '_reel_video.mp4')
+    os.makedirs(os.path.dirname(raw), exist_ok=True)
+
+    # Frames are piped straight into ffmpeg. Writing 900 JPEGs to disk and
+    # reading them back costs more than the drawing does.
+    enc = subprocess.Popen([
+        'ffmpeg', '-y', '-loglevel', 'error',
+        '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}',
+        '-r', str(fps), '-i', 'pipe:0',
+        # Both platforms re-encode on upload, so what matters is the quality
+        # of what they re-encode FROM. 3 Mbps was leaving quality on the table.
+        '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
+        '-maxrate', '12M', '-bufsize', '24M',
+        '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-level', '4.2',
+        '-x264-params', 'ref=4:bframes=3',
+        '-movflags', '+faststart', raw], stdin=subprocess.PIPE)
+
+    for k in range(n_frames):
+        t = k / fps
+
+        in_trans = False
+        for i in range(1, len(scenes)):
+            s_tr = starts[i]
+            if s_tr <= t < s_tr + XF:
+                p = clamp01((t - s_tr) / XF)
+                f_prev = scenes[i - 1].frame(min(t - starts[i - 1], scenes[i - 1].dur))
+                f_next = scenes[i].frame(min(t - s_tr, scenes[i].dur))
+                f = _transition(f_prev, f_next, p, W, H)
+                in_trans = True
+                break
+
+        if not in_trans:
+            cur = 0
+            for i, s0 in enumerate(starts):
+                if t >= s0:
+                    cur = i
+            sc = scenes[cur]
+            f = sc.frame(min(t - starts[cur], sc.dur))
+
+        _progress_bar(f, t / total, W, fs=frame_scale)
+        enc.stdin.write(f.convert('RGB').tobytes())
+        if k % 60 == 0 or k == n_frames - 1:
+            print(f'    frame {k + 1}/{n_frames}  ({t:5.1f}s)', end='\r')
+    enc.stdin.close()
+    enc.wait()
+    print(f'\n  ✓ picture locked')
+    return raw
+
+
+def _render_narrated_reel(edition: Edition, path: str, voice, *, W: int, H: int,
+                          safe, ss: int, fps: int, frame_scale: float,
+                          bgm, sfx_dir, keep_frames: bool, pace: Pace) -> str:
+    """A reel whose every cut is placed from the measured narration.
+
+    The timeline is not a design decision here — it is arithmetic on the audio:
+
+        scene i starts at  segment[i].start - lead_in
+        scene i runs for   segment[i].span + crossfade
+
+    which puts the crossfade INTO the silence between two sentences, brings
+    each card up `lead_in` before its sentence begins, and leaves the last
+    card standing for the tail after the final word. Nothing here can drift,
+    because there is no second clock to drift against.
+    """
+    st = edition.stories[0]
+    cards = reel_cards(st)
+    segs = list(voice.segments)
+
+    # The two lists are generated from the same spine (reel_cards /
+    # voice.card_keys), so they normally match exactly. If a beat went missing
+    # — an engine dropped a clip, an editor's script had nothing for a card —
+    # keep only the cards that actually have speech, rather than showing a
+    # card in silence or speaking over the wrong picture.
+    by_key = {c.key: c for c in cards}
+    plan = [(by_key[s.key], s) for s in segs if s.key in by_key]
+    if not plan:
+        raise ValueError('the narration has no beat matching any reel card')
+    if len(plan) != len(segs):
+        missing = [s.key for s in segs if s.key not in by_key]
+        print(f'  ⚠ narration beats with no card: {", ".join(missing)} — '
+              f'their audio would play over the wrong picture, so they have '
+              f'been dropped.')
+
+    XF = Motion.scene_cross
+    lead_in = voice.lead_in
+
+    print(f'  narration-locked: {len(plan)} cards from {len(segs)} spoken beats')
+    scenes: list[Scene] = []
+    dirs = [1, -1, 2, -2]
+    for i, (card, seg) in enumerate(plan):
+        dur = seg.span + XF
+        if card.kind == 'outro':
+            # The end card keeps the story's own picture behind it, so the
+            # longest static moment of the reel is not a black rectangle.
+            scenes.append(OutroScene(edition, W, H, ss, dur, safe,
+                                     photo=st.photo))
+        elif card.kind == 'lead':
+            scenes.append(StoryScene(st, W, H, ss, dur, 0, 1, safe,
+                                     direction=dirs[0], pace=pace))
+        else:
+            pic = None
+            if card.photo is not None and os.path.exists(card.photo.path):
+                pic = card.photo.path
+            scenes.append(ChapterScene(
+                st, W, H, ss, dur, badge=card.badge, text=card.text,
+                chapter_idx=i, total_chapters=len(plan), safe=safe,
+                photo_path=pic, direction=dirs[i % len(dirs)],
+                is_alert=card.is_alert, pace=pace, photo=card.photo))
+        hold = seg.span
+        print(f'    {i + 1}. {card.key:9} {hold:5.2f}s  '
+              f'({seg.speech:.2f}s spoken + {seg.gap:.2f}s beat)  '
+              f'"{(card.text or "—")[:34]}"')
+
+    # The scene clock and the audio clock, stated once so they cannot diverge.
+    starts = [seg.start - lead_in for _c, seg in plan]
+    total = starts[-1] + scenes[-1].dur
+    n_frames = int(round(total * fps))
+    print(f'  total {total:.1f}s · {n_frames} frames · {W}x{H} @{fps}fps '
+          f'· narration {voice.duration:.1f}s')
+
+    _write_cover(scenes, path, H, W)
+    raw = _encode_frames(scenes, starts, total, n_frames, fps, W, H,
+                         frame_scale, XF)
+    audio = _master_narrated_audio(total, plan, lead_in, bgm, sfx_dir, voice)
+    out = _mux(raw, audio, path)
+    if not keep_frames and os.path.exists(raw):
+        os.remove(raw)
+
+    ok, notes = audit_sync(out, starts[1:], voice.path)
+    for n in notes:
+        print(f'  {"✓" if ok else "✗"} {n}')
+    if not ok:
+        print('  ✗ this reel cuts mid-sentence. That is the fault the '
+              'narration-locked timeline exists to prevent — do not publish '
+              'it without looking at why.')
+    return out
 
 
 def render_reel(edition: Edition, path: str, format_key: str = 'reel',
                 target_seconds: float | None = None, ss: int | None = None,
                 fps: int = Motion.fps, bgm: str | None = None,
                 sfx_dir: str | None = None, keep_frames: bool = False,
-                voiceover: str | None = None) -> str:
+                voiceover: str | None = None, voice=None) -> str:
     """Render the day's edition as video and master the audio.
 
     Drives both the 9:16 reel and the 16:9 bulletin: same engine, different
     `Pace`. See DECISIONS.md D37 for why the bulletin carries the deck, and
     D39 for why a reel is the lead story with no logo sting.
+
+    `voice` is a brand.voice.VoiceTrack — a narration whose per-beat
+    boundaries have been MEASURED. Given one, the reel is cut from those
+    boundaries: one card per spoken beat, each held for exactly as long as
+    its own sentence takes, so the card on screen is always the sentence in
+    the viewer's ear. `voiceover` (a bare path) is the older, unmeasured
+    form; it still works, but it can only place cuts by guessing.
     """
     edition.validate()
     F = fmt(format_key)
@@ -1141,6 +1500,19 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
         ss = F.ss
 
     pace = pace_for(format_key)
+    XF = Motion.scene_cross
+
+    # ── The narrated reel: the picture is cut from the speech ─────────────
+    # Everything below this branch is the older path, which decides scene
+    # lengths from reading time alone. When a measured VoiceTrack is present
+    # we do not guess at all: each card gets exactly its own beat's span, and
+    # the whole timeline is a restatement of the audio.
+    if voice is not None and pace.name != 'bulletin' and getattr(voice, 'segments', None):
+        return _render_narrated_reel(
+            edition, path, voice, W=W, H=H, safe=safe, ss=ss, fps=fps,
+            frame_scale=frame_scale, bgm=bgm, sfx_dir=sfx_dir,
+            keep_frames=keep_frames, pace=pace)
+
     if pace.name == 'bulletin':
         pace, intro_d, holds, outro_d, used, _t = plan_bulletin(
             edition, target=target_seconds)
@@ -1171,7 +1543,6 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
         if used < len(edition.stories):
             print(f'  · reel is the lead story only '
                   f'({len(edition.stories) - used} more on the carousel / bulletin)')
-    XF = Motion.scene_cross
 
     if pace.name == 'bulletin' and used < len(edition.stories):
         print(f'  ⚠ {len(edition.stories) - used} storie(s) dropped: they will not '
@@ -1278,77 +1649,9 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
                   f'Nothing is truncated, but that is a long watch for a local '
                   f'bulletin — consider fewer stories or tighter decks.')
 
-    # Cover frame: the first story with its headline up, not frame 0 of a
-    # sting. Instagram and YouTube Shorts both use this as the shelf tile
-    # if you set it; leaving the default (a logo) is a scroll-past.
-    story_scenes = [sc for sc in scenes if isinstance(sc, StoryScene)]
-    if story_scenes:
-        sc0 = story_scenes[0]
-        t_cover = min(max(1.35, Motion.build_in), max(0.4, sc0.dur * 0.55))
-        cover_path = os.path.splitext(path)[0] + '_cover.jpg'
-        os.makedirs(os.path.dirname(os.path.abspath(cover_path)) or '.',
-                    exist_ok=True)
-        sc0.frame(t_cover).convert('RGB').save(
-            cover_path, quality=92, subsampling=0, optimize=True)
-        # A 16:9 bulletin already has a purpose-built thumbnail — yt_thumbnail
-        # .jpg, set at a size that survives the feed. Telling an editor to use
-        # this landscape frame as "the IG / Shorts cover" would send them to
-        # the wrong file for the wrong platform, so the note follows the aspect.
-        where = ('IG / Shorts cover' if H > W
-                 else 'in-video still — the YouTube thumbnail is yt_thumbnail.jpg')
-        print(f'  ✓ cover {os.path.basename(cover_path)}  ({where})')
-
-    raw = os.path.join(BASE, 'build', '_reel_video.mp4')
-    os.makedirs(os.path.dirname(raw), exist_ok=True)
-
-    # Frames are piped straight into ffmpeg. Writing 900 JPEGs to disk and
-    # reading them back costs more than the drawing does.
-    enc = subprocess.Popen([
-        'ffmpeg', '-y', '-loglevel', 'error',
-        '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}',
-        '-r', str(fps), '-i', 'pipe:0',
-        # Both platforms re-encode on upload, so what matters is the quality
-        # of what they re-encode FROM. 3 Mbps was leaving quality on the table.
-        '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
-        '-maxrate', '12M', '-bufsize', '24M',
-        '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-level', '4.2',
-        '-x264-params', 'ref=4:bframes=3',
-        '-movflags', '+faststart', raw], stdin=subprocess.PIPE)
-
-    for k in range(n_frames):
-        t = k / fps
-
-        # Check if currently in a cross-transition between scene i-1 and scene i
-        in_trans = False
-        for i in range(1, len(scenes)):
-            s_tr = starts[i]
-            if s_tr <= t < s_tr + XF:
-                p = clamp01((t - s_tr) / XF)
-                f_prev = scenes[i - 1].frame(min(t - starts[i - 1], scenes[i - 1].dur))
-                f_next = scenes[i].frame(min(t - s_tr, scenes[i].dur))
-                f = Image.blend(f_prev, f_next, Ease.in_out_cubic(p))
-                if 0.10 < p < 0.90:
-                    f = _sweep(f, (p - 0.10) / 0.80, W, H)
-                in_trans = True
-                break
-
-        if not in_trans:
-            cur = 0
-            for i, s0 in enumerate(starts):
-                if t >= s0:
-                    cur = i
-            sc = scenes[cur]
-            lt = t - starts[cur]
-            f = sc.frame(min(lt, sc.dur))
-
-        _progress_bar(f, t / total, W, fs=frame_scale)
-        enc.stdin.write(f.convert('RGB').tobytes())
-        if k % 60 == 0 or k == n_frames - 1:
-            print(f'    frame {k + 1}/{n_frames}  ({t:5.1f}s)', end='\r')
-    enc.stdin.close()
-    enc.wait()
-    print(f'\n  ✓ picture locked')
-
+    _write_cover(scenes, path, H, W)
+    raw = _encode_frames(scenes, starts, total, n_frames, fps, W, H,
+                         frame_scale, XF)
     audio = _master_audio(total, starts, holds, intro_d, bgm, sfx_dir, voiceover=voiceover)
     out = _mux(raw, audio, path)
     if not keep_frames and os.path.exists(raw):
@@ -1359,6 +1662,131 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
 # ─────────────────────────────────────────────────────────────────────────────
 #  AUDIO
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _sfx_set(sfx_dir: str) -> dict:
+    """The broadcast hits, resolved to whatever this install actually has."""
+    def pick(*names):
+        for n in names:
+            p = os.path.join(sfx_dir, n)
+            if os.path.exists(p):
+                return p
+        return None
+    return {
+        'impact': pick('pro_impact.wav', 'news_impact.wav'),
+        'whoosh': pick('pro_whoosh.wav', 'whoosh.wav'),
+        'ping':   pick('tech_ping.wav'),
+        'outro':  pick('pro_outro_hit.wav', 'pro_news_ident.wav',
+                       'pro_impact.wav', 'news_impact.wav'),
+    }
+
+
+def _master_narrated_audio(total: float, plan: list, lead_in: float,
+                           bgm: str | None, sfx_dir: str | None, voice) -> str:
+    """Score, hits and narration for a reel cut from its own speech.
+
+    Two things here are different from the unmeasured path, and both were
+    audible faults rather than refinements:
+
+    DUCKING IS COMPUTED ONCE, NOT STACKED. The old filter chained a
+    `volume=0.22` across the whole voiceover and then a `volume=0.45` at every
+    scene start — and ffmpeg applies chained volume filters MULTIPLICATIVELY,
+    so the music dropped to 0.099 at each cut and jumped back up between them.
+    That pumping is what made the score sound like it was breathing against
+    the anchor. Here the bed is ducked to one level for the span of each
+    spoken beat and released in the gaps, so the music actually lifts between
+    sentences the way a broadcast bed does.
+
+    HITS LAND ON THE CUT. Because every cut time is known exactly, the whoosh
+    is centred on the wipe rather than fired at a scene index that only
+    roughly corresponded to one.
+    """
+    bgm = bgm or os.path.join(BASE, 'assets', 'news_bgm.mp3')
+    sfx_dir = sfx_dir or os.path.join(BASE, 'sfx')
+    out = os.path.join(BASE, 'build', '_reel_audio.wav')
+    S = _sfx_set(sfx_dir)
+    XF = Motion.scene_cross
+
+    if not os.path.exists(bgm):
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'lavfi',
+                        '-i', 'anullsrc=r=48000:cl=stereo', '-t', str(total),
+                        out], check=True)
+        return out
+
+    files = [bgm, voice.path]
+    for key in ('impact', 'whoosh', 'ping', 'outro'):
+        if S[key] and S[key] not in files:
+            files.append(S[key])
+    idx = {p: i for i, p in enumerate(files)}
+    ins = [x for p in files for x in ('-i', p)]
+
+    parts, mixes = [], []
+
+    # ── the bed, ducked per spoken beat ───────────────────────────────────
+    # One enable window per beat, each setting the SAME level, so no two
+    # windows can multiply. A short pre-roll and release keep the duck from
+    # chopping at the edges.
+    duck = ''
+    for _card, seg in plan:
+        a = max(0.0, seg.start - 0.28)
+        b = min(total, seg.start + seg.speech + 0.34)
+        if b > a:
+            duck += f",volume=enable='between(t,{a:.2f},{b:.2f})':volume={Motion.bgm_duck}"
+
+    fade_out = max(0.0, total - 0.85)
+    parts.append(f'[{idx[bgm]}:a]aloop=loop=-1:size=2e9,atrim=0:{total:.2f},'
+                 f'asetpts=N/SR/TB,'
+                 f'afade=t=in:st=0:d=0.6,'
+                 f'afade=t=out:st={fade_out:.2f}:d=0.85,'
+                 f'volume={Motion.bgm_level}{duck}[bgm]')
+    mixes.append('[bgm]')
+
+    # ── the narration ─────────────────────────────────────────────────────
+    # Already laid out with its own lead-in and gaps by synthesize_track, so
+    # it drops in at t=0 with no delay of its own. A gentle compressor keeps
+    # the anchor at a constant level under the bed rather than riding up and
+    # down with the TTS engine's own dynamics.
+    parts.append(f'[{idx[voice.path]}:a]'
+                 f'acompressor=threshold=0.09:ratio=3:attack=12:release=220:makeup=1.6,'
+                 f'highpass=f=80,'
+                 f'volume={Motion.vo_level}[vo]')
+    mixes.append('[vo]')
+
+    def hit(key: str, at: float, gain: float, tag: str):
+        p = S.get(key)
+        if not p or at < 0 or at >= total:
+            return
+        ms = int(max(0.0, at) * 1000)
+        parts.append(f'[{idx[p]}:a]adelay={ms}|{ms},volume={gain}[{tag}]')
+        mixes.append(f'[{tag}]')
+
+    k = 0
+    hit('impact', 0.02, 0.92, f'h{k}'); k += 1
+
+    # One whoosh per cut, centred on the wipe. `plan` is card-aligned, so
+    # starts[i] is exactly where scene i's wipe begins.
+    for i in range(1, len(plan)):
+        cut_at = plan[i][1].start - lead_in
+        last = (i == len(plan) - 1)
+        hit('whoosh', cut_at + XF * 0.5 - 0.16, 0.72, f'h{k}'); k += 1
+        if last:
+            # The outro ident lands as the wordmark arrives, not at the cut.
+            hit('outro', cut_at + XF + 0.12, 0.90, f'h{k}'); k += 1
+        else:
+            hit('ping', cut_at + XF + 0.10, 0.34, f'h{k}'); k += 1
+
+    parts.append(''.join(mixes) +
+                 f'amix=inputs={len(mixes)}:duration=first:normalize=0,'
+                 f'atrim=0:{total:.2f},'
+                 f'loudnorm=I=-14:TP=-1.5:LRA=9,'
+                 f'alimiter=level_in=1:level_out=0.97:limit=0.85:'
+                 f'attack=4:release=60:level=disabled[a]')
+
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', *ins,
+                    '-filter_complex', ';'.join(parts), '-map', '[a]',
+                    '-ar', '48000', '-ac', '2', '-c:a', 'pcm_s16le', out],
+                   check=True)
+    return out
+
 
 def _master_audio(total: float, starts: list[float], holds: list[float],
                   intro_d: float, bgm: str | None, sfx_dir: str | None,

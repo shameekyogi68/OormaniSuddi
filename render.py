@@ -126,6 +126,36 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None)
     return txt
 
 
+def _reel_with_voice(story, sub_ed, path: str, vo_path: str,
+                     reel_seconds: float | None) -> str | None:
+    """Narrate the story, then cut the reel to that narration.
+
+    The two steps are ordered and they depend on each other, which is the
+    whole point. `reel_min_spans` tells the voice engine how long each card
+    needs to be READABLE, so a beat is never shorter than the Kannada on it
+    takes to read; the returned track then tells the reel engine exactly where
+    every sentence begins, so every cut lands in a gap between sentences.
+
+    If synthesis fails — no network, no TTS engine — the reel is still made,
+    silent, from reading time alone. A missing voiceover must not cost the
+    edition its video.
+    """
+    try:
+        from brand.voice import synthesize_track
+        from brand import motion
+        track = synthesize_track(story, vo_path,
+                                 min_span=motion.reel_min_spans(story))
+        print(f'    · narration: {len(track.segments)} beats, '
+              f'{track.duration:.1f}s')
+        TP.render('reel', sub_ed, path, target_seconds=reel_seconds, voice=track)
+        return track.script
+    except Exception as e:
+        print(f'    ! voiceover synthesis failed ({e}); '
+              f'rendering the reel silent, timed from reading speed')
+        TP.render('reel', sub_ed, path, target_seconds=reel_seconds)
+        return None
+
+
 def render_edition(ed: Edition, outdir: str, only: list[str] | None,
                    reel_seconds: float | None,
                    bulletin_seconds: float | None = None
@@ -192,15 +222,7 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
                 sub_ed = replace(ed, stories=[st])
                 p = os.path.join(outdir, f'reel_{r:02d}.mp4')
                 vo_path = os.path.join(outdir, f'reel_{r:02d}_voiceover.mp3')
-                vo_script = None
-                try:
-                    from brand.voice import synthesize_narration
-                    _, vo_dur, vo_script = synthesize_narration(st, vo_path)
-                    print(f'    · voiceover synthesized ({vo_dur:.1f}s)')
-                except Exception as e:
-                    print(f'    ! voiceover synthesis failed: {e}')
-                    vo_path = None
-                TP.render('reel', sub_ed, p, target_seconds=reel_seconds, voiceover=vo_path)
+                vo_script = _reel_with_voice(st, sub_ed, p, vo_path, reel_seconds)
                 write_copy(st, outdir, f'reel_{r:02d}_copy', voice_script=vo_script)
                 cov = os.path.join(outdir, f'reel_{r:02d}_cover.jpg')
                 if os.path.exists(cov):
@@ -226,15 +248,7 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
             if getattr(lead, 'is_reel', True):
                 p = os.path.join(outdir, 'reel.mp4')
                 vo_path = os.path.join(outdir, 'reel_voiceover.mp3')
-                vo_script = None
-                try:
-                    from brand.voice import synthesize_narration
-                    _, vo_dur, vo_script = synthesize_narration(lead, vo_path)
-                    print(f'    · voiceover synthesized ({vo_dur:.1f}s)')
-                except Exception as e:
-                    print(f'    ! voiceover synthesis failed: {e}')
-                    vo_path = None
-                TP.render('reel', ed, p, target_seconds=reel_seconds, voiceover=vo_path)
+                vo_script = _reel_with_voice(lead, ed, p, vo_path, reel_seconds)
                 write_copy(lead, outdir, 'reel_copy', voice_script=vo_script)
                 cov = os.path.join(outdir, 'reel_cover.jpg')
                 if os.path.exists(cov):

@@ -8,10 +8,17 @@ sprite reveals, Ken Burns, scene timing from reading speed, and the audio
 master. Kept separate because the engine is 600 lines of motion machinery
 that the still templates have no use for.
 
+When the caller passes a `voice=` VoiceTrack, the reel is cut from the
+MEASURED narration instead of from reading time alone — one card per spoken
+beat, each held exactly as long as its own sentence. `reel_cards` and
+`reel_min_spans` are the contract the voice engine synthesizes against.
+
 See STANDARDS.md §7.
 """
 from __future__ import annotations
 
-from brand.motion import render_reel, plan_durations, reading_seconds
+from brand.motion import (render_reel, plan_durations, reading_seconds,
+                          reel_cards, reel_min_spans, card_read_seconds, Card)
 
-__all__ = ['render_reel', 'plan_durations', 'reading_seconds']
+__all__ = ['render_reel', 'plan_durations', 'reading_seconds',
+           'reel_cards', 'reel_min_spans', 'card_read_seconds', 'Card']

@@ -85,7 +85,10 @@ Whenever raw news copy is provided for a bulletin:
      - **Short-Form Audience Retention & 10/10 Algorithm Gate**:
        - Only stories scoring 10/10 in visual drama, public urgency, high stakes, or viral regional talkability become reels (`is_reel: true`).
        - Multi-image chapter breakdown (cutting to fresh scene photos every 12–15s) guarantees dynamic visual rhythm without static freezes.
-       - The Audience Retention Expert audits the final video (3-second hook, audio ducking, text legibility, living outro). If rating < 10/10, loop back to polish until 10/10 perfection is reached.
+       - **Speech-Locked Beat Synchronization (D45)**: Narration is synthesized per card beat (`card_keys()`), and cuts are timed strictly to speech boundaries (`vo_gap`, `vo_lead`), completely preventing drift between voiceover and on-screen cards.
+       - **Clean Wipes & Restrained Audio Bed (D48)**: Smooth scene wipes with gold rim; background score ducks once cleanly under speech (`bgm_duck`) without pumping.
+       - **Glyph Safety (D46)**: Typographic fallback (`typo.safe()`) and drawn badge marks ensure no missing characters or empty tofu boxes render in badges or copy.
+       - The Audience Retention Expert audits the final video (3-second hook, speech-locked sync, audio ducking, text legibility, living outro). If rating < 10/10, loop back to polish until 10/10 perfection is reached.
 5. **Legal, Copyright & YouTube Monetization Guardrails (10/10 Ad-Safe)**:
    - **AdSense Green Dollar Clearance**: Zero depictions of blood, open wounds, gore, or trapped victims in imagery or thumbnails. Sober, objective reporting without sensationalized clickbait.
    - **Content ID & Copyright Shield**: In-house royalty-free music (`assets/news_bgm.mp3`), open/proprietary broadcast SFX (`sfx/`), and verified `own` licenses. Zero risk of copyright claims or audio mutes.

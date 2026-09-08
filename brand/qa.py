@@ -147,6 +147,30 @@ def preflight(story: Story, format_key: str = 'post', hook: str = '') -> Report:
             f'In a reel that needs about {len(story.headline) / 7.0:.0f}s on '
             f'screen to be readable. Add a reel_line of ~45 characters.')
 
+    # Every string that will be SET, checked against the faces that will set
+    # it. A codepoint no face carries renders as .notdef — the empty box — and
+    # nothing anywhere else raises, so this is the only place it can be caught
+    # before a viewer sees it. typo.safe() already substitutes or drops
+    # decoration; what is reported here is copy that would lose meaning.
+    from . import typo
+    copy_faces = [('kn', story.headline), ('kn', story.reel_line),
+                  ('kn_var', story.deck), ('kn_var', story.takeaway or ''),
+                  ('kn_var', story.reel_support),
+                  ('kn_var', story.credit_line if story.photo else '')]
+    copy_faces += [('kn_var', p) for p in story.points]
+    seen: set[str] = set()
+    for fam, txt in copy_faces:
+        if not txt:
+            continue
+        gone = typo.missing_glyphs(txt, typo.font_for(txt, fam, 40))
+        seen.update(gone)
+    if seen:
+        r.fail.append(
+            'these characters have no glyph in the house faces and would be '
+            f'set as empty boxes: {" ".join(sorted(seen))}. Replace them in '
+            'the copy — the renderer will not invent a substitute for a '
+            'letter, because dropping one changes what the sentence says.')
+
     if story.status == 'unconfirmed':
         r.warn.append('status is unconfirmed — the card will say so in Kannada. '
                       'That is correct; just make sure you meant it.')

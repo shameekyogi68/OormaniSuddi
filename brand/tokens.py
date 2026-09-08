@@ -378,6 +378,59 @@ class Motion:
     panel_width         = 0.460   # type column, as a fraction of frame width
     panel_pad           = 44      # breathing room inside the column, in px
 
+    # ── reels narrated by a voice ─────────────────────────────────────────
+    # When a reel carries narration, the cut is placed from the SPEECH, not
+    # guessed from a total duration. These are the three constants that make
+    # the join land cleanly.
+    #
+    # vo_lead is silence before the first word, so the opening card is up and
+    # its type has settled before anyone speaks. vo_gap is the beat between
+    # cards: the cut is made inside it, which is why a transition can no
+    # longer clip a syllable. vo_tail holds the outro after the last word so
+    # the reel does not end on a cut-off consonant.
+    #
+    # vo_gap must stay comfortably above vo_lead: the picture leads the audio
+    # by vo_lead, so the next cut falls (vo_gap - vo_lead) after the previous
+    # sentence ends, and a gap at or below the lead would cut on the word.
+    vo_lead     = 0.75
+    vo_gap      = 1.05
+    vo_tail     = 1.30
+    # The most extra silence a card may be given so its Kannada can be read.
+    # Uncapped, a card carrying more copy than its narration covers asked for
+    # 6.6s of held picture in the middle of a reel, which reads as the video
+    # having stalled. Past this the honest diagnosis is that the card says
+    # more than the voice does — reported, not absorbed.
+    vo_hold_max = 1.60
+    # A narrated card is heard as well as read, so it does not need the full
+    # silent reading time — but it needs most of it, because the viewer is
+    # reading the Kannada on screen, not the sentence being spoken.
+    reel_read_ease = 0.80
+
+    # ── the reel's fact-card type scale ───────────────────────────────────
+    # A fact card is read at the same distance, on the same phone, in the same
+    # scrolling feed as the headline card before it, so it is set at a
+    # comparable size. It was capped at 46px against a 96px headline, which is
+    # why every card after the first read as a caption rather than as news.
+    # The floor matters as much as the ceiling: below ~44px Kannada matras
+    # start to close up at feed size.
+    reel_card_hi    = 74          # px on a 1080-wide frame
+    reel_card_lo    = 46
+    reel_card_lines = 5
+    reel_badge_size = 26
+    # Distance from the meta row up to the foot of the copy block. The block
+    # is seated on this edge rather than hung from its top, so a two-line card
+    # and a five-line card close at the same place instead of drifting.
+    reel_block_foot = 46
+
+    # ── the audio bed under a narrated reel ───────────────────────────────
+    # One duck level, applied once per spoken beat. It used to be two chained
+    # ffmpeg volume filters — 0.22 across the whole voiceover and 0.45 at each
+    # scene start — which multiply to 0.099, so the score dived at every cut
+    # and surfaced between them. Music under an anchor should sit still.
+    bgm_level   = 0.62
+    bgm_duck    = 0.20
+    vo_level    = 1.15
+
     kb_zoom     = 0.11    # Ken Burns total scale travel
     kb_drift    = 0.035   # lateral drift as a fraction of frame width
 

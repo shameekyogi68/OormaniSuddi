@@ -273,10 +273,11 @@ Raw bullet points, colons (`:`), semicolons (`;`), and print-copy dashes (`-`) s
 2. **Conversational Flow**: Weaves isolated facts into complete spoken sentences with broadcast connectors (*"ಇನ್ನು...", "ಇದೇ ವೇಳೆ...", "ಈ ನಡುವೆ..."*).
 3. **Regional Phonetics**: Accurately handles Coastal Karnataka place-names (Gangolli, Mullikatte, Kundapura, Udupi, Brahmavara, Siddapura).
 4. **Broadcast Sign-off**: Signature newsroom closing (*"ಕ್ಷಣ ಕ್ಷಣದ ನಿಖರ ಕರಾವಳಿ ಸುದ್ದಿಗಳಿಗಾಗಿ ಊರ್ಮನಿ ಸುದ್ದಿ ಫಾಲೋ ಮಾಡಿ."*).
+5. **Card-Spoken Beat Invariant (D45)**: Narration is synthesized per card beat (`card_keys()`), matching the lead, each fact, the advisory, and sign-off. Speech length determines card duration; cuts happen strictly in the silence (`vo_gap`).
 
 **Audio Mix & Mastering Standards:**
-- **Voice Level**: Mastered loud, clear, and centered (-14 LUFS target).
-- **News BGM Ducking**: Background newsroom bed automatically ducked to 22% (`volume=0.22`) during spoken narration, swelling to full volume only during intro/outro brand stings.
+- **Voice Level**: Mastered loud, clear, and centered at `vo_level=1.15` (-14 LUFS target).
+- **News BGM Ducking (D48)**: Background newsroom bed automatically ducked to 20% (`bgm_duck=0.20`) during spoken narration without multiplicative pumping, rising smoothly in gaps.
 - **Auditory Verification**: The expert verifies intelligibility, cadence, and anchor realism. If the narration sounds robotic, hesitant, or lacks journalistic authority, the expert rejects the take and rewrites the script for a fresh synthesis until it hits 10/10.
 
 ---
@@ -292,11 +293,12 @@ Raw bullet points, colons (`:`), semicolons (`;`), and print-copy dashes (`-`) s
    - Does the anchor's opening voiceover line spark instant curiosity without dragging?
 2. **Dynamic Visual Rhythm & Anti-Monotony**:
    - **Zero Visual Freezes**: The video must NEVER show a single fixed image for 60+ seconds.
-   - **Multi-Scene Chapters**: Every 12–15 seconds, the visual must cut to a new distinct scene photo with smooth Ken Burns motion and subtle audio whooshes.
-   - **Clean Top Header**: No cluttered or distracting numbered badges at the top; only the clean, elegant masthead and dateline.
+   - **Multi-Scene Chapters & Clean Wipes (D48)**: Every 12–15 seconds, the visual wipes to a new distinct scene photo with gold leading rim and subtle audio whooshes.
+   - **Clean Top Header & Drawn Badges (D46)**: Clean, elegant masthead and dateline. Chapter and advisory badges use vector-drawn marks (`_badge_mark`), guaranteeing zero unrendered tofu glyphs.
 3. **Audio-Visual Pacing & Clarity**:
-   - Do on-screen lower-third fact cards match the spoken narration points in real-time?
+   - **Speech-Synchronized Cuts (D45)**: Do on-screen fact cards cut exactly in sync with spoken narration beats (`audit_sync()`)? Zero audio drift across facts.
    - Is the background music ducked cleanly so speech is 100% crisp and intelligible on phone speakers?
+   - **News-Scaled Fact Typography (D47)**: Fact cards set boldly (46–74px) seated on the meta row, and outro card holds a deep-veiled photo rather than dead black.
    - Does the outro animate smoothly with living continuous scale, avoiding any "stuck" or frozen frame?
 4. **High-Engagement Triggers & Algorithm Reach**:
    - Does the news package inspire immediate regional sharing (WhatsApp forwards / Instagram DM shares)?

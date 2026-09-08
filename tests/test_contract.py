@@ -467,5 +467,154 @@ class BulletinPacing(unittest.TestCase):
         self.assertLess(self.M.Motion.reel_outro, 3.0)
 
 
+class NarrationLockedReel(unittest.TestCase):
+    """D45: the picture is cut from the speech, so the two cannot drift.
+
+    These are the invariants that made the drift possible. The old timeline
+    put the fact-one card on screen 15.5 seconds before the voice reached that
+    fact, and no test could have caught it, because nothing tied the two
+    together at all.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from brand import motion as M
+        from brand import voice as V
+        from brand.content import Edition
+        cls.M, cls.V = M, V
+        cls.ed = Edition.load('tests/fixture_edition.json')
+
+    def test_every_story_has_one_spoken_beat_per_card(self):
+        """The single invariant the whole design rests on."""
+        for st in self.ed.stories:
+            cards = [c.key for c in self.M.reel_cards(st)]
+            beats = [k for k, _t in self.V.narration_beats(st)]
+            self.assertEqual(cards, self.V.card_keys(st),
+                             'reel_cards and card_keys disagree')
+            self.assertEqual(beats, cards,
+                             f'{st.headline[:30]}: narration beats {beats} do '
+                             f'not match cards {cards} — the voice would play '
+                             f'over the wrong picture')
+
+    def test_a_cards_text_is_what_its_beat_talks_about(self):
+        """A fact card must carry the fact its beat was built from."""
+        for st in self.ed.stories:
+            cards = {c.key: c for c in self.M.reel_cards(st)}
+            for i, p in enumerate([x for x in st.points if x.strip()]):
+                self.assertEqual(cards[f'fact{i}'].text, p)
+            if (st.takeaway or '').strip():
+                self.assertEqual(cards['advisory'].text, st.takeaway.strip())
+                self.assertTrue(cards['advisory'].is_alert)
+
+    def test_the_gap_between_cards_outlasts_the_picture_lead(self):
+        """The cut is made inside the silence between two sentences.
+
+        The picture leads the audio by vo_lead, so the next cut falls
+        (vo_gap - vo_lead) after a sentence ends. If the gap ever drops to the
+        lead, every transition clips a syllable.
+        """
+        Mo = self.M.Motion
+        self.assertGreater(Mo.vo_gap, Mo.vo_lead + 0.2)
+        self.assertGreater(Mo.vo_tail, Mo.vo_lead)
+
+    def test_a_card_is_never_shorter_than_its_kannada_takes_to_read(self):
+        for st in self.ed.stories:
+            for c in self.M.reel_cards(st):
+                if c.kind == 'outro':
+                    continue
+                self.assertGreaterEqual(
+                    self.M.card_read_seconds(c),
+                    self.M.reading_seconds(c.text) * Mo_ease(self.M),
+                    'a card may not be given less time than its copy needs')
+
+    def test_an_override_script_still_lands_on_the_right_cards(self):
+        """An editor's own narration is speech; the cards come from the story.
+
+        Balancing by length alone put the sign-off on a fact card and the
+        advisory on the outro, which is worse than the automatic path.
+        """
+        st = next(s for s in self.ed.stories if s.points)
+        keys = self.V.card_keys(st)
+        script = ('ನಮಸ್ಕಾರ. ಮೊದಲ ವಾಕ್ಯ. ಎರಡನೇ ವಾಕ್ಯ. ಮೂರನೇ ವಾಕ್ಯ. '
+                  'ನಾಲ್ಕನೇ ವಾಕ್ಯ. ಐದನೇ ವಾಕ್ಯ. ಆರನೇ ವಾಕ್ಯ. '
+                  'ಕ್ಷಣ ಕ್ಷಣದ ಸುದ್ದಿಗಳಿಗಾಗಿ ಊರ್ಮನಿ ಸುದ್ದಿ ಫಾಲೋ ಮಾಡಿ.')
+        beats = self.V._fit_script_to_cards(script, keys)
+        self.assertEqual([k for k, _ in beats], keys)
+        self.assertIn('ಫಾಲೋ ಮಾಡಿ', dict(beats)['signoff'],
+                      'the sign-off must land on the outro card')
+
+
+def Mo_ease(M):
+    return M.Motion.reel_read_ease
+
+
+class GlyphsThatCannotBeSet(unittest.TestCase):
+    """D46: a codepoint no face carries used to ship as an empty box."""
+
+    @classmethod
+    def setUpClass(cls):
+        from brand import typo
+        cls.typo = typo
+
+    def test_the_characters_that_shipped_as_boxes_are_now_substituted(self):
+        for fam in ('kn', 'kn_var', 'kn_serif'):
+            f = self.typo.font(fam, 40)
+            self.assertNotIn('\u25aa', self.typo.safe('▪ ಪರೀಕ್ಷೆ', f))
+            self.assertNotIn('\u26a0', self.typo.safe('⚠ ಪರೀಕ್ಷೆ', f))
+
+    def test_no_reel_badge_contains_an_unsettable_character(self):
+        """The badges are the copy that actually broke."""
+        from brand import motion as M
+        from brand.content import Edition
+        ed = Edition.load('tests/fixture_edition.json')
+        for st in ed.stories:
+            for c in M.reel_cards(st):
+                if not c.badge:
+                    continue
+                f = self.typo.font_for(c.badge, 'kn_var', 30)
+                self.assertEqual(self.typo.safe(c.badge, f), c.badge,
+                                 f'badge {c.badge!r} is not renderable as written')
+                self.assertEqual(self.typo.missing_glyphs(c.badge, f), ())
+
+    def test_designed_whitespace_survives(self):
+        """Only whitespace the sanitizer creates may be closed up.
+
+        Collapsing the double space either side of the tagline's bullet moved
+        every still in the house the first time this was written.
+        """
+        f = self.typo.font('kn_var', 40)
+        for s in ('ನಮ್ಮ ಊರು  •  ನಮ್ಮ ಧ್ವನಿ', '  ಪೂರ್ವ  ', 'a  b'):
+            self.assertEqual(self.typo.safe(s, f), s)
+
+    def test_a_missing_letter_is_reported_and_never_dropped(self):
+        """Dropping a letter changes what a sentence says; that is worse."""
+        f = self.typo.font('latin', 40)          # SF has no Kannada
+        out = self.typo.safe('ಪರೀಕ್ಷೆ', f)
+        self.assertTrue(out, 'Kannada must not be silently deleted')
+        self.assertTrue(self.typo.missing_glyphs('ಪರೀಕ್ಷೆ', f),
+                        'a face that cannot set this must say so')
+
+    def test_decoration_is_dropped_but_a_letter_is_escalated(self):
+        """The split that makes silent substitution safe.
+
+        An emoji is decoration: dropping it costs nothing and beats a box. A
+        letter from a script the face does not carry cannot be dropped — that
+        would change what the sentence says — so it survives to be reported.
+        """
+        f = self.typo.font('kn_var', 40)
+        self.assertEqual(self.typo.safe('ಪ \U0001F600 ಪ', f), 'ಪ ಪ')
+        self.assertEqual(self.typo.missing_glyphs('ಪ \U0001F600 ಪ', f), ())
+        self.assertIn('அ', self.typo.safe('ಪ அ ಪ', f))
+        self.assertEqual(self.typo.missing_glyphs('ಪ அ ಪ', f), ('அ',))
+
+    def test_preflight_fails_copy_that_cannot_be_set(self):
+        from brand.qa import preflight
+        from brand.content import Story
+        s = Story(headline='ಪರೀಕ್ಷೆ அ ಪರೀಕ್ಷೆ', sources=['ಮೂಲ'])
+        r = preflight(s, 'reel')
+        self.assertTrue(any('empty boxes' in m for m in r.fail),
+                        'an unsettable letter must fail preflight')
+
+
 if __name__ == '__main__':
     unittest.main()

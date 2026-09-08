@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from functools import lru_cache
 
@@ -37,6 +38,120 @@ _KANNADA = re.compile(r'[ಀ-೿]')
 
 def has_kannada(s: str) -> bool:
     return bool(_KANNADA.search(s))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  GLYPH SAFETY
+#
+#  A codepoint the face does not carry renders as .notdef — the empty box. It
+#  is silent: nothing raises, the layout still measures, and the box only shows
+#  up when somebody watches the finished video. That is exactly how "▪" and
+#  "⚠" reached published reels: NONE of the four faces here carries either,
+#  including SF, so every badge pill shipped with a tofu box in front of it.
+#
+#  The fix is structural rather than a one-time find-and-replace, because the
+#  next decorative character somebody types would fail the same silent way.
+#  Every measurement and every draw funnels through here, so what is measured
+#  is exactly what is drawn, and nothing uncovered can reach a frame:
+#
+#    * A SYMBOL or PUNCTUATION mark the face lacks is substituted from
+#      _SUBSTITUTE (which only ever maps to characters all four faces carry),
+#      or dropped when it is pure decoration with no equivalent.
+#    * A LETTER or COMBINING MARK the face lacks is left alone and reported.
+#      Dropping it would silently change the meaning of Kannada copy, which is
+#      a far worse failure than a visible box — so it is raised to preflight
+#      instead, where a human can see it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Only maps to characters verified present in all of Noto Sans Kannada, Anek
+# Kannada, Noto Serif Kannada and SF. Keep it that way.
+_SUBSTITUTE = {
+    '▪': '•', '▫': '•', '■': '•', '□': '•', '◾': '•', '◽': '•',
+    '●': '•', '⬤': '•', '◦': '•', '‧': '·', '∙': '·',
+    '▸': '›', '▶': '›', '►': '›', '➤': '›', '➔': '›', '→': '›', '⟶': '›',
+    '▹': '›', '»': '»', '☞': '›',
+    '⚠': '', '⚡': '', '★': '', '☆': '', '✓': '', '✔': '', '✗': '', '✘': '',
+    '❗': '', '❕': '', '‼': '!', '⁉': '!?',
+    '︎': '', '️': '',        # emoji / text variation selectors
+    '​': '', '‌': '', '‍': '',   # ZWSP / ZWNJ / ZWJ
+}
+
+
+@lru_cache(maxsize=16)
+def _coverage(path: str) -> frozenset | None:
+    """Every codepoint the face at `path` can actually render.
+
+    Read once per face with fontTools and cached. Returns None if the table
+    cannot be read, which makes every check below fail open — a font we cannot
+    introspect is left exactly as it is rather than having its text mangled.
+    """
+    try:
+        from fontTools.ttLib import TTFont
+        cps: set[int] = set()
+        with TTFont(path, fontNumber=0, lazy=True) as tt:
+            for table in tt['cmap'].tables:
+                cps |= set(table.cmap.keys())
+        return frozenset(cps)
+    except Exception:
+        return None
+
+
+def covers(f, ch: str) -> bool:
+    """Can this font render this character?"""
+    cov = _coverage(getattr(f, 'path', '') or '')
+    return True if cov is None else (ord(ch) in cov)
+
+
+@lru_cache(maxsize=4096)
+def _safe(s: str, path: str) -> tuple[str, tuple]:
+    """(renderable text, letters the face is missing).
+
+    Cached on (text, face) because it runs inside every measure and every
+    draw — including once per line per frame — and the answer never changes.
+    """
+    cov = _coverage(path)
+    if cov is None or not s:
+        return s, ()
+    DROP = '\x00'            # sentinel: a character removed, not replaced
+    out, missing = [], []
+    for ch in s:
+        if ord(ch) in cov:
+            out.append(ch)
+            continue
+        if ch in _SUBSTITUTE:
+            sub = _SUBSTITUTE[ch]
+            # A substitute is only useful if THIS face has it too.
+            out.append(sub if (sub and all(ord(c) in cov for c in sub)) else DROP)
+            continue
+        cat = unicodedata.category(ch)
+        if cat[0] in ('S', 'P', 'C', 'Z'):
+            out.append(DROP)        # decoration the face lacks: remove it
+        else:
+            out.append(ch)          # a letter or mark: keep it, and report it
+            missing.append(ch)
+    txt = ''.join(out)
+    if DROP in txt:
+        # Close the hole a removed character left, taking ONE adjacent space
+        # with it so " ⚠ ಸೂಚನೆ" becomes "ಸೂಚನೆ" and not "  ಸೂಚನೆ". Only the
+        # whitespace this function created is touched: spacing the designer
+        # wrote — the double space either side of the tagline's bullet, for
+        # one — has to survive untouched, or every still in the house moves.
+        txt = re.sub(rf'{DROP}+ | {DROP}+|{DROP}+', '', txt)
+    return txt, tuple(dict.fromkeys(missing))
+
+
+def safe(s: str, f) -> str:
+    """The renderable form of `s` in face `f`. Idempotent."""
+    if not s:
+        return s
+    return _safe(s, getattr(f, 'path', '') or '')[0]
+
+
+def missing_glyphs(s: str, f) -> tuple:
+    """Letters/marks in `s` that face `f` cannot render. Empty is the good case."""
+    if not s:
+        return ()
+    return _safe(s, getattr(f, 'path', '') or '')[1]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -123,6 +238,7 @@ def line_height(f: ImageFont.FreeTypeFont, leading: float = 1.35,
 
 
 def text_width(s: str, f, tracking: float = 0.0) -> float:
+    s = safe(s, f)
     if not s:
         return 0.0
     w = _M.textlength(s, font=f)
@@ -133,6 +249,7 @@ def text_width(s: str, f, tracking: float = 0.0) -> float:
 
 def ink_extents(s: str, f) -> tuple[float, float]:
     """(rise above baseline, drop below baseline) of the actual inked pixels."""
+    s = safe(s, f)
     if not s:
         return (0.0, 0.0)
     x0, y0, x1, y1 = _M.textbbox((0, 0), s, font=f, anchor='ls')
@@ -255,6 +372,10 @@ class Block:
 def layout(text: str, f, max_w: float, leading: float = 1.35,
            tracking: float = 0.0, align: str = 'left',
            balance: bool = True) -> Block:
+    # Wrap the text the face can actually set, so Block.lines is what a viewer
+    # will really see — otherwise a dropped symbol makes the stored line and
+    # the drawn line disagree, and every QA check reads the wrong one.
+    text = safe(text, f)
     lines = wrap(text, f, max_w, tracking, balance) if max_w else text.split('\n')
     lh = line_height(f, leading, lines)
     # Rise/drop from the real ink, floored at the Kannada headline height so a
@@ -305,6 +426,11 @@ def _needs_layer(fill) -> bool:
 
 def _draw_line(d: ImageDraw.ImageDraw, x: float, baseline: float, s: str,
                f, fill, tracking: float):
+    # The last gate before ink hits the canvas. Every path into the rasteriser
+    # passes through here, so nothing the face cannot render ever gets drawn.
+    s = safe(s, f)
+    if not s:
+        return
     if tracking and not has_kannada(s):
         cx = x
         for ch in s:

@@ -973,6 +973,144 @@ The path had no test — which is how it survived. It has one now.
 
 ---
 
+## D45 · A narrated reel is cut from the speech, never alongside it
+
+A reel with a voiceover used to be timed like this: synthesize one long MP3,
+measure its total duration, give the whole story that many seconds, then split
+those seconds into equal chapters and hope the picture matched the words.
+
+It did not match. On the 2026-09-07 edition, measured:
+
+| card | appeared at | the voice reached it at | drift |
+|---|---|---|---|
+| fact 0 | 17.6s | 33.1s | **15.5s** |
+| fact 1 | 35.4s | 45.7s | 10.3s |
+| fact 2 | 53.2s | 57.3s | 4.1s |
+| outro | 71.0s | — the sign-off was spoken at 62.4s, over a fact card | — |
+
+For fifteen seconds the viewer read one fact while hearing another, and the
+reel ended with a silent outro because the narration had already finished.
+
+No amount of tuning fixes this, because **a total duration does not contain
+the information needed to place a cut**. Only segment boundaries do. So the
+narration is now synthesized one BEAT at a time — the lead, each fact, the
+advisory, the sign-off — each measured, then concatenated with known gaps.
+`brand.voice.card_keys()` and `brand.motion.reel_cards()` are generated from
+the same spine, so a story with three facts has five cards and five beats,
+always, and the timeline becomes arithmetic on the audio:
+
+    scene i starts at  segment[i].start - vo_lead
+    scene i runs for   segment[i].span + scene_cross
+
+There is no second clock, so there is nothing to drift against. The cut falls
+inside `vo_gap`, the silence between two sentences — which is also why a
+transition can no longer clip a syllable.
+
+Two constraints ride on top. A card is never shorter than its Kannada takes to
+READ (`reel_min_spans` is passed to the voice engine as a floor, because TTS
+reads Kannada far faster than a viewer meeting the sentence for the first
+time); and that stretching is capped at `vo_hold_max`, because uncapped it
+asked for 6.6s of held picture and silence mid-reel, which reads as the video
+having stalled. Past the cap the honest diagnosis is that the card says more
+than the voice does, and it is reported rather than absorbed.
+
+Because the claim is checkable, it is checked: `audit_sync()` scans the
+finished narration for its real silences and requires every cut to fall inside
+one. All 13 cuts across the three reels of that edition pass.
+
+`brand/voice.py :: synthesize_track` · `brand/motion.py :: _render_narrated_reel, audit_sync`
+
+---
+
+## D46 · A glyph the face does not carry is a rendering fault, caught in the type engine
+
+Every published reel carried an empty box. The chapter badges were written
+`"▪ ಬ್ರೇಕಿಂಗ್ ಮುಖ್ಯಾಂಶ"` and `"⚠ ಸಾರ್ವಜನಿಕ ಎಚ್ಚರಿಕೆ"`, and:
+
+* `▪` is in **none** of the four house faces, and not in SF either.
+* `⚠` is in SF only — and a badge containing Kannada is routed to a Kannada
+  face by `font_for`, so it never reached SF.
+
+Nothing raised. `.notdef` renders, layout measures it, the file encodes, and
+the box is visible only to whoever watches the video afterwards.
+
+A find-and-replace would have fixed those two characters and left the next one
+to fail identically, so the guard is in the type engine instead. `typo.safe()`
+runs inside `text_width`, `ink_extents` and `_draw_line` — every measurement
+and every draw — and is idempotent, so measurement and drawing can never
+disagree:
+
+* a **symbol or punctuation** mark the face lacks is substituted from a map
+  that only ever targets characters all four faces carry, or dropped;
+* a **letter or combining mark** is left alone and reported by `preflight()`,
+  because silently dropping one would change what a Kannada sentence says —
+  a worse failure than a visible box.
+
+Only whitespace this function itself creates is closed up. The designed double
+space either side of the tagline's bullet has to survive, and the first cut of
+this collapsed it and moved every still in the house.
+
+The marks themselves are now **drawn**, not typed: `_badge_mark()` renders the
+square and the warning triangle with `ImageDraw`. A drawn shape has no font to
+be missing from.
+
+`brand/typo.py :: safe, covers, missing_glyphs` · `brand/motion.py :: _badge_mark` · `brand/qa.py :: preflight`
+
+---
+
+## D47 · The fact card is set at news size, and the end card holds a picture
+
+Three faults that all read as "the reel is not finished", fixed together
+because they share a cause — scenes drawn to standards that did not match.
+
+**Type.** A fact card was capped at 46px against a 96px headline, so every
+card after the first read as a caption. It is now bounded by the space
+between the masthead and the meta row rather than by a fixed 340px block, so a
+short fact is set BIG instead of small in a half-empty tile. The lines were
+also drawn at weight 620 while `fit` had measured them at 600, so long lines
+crept past their own measure.
+
+**Seating.** The block hung from its top, so a two-line card and a five-line
+card ended in different places and the cards visibly disagreed from scene to
+scene. It is seated on the meta row instead.
+
+**The end card.** At 2.4s a near-black panel was survivable. Carrying the
+spoken sign-off it runs eight or nine seconds, and nine seconds of dead black
+at the end of a video is where the retention graph falls off. It keeps the
+story's own photograph behind a deep veil, pushed in slowly.
+
+Also here: the photo credit was given a fixed one-line tile while being
+wrapped to the full column width, so a credit long enough to wrap — an AI
+label plus a caption is easily 60 characters — had its second line sliced
+through the middle by the edge of its own sprite. It is laid out and measured
+now. It is an honesty label; one the reader cannot read does not discharge the
+obligation it exists for.
+
+`brand/tokens.py :: Motion.reel_card_*` · `brand/motion.py :: ChapterScene, OutroScene, StoryScene._measure`
+
+---
+
+## D48 · Scenes wipe; the music ducks once
+
+**The cut.** Scenes cross-dissolved, which for the whole length of the
+transition made the frame a double exposure of two crowds — the single thing
+that most made these look generated rather than edited. A wipe shows one
+picture or the other at every pixel, which is what a cutting room does. The
+old gold "sweep" also washed the entire frame at alpha 190; the wipe carries a
+narrow rim on its leading edge instead.
+
+**The bed.** The old filter chained `volume=0.22` across the whole voiceover
+and `volume=0.45` at every scene start. ffmpeg applies chained volume filters
+**multiplicatively**, so the music dropped to 0.099 at each cut and surfaced
+between them — audible pumping against the anchor. It is now one duck level,
+one window per spoken beat, so the score sits still under speech and lifts in
+the gaps. The whoosh is centred on the wipe, which is possible only because
+every cut time is now exactly known.
+
+`brand/motion.py :: _transition, _master_narrated_audio` · `brand/tokens.py :: Motion.bgm_*`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

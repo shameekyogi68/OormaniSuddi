@@ -268,11 +268,11 @@ The day's edition as a single front page.
 
 **Requires.** `stories`, `date`, `edition_no`, `strapline`
 
-**Also accepts.** `target_seconds`
+**Also accepts.** `target_seconds`, `voice`, `voiceover`
 
 **Limits.** `stories` = 1, `reel_line_chars` = 46, `target_seconds_min` = 8, `target_seconds_max` = 45
 
-**Note.** A reel is a glance in a vertical feed: one story, no sting, headline on frame 0. Writes reel_cover.jpg — set that as the Instagram / Shorts cover. Write a reel_line of ~45 chars. Audio is normalised to -14 LUFS / -1.5 dBTP.
+**Note.** A reel is a glance in a vertical feed: one story, no sting, headline on frame 0. Writes reel_cover.jpg — set that as the Instagram / Shorts cover. Write a reel_line of ~45 chars. Audio is normalised to -14 LUFS / -1.5 dBTP. Pass voice= a brand.voice.VoiceTrack to cut the reel from MEASURED narration: one card per spoken beat, every cut landing between sentences, and target_seconds no longer applies because the length is the narration's. voiceover= is the older bare-path form, which can only guess where to cut.
 
 ---
 
