@@ -1,0 +1,51 @@
+#!/bin/bash
+# ಊರ್ಮನಿ ಸುದ್ದಿ — the 06:05 intake, and what happens when it fails.
+#
+# Run by launchd (see scripts/launchd/). The whole point of the wrapper is the
+# failure path: a fetch that dies quietly at 06:05 is discovered at noon, which
+# is a day without an edition. This puts a notification on the editor's screen
+# instead.
+#
+# Install:  bash scripts/install_launchd.sh
+# Run now:  bash scripts/morning.sh
+# Logs:     logs/fetch-YYYY-MM-DD.log
+
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT" || exit 1
+
+mkdir -p logs
+DATE="$(date +%Y-%m-%d)"
+LOG="logs/fetch-$DATE.log"
+
+notify() {
+  # osascript is on every Mac; no dependency, no account, no service.
+  /usr/bin/osascript -e "display notification \"$2\" with title \"ಊರ್ಮನಿ ಸುದ್ದಿ\" subtitle \"$1\"" 2>/dev/null || true
+}
+
+{
+  echo "════════════════════════════════════════════════"
+  echo "$(date '+%Y-%m-%d %H:%M:%S')  morning intake"
+} >> "$LOG"
+
+if /usr/bin/env python3 scripts/fetch_daily_news.py >> "$LOG" 2>&1; then
+  TIPS=$(/usr/bin/env python3 -c "
+import json,sys
+try:
+    d=json.load(open('inbox/today.json',encoding='utf-8'))
+    c=d.get('counts',{})
+    print(f\"{c.get('tips',0)} tips · {c.get('full_articles',0)} full articles · {c.get('flagged_unsupported',0)} to verify\")
+except Exception:
+    print('tip sheet ready')
+" 2>/dev/null)
+  echo "$(date '+%H:%M:%S')  OK — $TIPS" >> "$LOG"
+  notify "Tip sheet ready" "$TIPS — open inbox/today.md"
+  exit 0
+fi
+
+REASON="$(cat inbox/.fetch_failed 2>/dev/null | tail -1)"
+[ -z "$REASON" ] && REASON="see $LOG"
+echo "$(date '+%H:%M:%S')  FAILED — $REASON" >> "$LOG"
+notify "Morning fetch FAILED" "$REASON"
+exit 1
