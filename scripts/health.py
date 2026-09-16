@@ -172,6 +172,24 @@ def check_house() -> list[str]:
             '      docs/HOUSE_RULES.md']
 
 
+def check_music() -> list[str]:
+    """The quarterly licence audit, as something that runs."""
+    try:
+        from brand import music
+        problems = music.audit()
+    except Exception as e:
+        return [f'{WARN} music licences — could not check ({e})']
+    if not problems:
+        n = len(music.allowed_paths())
+        return [f'{OK} music licences — register clean, {n} bed(s) usable']
+    out = [f'{BAD} music licences — {len(problems)} problem(s). Every video '
+           f'that used an unverified bed is exposed, and a strike is how you '
+           f'find out.']
+    for m in problems[:4]:
+        out.append(f'      {m[:150]}')
+    return out
+
+
 def check_git() -> list[str]:
     def run(*a):
         return subprocess.run(a, cwd=ROOT, capture_output=True,
@@ -207,7 +225,7 @@ def main() -> int:
     print(f'\n  ಊರ್ಮನಿ ಸುದ್ದಿ — health   {datetime.now():%Y-%m-%d %H:%M}\n')
     lines: list[str] = []
     for fn in (check_fetch, check_clocks, check_reviews, check_house,
-               check_backups, check_git, check_tests):
+               check_music, check_backups, check_git, check_tests):
         try:
             lines += fn()
         except Exception as e:                      # never fail the check

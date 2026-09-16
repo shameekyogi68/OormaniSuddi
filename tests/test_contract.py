@@ -1354,3 +1354,54 @@ class EditorialDriftIsNoticed(unittest.TestCase):
         rep = self.R.review(self.dir, ed)
         self.assertFalse([f for f in rep.findings
                           if f.code == 'PUB-04' and f.severity == 'fail'])
+
+
+class AMusicLicenceMustBeProducible(unittest.TestCase):
+    """D74: a licence you cannot point at is one you cannot produce.
+
+    'recorded-in-project' is not a licence. It is a note saying the terms were
+    written down somewhere — which is exactly what nobody can find eighteen
+    months later, when a Content ID claim lands on a film that has been up
+    since Ganesha. The quarterly audit found one of these already marked
+    allowed and in use.
+    """
+
+    def test_the_register_and_the_disk_agree(self):
+        from brand import music
+        problems = [m for m in music.audit()
+                    if 'on disk and not in the register' in m
+                    or 'registered and not on disk' in m]
+        self.assertFalse(problems, '\n  ' + '\n  '.join(problems))
+
+    def test_every_allowed_third_party_bed_can_be_produced(self):
+        from brand import music
+        gaps = [m for m in music.audit() if 'source_url' in m]
+        self.assertFalse(
+            gaps,
+            '\n  ' + '\n  '.join(gaps)
+            + '\n\nEither paste the licence page into assets/LICENCES.json, '
+              'or set the track to blocked until somebody can.')
+
+    def test_a_self_made_bed_needs_no_url(self):
+        """You cannot link to the licence for something you made yourself."""
+        from brand import music
+        self.assertIsNone(music.check_path('assets/news_bgm.mp3'))
+
+    def test_an_unregistered_bed_is_refused(self):
+        from brand import music
+        err = music.check_path('assets/bgm_options/does_not_exist.mp3')
+        self.assertTrue(err)
+        self.assertIn('licence register', err)
+
+    def test_blocked_tracks_stay_on_disk(self):
+        """Deleting the evidence of what was used is worse than blocking it."""
+        import json, os
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(root, 'assets', 'LICENCES.json'),
+                  encoding='utf-8') as fh:
+            reg = json.load(fh)
+        blocked = [r for r in reg['tracks'] if r.get('status') == 'blocked']
+        self.assertTrue(blocked, 'the register has stopped recording refusals')
+        for r in blocked[:3]:
+            self.assertTrue(os.path.exists(os.path.join(root, r['path'])),
+                            f'{r["path"]} was deleted rather than blocked')

@@ -1846,6 +1846,41 @@ forgotten by October.
 ---
 
 
+## D74 · A licence you cannot point at is one you cannot produce
+
+**Decided.** A bed may be `status: allowed` only when its licence can be
+produced. `own` is the single exemption — there is no licence page for
+something the channel made. Everything else needs a `source_url`, and
+`brand/music.py` blocks the render without one.
+
+**Found by running the audit rather than by reasoning about it.** The quarterly
+`licence_audit` had never run. It took eleven seconds and turned up a
+third-party track by a named artist, marked allowed under
+`recorded-in-project`, with no URL — already used as the bed on a published
+Ganapathi film.
+
+**Why that is not a licence.** "Recorded in project" means the terms were
+written down somewhere. That is precisely what nobody can find eighteen months
+later when a claim lands, which is the only moment the record matters.
+
+**What was done.** Blocked, not deleted. The file stays on disk with a note
+naming the one line that re-enables it: find the page it was licensed from,
+paste it into `source_url`, set the real terms. Deleting the evidence of what
+was used would be worse than blocking it — a claim about a video already
+published is not answered by having tidied up.
+
+**The cost, stated plainly.** The channel is down to one usable bed until
+somebody finds that URL. That is the correct state: the alternative was
+carrying an exposure on every devotional edit and finding out via a strike.
+
+**If you undo it.** Every video using an unprovable bed stays exposed, and the
+register goes back to recording intentions rather than licences.
+
+`brand/music.py :: audit` · `assets/LICENCES.json` · `scripts/health.py` · `tests/test_contract.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

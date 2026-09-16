@@ -1,6 +1,6 @@
 {
-  "updated": "2026-09-16",
-  "policy": "A track must be status=allowed with a recorded source before it can be a bed. Unverified files stay on disk but fail the render if selected.",
+  "updated": "2026-09-17",
+  "policy": "A track must be status=allowed with a licence somebody can produce before it can be a bed. 'own' needs no URL — there is no licence page for something the channel made. Everything else needs source_url, because a licence you cannot point at is one you cannot produce when a Content ID claim arrives. Unverified files stay on disk: deleting the evidence of what was used is worse than blocking it. Audited by brand/music.py audit(), quarterly per the editorial calendar.",
   "tracks": [
     {
       "path": "assets/news_bgm.mp3",
@@ -14,10 +14,10 @@
       "path": "assets/bgm_options/ganapathi/journey_to_the_golden_temple_tokyorifft.mp3",
       "title": "Journey to the Golden Temple",
       "artist": "tokyorifft",
-      "status": "allowed",
-      "licence": "recorded-in-project",
+      "status": "blocked",
+      "licence": "unverified",
       "source_url": "",
-      "notes": "Proven instrumental for Line B/C devotional edits. Keep the project.json licence field filled per job."
+      "notes": "BLOCKED by the 2026-09-17 audit. Was allowed under 'recorded-in-project', which is a note rather than a licence — a third-party track by tokyorifft with nothing to produce if a claim lands on the Ganapathi film. It is still on disk and still the proven instrumental for Line B/C devotional edits. TO RE-ENABLE: find where it was licensed from, paste that page into source_url, set licence to the actual terms (cc / licensed / public-domain) and status back to allowed. One line, and then it is defensible."
     },
     {
       "path": "assets/bgm_options/ganapathi/ganpati_bappa_morya_kontraa.mp3",
