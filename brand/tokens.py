@@ -227,7 +227,13 @@ class T:
     caption  = ( 22, 1.42, 0.010)   # photo caption
     eyebrow  = ( 21, 1.20, 0.140)   # ALL-CAPS Latin kicker — wide tracking
     micro    = ( 19, 1.30, 0.050)   # provenance small print
-    nano     = ( 16, 1.30, 0.060)
+    # 18, not 16. nano carries the photo credit line — which is the IT Rules
+    # synthetic-content disclosure — plus the ಮೂಲ sources line and the
+    # broadsheet's secondary category and location. At 16px on a 1080 canvas
+    # that is 6.2px on an opened 4:5 post, below the 7px floor at which a
+    # Kannada conjunct still separates. A disclosure nobody can read is not a
+    # disclosure. brand/legibility.py measures this and a test holds it. D60.
+    nano     = ( 18, 1.30, 0.060)
 
 
 # Font families → (file, default weight, default width)

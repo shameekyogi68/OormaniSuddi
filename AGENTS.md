@@ -42,9 +42,21 @@ python3 -m unittest discover tests              # + the golden design (~2 min)
 
 python3 scripts/fetch_daily_news.py             # the morning tip sheet
 python3 scripts/sign_off.py out/DATE --by NAME  # sign taste / culture / news
+python3 scripts/calendar.py                     # what is coming, what is overdue
 python3 scripts/correction.py status            # the IT Rules clocks
 python3 scripts/metrics.py report               # whether the guessed numbers hold
 python3 scripts/verify_narration.py out/DATE    # did the voice say the words
+python3 scripts/archive_edition.py DATE         # the published record
+bash scripts/backup.sh --status                 # three copies, or fewer
+```
+
+On a fresh checkout, once:
+
+```bash
+python3 -m pip install --break-system-packages -r requirements.txt
+bash scripts/install_hooks.sh          # contract runs before every commit
+bash scripts/install_launchd.sh        # 06:05 tip sheet, with failure alerts
+bash scripts/backup.sh --install       # nightly, 22:30
 ```
 
 Content is JSON in `editions/`. Copy a recent edition. You never write
@@ -167,6 +179,14 @@ Whenever raw news copy is provided for a bulletin:
      - **Save to Stock**: Copy the generic images to `assets/stock/` with clean descriptive filenames and update `assets/stock/CATALOG.md`.
      - **Archive the published record first**: `python3 scripts/archive_edition.py {DATE}` copies edition JSON, APPROVAL.md, copy, schedule and review frames to `archive/{DATE}/`.
      - **Then** delete leftover `out/{DATE}/` and remaining `assets/daily/{DATE}/`. Never delete the edition JSON.
+
+---
+
+## When it goes wrong
+
+[`docs/RUNBOOK.md`](docs/RUNBOOK.md) — every error code mapped to its fix, both
+statutory clocks, the short-day floor, and what to do when the golden test
+fails. That is the document to reach for at 07:40; this one is the contract.
 
 ---
 

@@ -58,6 +58,21 @@ JSON until the editor has opened each `source_url`.
 
 ---
 
+## Before Stop A — what is coming
+
+```bash
+python3 scripts/calendar.py
+```
+
+A festival three days out is a shoot you can still arrange; one that is
+tomorrow is a card you rush. Lunar festivals show the MONTH only — confirm the
+day from a Udupi panchanga, and never let a placeholder date reach a render.
+
+If anything is marked overdue, say so to the editor. The backup restore test is
+the one that costs most to skip.
+
+---
+
 ## Stop A — Desk (facts, Kannada, legal flags)
 
 **Person decides:** which tips become stories, whether it is a reel, legal flags,
@@ -83,6 +98,10 @@ category fail, source_url requirement.
 - Do not invent officials, hospitals, vehicle models, quotes, or causes
 - `is_reel: true` only for visual / urgent / shareable stories. Routine civic
   notices stay carousel-only.
+- **At most one crime reel.** Crime wins the drama/stakes/shareability test
+  every single day, so that test cannot be the thing that limits it. If two
+  crime stories both look reel-worthy, one of them is a carousel story and the
+  second reel slot goes to civic, weather or culture. D68.
 
 If a tip has no URL and is not own reporting: it stays in `inbox/`. It does
 not become an edition.

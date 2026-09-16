@@ -103,3 +103,34 @@ class SizeIsMeasuredWhereItIsRead(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SmallPrintThatCarriesMeaning(unittest.TestCase):
+    """The step that carries the photo credit carries a legal disclosure."""
+
+    def test_every_meaningful_step_is_readable_on_an_opened_post(self):
+        failures = L.audit_small_print()
+        self.assertFalse(
+            failures,
+            '\n  ' + '\n  '.join(failures)
+            + '\n\nThese steps carry copy somebody has to read. Raise the step '
+              'in tokens.T, or stop using it for meaning.')
+
+    def test_nano_clears_the_floor(self):
+        """It was 16px — 6.2px on an opened post — and it carries the credit
+        line, which is the IT Rules synthetic-content disclosure."""
+        self.assertGreaterEqual(
+            L.effective_px(T.nano[0], 'post'), Limits.min_effective_px)
+
+    def test_the_ramp_is_still_ordered(self):
+        """Raising a step must not collapse the scale into itself."""
+        steps = ['display', 'h1', 'h2', 'h3', 'h4', 'deck', 'body',
+                 'body_sm', 'meta', 'caption', 'micro', 'nano']
+        sizes = [getattr(T, s)[0] for s in steps]
+        for a, b, sa, sb in zip(steps, steps[1:], sizes, sizes[1:]):
+            self.assertGreater(sa, sb, f'{a} is no longer larger than {b}')
+
+    def test_compliance_reports_a_step_that_falls_below(self):
+        from brand.qa import compliance
+        self.assertTrue(compliance().clean,
+                        'the house ramp itself does not pass its own floor')

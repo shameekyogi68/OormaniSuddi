@@ -264,7 +264,7 @@ those carry a reason rather than a test.
 ## D60 · Legibility is arithmetic, and arithmetic is testable
 
 - **Tested by:** `tests/test_legibility.py`
-- Enforced in: `brand/review.py`
+- Enforced in: `brand/review.py`, `brand/tokens.py`
 
 ## D61 · The legal guard is a word list, so its coverage is measured
 

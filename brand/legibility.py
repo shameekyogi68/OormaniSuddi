@@ -220,6 +220,34 @@ def audit_sizes(format_key: str, used: tuple[str, ...] = ()) -> list[str]:
     return out
 
 
+# Ramp steps that carry MEANING rather than decoration, and the format each
+# is really read on. These must clear the floor at the width the post is
+# opened at — not at the width it is glanced at in a grid, which is a
+# different and much harsher test that only the headline has to pass.
+#
+# nano is on this list because it carries the photo credit line, and the photo
+# credit line is the IT Rules synthetic-content disclosure. A disclosure below
+# the legibility floor is not a disclosure.
+MEANINGFUL_STEPS = ('body', 'body_sm', 'meta', 'caption', 'micro', 'nano')
+READ_AT = 'post'          # an opened 4:5 post on a phone
+
+
+def audit_small_print() -> list[str]:
+    """Every step that carries meaning, at the width it is actually read."""
+    out: list[str] = []
+    for name in MEANINGFUL_STEPS:
+        size = float(getattr(T, name)[0])
+        eff = effective_px(size, READ_AT)
+        if eff < Limits.min_effective_px:
+            out.append(
+                f'type step {name} is {size:.0f}px on the canvas and '
+                f'{eff:.2f}px on an opened post, below the '
+                f'{Limits.min_effective_px:.0f}px floor. This step carries '
+                f'copy somebody has to read — for nano that includes the photo '
+                f'credit, which is the synthetic-content disclosure.')
+    return out
+
+
 def first_sight(format_key: str) -> tuple[str, float, float]:
     """(step, designed px, effective px) for the line that sells the post."""
     step = PRIMARY_STEP.get(format_key, 'h1')

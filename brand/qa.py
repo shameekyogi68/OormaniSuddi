@@ -79,6 +79,8 @@ def compliance() -> Report:
     from . import legibility
     for msg in legibility.audit_tokens():
         r.fail.append(f'contrast: {msg}')
+    for msg in legibility.audit_small_print():
+        r.fail.append(f'legibility: {msg}')
     if not Brand.grievance_named():
         r.fail.append(
             'IT Rules 2021 Part III requires a named Grievance Officer and a '
