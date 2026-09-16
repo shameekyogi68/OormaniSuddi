@@ -5,6 +5,26 @@ __pycache__/
 .venv/
 venv/
 
+# Working footage and scratch masters. Keep the code repo small.
+media/
+Ganapathi Video/
+scratch/
+
+# A day's generated story images. Transient by design: AGENTS rule 9 archives
+# the published record and then deletes these. Anything worth keeping was
+# already promoted into assets/stock/ by the `stop` workflow. Tracking them
+# would put a few megabytes of throwaway JPEGs in history every morning.
+assets/daily/
+
+# Published record (kept locally, backed up by scripts/backup.sh, not in git)
+archive/
+
+# The morning tip sheet. Regenerated daily, and it is explicitly NOT copy —
+# committing it would put unverified leads in the permanent record. inbox/README.md
+# is tracked so the folder's purpose survives.
+inbox/*
+!inbox/README.md
+
 # ── Rendered deliverables ────────────────────────────────────────────────────
 # out/ is regenerated from editions/*.json by render.py. The inputs are the
 # source of truth; the artwork is not. out/reference/ is the exception — it is
@@ -21,6 +41,16 @@ build/
 .env.*
 .gemini_key
 *.secret
+
+# Structured run logs. Regenerated every morning; useful for a day, not a year.
+logs/
+
+# The render lock. Machine state, never shared.
+.render.lock
+
+# Working stills dropped in the project root. Real assets live in assets/.
+/image.png
+/LIVE BG.png
 
 # ── Editor / OS noise ────────────────────────────────────────────────────────
 .DS_Store

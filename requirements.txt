@@ -1,0 +1,41 @@
+# What the newsroom actually imports.
+#
+#   python3 -m pip install -r requirements.txt
+#
+# This Mac's python3 is externally managed (PEP 668), which is how Pillow and
+# numpy already got there. Same flag for anything new:
+#
+#   python3 -m pip install --break-system-packages -r requirements.txt
+#
+# Or, cleaner, if you ever want the environment isolated from macOS:
+#   python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+#
+# Lower bounds, not pins, with one exception. Pillow and libraqm decide how
+# Kannada conjuncts rasterise, so a bump moves the golden fingerprints without
+# anybody touching this repo. PROVENANCE.json records the versions that made
+# each render, which is how a golden failure can say WHY and not only THAT.
+
+# ── Line A: the daily package. Required. ─────────────────────────────────────
+Pillow>=10.0            # the renderer. Needs libraqm for Kannada shaping.
+numpy>=1.26             # grades, grain, scrims, the editorial plate
+google-genai>=1.0       # TTS, and the intake's extraction pass
+
+# ── Intake accuracy. Optional, and the single biggest one. ───────────────────
+# Without this the tip sheet has headlines and RSS blurbs; with it, the model
+# condenses the actual article instead of expanding a headline. The sheet says
+# which it had, either way. See D63.
+trafilatura>=1.8
+
+# ── Narration verification. Optional, local, no key. ─────────────────────────
+# Transcribes the rendered audio and diffs it against the script — the only
+# check here that can hear a mispronounced name. Install ONE:
+#   mlx-whisper      M-series Macs, runs on the Neural Engine, fastest
+#   faster-whisper   anywhere
+# mlx-whisper>=0.4
+# faster-whisper>=1.0
+
+# ── Line B/C: the footage pipeline. Optional on a Line-A-only machine. ───────
+torch>=2.2              # Real-ESRGAN upscaling (MPS on Apple Silicon)
+
+# ── Not installable with pip ─────────────────────────────────────────────────
+# ffmpeg + ffprobe   brew install ffmpeg
