@@ -20,7 +20,7 @@ import re
 from dataclasses import dataclass, field, asdict
 
 from .content import Story, Edition, IMAGE_NATURE, STATUS
-from .tokens import Brand, CATEGORIES, category
+from .tokens import Brand, CATEGORIES, category, Limits
 
 # Instagram shows roughly this much before the "… more" fold. The first line has
 # to earn the tap on its own.
@@ -61,7 +61,7 @@ CATEGORY_TAGS = {
 # Always-on. Small pool, right people. Mega-tags (#Karnataka, #KannadaNews)
 # put a new channel in a feed with millions of posts and a 0.2% chance of
 # being picked; they go last, and only if there is room.
-CORE_TAGS = ['OormaniSuddi', 'ಕರಾವಳಿ', 'ಕರಾವಳಿಸುದ್ದಿ', 'KaravaliNews']
+CORE_TAGS = ['oormanisuddi', 'ಕರಾವಳಿ', 'ಕರಾವಳಿಸುದ್ದಿ', 'KaravaliNews']
 WIDE_TAGS = ['CoastalKarnataka', 'ಕನ್ನಡಸುದ್ದಿ', 'KannadaNews', 'Karnataka']
 
 # Latin equivalents for places we cover, so a Kannada location also produces a
@@ -346,6 +346,8 @@ class PostCopy:
     def to_dict(self) -> dict:
         return {
             'instagram': self.instagram,
+            'whatsapp': self.whatsapp,
+            'first_comment': self.first_comment,
             'youtube_title': self.youtube_title,
             'youtube_description': self.youtube_description,
             'youtube_tags': self.youtube_tags,
@@ -380,6 +382,8 @@ def instagram_caption(story: Story, tags: list[str] | None = None) -> str:
     g = Brand.grievance_line()
     if g:
         blocks.append(g)
+    if Brand.voice_disclosure_kn:
+        blocks.append(Brand.voice_disclosure_kn)
 
     blocks.append(' '.join(f'#{t}' for t in tags))
 
@@ -410,6 +414,11 @@ def whatsapp_text(story: Story) -> str:
             if b]
     blocks.append(' · '.join(meta))
     blocks.append('ಮೂಲ: ' + ' · '.join(story.sources))
+    g = Brand.grievance_line()
+    if g:
+        blocks.append(g)
+    if Brand.whatsapp_url:
+        blocks.append(Brand.whatsapp_url)
     blocks.append(f'— {Brand.name} · {Brand.handle}')
     return _join(blocks)
 
@@ -488,8 +497,12 @@ def youtube_description(subject: Story | Edition) -> str:
     g = Brand.grievance_line()
     if g:
         blocks.append(g)
-    blocks.append(f'ಫಾಲೋ ಮಾಡಿ: Instagram {Brand.handle}')
+    blocks.append(Brand.channels_block())
     blocks.append(f'Subscribe · {Brand.name} · {Brand.handle}')
+    # Engagement CTA — drive the comment signal that the algorithm needs.
+    # Zero comments across 16/17 videos (Sept 2026 audit) was a primary reason
+    # for algorithmic suppression. A direct Kannada question prompts replies.
+    blocks.append('💬 ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಮೆಂಟ್ ಮಾಡಿ!')
     # YouTube shows the first three hashtags above the title. Place tags
     # already lead the list.
     blocks.append(' '.join(f'#{t}' for t in
@@ -526,10 +539,10 @@ def youtube_tags(subject: Story | Edition, limit: int = 20) -> list[str]:
 # Two rules do the real work:
 #   * reels are spaced at least 2.5h apart, because two of ours in one window
 #     compete with each other rather than with anyone else;
-#   * the long-form bulletin goes up FIRST, so it has the whole day to
-#     accumulate the watch time that decides whether it gets recommended.
-REEL_MIN_GAP_MIN = 150            # 2.5h — the spacing rule, in one place
-REEL_SLOTS = ['11:30', '15:30', '19:00', '21:30']
+#   * AI-card reels are Instagram-only (Rule 7). YouTube gets real footage.
+# Peak engagement windows, IST — starting positions, not measured truth.
+REEL_MIN_GAP_MIN = Limits.reel_gap_min
+REEL_SLOTS = list(Limits.reel_slots)
 
 
 def _reel_times(n: int) -> list[str]:
@@ -560,28 +573,43 @@ class Slot:
     why: str
 
 
-def publishing_plan(n_reels: int, has_bulletin: bool = True,
+def publishing_plan(n_reels: int, has_bulletin: bool = False,
                     has_carousel: bool = True, has_story_card: bool = True,
-                    has_broadsheet: bool = True) -> list[Slot]:
-    """The day's upload order, derived from what was actually rendered."""
+                    has_broadsheet: bool = True,
+                    carousel_last: str = '',
+                    bulletin_is_footage: bool = False) -> list[Slot]:
+    """The day's upload order, derived from what was actually rendered.
+
+    AI-card reels are Instagram-only. The 16:9 AI bulletin is off by default
+    and is never scheduled to YouTube unless `bulletin_is_footage` is True.
+    D55 / AGENTS Rule 7.
+    """
     plan: list[Slot] = []
     if has_bulletin:
-        plan.append(Slot(
-            '08:30', 'bulletin.mp4', 'YouTube',
-            'Long-form bulletin (16:9) — set yt_thumbnail.jpg as the thumbnail',
-            'Posted first so it has the full day to gather watch time. This is '
-            'the only asset on the 4,000-hour path; Shorts do not count toward '
-            'it.'))
+        if bulletin_is_footage:
+            plan.append(Slot(
+                Limits.bulletin_slot, 'bulletin.mp4', 'YouTube',
+                'Long-form bulletin (16:9) — set yt_thumbnail.jpg as the thumbnail',
+                'Real footage only. Posted first so it has the full day to '
+                'gather watch time on the 4,000-hour path.'))
+        else:
+            plan.append(Slot(
+                Limits.bulletin_slot, 'bulletin.mp4',
+                'HOLD — not for YouTube',
+                'AI bulletin rendered internally. Do not upload to YouTube.',
+                'Rule 7: YouTube suppresses AI TTS slideshows (37 vs 397 views). '
+                'Keep this file as a record, or post to Instagram only if asked.'))
     if has_carousel:
+        last = carousel_last or 'carousel_06_sources.jpg'
         plan.append(Slot(
-            '09:00', 'carousel_01_cover.jpg … carousel_06_sources.jpg',
+            Limits.carousel_slot, f'carousel_01_cover.jpg … {last}',
             'Instagram',
             'Carousel — the whole edition, swipeable',
             'The morning scroll. A carousel is the only format that gets a '
             'second impression when someone does not swipe the first time.'))
     if has_story_card:
         plan.append(Slot(
-            '09:15', 'story_9x16.jpg', 'Instagram Story / WhatsApp',
+            Limits.story_slot, 'story_9x16.jpg', 'Instagram Story / WhatsApp',
             'Story card pointing at the carousel',
             'Posted just after, so the people who open Stories first are sent '
             'to a post that already exists.'))
@@ -590,18 +618,18 @@ def publishing_plan(n_reels: int, has_bulletin: bool = True,
         n = i + 1
         plan.append(Slot(
             at, f'reel_{n:02d}.mp4  (cover: reel_{n:02d}_cover.jpg)',
-            'Instagram Reels + YouTube Shorts',
+            'Instagram Reels',
             f'Reel {n} — caption and first comment in reel_{n:02d}_copy.txt',
-            'Set the cover frame; leaving the default costs the tile. '
-            'Paste the first comment immediately — an early comment is the '
-            'signal Instagram reads as a conversation.'))
+            'Instagram only. Do not cross-post this AI reel to YouTube Shorts '
+            'unless the editor explicitly overrides for a story with no tape. '
+            'Set the cover frame; paste the first comment immediately.'))
 
     if has_broadsheet:
         plan.append(Slot(
-            '20:00', 'broadsheet.jpg', 'WhatsApp / Telegram',
+            Limits.broadsheet_slot, 'broadsheet.jpg', 'WhatsApp / Telegram',
             "The day's front page, as a forward",
-            'Forwards are where a local channel actually grows. It goes out '
-            'once the day is complete.'))
+            'Forwards are where a local channel actually grows. Paste the '
+            'WhatsApp text from MASTER_COPY.md. Aim under 300 KB.'))
 
     return sorted(plan, key=lambda s: s.at)
 
@@ -673,7 +701,10 @@ def for_edition(edition: Edition) -> PostCopy:
         alt_text=(f'{Brand.name} {Brand.bulletin} — {edition.date_kn}. '
                   f'{n} ಸುದ್ದಿಗಳ ಸಂಗ್ರಹ. {lead.headline}'),
         whatsapp=_join([f'*{Brand.name} · {edition.date_kn}*', heads.replace('▪', '•'),
-                        'ಮೂಲ: ' + ' · '.join(seen), f'— {Brand.handle}']),
+                        'ಮೂಲ: ' + ' · '.join(seen),
+                        Brand.grievance_line(),
+                        Brand.whatsapp_url,
+                        f'— {Brand.handle}']),
         x_post=x_post(lead),
         first_comment=first_comment(lead),
         youtube_title=youtube_title(edition, 'long'),

@@ -293,7 +293,8 @@
     "accepts": [
       "target_seconds",
       "voice",
-      "voiceover"
+      "voiceover",
+      "bgm"
     ],
     "limits": {
       "stories": 1,
@@ -302,5 +303,43 @@
       "target_seconds_max": 45
     },
     "notes": "A reel is a glance in a vertical feed: one story, no sting, headline on frame 0. Writes reel_cover.jpg — set that as the Instagram / Shorts cover. Write a reel_line of ~45 chars. Audio is normalised to -14 LUFS / -1.5 dBTP. Pass voice= a brand.voice.VoiceTrack to cut the reel from MEASURED narration: one card per spoken beat, every cut landing between sentences, and target_seconds no longer applies because the length is the narration's. voiceover= is the older bare-path form, which can only guess where to cut."
+  },
+  "greeting": {
+    "key": "greeting",
+    "module": "greeting",
+    "entry": "greeting",
+    "takes": "greeting",
+    "format": "story",
+    "size": [
+      1080,
+      1920
+    ],
+    "produces": "files",
+    "summary": "A festival wish designed as a poster, not a bulletin: centred, gold foil, ornament, signed by the channel.",
+    "when": "Festival and occasion wishes only — Gauri-Ganesha, Deepavali, Ugadi, Rajyotsava, Eid, Christmas and the like. Never for news: a news story set in this template reads as a celebration.",
+    "requires": [
+      "kind: \"greeting\"",
+      "occasion"
+    ],
+    "accepts": [
+      "wish",
+      "salutation",
+      "blessing",
+      "theme",
+      "photo",
+      "keep_clear",
+      "sign_label",
+      "date",
+      "tags",
+      "slug"
+    ],
+    "limits": {
+      "occasion_chars": 30,
+      "wish_chars": 26,
+      "salutation_chars": 34,
+      "blessing_chars": 96,
+      "themes": "sacred lights harvest rajyotsava national serene"
+    },
+    "notes": "Renders wish_9x16.jpg, wish_4x5.jpg and wish_1x1.jpg plus wish_copy.txt. A photograph MUST declare keep_clear — the band of the image, as fractions of its height, that holds the deity or subject — and no type is ever set inside it: the solver moves the picture, frames it in an arch, or refuses. An AI image is labelled on the poster and in the caption automatically. See DECISIONS.md D54."
   }
 }

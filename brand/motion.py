@@ -813,12 +813,23 @@ class ChapterScene(Scene):
         self.photo_x = self.panel_w
         self.photo_w = W - self.panel_w
 
-        pic = photo_path if (photo_path and os.path.exists(photo_path)) else (
-            self.st.photo.path if self.st.photo and os.path.exists(self.st.photo.path) else None)
+        # Resolve the photograph AND the object it came from together, so the
+        # picture on screen and the label under it can never describe
+        # different images. Falling back to the hero for the picture while
+        # leaving the label blank is what let an AI-generated gallery frame
+        # hold the frame for twenty seconds with nothing disclosing it.
+        shown = None
+        if photo is not None and os.path.exists(getattr(photo, 'path', '')):
+            shown = photo
+        elif photo_path and os.path.exists(photo_path):
+            shown = next((p for p in self.st.all_photos if p.path == photo_path), None)
+        elif self.st.photo and os.path.exists(self.st.photo.path):
+            shown = self.st.photo
+        self.shown = shown
+        pic = shown.path if shown is not None else None
         self.kb = None
         if pic:
-            focal = photo.focal if (photo and photo.focal) else (
-                self.st.photo.focal if self.st.photo else (0.5, 0.45))
+            focal = shown.focal or (0.5, 0.45)
             self.kb = KenBurns(pic, self.photo_w, H, focal=focal, direction=direction)
 
         self.bed = self._bed()
@@ -925,6 +936,22 @@ class ChapterScene(Scene):
         gap = int(30 * ts)
         total_block_h = badge_h + gap + blk.height
 
+        # The disclosure for the picture THIS card is showing. Legally this is
+        # the important one: the fact cards are where the AI-generated gallery
+        # frames appear, and they carried no label at all. See D49.
+        cred = self.shown.disclosure if self.shown is not None else ''
+        c_blk = None
+        if cred:
+            c_blk = typo.layout(
+                cred,
+                typo.font('kn_var', int(ss * T.micro[0] * ts * 1.05), weight=470),
+                ss * cw, 1.34)
+            if c_blk.n > 2:
+                c_blk = typo.layout(
+                    typo.ellipsize(cred, c_blk.f, ss * cw * 2), c_blk.f,
+                    ss * cw, 1.34)
+        cap_h = int(c_blk.height / ss) + 8 if c_blk is not None else 0
+
         # Seated on the meta row, so the block always closes on the same edge
         # however many lines it runs to. Anchoring the TOP instead let a short
         # card float with a hole beneath it and a long one crowd the source
@@ -978,7 +1005,18 @@ class ChapterScene(Scene):
                 sl, int(y_text + k * lh),
                 t_in=0.22 + k * Motion.text_stagger, dur=Motion.text_in, rise=28 * fs))
 
-        # 3. Sourceline Sprite
+        # 3. The image disclosure, seated above the badge.
+        if c_blk is not None:
+            def cap(sf, _b=c_blk, _w=cw):
+                sh = None if landscape else (0, sf.s(1), sf.s(9), (0, 0, 0, 215))
+                typo.draw_block(sf.img, _b, 0, 0,
+                                alpha(C.paper_300, 0.94 if landscape else 1.0),
+                                shadow=sh, box_w=sf.s(_w))
+            out.append(Sprite(_sprite_from(cap, cw, cap_h, ss, 0, 0).img,
+                              sl, int(y - cap_h - 20 * fs),
+                              t_in=0.30, dur=0.5, rise=12 * fs))
+
+        # 4. Sourceline Sprite
         pad = 36 * ts if landscape else 0
         def src(sf):
             if landscape:
@@ -1017,7 +1055,9 @@ class OutroScene(Scene):
         self.W, self.H, self.ss, self.dur, self.safe = W, H, ss, dur, safe
         self.ed = edition
         self.kb = None
+        self.shown = None
         if photo is not None and os.path.exists(getattr(photo, 'path', '')):
+            self.shown = photo
             self.kb = KenBurns(photo.path, W, H,
                                focal=getattr(photo, 'focal', (0.5, 0.45)),
                                zoom=Motion.kb_zoom * 0.7, direction=1)
@@ -1091,6 +1131,30 @@ class OutroScene(Scene):
                            C.paper_200, anchor_x='c')
         out.append(Sprite(_sprite_from(where, cw, 84, ss, 0, 0).img, sl, y + 344,
                           t_in=0.70, dur=0.5, rise=14))
+
+        # The end card now holds a photograph (D47), so it discloses it like
+        # every other card that shows one.
+        #
+        # Placed ABOVE the safe line, not below it. Instagram parks its caption
+        # over the bottom ~470px, so a disclosure sitting there is covered on
+        # the platform this reel is mainly made for — and a label the viewer
+        # cannot see does not disclose anything. Set quieter than the lockup
+        # but not faint: legibility is the whole function.
+        if self.shown is not None and self.shown.disclosure:
+            cb = typo.layout(self.shown.disclosure,
+                             typo.font('kn_var', int(ss * T.micro[0] * 0.95),
+                                       weight=450),
+                             ss * cw, 1.32, align='center')
+            ch = int(cb.height / ss) + 10
+
+            def cred(sf, _b=cb, _w=cw):
+                typo.draw_block(sf.img, _b, 0, 0, alpha(C.paper_200, 0.92),
+                                shadow=(0, sf.s(1), sf.s(9), (0, 0, 0, 215)),
+                                box_w=sf.s(_w))
+            cred_y = min(y + 452, (H - sb) - ch - 16)
+            out.append(Sprite(_sprite_from(cred, cw, ch, ss, 0, 0).img,
+                              sl, int(cred_y),
+                              t_in=0.88, dur=0.5, rise=10))
         return out
 
     def frame(self, t: float) -> Image.Image:
@@ -1204,7 +1268,7 @@ class Card:
 # was previously typed there — ▪ and ⚠ — is absent from all four house faces
 # AND from SF, so each of them shipped as an empty box on every reel.
 _BADGE = {
-    'incident': ('ಘಟನಾ ಸ್ಥಳದ ವಿವರ', 'ತನಿಖಾ ಪ್ರಗತಿ ಹಾಗೂ ಕ್ರಮ', 'ಸಾರ್ವಜನಿಕ ಗಮನಕ್ಕೆ'),
+    'incident': ('ಘಟನಾ ಸ್ಥಳದ ವಿವರ', 'ತನಿಖಾ ಪ್ರಗತಿ ಹಾಗೂ ಕ್ರಮ', 'ಸ್ಥಳ ಪರಿಶೀಲನೆ ಹಾಗೂ ಕ್ರಮ'),
     'default':  ('ಪ್ರಮುಖ ವಿದ್ಯಮಾನ', 'ಹಿನ್ನೆಲೆ ಹಾಗೂ ವಿವರ', 'ವಿಶೇಷ ಮಾಹಿತಿ'),
 }
 
@@ -1222,16 +1286,23 @@ def reel_cards(story: Story) -> list[Card]:
                   badge='', photo=story.photo)]
 
     facts = [p.strip() for p in story.points if p.strip()]
+    shorts = list(getattr(story, 'reel_points', []) or [])
     for i, p in enumerate(facts):
         pic = gallery[i] if i < len(gallery) else None
-        cards.append(Card(key=f'fact{i}', kind='fact', text=p,
+        # The card shows the short form when the editor wrote one. The VOICE
+        # still carries the full point either way, so nothing is lost from the
+        # reel — only from the frame, which is the point. See D51.
+        on_card = (shorts[i].strip() if i < len(shorts) and shorts[i].strip()
+                   else p)
+        cards.append(Card(key=f'fact{i}', kind='fact', text=on_card,
                           badge=labels[min(i, len(labels) - 1)], photo=pic))
 
     if (story.takeaway or '').strip():
         pic = gallery[len(facts)] if len(facts) < len(gallery) else None
+        badge_txt = 'ಸಾರ್ವಜನಿಕ ಎಚ್ಚರಿಕೆ' if incident else 'ಸಾರ್ವಜನಿಕ ಪ್ರಕಟಣೆ'
         cards.append(Card(key='advisory', kind='advisory',
                           text=story.takeaway.strip(),
-                          badge='ಸಾರ್ವಜನಿಕ ಎಚ್ಚರಿಕೆ', is_alert=True, photo=pic))
+                          badge=badge_txt, is_alert=True, photo=pic))
 
     cards.append(Card(key='signoff', kind='outro'))
     return cards
@@ -1326,6 +1397,19 @@ def _write_cover(scenes: list, path: str, H: int, W: int):
     print(f'  ✓ cover {os.path.basename(cover_path)}  ({where})')
 
 
+def _h264_encode_args() -> list[str]:
+    """Hardware encode on Apple Silicon; software x264 everywhere else."""
+    import sys
+    if sys.platform == 'darwin':
+        return ['-c:v', 'h264_videotoolbox', '-b:v', '12M', '-profile:v', 'high']
+    return [
+        '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
+        '-maxrate', '12M', '-bufsize', '24M',
+        '-profile:v', 'high', '-level', '4.2',
+        '-x264-params', 'ref=4:bframes=3',
+    ]
+
+
 def _encode_frames(scenes: list, starts: list[float], total: float,
                    n_frames: int, fps: int, W: int, H: int,
                    frame_scale: float, XF: float) -> str:
@@ -1341,11 +1425,8 @@ def _encode_frames(scenes: list, starts: list[float], total: float,
         '-r', str(fps), '-i', 'pipe:0',
         # Both platforms re-encode on upload, so what matters is the quality
         # of what they re-encode FROM. 3 Mbps was leaving quality on the table.
-        '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
-        '-maxrate', '12M', '-bufsize', '24M',
-        '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-level', '4.2',
-        '-x264-params', 'ref=4:bframes=3',
-        '-movflags', '+faststart', raw], stdin=subprocess.PIPE)
+        *_h264_encode_args(),
+        '-pix_fmt', 'yuv420p', '-movflags', '+faststart', raw], stdin=subprocess.PIPE)
 
     for k in range(n_frames):
         t = k / fps

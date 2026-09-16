@@ -22,7 +22,7 @@ from .content import (Story, Photo, Edition, ContentError, IST,
 from .motion import render_reel, plan_durations
 from .qa import preflight, inspect, audit, compliance
 from .copy import for_story as copy_for_story, for_edition as copy_for_edition
-from .tokens import C, Role, T, Grid, FORMATS, fmt, CATEGORIES, category
+from .tokens import C, Role, T, Grid, FORMATS, fmt, CATEGORIES, category, Limits
 
 __all__ = [
     'Story', 'Photo', 'Edition', 'ContentError', 'IST',
@@ -31,4 +31,5 @@ __all__ = [
     'preflight', 'inspect', 'audit', 'compliance',
     'copy_for_story', 'copy_for_edition',
     'C', 'Role', 'T', 'Grid', 'FORMATS', 'fmt', 'CATEGORIES', 'category',
+    'Limits',
 ]
