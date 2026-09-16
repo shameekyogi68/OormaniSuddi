@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **46/71** decisions are named by at least one test
+- **47/72** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -128,8 +128,8 @@ those carry a reason rather than a test.
 
 ## D29 · Legal guards are validation rules, not guidance
 
-- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_legal_corpus.py`
-- Enforced in: `brand/content.py`, `templates/youtube_thumb.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_house.py`, `tests/test_legal_corpus.py`
+- Enforced in: `brand/content.py`, `brand/house.py`, `scripts/house_rule.py`, `templates/youtube_thumb.py`
 
 ## D30 · A credit is not a licence
 
@@ -245,7 +245,7 @@ those carry a reason rather than a test.
 ## D56 · Numeric policy lives in `tokens.Limits`
 
 - **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/codes.py`, `brand/tokens.py`
+- Enforced in: `brand/codes.py`, `brand/house.py`, `brand/tokens.py`, `scripts/house_rule.py`
 
 ## D57 · Generated images, including stock, are `nature: 'ai'`
 
@@ -318,4 +318,8 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_reach.py`
 - Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`
+
+## D73 · The newsroom answers in one shape, argues with itself, and remembers
+
+- **Tested by:** `tests/test_house.py`
 

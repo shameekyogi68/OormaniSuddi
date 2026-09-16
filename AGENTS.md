@@ -41,6 +41,8 @@ python3 -m unittest tests.test_contract         # the contract (instant)
 python3 -m unittest discover tests              # + the golden design (~2 min)
 
 python3 scripts/health.py                       # is anything quietly broken
+python3 scripts/house_rule.py list              # standing instructions in force
+python3 scripts/house_rule.py where "…"         # where does this change belong
 python3 scripts/fetch_daily_news.py             # the morning tip sheet
 python3 scripts/sign_off.py out/DATE --by NAME  # sign taste / culture / news
 python3 scripts/whats_on.py                     # what is coming, what is overdue
@@ -182,6 +184,25 @@ Whenever raw news copy is provided for a bulletin:
      - **Save to Stock**: Copy the generic images to `assets/stock/` with clean descriptive filenames and update `assets/stock/CATALOG.md`.
      - **Archive the published record first**: `python3 scripts/archive_edition.py {DATE}` copies edition JSON, APPROVAL.md, copy, schedule and review frames to `archive/{DATE}/`.
      - **Then** delete leftover `out/{DATE}/` and remaining `assets/daily/{DATE}/`. Never delete the edition JSON.
+
+---
+
+## Asking for a change
+
+Four places, and only four. `python3 scripts/house_rule.py where "…"` tells you
+which:
+
+| What | Where | Why there |
+|---|---|---|
+| a **number** | `tokens.Limits` + decision + test | D56 — one home, or it drifts |
+| a **legal** rule | `brand/content.py` + test + decision | D29 — never in a file that can be edited on a deadline |
+| a **place** | `copy.PLACE_TAGS` | one registry, read by hashtags, forwards and reach |
+| everything else | `scripts/house_rule.py add` | wording, habits, preferences |
+
+A house rule applies from the moment it is added, every run, until retired. It
+**cannot** switch a check off — `add()` refuses that, and says what to do
+instead. `AGENTS.md` beats a house rule; a house rule beats the skill's
+defaults. D73.
 
 ---
 

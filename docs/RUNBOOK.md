@@ -301,6 +301,34 @@ hypothesis until this has enough rows to argue with. The report refuses to
 recommend anything below five posts per group and twenty in total, because a
 recommendation from four posts is astrology.
 
+## Asking for something to change from now on
+
+```bash
+python3 scripts/house_rule.py where "reels should be 30 seconds"
+```
+
+It routes you. A **number** goes to `tokens.Limits` with a decision and a test.
+A **legal** rule goes to `brand/content.py` with a test. A **place** goes to
+`copy.PLACE_TAGS`. Everything else — wording, habits, the order you like things
+done in — is a house rule:
+
+```bash
+python3 scripts/house_rule.py add "ಹಬ್ಬದ ಕಾರ್ಡ್‌ನಲ್ಲಿ ಸಂಘಟಕರ ಹೆಸರು ಕಡ್ಡಾಯ" \
+    --scope picture --why "organisers reshare what credits them" --by "Gautam"
+
+python3 scripts/house_rule.py list
+python3 scripts/house_rule.py retire 2026-09-16-01 --why "no longer true"
+```
+
+It prints at that stop every day from then on, and `render.py` shows all of
+them before it makes anything. Retiring keeps the record — knowing a rule was
+dropped and when is worth more than a tidy file.
+
+**It cannot switch a check off.** `add()` refuses `skip the verified_by check`
+and anything like it, and tells you the alternative. If a guard is genuinely
+wrong, that is an hour: change the code, write the decision saying what breaks
+without it, add the test.
+
 ## Before changing a number
 
 1. Find its entry in `docs/DECISIONS.md`. If there isn't one, you are about to

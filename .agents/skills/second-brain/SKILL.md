@@ -13,7 +13,98 @@ description: >
 
 This is a **four-stop desk**, not a 13-expert panel. Code enforces law, length,
 disclosure and files. A person owns facts, pictures, the native ear, and the
-upload. Scores out of 10 are forbidden — use PASS / FAIL / HUMAN REVIEW.
+upload. Scores out of 10 are forbidden — use PASS / FIX / BLOCK.
+
+---
+
+## The formula every expert answers in
+
+One shape, used by every role below. It exists because a reviewer — human or
+model — can write ✅ against anything, and the failure is invisible precisely
+because nobody downstream looks again. A verdict with no filled-in value behind
+it is an opinion wearing a uniform.
+
+```
+ROLE        one line: what you are, and the one thing you are for
+LOOKING AT  the exact artefact. A path, a field, a frame, a number.
+            Not "the package" — out/{DATE}/_review/reel_01_t012s.jpg
+MAY BLOCK   the specific things this role is allowed to stop the day for
+MAY NOT     the boundaries. Every role has them.
+EVIDENCE    the values, filled in. headline 81 chars · gallery 2 · facts 3 ·
+            peak −0.2 dB · local share 79%. Never adjectives.
+VERDICT     PASS · FIX (named, with the edit) · BLOCK (named, with the reason)
+```
+
+**Three rules that make it work:**
+
+1. **No evidence, no verdict.** A role that cannot fill in EVIDENCE has not
+   done its pass. "Looks good" is not a pass; it is a missing pass.
+2. **Say what you could not check.** Every verdict may carry
+   `COULD NOT CHECK: …`. A model cannot hear a reel or see a frame. Claiming
+   otherwise is the failure mode; declaring it is the honest one, and it tells
+   the person exactly where their attention is not optional.
+3. **BLOCK names the fix.** "This is wrong" is not a block. "Story 3 headline
+   asserts guilt (ಕೊಂದ) with no marker — rewrite as ಆರೋಪ" is.
+
+---
+
+## Iteration: two passes, then it is held
+
+Each stop runs **at most twice**.
+
+```
+pass 1  →  findings  →  fix  →  pass 2  →  clean?  → next stop
+                                        └ still failing? → HELD, say why
+```
+
+Unbounded looping until everything scores 10/10 is how a panel starts awarding
+itself nines. Two passes is enough to fix what is fixable; a third means the
+problem is the story, the source material or the day — and the honest output is
+to say so and stop, not to grind.
+
+**HELD is a legitimate outcome.** A day that publishes three good things and
+holds the fourth beat a day that published four, one of which was wrong.
+
+---
+
+## The adversary
+
+One role exists to fail the package, and it runs at every stop.
+
+Everybody else is helping the edition ship, which makes the review additive
+when it needs to be adversarial. The adversary has the opposite incentive
+written into it, and it is the only role that earns its cost by being wrong
+most days.
+
+```
+ROLE        Adversary — argue this should NOT run
+LOOKING AT  whatever the stop just cleared
+MAY BLOCK   nothing. It has no veto. It makes the case; the human decides.
+MAY NOT     invent facts to object with, or object to be seen objecting
+EVIDENCE    the specific line, frame, claim or number it is attacking
+VERDICT     one of:
+              NOTHING — I tried and could not build a case
+              CONCERN — here is the case, here is what I would need to drop it
+              SERIOUS — I think this is wrong, and here is why
+```
+
+Prompts it must actually attempt, in order:
+
+1. **"This headline is defamatory."** Build the case as a lawyer for the person
+   named would. The word list in `content.py` is a floor, not a proof — find
+   the implication that clears it and still asserts guilt.
+2. **"This claim is not sourced."** Take the most specific number, name or
+   procedure in the copy and ask which `source_url` carries it. If the answer
+   is "the model wrote it", that is the finding.
+3. **"This picture is wrong."** Not ugly — wrong. Misleading about what it
+   shows, disrespectful to the ritual, or an AI frame passing as a photograph.
+4. **"Nobody will forward this."** No town named, no takeaway, nothing a reader
+   can do. A story that cannot travel is a story that did not need making.
+5. **"This is not our story."** Statewide news with a coastal dateline stuck on
+   it. The channel's whole position is being the one that is actually here.
+
+If the adversary returns NOTHING on every story every day, it is not working.
+Tell the editor that, and say it plainly.
 
 ---
 
@@ -24,6 +115,19 @@ Read these every run:
 1. [`docs/AI_BRIEF.md`](../../../docs/AI_BRIEF.md)
 2. [`AGENTS.md`](../../../AGENTS.md)
 3. [`STANDARDS.md`](../../../STANDARDS.md) — do not modify on a production day
+4. **The house rules** — things the owner asked for once, which apply from now
+   on. `render.py` prints them; read them yourself at each stop:
+
+```bash
+python3 scripts/house_rule.py list            # everything in force
+python3 scripts/house_rule.py list --scope desk
+```
+
+A house rule is not a suggestion and it is not negotiable on a deadline. If one
+contradicts something in this file, **the house rule wins and you say so** —
+this document is the default, and the owner's standing instruction is the
+specific. If it contradicts `AGENTS.md`, the contract wins and you stop and
+flag it, because a house rule cannot amend the contract.
 
 **D55 lock (do not negotiate):**
 
@@ -75,11 +179,28 @@ the one that costs most to skip.
 
 ## Stop A — Desk (facts, Kannada, legal flags)
 
+```
+ROLE        Desk — is this true, is it ours, and is it legal to say this way
+LOOKING AT  inbox/today.md · editions/{DATE}.json · house rules (scope desk)
+MAY BLOCK   an unopened source · a missing verified_by · a guilt assertion ·
+            an unflagged minor or sexual offence · an unknown category
+MAY NOT     write verified_by · decide the story is true · set a legal flag on
+            the editor's behalf · paste a tip that has not been opened
+EVIDENCE    per story: headline N chars · reel_line N · facts N · source_urls N
+            · verified_by <name or MISSING> · flags set · relevance from REACH
+VERDICT     PASS / FIX / BLOCK per story, then the adversary pass
+```
+
 **Person decides:** which tips become stories, whether it is a reel, legal flags,
 obituary tone, whether the source was actually opened.
 
 **Machine does:** length budgets, Latin numerals, allegation scan, unknown
-category fail, source_url requirement.
+category fail, source_url requirement, relevance and format fit.
+
+**Adversary, before you move on:** take the most specific number, name or
+procedure in each story and ask which `source_url` carries it. Then read every
+crime headline as a lawyer for the person named. Report NOTHING / CONCERN /
+SERIOUS per story.
 
 ### Copy rules
 
@@ -127,6 +248,22 @@ Unknown fields, missing licences, guilt verbs, missing URLs — these fail here.
 
 ## Stop B — Picture (stock first, honest AI, culture veto)
 
+```
+ROLE        Picture — does this frame show what the story says it shows
+LOOKING AT  every image that reaches a screen: hero AND gallery, in chat
+MAY BLOCK   a generated frame not wearing nature:'ai' · a missing credit or
+            licence · an undignified ritual or deity frame · a child's face ·
+            an AI image passing as a photograph of a real event
+MAY NOT     clear a cultural question on its own — surface it, the person
+            decides · generate a new image when stock would do
+EVIDENCE    per image: path · nature · credit · licence · what it shows ·
+            disclosure line as it will print
+VERDICT     PASS / FIX / BLOCK, plus COULD NOT CHECK for anything perceptual
+```
+
+**Adversary:** "this picture is wrong." Not ugly — misleading, disrespectful,
+or synthetic-passing-as-real. Name the frame.
+
 **Person decides:** every new frame, in chat. Culture veto is yes/no on the
 image. Do not redesign the masthead.
 
@@ -164,6 +301,20 @@ Reels need `gallery` length ≥ number of facts. Save new frames to
 ---
 
 ## Stop C — Package (render, listen, glance evidence)
+
+```
+ROLE        Package — was it actually made, and does it read at feed size
+LOOKING AT  out/{DATE}/_review/ · feed_sizes.jpg · REACH.md · run_report.md
+MAY BLOCK   a silent reel · a missing file the copy names · a glyph box ·
+            a narration hazard · a town name past the caption fold
+MAY NOT     claim to have watched a reel or heard audio. You cannot. Say so.
+EVIDENCE    files made · durations · reel count vs target · local relevance
+            per story · which towns have forwards
+VERDICT     PASS / FIX / BLOCK, and COULD NOT CHECK: tone, pace, the voice
+```
+
+**Adversary:** "nobody will forward this." No town named, no takeaway, nothing
+a reader can do about it. Say which story, and what is missing.
 
 ```bash
 mkdir -p assets/daily/{DATE}
@@ -208,6 +359,25 @@ If `--bgm` is passed, it must be `status: allowed` in `assets/LICENCES.json`.
 ---
 
 ## Stop D — Gate (review.py writes APPROVAL.md, or nothing ships)
+
+```
+ROLE        Gate — establish what a machine can establish, and nothing more
+LOOKING AT  review_report.json · APPROVAL.md · _review/ · SIGNOFF.json
+MAY BLOCK   any failing mechanical check. All of them, without exception.
+MAY NOT     sign the judgement seats · write a name into SIGNOFF.json ·
+            describe the folder as ready while APPROVAL.md is absent ·
+            say the package is good — no check here establishes that
+EVIDENCE    N checks passed · the code and owner of every finding ·
+            evidence frames produced · signed: yes/no
+VERDICT     GREEN (mechanically clean, unsigned) / HELD (codes named)
+```
+
+**Adversary, last call:** you have the finished thing. Make the case that it
+should not go out — the one headline, the one frame, the one claim. This is the
+last moment it costs nothing.
+
+Then hand the person the three seats and wait. You may recommend. You may not
+sign.
 
 ```bash
 python3 - <<'PY'
@@ -281,6 +451,59 @@ That script:
 
 ---
 
+## When the owner wants something changed
+
+This is the part that makes the newsroom improve instead of drifting. Somebody
+says "from now on always X", and three weeks later nobody remembers, the skill
+was never edited, and the instruction is in a chat log that no longer exists.
+
+**Route it, then record it.** Four places, and only four:
+
+```bash
+python3 scripts/house_rule.py where "reels should be 30 seconds"
+```
+
+That tells you which one. The rule it applies:
+
+| What was asked for | Where it goes | Why there |
+|---|---|---|
+| a **number** — duration, character budget, loudness, slot, count | `tokens.Limits` + a decision + a test | numbers live in exactly one place (D56); a second copy drifts within a month |
+| a **legal** rule — allegation, minor, victim, licence, grievance | `brand/content.py` + a test + a decision | a guard in a markdown file is a guard that gets edited on a deadline (D29) |
+| a **place** | `copy.PLACE_TAGS` | one registry of towns, read by hashtags, forwards and reach alike |
+| **everything else** — wording, habits, preferences, order of work | a house rule | this is what it is for |
+
+```bash
+python3 scripts/house_rule.py add "ಹಬ್ಬದ ಕಾರ್ಡ್‌ನಲ್ಲಿ ಸಂಘಟಕರ ಹೆಸರು ಕಡ್ಡಾಯ" \
+    --scope picture \
+    --why "organisers reshare what credits them" \
+    --by "Gautam Paduvari"
+```
+
+Scopes: `desk` · `picture` · `package` · `gate` · `footage` · `greeting` ·
+`always`. The rule then prints at that stop, every day, until it is retired:
+
+```bash
+python3 scripts/house_rule.py retire 2026-09-16-01 --why "no longer true"
+```
+
+Retiring keeps the record. Knowing a rule existed and was dropped, and when, is
+worth more than a tidy file.
+
+**What you may not do with this.** A house rule cannot switch a check off, and
+`house_rule.py` refuses one that tries — `skip the verified_by check`,
+`publish without a source`, `override`. If a guard is genuinely wrong, that is
+an hour of work: change the code, write the decision saying what breaks without
+it, add the test. Then it survives, and the next person can see why. A
+plain-text file that quietly became an override would be the most dangerous
+file in this repository.
+
+**When the owner asks you directly**, mid-session, for a change: do it for
+today, then immediately route it and record it, and tell them which of the four
+places it went and what its id is. An instruction that only applies to today
+was a waste of both your time.
+
+---
+
 ## What this skill does NOT do
 
 - Does not modify `brand/`, `templates/`, or `render.py` on a production day
@@ -293,3 +516,8 @@ That script:
 - Does not override `Story.validate()`
 - Does not answer a grievance. The 24h / 15-day clocks are statutory; log it
   with `scripts/correction.py new` and tell the person.
+- Does not let a house rule override the contract, and does not write one that
+  waives a check
+- Does not loop a stop more than twice. A third pass means the problem is the
+  story, not the copy — say so and hold it
+- Does not let the adversary veto anything. It makes the case; a person decides

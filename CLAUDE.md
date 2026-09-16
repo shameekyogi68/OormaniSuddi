@@ -65,12 +65,24 @@ That is not automatically a bug — but do not re-bless it without looking at
   loudness, slots, contrast floors. Skills and docs quote those names; they do
   not restate the values. See D56.
 
+## When the user asks for a change
+
+Route it before you do it — `python3 scripts/house_rule.py where "…"`. A number
+goes to `tokens.Limits`, a legal rule to `brand/content.py`, a place to
+`copy.PLACE_TAGS`, everything else to a house rule. Then record it, and tell
+them where it went and what its id is. An instruction that only applied to
+today was a waste of both your time. D73.
+
+Never write a house rule that waives a check. `add()` refuses it, and it is
+right to.
+
 ## Numbers you can measure
 
 ```bash
 python3 docs/_build_traceability.py     # which decisions are enforced by a test
 python3 scripts/metrics.py report       # which of the guessed numbers hold up
 python3 scripts/correction.py status    # the IT Rules clocks
+python3 scripts/house_rule.py list      # standing instructions in force
 ```
 
 Regenerate derived files after touching the registry, categories, or Story

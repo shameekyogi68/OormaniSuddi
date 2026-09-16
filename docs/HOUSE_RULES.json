@@ -1,0 +1,24 @@
+{
+  "kind": "house_rules",
+  "note": "Things the owner asked for once. Read at the start of every run. Numbers belong in tokens.Limits, legal rules in brand/content.py, places in copy.PLACE_TAGS — see brand/house.py for why.",
+  "rules": [
+    {
+      "id": "2026-09-16-01",
+      "said": "ಹಬ್ಬದ ಕಾರ್ಡ್‌ನಲ್ಲಿ ಸಂಘಟಕರ ಹೆಸರು ಕಡ್ಡಾಯ — ಪೋಸ್ಟರ್‌ನಿಂದ ಅಲ್ಲ, ಸಂಘಟಕರಿಂದಲೇ ಪಡೆಯಿರಿ",
+      "scope": "picture",
+      "why": "organisers reshare what credits them; a name off a poster is how ಸೇನೇಶ್ವರ happened",
+      "added": "2026-09-16",
+      "retired": "",
+      "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-09-16-02",
+      "said": "Weather takeaway always names the helpline number, not just 'contact the DC'",
+      "scope": "desk",
+      "why": "a takeaway people can act on is the strongest forward predictor (D72)",
+      "added": "2026-09-16",
+      "retired": "",
+      "by": "Gautam Paduvari"
+    }
+  ]
+}

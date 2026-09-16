@@ -155,6 +155,23 @@ def check_backups() -> list[str]:
     return out
 
 
+def check_house() -> list[str]:
+    try:
+        from brand import house
+        live = house.rules()
+    except Exception as e:
+        return [f'{WARN} house rules — could not read ({e})']
+    if not live:
+        return [f'{OK} house rules — none set',
+                '      python3 scripts/house_rule.py add "…" --scope desk']
+    by_scope: dict[str, int] = {}
+    for r in live:
+        by_scope[r.scope] = by_scope.get(r.scope, 0) + 1
+    where = ', '.join(f'{k} {v}' for k, v in sorted(by_scope.items()))
+    return [f'{OK} house rules — {len(live)} in force ({where})',
+            '      docs/HOUSE_RULES.md']
+
+
 def check_git() -> list[str]:
     def run(*a):
         return subprocess.run(a, cwd=ROOT, capture_output=True,
@@ -189,7 +206,7 @@ def check_tests() -> list[str]:
 def main() -> int:
     print(f'\n  ಊರ್ಮನಿ ಸುದ್ದಿ — health   {datetime.now():%Y-%m-%d %H:%M}\n')
     lines: list[str] = []
-    for fn in (check_fetch, check_clocks, check_reviews,
+    for fn in (check_fetch, check_clocks, check_reviews, check_house,
                check_backups, check_git, check_tests):
         try:
             lines += fn()

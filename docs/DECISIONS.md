@@ -1783,6 +1783,69 @@ cannot distinguish its own town from a stranger's.
 ---
 
 
+## D73 · The newsroom answers in one shape, argues with itself, and remembers
+
+**Decided.** Four things, which are one thing.
+
+Every expert role answers in the same six fields — ROLE, LOOKING AT, MAY BLOCK,
+MAY NOT, EVIDENCE, VERDICT — and a verdict with no filled-in EVIDENCE is not a
+pass, it is a missing pass. Every verdict may carry `COULD NOT CHECK`, because
+a model cannot hear a reel or see a frame and the honest failure is declaring
+that rather than claiming otherwise.
+
+An **adversary** runs at every stop with the opposite incentive written into
+it: argue this should not run. It has no veto — it makes the case, a person
+decides — and it returns NOTHING, CONCERN or SERIOUS. If it returns NOTHING on
+every story every day, it is not working, and the skill says to report that.
+
+**Iteration is bounded at two passes.** Then the stop is HELD with a named
+reason. Unbounded looping until everything scores 10/10 is how a panel starts
+awarding itself nines; two passes fixes what is fixable, and a third means the
+problem is the story rather than the copy.
+
+**House rules** (`brand/house.py`, `scripts/house_rule.py`) record what the
+owner asked for once, in their words, with the date and the reason, and the
+newsroom reads them at the start of every run.
+
+**Replaced.** Twelve roles scoring themselves out of ten, a loop with no
+termination condition, a panel where every member was helping the thing ship,
+and standing instructions that lived in a chat log until everybody forgot them.
+
+**Why the routing matters more than the ledger.** Not every change is a house
+rule, and putting the wrong one there rebuilds the two-sources-of-truth problem
+this project is arranged to prevent. `house_rule.py where "…"` answers it: a
+NUMBER goes to `tokens.Limits` with a decision and a test (D56); a LEGAL rule
+goes to `brand/content.py` with a test (D29); a PLACE goes to
+`copy.PLACE_TAGS`; everything else — wording, habits, the order you like things
+done in — is a house rule.
+
+**The hard edge.** `add()` refuses anything that reads like a waiver: skip,
+bypass, ignore, disable, override, publish without. This is the most dangerous
+file in the repository and it needs the least give, because it is exactly the
+shape an override would take if one ever got in: a plain-text file the newsroom
+reads every morning and obeys. D29 says a rule that can be waived on a deadline
+will be waived on a deadline, and that does not stop being true because the
+waiver is polite and dated. If a guard is genuinely wrong, that is an hour:
+change the code, write what breaks without it, add the test. Then it survives,
+and the next person can see why.
+
+The refusal names the alternative, deliberately. A refusal that does not gets
+worked around.
+
+**Precedence.** `AGENTS.md` beats a house rule and the skill stops and flags the
+conflict. A house rule beats the skill's own defaults and the skill says so —
+the document is the general case, the owner's standing instruction is the
+specific one.
+
+**If you undo it.** Experts go back to asserting, the loop goes back to having
+no floor, nothing argues the other side, and the next thing you ask for is
+forgotten by October.
+
+`brand/house.py` · `scripts/house_rule.py` · `.agents/skills/second-brain/SKILL.md` · `tests/test_house.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

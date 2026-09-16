@@ -60,8 +60,13 @@ SHADOW = (0, 2 * SS, 8 * SS, (0, 0, 0, 120))
 CTA_TOP = 'ಕ್ಷಣ ಕ್ಷಣದ ಕರಾವಳಿ ಸುದ್ದಿಗಾಗಿ'
 CTA_MAIN = 'ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ, ಬೆಲ್ ಒತ್ತಿ'
 FOLLOW = 'ನಮ್ಮನ್ನು ಫಾಲೋ ಮಾಡಿ'
-PLATFORMS = 'YouTube  •  Instagram'
+PLATFORMS = 'YouTube  •  Instagram  •  Facebook'
 PARTNERS = 'ಸಹಯೋಗ'
+
+# Promo mode — Citizen news tip line & live event broadcast booking
+PROMO_CENTER = 'ನಿಮ್ಮೂರಿನ ಸುದ್ದಿ • ಸಮಸ್ಯೆ • ನೇರ ಪ್ರಸಾರಕ್ಕಾಗಿ'
+PROMO_PHONE_KICKER = 'ವಾಟ್ಸಾಪ್ / ಕರೆ ಮಾಡಿ'
+PROMO_PHONE = '96117 56514'
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -201,6 +206,47 @@ def bell(sf: Surface, cx: float, cy: float, h: float, color):
     orn._paste(sf, lay, cx * SS - ox, cy * SS - oy)
 
 
+def mic_icon(sf: Surface, cx: float, cy: float, h: float, color):
+    """A broadcast microphone icon in gold."""
+    S = int(h * 1.5 * SS)
+    lay = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(lay)
+    u = h * SS
+    ox, oy = S / 2, S / 2
+    col = (*color[:3], 255)
+    # capsule
+    dr.rounded_rectangle([ox - 0.16 * u, oy - 0.44 * u, ox + 0.16 * u, oy + 0.06 * u],
+                         radius=int(0.16 * u), fill=col)
+    # cradle
+    dr.arc([ox - 0.28 * u, oy - 0.24 * u, ox + 0.28 * u, oy + 0.24 * u],
+           start=0, end=180, fill=col, width=max(2, int(2.5 * SS)))
+    # stem
+    dr.rectangle([ox - 0.04 * u, oy + 0.24 * u, ox + 0.04 * u, oy + 0.42 * u], fill=col)
+    # base
+    dr.rounded_rectangle([ox - 0.22 * u, oy + 0.40 * u, ox + 0.22 * u, oy + 0.48 * u],
+                         radius=int(2 * SS), fill=col)
+    orn._paste(sf, lay, cx * SS - ox, cy * SS - oy)
+
+
+def phone_icon(sf: Surface, cx: float, cy: float, h: float, color):
+    """A clean phone handset icon."""
+    S = int(h * 1.5 * SS)
+    lay = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(lay)
+    u = h * SS
+    ox, oy = S / 2, S / 2
+    col = (*color[:3], 255)
+    dr.rounded_rectangle([ox - 0.28 * u, oy - 0.38 * u, ox - 0.06 * u, oy - 0.14 * u],
+                         radius=int(4 * SS), fill=col)
+    dr.rounded_rectangle([ox + 0.06 * u, oy + 0.14 * u, ox + 0.28 * u, oy + 0.38 * u],
+                         radius=int(4 * SS), fill=col)
+    pts = [(ox - 0.22 * u, oy - 0.18 * u), (ox - 0.08 * u, oy - 0.18 * u),
+           (ox + 0.18 * u, oy + 0.08 * u), (ox + 0.18 * u, oy + 0.22 * u),
+           (ox + 0.08 * u, oy + 0.22 * u), (ox - 0.22 * u, oy - 0.06 * u)]
+    dr.polygon(pts, fill=col)
+    orn._paste(sf, lay, cx * SS - ox, cy * SS - oy)
+
+
 def partner_tiles(sf: Surface, x0: float, top: int, paths: list[str]) -> float:
     """White tiles for partner logos, so any logo reads on maroon. Returns the
     right edge. Contained, never cropped — a partner's mark is not ours to cut."""
@@ -233,7 +279,8 @@ def text_w(s: str, f) -> float:
 #  LAYERS
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_bg(top: int, colour: tuple, partners: list[str]) -> Image.Image:
+def build_bg(top: int, colour: tuple, partners: list[str],
+             mode: str = 'subscribe') -> Image.Image:
     sf = Surface(W, H, SS, bg=(0, 0, 0, 0))
     bh = H - top
     band_ground(sf, top, colour)
@@ -256,7 +303,7 @@ def build_bg(top: int, colour: tuple, partners: list[str]) -> Image.Image:
                    C.gold_300, shadow=SHADOW)
     left_edge = tx + max(text_w(Brand.name, f_name), text_w(sub, f_sub))
 
-    # ── right: partners, or — until there are any — the handle ───────────
+    # ── right: partners, or — until there are any — the handle/phone ─────
     right = W - MARGIN
     if partners:
         n = len(partners)
@@ -267,6 +314,17 @@ def build_bg(top: int, colour: tuple, partners: list[str]) -> Image.Image:
                        (top + 46) * SS, f_lab, C.gold_300, anchor_x='c',
                        shadow=SHADOW)
         partner_tiles(sf, rx0, top, partners)
+    elif mode == 'promo':
+        f_kicker = typo.font('kn_var', int(28 * SS), weight=580)
+        f_phone = typo.font('latin', int(58 * SS), weight=780)
+        block_w = max(text_w(PROMO_PHONE_KICKER, f_kicker),
+                      text_w(PROMO_PHONE, f_phone))
+        rx0 = right - block_w
+        mid = (rx0 + block_w / 2) * SS
+        typo.draw_text(sf.img, PROMO_PHONE_KICKER, mid, (top + 72) * SS, f_kicker,
+                       C.gold_300, anchor_x='c', shadow=SHADOW)
+        typo.draw_text(sf.img, PROMO_PHONE, mid, (top + 138) * SS, f_phone,
+                       C.paper_0, anchor_x='c', shadow=SHADOW)
     else:
         f_follow = typo.font('kn_var', int(26 * SS), weight=560)
         f_handle = typo.font('latin', int(56 * SS), weight=760)
@@ -286,22 +344,37 @@ def build_bg(top: int, colour: tuple, partners: list[str]) -> Image.Image:
     div1, div2 = left_edge + 56, rx0 - 56
     for x in (div1, div2):
         gilded_vrule(sf, x, top + 34, H - 34, weight=1.6, a_mid=0.75)
-    cx0, cx1 = div1 + 40, div2 - 40
+    cx0, cx1 = div1 + 30, div2 - 30
     ccx = (cx0 + cx1) / 2
     f_top = typo.font('kn_var', int(30 * SS), weight=560)
-    typo.draw_text(sf.img, CTA_TOP, ccx * SS, (top + 72) * SS, f_top,
-                   C.gold_300, anchor_x='c', shadow=SHADOW)
-    bell_h = 40
-    room = (cx1 - cx0) - bell_h - 18
-    main = typo.fit(CTA_MAIN, 'kn', int(46 * SS), int(32 * SS), room * SS,
-                    60 * SS, 1.1, max_lines=1)
-    mw = main.width / SS
-    gx = ccx - (bell_h + 18 + mw) / 2
-    base = top + 136
-    bell(sf, gx + bell_h / 2, base - main.first_rise / SS * 0.48, bell_h,
-         C.gold_400)
-    typo.draw_text(sf.img, main.lines[0], (gx + bell_h + 18) * SS, base * SS,
-                   main.f, C.paper_0, shadow=SHADOW)
+
+    if mode == 'promo':
+        room = cx1 - cx0
+        main = typo.fit(PROMO_CENTER, 'kn', int(46 * SS), int(34 * SS), room * SS,
+                        80 * SS, 1.1, max_lines=1)
+        rise, drop = typo.ink_extents(main.lines[0], main.f)
+        cy = (top + bh / 2) * SS
+        base = cy + (rise - drop) / 2
+        typo.draw_text(sf.img, main.lines[0], ccx * SS, base,
+                       main.f, C.paper_0, anchor_x='c', shadow=SHADOW)
+        # Subtle gold accent line underneath
+        ry = top + bh / 2 + 34
+        rule(sf, ccx - 140, ry, ccx + 140, (*C.gold_500, 80), 1.2)
+        rule(sf, ccx - 60, ry, ccx + 60, (*C.gold_400, 140), 1.0)
+    else:
+        typo.draw_text(sf.img, CTA_TOP, ccx * SS, (top + 72) * SS, f_top,
+                       C.gold_300, anchor_x='c', shadow=SHADOW)
+        bell_h = 40
+        room = (cx1 - cx0) - bell_h - 18
+        main = typo.fit(CTA_MAIN, 'kn', int(46 * SS), int(32 * SS), room * SS,
+                        60 * SS, 1.1, max_lines=1)
+        mw = main.width / SS
+        gx = ccx - (bell_h + 18 + mw) / 2
+        base = top + 136
+        bell(sf, gx + bell_h / 2, base - main.first_rise / SS * 0.48, bell_h,
+             C.gold_400)
+        typo.draw_text(sf.img, main.lines[0], (gx + bell_h + 18) * SS, base * SS,
+                       main.f, C.paper_0, shadow=SHADOW)
 
     top_edge(sf, top)
     return finish(sf.img, top)
@@ -382,21 +455,44 @@ def main() -> int:
           f'({H - top}px), #{colour[0]:02X}{colour[1]:02X}{colour[2]:02X}')
     os.makedirs(args.out, exist_ok=True)
 
-    bg = build_bg(top, colour, args.partner)
-    empty = np.asarray(bg)[:top, :, 3].max()
-    assert empty == 0, 'the picture area is no longer transparent'
-    bg.save(os.path.join(args.out, 'live_bg.png'), optimize=True)
     bug = build_bug()
     bug.save(os.path.join(args.out, 'live_bug.png'), optimize=True)
     badge = build_badge()
     badge.save(os.path.join(args.out, 'live_badge.png'), optimize=True)
+
+    # ── 1. Default Subscribe & Social Follow Overlay ─────────────────────
+    bg = build_bg(top, colour, args.partner, mode='subscribe')
+    empty = np.asarray(bg)[:top, :, 3].max()
+    assert empty == 0, 'the picture area is no longer transparent'
+    bg.save(os.path.join(args.out, 'live_bg.png'), optimize=True)
+
+    full = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    full.alpha_composite(bg)
+    full.alpha_composite(bug)
+    full.alpha_composite(badge)
+    full.save(os.path.join(args.out, 'live_overlay_full.png'), optimize=True)
     preview([bg, bug, badge], os.path.join(args.out, 'live_preview.jpg'))
 
+    # ── 2. Promotion & News Coverage / Tip Line Overlay ──────────────────
+    promo_bg = build_bg(top, colour, args.partner, mode='promo')
+    promo_bg.save(os.path.join(args.out, 'live_promo_bg.png'), optimize=True)
+
+    promo_full = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    promo_full.alpha_composite(promo_bg)
+    promo_full.alpha_composite(bug)
+    promo_full.alpha_composite(badge)
+    promo_full.save(os.path.join(args.out, 'live_promo_overlay_full.png'), optimize=True)
+    preview([promo_bg, bug, badge], os.path.join(args.out, 'live_promo_preview.jpg'))
+
     mode = f'{len(args.partner)} partner logo(s)' if args.partner else 'channel branding (no partners yet)'
-    print(f'  ✓ live_bg.png     band: {mode}; picture area verified transparent')
-    print('  ✓ live_bug.png    optional corner logo')
-    print('  ✓ live_badge.png  optional LIVE badge — stays in the replay if used')
-    print('  ✓ live_preview.jpg')
+    print(f'  ✓ live_bg.png                 band: {mode}; picture area verified transparent')
+    print('  ✓ live_bug.png                optional corner logo')
+    print('  ✓ live_badge.png              optional LIVE badge')
+    print('  ✓ live_overlay_full.png       full transparent overlay (Subscribe + Socials)')
+    print('  ✓ live_preview.jpg            preview of subscribe overlay')
+    print('  ✓ live_promo_bg.png           promo band: news coverage tip line + phone')
+    print('  ✓ live_promo_overlay_full.png full transparent overlay (News Tip / Raise Voice + Phone)')
+    print('  ✓ live_promo_preview.jpg      preview of promo overlay')
     return 0
 
 

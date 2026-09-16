@@ -539,6 +539,16 @@ def main() -> int:
     print(f'\nಊರ್ಮನಿ ಸುದ್ದಿ — {ed.date_kn} · ಆವೃತ್ತಿ {ed.edition_no}')
     print(f'{len(ed.stories)} stories\n')
 
+    # Things you asked for once. Printed before anything is made, because a
+    # rule nobody sees until after the render is a rule that costs a re-render.
+    try:
+        from brand import house
+        note = house.brief()
+        if note:
+            print(note + '\n')
+    except Exception:
+        pass
+
     print('PREFLIGHT')
     compliance().show('channel compliance')
     blocked = False
