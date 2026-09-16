@@ -36,6 +36,20 @@ out/*
 # Reel intermediates. Rebuilt on every render.
 build/
 
+# ── Not for the public record ────────────────────────────────────────────────
+# The remote is a public repo. These two are kept on the Mac and in
+# scripts/backup.sh, not on GitHub.
+#
+# REVIEWS/ is candid third-party critique OF THIS OPERATION — useful to work
+# from, not something to publish about yourself. SYSTEM_BOOK.md is the full
+# internal operations manual, including things that are nobody else's business.
+#
+# Everything a reader or a regulator is entitled to IS public: the grievance
+# officer and contact (IT Rules 2021 Part III requires that), the corrections
+# policy, the decisions, the standards, and the code itself.
+REVIEWS/
+docs/SYSTEM_BOOK.md
+
 # ── Local secrets ─────────────────────────────────────────────────────────────
 .env
 .env.*
@@ -57,3 +71,4 @@ logs/
 *.swp
 .idea/
 .vscode/
+.backups/

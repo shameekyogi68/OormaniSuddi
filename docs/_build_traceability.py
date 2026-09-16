@@ -190,6 +190,12 @@ def main() -> int:
           f'{len(untested)} unenforced')
     if untested:
         print(f'  unenforced: {", ".join(untested)}')
+        if check:
+            print('\n  A decision enforced by nothing is a paragraph, not a '
+                  'rule. Write a test that names the number, or add it to '
+                  'GOLDEN_GUARDED / UNTESTABLE with a reason somebody would '
+                  'defend.', file=sys.stderr)
+            return 1
     return 0
 
 

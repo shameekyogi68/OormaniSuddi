@@ -1,0 +1,63 @@
+# The contract, checked on every push — on a machine that is not the Mac.
+#
+# The point is not that the tests pass; they pass locally too. The point is
+# that they pass somewhere the newsroom does not live. If this workflow is
+# green, the repo rebuilds on hardware that has never seen this project, which
+# is the thing a one-Mac operation cannot otherwise know.
+#
+# The golden design test deliberately does NOT run here. It pins rendered
+# pixels, and pixels depend on the exact Pillow, libraqm and font build — a
+# Linux runner produces different ones for reasons that have nothing to do with
+# design. Running it here would train everybody to ignore a red build, which is
+# worse than not running it. It runs on the Mac, where the renders are made.
+
+name: contract
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          # Line A only. torch is for the footage upscaler and is a ~2 GB
+          # download that no test here touches.
+          pip install "Pillow>=10.0" "numpy>=1.26" trafilatura
+
+      - name: The contract
+        run: python -m unittest tests.test_contract -v
+
+      - name: Legibility floors
+        run: python -m unittest tests.test_legibility -v
+
+      - name: The legal corpus
+        run: python -m unittest tests.test_legal_corpus -v
+
+      - name: The intake retrieves, never invents
+        run: python -m unittest tests.test_intake -v
+
+      - name: Every decision is enforced by something
+        run: python docs/_build_traceability.py --check
+
+      - name: Derived files are actually derived
+        # These are generated from code so they cannot drift. If regenerating
+        # them changes anything, somebody edited a generated file by hand.
+        run: |
+          python -m templates --dump
+          python schemas/_build.py
+          python docs/_build_templates_md.py
+          python docs/_build_traceability.py
+          git diff --exit-code -- templates/registry.json schemas docs/TEMPLATES.md docs/TRACEABILITY.md \
+            || (echo "::error::A generated file is out of date. Run the four commands in AGENTS.md and commit the result." && exit 1)
