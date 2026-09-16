@@ -1,0 +1,62 @@
+#!/bin/bash
+# The contract, before it can be committed.
+#
+# Installed by scripts/install_hooks.sh into .git/hooks/. Kept in scripts/ so
+# it is version-controlled — a hook that lives only in .git/ is a hook that
+# exists on one machine, which is the problem this whole release was about.
+#
+# It runs the INSTANT suites only (about three seconds). The golden design test
+# takes two minutes and belongs in a deliberate run, not in the path of every
+# commit: a hook people are tempted to skip is a hook that gets skipped with
+# --no-verify, and then it protects nothing.
+#
+# Bypass honestly when you mean to:  git commit --no-verify
+
+set -uo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 0
+
+# Nothing Python staged? Nothing to check.
+if ! git diff --cached --name-only | grep -qE '\.(py|json)$'; then
+  exit 0
+fi
+
+fail() { echo "✗ $1" >&2; echo "  commit refused. Fix it, or 'git commit --no-verify' if you truly mean to." >&2; exit 1; }
+
+echo "  pre-commit: the contract…"
+python3 -m unittest tests.test_contract -q 2>&1 | tail -3 | grep -q '^OK' || fail "tests.test_contract"
+
+echo "  pre-commit: legibility, legal corpus, intake, calendar…"
+python3 -m unittest tests.test_legibility tests.test_legal_corpus \
+                    tests.test_intake tests.test_calendar -q 2>&1 \
+  | tail -3 | grep -q '^OK' || fail "one of the fast suites"
+
+echo "  pre-commit: every decision enforced by something…"
+python3 docs/_build_traceability.py --check >/dev/null 2>&1 \
+  || fail "a decision is enforced by nothing — see docs/_build_traceability.py"
+
+# A generated file edited by hand is a silent drift, and drift is the failure
+# mode this project exists to prevent.
+echo "  pre-commit: generated files are actually generated…"
+python3 -m templates --dump >/dev/null 2>&1
+python3 schemas/_build.py >/dev/null 2>&1
+python3 docs/_build_templates_md.py >/dev/null 2>&1
+python3 docs/_build_traceability.py >/dev/null 2>&1
+if ! git diff --quiet -- templates/registry.json schemas docs/TEMPLATES.md docs/TRACEABILITY.md; then
+  echo "✗ a generated file was out of date and has just been regenerated." >&2
+  echo "  Stage the result and commit again:" >&2
+  echo "    git add templates/registry.json schemas docs/TEMPLATES.md docs/TRACEABILITY.md" >&2
+  exit 1
+fi
+
+# The golden fingerprints are the design. Changing them is allowed; changing
+# them by accident, in a commit about something else, is not.
+if git diff --cached --name-only | grep -q '^tests/golden.json$'; then
+  echo
+  echo "  ! tests/golden.json is in this commit — the DESIGN changed." >&2
+  echo "    Confirm you looked at out/_blessed/ before you blessed it." >&2
+  echo
+fi
+
+echo "  pre-commit: clean"
+exit 0
