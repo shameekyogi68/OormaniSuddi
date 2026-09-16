@@ -98,6 +98,10 @@ category fail, source_url requirement.
 - Do not invent officials, hospitals, vehicle models, quotes, or causes
 - `is_reel: true` only for visual / urgent / shareable stories. Routine civic
   notices stay carousel-only.
+- **At most two reels in a day**, and the best two. Four reels split the same
+  audience four ways and all four look average. `REACH.md` scores which earn it.
+- **Every story needs `location`.** It drives the hashtags, the first comment,
+  the per-town forward, and whether anyone can tell the story is theirs.
 - **At most one crime reel.** Crime wins the drama/stakes/shareability test
   every single day, so that test cannot be the thing that limits it. If two
   crime stories both look reel-worthy, one of them is a carousel story and the
@@ -191,6 +195,13 @@ for them.
 
 WhatsApp forward text is in `*_copy.txt` under `WHATSAPP FORWARD`. That is
 the growth product. Broadsheet at 20:00.
+
+**And one forward per town**, in `out/{DATE}/forward_<town>.txt`, listed in
+MASTER_COPY. Send each to that town's groups — not all of them to everyone.
+Nobody forwards a seven-taluk digest because it belongs in no group; a
+Kundapura card goes into a Kundapura group with somebody's own name on it.
+`REACH.md` says which towns the edition reached and which stories are marked as
+reels that read better as cards. D72.
 
 If `--bgm` is passed, it must be `status: allowed` in `assets/LICENCES.json`.
 

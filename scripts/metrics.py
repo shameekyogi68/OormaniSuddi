@@ -58,6 +58,13 @@ CREATE TABLE IF NOT EXISTS posts (
     seconds   REAL,                   -- duration, for video
     views     INTEGER DEFAULT 0,
     reach     INTEGER DEFAULT 0,
+    -- Reach inside the taluks this channel covers. The number that decides
+    -- whether this is a local paper or a page that happens to be in Kannada:
+    -- 40,000 views from Bengaluru and 200 from Byndoor is a miss, and raw
+    -- reach cannot tell you that happened. Instagram Insights breaks reach
+    -- down by city — type in the in-district share.
+    local_reach INTEGER DEFAULT 0,
+    place     TEXT,                   -- the taluk this post was written for
     likes     INTEGER DEFAULT 0,
     saves     INTEGER DEFAULT 0,
     shares    INTEGER DEFAULT 0,
@@ -73,11 +80,26 @@ CREATE INDEX IF NOT EXISTS posts_slot ON posts(at);
 """
 
 
+# Columns added after the table first shipped. CREATE TABLE IF NOT EXISTS does
+# nothing to a table that already exists, so a database with real rows in it
+# would silently keep the old shape and every insert would fail. Migrations are
+# additive and idempotent; nothing here ever drops a column.
+MIGRATIONS = (
+    ('local_reach', 'INTEGER DEFAULT 0'),
+    ('place', 'TEXT'),
+)
+
+
 def connect() -> sqlite3.Connection:
     os.makedirs(os.path.dirname(DB), exist_ok=True)
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
+    have = {r['name'] for r in con.execute('PRAGMA table_info(posts)')}
+    for col, decl in MIGRATIONS:
+        if col not in have:
+            con.execute(f'ALTER TABLE posts ADD COLUMN {col} {decl}')
+    con.commit()
     return con
 
 
@@ -86,17 +108,20 @@ def add(args) -> int:
     try:
         con.execute(
             """INSERT INTO posts (date, asset, format, category, platform, at,
-                                  seconds, views, reach, likes, saves, shares,
+                                  seconds, views, reach, local_reach, place,
+                                  likes, saves, shares,
                                   comments, follows, watch_pct, note, entered)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(date, asset, platform) DO UPDATE SET
                  views=excluded.views, reach=excluded.reach,
+                 local_reach=excluded.local_reach, place=excluded.place,
                  likes=excluded.likes, saves=excluded.saves,
                  shares=excluded.shares, comments=excluded.comments,
                  follows=excluded.follows, watch_pct=excluded.watch_pct,
                  note=excluded.note, entered=excluded.entered""",
             (args.date, args.asset, args.format, args.category, args.platform,
-             args.at, args.seconds, args.views, args.reach, args.likes,
+             args.at, args.seconds, args.views, args.reach, args.local_reach,
+             args.place, args.likes,
              args.saves, args.shares, args.comments, args.follows, args.watch,
              args.note, datetime.now().isoformat(timespec='seconds')))
         con.commit()
@@ -164,6 +189,50 @@ def report(args) -> int:
 
     span = f'{rows[0]["date"]} → {rows[-1]["date"]}'
     lines += [f'{len(rows)} posts · {span}', '']
+
+    # ── the number this channel is actually judged on ─────────────────────
+    # Put first, deliberately. Raw reach rewards a post that went wide and
+    # landed nowhere; local share rewards the one that reached the taluk it
+    # was written for. A page optimising the first becomes a Kannada content
+    # account. Optimising the second is what a local paper is.
+    from brand.tokens import Limits
+    total_reach = sum(r['reach'] or r['views'] or 0 for r in rows)
+    total_local = sum((r['local_reach'] or 0) for r in rows)
+    lines += ['## Local penetration', '']
+    if not total_local:
+        lines += [
+            '> Not recorded yet. `--local-reach` takes the in-district number '
+            'from Instagram Insights → Audience → cities.',
+            '>',
+            "> Without it this report can tell you a post did well and cannot "
+            "tell you whether it did well *here*, which for a channel covering "
+            "seven taluks is most of the question.", '']
+    else:
+        share = total_local / total_reach if total_reach else 0
+        mark = '✓' if share >= Limits.local_reach_floor else '⚠️'
+        lines += [
+            f'{mark} **{share:.0%}** of all reach was in-district '
+            f'({total_local:,} of {total_reach:,}), against a floor of '
+            f'{Limits.local_reach_floor:.0%}.', '']
+        if share < Limits.local_reach_floor:
+            lines += [
+                'Reach is going to people who cannot use it. That usually '
+                'means the hooks are generic — a town name in the first line '
+                'is what makes a coastal story findable by coastal readers, '
+                'and invisible to everyone else, which is the trade you want.',
+                '']
+        by_place = _group([r for r in rows if r['place']], 'place')
+        if by_place:
+            lines += ['| town | posts | reach | local | local share |',
+                      '|---|--:|--:|--:|--:|']
+            for place, rs in sorted(
+                    by_place.items(),
+                    key=lambda kv: -sum(x['local_reach'] or 0 for x in kv[1])):
+                pr = sum(x['reach'] or x['views'] or 0 for x in rs)
+                pl = sum(x['local_reach'] or 0 for x in rs)
+                lines.append(f'| {place} | {len(rs)} | {pr:,} | {pl:,} | '
+                             f'{(pl / pr if pr else 0):.0%} |')
+            lines.append('')
 
     if len(rows) < MIN_TOTAL:
         lines += [
@@ -266,6 +335,11 @@ def main() -> int:
                    choices=['reel', 'carousel', 'story', 'broadsheet',
                             'bulletin', 'footage', 'short'])
     a.add_argument('--category', default='')
+    a.add_argument('--place', default='',
+                   help='the taluk this post was written for')
+    a.add_argument('--local-reach', dest='local_reach', type=int, default=0,
+                   help='reach inside the district (Instagram Insights → '
+                        'cities). This is the number that matters.')
     a.add_argument('--platform', default='instagram')
     a.add_argument('--at', default='', help='HH:MM it actually went out')
     a.add_argument('--seconds', type=float, default=None)

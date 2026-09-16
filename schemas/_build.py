@@ -88,6 +88,15 @@ STORY = {
                         'description': 'http(s) URLs the editor can reopen. Required '
                                        'unless sources is own reporting '
                                        '("ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ").'},
+        'follows_up': {'type': 'string',
+                       'description': 'The edition date this story continues, '
+                                      'e.g. "2026-09-14". The caption then says '
+                                      'so, which tells a reader the channel '
+                                      'followed something up. Use it ONLY when '
+                                      'there is genuinely new information — a '
+                                      'follow-up with no new fact is padding, '
+                                      'and padding teaches an audience to stop '
+                                      'reading.'},
         'verified_by': {'type': 'string',
                         'description': 'The NAME of the person who opened the '
                                        'sources and confirmed the facts. The '

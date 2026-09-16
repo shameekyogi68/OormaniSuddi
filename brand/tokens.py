@@ -401,6 +401,17 @@ class Limits:
     # somebody takes rather than a drift nobody notices. D68.
     crime_reels_per_day = 1
     crime_share_warn = 0.40     # of an edition's stories, before it is a pattern
+    # Reels a day, on an account this size. Six posts a day does not reach six
+    # times as many people: each one goes to a small test slice, performance is
+    # judged relatively, and splitting the same audience six ways makes every
+    # post look mediocre. Two good reels beat four average ones, and the render
+    # time saved is the capacity problem solving itself. A target, not a cap —
+    # a genuinely big day is allowed to be a big day. D72.
+    reels_per_day_target = 2
+    # What a forward is measured in. Reach is not views: it is people in these
+    # taluks who see something they can use and send it to someone in the same
+    # taluk. A post reaching 40,000 statewide and 200 locally is a miss.
+    local_reach_floor = 0.55    # share of reach that should be in-district
 
 
 class Motion:

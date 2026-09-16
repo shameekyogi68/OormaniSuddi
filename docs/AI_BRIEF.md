@@ -208,6 +208,33 @@ about the festival. Write a separate file in `editions/greetings/` with
 
 ---
 
+## 3b · Writing so it travels
+
+A coastal story is forwarded by somebody who recognises their own town in it.
+Three rules follow from that, and the gate checks all three.
+
+**The town name goes in the first 125 characters.** Instagram truncates the
+caption behind "… more" at roughly there. `hook()` will prefix the place for
+you when it fits — but if your headline buries the town behind a clause, it
+lands past the fold and the taluk it was written for never sees it.
+
+**Set `location` on every story.** It drives the hashtags, the first comment,
+the per-town WhatsApp forward, and whether the story can be placed at all. A
+story with no location is a story nobody can tell is theirs.
+
+**Write the takeaway.** A helpline, a last date, a road closed, who to call.
+Copy that tells a reader what to DO is the strongest forward predictor there
+is, and it is the difference between a story people read and a story people
+send to their family.
+
+`follows_up` takes the date of an earlier edition when this genuinely continues
+it — a road that was closed and has reopened. The caption then says so, which
+tells a reader this channel follows things up. Use it only when there is new
+information: a follow-up with no new fact is padding, and padding teaches an
+audience to stop reading.
+
+---
+
 ## 4 · Hard limits
 
 Exceed these and preflight warns; exceed them badly and it fails.
@@ -244,6 +271,9 @@ There is no flag to switch any of this off, and you must not add one.
 | empty `sources` | name who told you; own reporting counts — `["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"]` |
 | sourced story with no `source_urls` | add an http URL the editor can reopen, or mark own reporting |
 | no `verified_by` (blocks APPROVAL.md, not the render) | a PERSON opens the source, checks the facts, and puts their name here. You cannot fill this in on their behalf — see §6 |
+| no `location` (warns) | set it. Nobody forwards a story they cannot tell is about their town, and the reach layer cannot place it |
+| a notice marked `is_reel` (warns) | civic, health and education read better as cards. A notice gets screenshotted; a video about one gets scrolled |
+| more than 2 stories marked `is_reel` (warns) | on an account this size, four reels split the same audience four ways and all four look average |
 | unknown `category` | pick from the registry; `governance` is not silent explainer |
 | AI credit with `nature: "representative"` | generated frames, including stock, use `nature: "ai"` |
 | obituary with one source | two sources, or own reporting |

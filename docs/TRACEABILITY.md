@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **45/70** decisions are named by at least one test
+- **46/71** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -100,6 +100,7 @@ those carry a reason rather than a test.
 ## D22 · The clock is injectable
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_golden.py`
+- Enforced in: `brand/reach.py`
 
 ## D23 · Golden tests render a frozen fixture, never a live edition
 
@@ -298,8 +299,8 @@ those carry a reason rather than a test.
 
 ## D68 · The reel gate cannot be the thing that limits crime
 
-- **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/review.py`, `brand/tokens.py`
+- **Tested by:** `tests/test_contract.py`, `tests/test_reach.py`
+- Enforced in: `brand/reach.py`, `brand/review.py`, `brand/tokens.py`
 
 ## D69 · A bad Tuesday has a defined minimum, decided in advance
 
@@ -312,4 +313,9 @@ those carry a reason rather than a test.
 ## D71 · The scheduler is not ours to own; the heartbeat is
 
 - **Tested by:** `tests/test_intake.py`
+
+## D72 · Reach is local penetration, and it is measured that way
+
+- **Tested by:** `tests/test_reach.py`
+- Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`
 

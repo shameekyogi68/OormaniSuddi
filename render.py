@@ -378,10 +378,50 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
         if re.fullmatch(r'reel(_\d+)?_copy\.txt', name):
             lines += [f'## {name}', '', '```',
                       _read(os.path.join(outdir, name)), '```', '']
+    # ── the forwards, one per town ────────────────────────────────────────
+    # The single highest-leverage distribution change available to this desk.
+    # A seven-taluk digest is nobody's in particular and belongs in no group;
+    # a Kundapura card goes into a Kundapura group with somebody's own name on
+    # it. Same facts, same sourcing, re-cut so the first line is the reader's
+    # town. See D72.
+    try:
+        forwards = copywriter.taluk_forwards(ed)
+    except Exception as e:
+        forwards = {}
+        print(f'  ! taluk forwards could not be built ({e})')
+    if forwards:
+        lines += ['## WhatsApp — one forward per town', '',
+                  'Send each of these to that town\'s groups and broadcast '
+                  'list, not to everyone. People forward what is theirs.', '']
+        for place, text in forwards.items():
+            lines += [f'### {place}', '', '```', text, '```', '']
+
     path = os.path.join(outdir, 'MASTER_COPY.md')
     with open(path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines).rstrip() + '\n')
     print('  ✓ MASTER_COPY.md')
+
+    # Also as files, because a forward gets sent from a phone and copying out
+    # of a fenced block in a long markdown file at 20:00 is how the wrong
+    # town's card goes to the wrong group.
+    for place, text in forwards.items():
+        safe = ''.join(c for c in place if c.isalnum() or c in ' _-').strip()
+        fp = os.path.join(outdir, f'forward_{safe or "edition"}.txt')
+        with open(fp, 'w', encoding='utf-8') as f:
+            f.write(text + '\n')
+    if forwards:
+        print(f'  ✓ {len(forwards)} taluk forward(s): '
+              + ', '.join(sorted(forwards)))
+
+    # ── the reach view of the day ─────────────────────────────────────────
+    try:
+        from brand import reach
+        rp = os.path.join(outdir, 'REACH.md')
+        with open(rp, 'w', encoding='utf-8') as f:
+            f.write(reach.report(ed))
+        print('  ✓ REACH.md')
+    except Exception as e:
+        print(f'  ! reach report could not be built ({e})')
 
 
 def main() -> int:

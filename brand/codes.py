@@ -66,6 +66,10 @@ CODES: dict[str, str] = {
     'PUB-02': 'the schedule routes an AI reel to YouTube (Rule 7)',
     'PUB-03': 'two posts are close enough to compete with each other',
     'PUB-04': 'the edition is drifting toward being a crime channel',
+    'PUB-05': 'the town name sits past the caption fold, where nobody sees it',
+    'PUB-06': 'a story is marked as a reel that reads better as a card',
+    'PUB-07': 'more reels than the day targets, splitting the same audience',
+    'PUB-08': 'a story names no place, so nobody can tell it is about their town',
     # ── OPS ───────────────────────────────────────────────────────────────
     'OPS-01': 'no Grievance Officer is named (IT Rules 2021 Part III)',
     'OPS-02': 'no contact route is published anywhere',

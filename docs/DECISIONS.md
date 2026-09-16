@@ -1726,6 +1726,63 @@ read it.
 ---
 
 
+## D72 · Reach is local penetration, and it is measured that way
+
+**Decided.** `brand/reach.py` scores every story on local usefulness, decides
+which formats it earns, and checks the town name lands before the caption fold.
+`copy.taluk_forwards()` cuts one WhatsApp forward per town the edition covers.
+`Limits.reels_per_day_target = 2`. `metrics.py` records `local_reach` and the
+report opens on in-district share rather than on views.
+
+**Replaced.** A posting schedule, and "reach" meaning views.
+
+**The correction underneath all of it.** Forty thousand views from Bengaluru is
+a miss. Two thousand in one taluk is a local media position, and eventually
+sellable to a jeweller in that taluk. Raw reach cannot tell those apart, so it
+was the wrong number to optimise and every downstream decision inherited that.
+
+**Why one forward per town.** Nobody forwards a seven-taluk digest, because a
+digest is nobody's in particular and there is no group it obviously belongs in.
+A Kundapura card goes into a Kundapura group with somebody's own name attached
+to it. Same facts, same sourcing, re-cut so the first line is the reader's
+town. This is the highest-leverage distribution change available to this desk
+and it costs one function.
+
+**Why the place registry is not duplicated here.** Every place name lives in
+`copy.PLACE_TAGS` and this module reads it without adding to it — the same rule
+`tokens.Limits` has for numbers. Two lists of towns drift within a month, and
+then the hashtags, the forwards and the relevance score disagree about where
+Byndoor is. A test asserts reach.py hard-codes no place.
+
+**Why it scores usefulness and not attention.** Crime wins every engagement
+signal in every newsroom that has ever existed. A reach layer that ranked by
+predicted views would be a machine for producing the drift D68 exists to cap.
+So the score is: who is affected, how near, how soon, and can the reader act.
+A test asserts a civic notice with a deadline outranks a crime story.
+
+**Why two reels rather than four.** On an account this size each post goes to a
+small test slice and is judged relatively; splitting the same audience four
+ways makes all four look average. It is a target, not a cap — a genuinely big
+day is allowed to be one — and the render time saved is the capacity problem
+solving itself.
+
+**Why the fold matters.** Instagram truncates a caption at about 125 characters
+behind "… more". A coastal story whose town name sits past that is invisible to
+the taluk it was written for, which is the only audience that was ever going to
+forward it.
+
+**What this deliberately does not do.** It does not auto-publish, it does not
+rank stories for the editor, and it does not touch which places the channel
+covers. It reports; a person still decides.
+
+**If you undo it.** The channel goes back to being judged on a number that
+cannot distinguish its own town from a stranger's.
+
+`brand/reach.py` · `brand/copy.py :: taluk_forwards` · `brand/tokens.py :: Limits` · `scripts/metrics.py` · `tests/test_reach.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

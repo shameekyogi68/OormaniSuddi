@@ -333,6 +333,15 @@ class Story:
     numbers: list[tuple[str, str]] = field(default_factory=list)  # (value, label)
     quote: tuple[str, str] | None = None                          # (text, attribution)
     correction: str = ''                 # if this card corrects an earlier one
+    # The edition date this story continues, e.g. "2026-09-14". A road that was
+    # closed and has reopened is a second story, and saying so is worth more
+    # than either half alone: it tells a reader this channel followed up, which
+    # is the difference between a feed and a paper.
+    #
+    # It is NOT a licence to split one small story across three days. The rule
+    # is new information or nothing — `follows_up` with no new fact is padding,
+    # and padding is what teaches an audience to stop reading. See D72.
+    follows_up: str = ''
     reel_line: str = ''                  # short headline for video; see AI_BRIEF
     reel_support: str = ''               # supporting sentence for reel scene
     # Short on-screen forms of `points`, for the reel's fact cards. Same idea

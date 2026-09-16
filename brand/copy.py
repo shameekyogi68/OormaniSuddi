@@ -374,6 +374,12 @@ def instagram_caption(story: Story, tags: list[str] | None = None) -> str:
     if story.correction:
         blocks.append(f'ತಿದ್ದುಪಡಿ: {story.correction.strip()}')
 
+    # Continuity. A reader who saw the first report is told this is the same
+    # story moving, and a reader who did not is told there is more behind it.
+    # Both are reasons to follow rather than to scroll.
+    if story.follows_up:
+        blocks.append(f'ಈ ಹಿಂದಿನ ವರದಿಯ ಮುಂದುವರಿಕೆ ({story.follows_up}).')
+
     blocks.append(cta(story))
 
     blocks.append(_join([dateline(story), status_line(story),
@@ -421,6 +427,53 @@ def whatsapp_text(story: Story) -> str:
         blocks.append(Brand.whatsapp_url)
     blocks.append(f'— {Brand.name} · {Brand.handle}')
     return _join(blocks)
+
+
+def taluk_forwards(edition) -> dict[str, str]:
+    """One WhatsApp forward per place this edition actually covers.
+
+    The reason this exists rather than a single district round-up: people
+    forward what is THEIRS. Somebody in Kundapura sends the Kundapura story
+    into a Kundapura group, with their own name attached to it. Nobody
+    forwards a seven-taluk digest, because a digest is nobody's in particular
+    and there is no group it obviously belongs in.
+
+    Same stories, same facts, same sourcing — re-cut so the first line names
+    the reader's town. The places come from PLACE_TAGS, which is the one
+    registry of place names in this project; nothing here invents a town.
+    """
+    from .reach import places_covered
+    out: dict[str, str] = {}
+    covered = places_covered(edition)
+    if not covered:
+        return out
+
+    for place, ids in sorted(covered.items()):
+        stories = [edition.stories[i - 1] for i in ids]
+        lines = [f'*{place} — {edition.date_kn}*', '']
+        for st in stories:
+            lines.append(f'*{st.headline.strip()}*')
+            if st.deck:
+                lines.append(st.deck.strip())
+            for pt in st.points[:2]:
+                lines.append(f'• {pt.strip()}')
+            if st.takeaway:
+                lines.append(st.takeaway.strip())
+            lines.append('')
+        seen: list[str] = []
+        for st in stories:
+            for s_ in st.sources:
+                if s_ not in seen:
+                    seen.append(s_)
+        lines.append('ಮೂಲ: ' + ' · '.join(seen))
+        g = Brand.grievance_line()
+        if g:
+            lines.append(g)
+        if Brand.whatsapp_url:
+            lines.append(Brand.whatsapp_url)
+        lines.append(f'— {Brand.name} · {Brand.handle}')
+        out[place] = '\n'.join(l for l in lines if l is not None).strip()
+    return out
 
 
 def x_post(story: Story) -> str:

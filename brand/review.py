@@ -421,6 +421,52 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                 f'is a day. A run of them is what the channel becomes, and it '
                 f'is where every legal exposure in this system lives.')
 
+        # ── reach ─────────────────────────────────────────────────────
+        # Not craft and not law: whether the people this was written for can
+        # tell it is for them. A coastal story whose town name sits past the
+        # caption fold is invisible to the taluk it is about, and a notice
+        # rendered as a video reaches fewer people than the card would have.
+        # D72.
+        r.checked.append('place before the fold, and format fit')
+        try:
+            from . import reach
+            from .copy import for_story
+            for i, st in enumerate(edition.stories, 1):
+                rel = reach.relevance(st)
+                if not rel.place:
+                    r.add_warn(
+                        'PUB-08',
+                        f'story {i} names no place. Nobody scrolling can tell '
+                        f'whether it is about their town, and nobody forwards '
+                        f'what is not theirs. Set `location`.',
+                        where=f'story {i}')
+                else:
+                    ok, why = reach.place_before_fold(st, for_story(st).instagram)
+                    if not ok:
+                        r.add_warn(
+                            'PUB-05',
+                            f'story {i}: {why}', where=f'story {i}')
+                if getattr(st, 'is_reel', False):
+                    earns, why = reach.should_be_reel(st)
+                    if not earns:
+                        r.add_warn(
+                            'PUB-06',
+                            f'story {i} is marked is_reel but {why}. A card '
+                            f'that gets screenshotted beats a video nobody '
+                            f'finishes.', where=f'story {i}')
+            marked = sum(1 for st in edition.stories
+                         if getattr(st, 'is_reel', False))
+            if marked > Limits.reels_per_day_target:
+                r.add_warn(
+                    'PUB-07',
+                    f'{marked} reels marked, the day targets '
+                    f'{Limits.reels_per_day_target}. On an account this size '
+                    f'each post goes to a small test slice — splitting the '
+                    f'same audience {marked} ways makes all of them look '
+                    f'average. Run the best two.')
+        except Exception as e:
+            r.add_warn('PUB-05', f'reach could not be checked ({e})')
+
         r.checked.append('grievance officer named')
         if not Brand.grievance_named():
             r.add_fail('OPS-01',

@@ -74,6 +74,22 @@ python3 scripts/sign_off.py out/2026-09-16 --by "Gautam Paduvari"
 `MASTER_COPY.md`, at the times in `schedule.txt`. Paste the first comment the
 moment you post.
 
+### The forwards — this is the circulation department
+
+```bash
+cat out/2026-09-16/REACH.md       # which towns this edition speaks to
+ls  out/2026-09-16/forward_*.txt  # one per town
+```
+
+Send each town's forward to **that town's** groups and broadcast list, not to
+everyone. People forward what is theirs; nobody forwards a seven-taluk digest,
+because it belongs in no group. This is the highest-leverage thing in the day
+and it takes four minutes.
+
+`REACH.md` also flags stories marked as reels that read better as cards, and
+tells you when more reels are marked than the day targets. Both are warnings,
+not blocks — a big day is allowed to be a big day.
+
 At the end of the day:
 
 ```bash
@@ -147,6 +163,10 @@ python3 scripts/whats_on.py --reviews --done law_review
 | `TYPE-01` | a character no house font can set | replace it in the copy; the renderer will not invent a substitute |
 | `PKG-01` | the copy names a file that was not rendered | re-render, or fix the copy |
 | `PUB-01` | the handle is miscapitalised | `@oormanisuddi`, exactly |
+| `PUB-05` | the town name is past the caption fold | rewrite the hook so the town is in the first 125 characters |
+| `PUB-06` | a notice is marked as a reel | make it a card — a notice is screenshotted, not watched |
+| `PUB-07` | more reels than the day targets | run the best two |
+| `PUB-08` | a story names no place | set `location`; nobody forwards what is not theirs |
 | `OPS-01` | no Grievance Officer named | `tokens.Brand` — this one blocks everything, correctly |
 
 ### "It says cleared but also not cleared"
@@ -263,12 +283,17 @@ applies to every future edition, which is the point.
 ```bash
 python3 scripts/whats_on.py --reviews      # anything overdue?
 python3 scripts/metrics.py add --date ... --asset reel_01.mp4 --format reel \
-    --category civic --at 17:30 --seconds 34 --views 412 --reach 380 \
+    --category civic --place ಬೈಂದೂರು --at 17:30 --seconds 34 \
+    --views 412 --reach 380 --local-reach 300 \
     --saves 9 --shares 14 --watch 62
 python3 scripts/metrics.py report
 python3 scripts/correction.py weekly       # draft the clarifications post
 bash scripts/backup.sh --status            # three copies, or fewer?
 ```
+
+`--local-reach` is the in-district number from Instagram Insights → Audience →
+cities. It is the one that decides whether this is a local paper or a page that
+happens to be in Kannada, and the report opens on it.
 
 Two minutes of typing what the app already shows you. Every number in
 `tokens.Limits` — the slots, the reel window, the hook length — is a
