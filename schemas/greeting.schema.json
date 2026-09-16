@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oormanisuddi.local/schemas/greeting.schema.json",
+  "title": "Greeting",
+  "description": "A festival or occasion wish, rendered by the greeting template as a poster in 9:16, 4:5 and 1:1. NOT news: it has no sources, status or headline, and must never be sent through a story template. See DECISIONS.md D54.",
+  "type": "object",
+  "required": [
+    "kind",
+    "occasion"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "greeting"
+    },
+    "template": {
+      "const": "greeting"
+    },
+    "occasion": {
+      "type": "string",
+      "maxLength": 30,
+      "description": "The festival, set as the gold-foil hero line: \"ಗೌರಿ ಗಣೇಶ ಹಬ್ಬದ\", \"ದೀಪಾವಳಿ ಹಬ್ಬದ\", \"ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವದ\"."
+    },
+    "wish": {
+      "type": "string",
+      "maxLength": 26,
+      "default": "ಹಾರ್ದಿಕ ಶುಭಾಶಯಗಳು"
+    },
+    "salutation": {
+      "type": "string",
+      "maxLength": 34,
+      "default": "ನಾಡಿನ ಸಮಸ್ತ ಜನತೆಗೆ"
+    },
+    "blessing": {
+      "type": "string",
+      "maxLength": 96,
+      "description": "One line of blessing. About 60 characters reads best: this is a poster, not a caption."
+    },
+    "theme": {
+      "enum": [
+        "sacred",
+        "lights",
+        "harvest",
+        "rajyotsava",
+        "national",
+        "serene"
+      ],
+      "default": "sacred",
+      "description": "Changes only the ground and the light; gold stays the accent. sacred: Ganesha, Navaratri, Dasara. lights: Deepavali. harvest: Ugadi, Sankranti, Bisu. rajyotsava. national. serene: Eid, Christmas, Buddha Purnima."
+    },
+    "photo": {
+      "type": "object",
+      "description": "Same shape as a story photo: path, nature, credit, licence, caption, focal. An AI image is labelled on the poster automatically."
+    },
+    "keep_clear": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "description": "REQUIRED with a photo. The band of the image, as [top, bottom] fractions of its height, that holds the deity or subject. No type is ever set inside it."
+    },
+    "sign_label": {
+      "type": "string",
+      "maxLength": 24,
+      "default": "ಶುಭ ಕೋರುವವರು"
+    },
+    "date": {
+      "type": "string",
+      "maxLength": 30
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Festival hashtags, without #. Channel tags are added automatically."
+    },
+    "slug": {
+      "type": "string",
+      "description": "Output folder under out/greetings/."
+    }
+  }
+}

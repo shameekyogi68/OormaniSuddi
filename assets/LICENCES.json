@@ -1,0 +1,80 @@
+{
+  "updated": "2026-09-16",
+  "policy": "A track must be status=allowed with a recorded source before it can be a bed. Unverified files stay on disk but fail the render if selected.",
+  "tracks": [
+    {
+      "path": "assets/news_bgm.mp3",
+      "title": "House news bed",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "In-house instrumental. Confirm this row if the file is ever replaced."
+    },
+    {
+      "path": "assets/bgm_options/ganapathi/journey_to_the_golden_temple_tokyorifft.mp3",
+      "title": "Journey to the Golden Temple",
+      "artist": "tokyorifft",
+      "status": "allowed",
+      "licence": "recorded-in-project",
+      "source_url": "",
+      "notes": "Proven instrumental for Line B/C devotional edits. Keep the project.json licence field filled per job."
+    },
+    {
+      "path": "assets/bgm_options/ganapathi/ganpati_bappa_morya_kontraa.mp3",
+      "title": "Ganpati Bappa Morya",
+      "status": "blocked",
+      "licence": "unverified",
+      "notes": "Contains dialogue. Do not use."
+    },
+    {
+      "path": "assets/bgm_options/01_Urgent_Breaking_News_Intense_Fast.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/02_Royalty_Free_Broadcast_Intro.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/03_Dramatic_News_Intro_Theme.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/04_High_Impact_Epic_Alert.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/05_Indian_TV_AajTak_Style_Breaking.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/06_Epic_Tension_Fast_Intro.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/07_TV_Radio_Fast_Breaking_News.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/08_Broadcast_News_Countdown_Beat.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/09_Fast_Paced_Urgent_News_Tone.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    },
+    {
+      "path": "assets/bgm_options/10_Clean_News_Stinger_Intro.mp3",
+      "status": "blocked",
+      "licence": "unverified"
+    }
+  ]
+}
