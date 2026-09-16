@@ -84,6 +84,22 @@ STORY = {
                     'minItems': 1,
                     'description': 'Who told you. Own reporting counts, but you have '
                                    'to say so: ["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"].'},
+        'source_urls': {'type': 'array', 'items': {'type': 'string', 'minLength': 8},
+                        'description': 'http(s) URLs the editor can reopen. Required '
+                                       'unless sources is own reporting '
+                                       '("ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ").'},
+        'verified_by': {'type': 'string',
+                        'description': 'The NAME of the person who opened the '
+                                       'sources and confirmed the facts. The '
+                                       'Chief Editor gate refuses to write '
+                                       'APPROVAL.md without it (D59). This is '
+                                       'not inferable from status: "confirmed" '
+                                       'is what the card says about the news, '
+                                       'and a model can write that. This is '
+                                       'what a person says about their own '
+                                       'work.'},
+        'verified_at': {'type': ['string', 'null'], 'format': 'date-time',
+                        'description': 'When that check happened, ISO-8601.'},
         'status': {'enum': sorted(STATUS), 'default': 'developing',
                    'description': 'Verification state. Printed on the card as it '
                                   'stands — a card that admits it is still being '
@@ -124,6 +140,17 @@ STORY = {
                                      '~11 seconds on screen to be readable, which '
                                      'is most of a scene. Without this the reel '
                                      'still works, it just runs long.'},
+        'reel_points': {'type': 'array', 'items': {'type': 'string', 'maxLength': 80},
+                        'description': 'SHORT on-screen forms of `points`, one per '
+                                       'point, about 60 characters each. A reel fact '
+                                       'card is glanced at while the anchor is already '
+                                       'delivering the same fact at roughly twice '
+                                       'reading speed, so a print-length point is more '
+                                       'copy than the viewer can finish. The voice '
+                                       'still reads the FULL point either way — this '
+                                       'only shortens what is on the frame. Omit an '
+                                       'entry (or leave it blank) to fall back to the '
+                                       'full point.'},
         'hook': {'type': 'string', 'maxLength': 40,
                  'description': 'Short line for the YouTube thumbnail. About seven '
                                 'words maximum — it is read at 210 px wide. Put it on '
@@ -152,13 +179,73 @@ EDITION = {
                     'description': 'Lead story first. Three to four read best in a reel.'},
         'date': {'type': 'string', 'format': 'date-time'},
         'edition_no': {'type': 'integer', 'minimum': 1},
+        'schema_version': {'type': 'integer', 'minimum': 1,
+                           'description': 'The shape of this file. Bumped when '
+                                          'a field is added or its meaning '
+                                          'changes, so an old edition can be '
+                                          'read — or refused — knowingly. '
+                                          'Absent means 1.'},
         'strapline': {'type': 'string', 'default': 'ಕರಾವಳಿ ಬುಲೆಟಿನ್'},
     },
 }
 
 
+GREETING = {
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    '$id': 'https://oormanisuddi.local/schemas/greeting.schema.json',
+    'title': 'Greeting',
+    'description': 'A festival or occasion wish, rendered by the greeting '
+                   'template as a poster in 9:16, 4:5 and 1:1. NOT news: it has '
+                   'no sources, status or headline, and must never be sent '
+                   'through a story template. See DECISIONS.md D54.',
+    'type': 'object',
+    'required': ['kind', 'occasion'],
+    'additionalProperties': False,
+    'properties': {
+        'kind': {'const': 'greeting'},
+        'template': {'const': 'greeting'},
+        'occasion': {'type': 'string', 'maxLength': 30,
+                     'description': 'The festival, set as the gold-foil hero '
+                                    'line: "ಗೌರಿ ಗಣೇಶ ಹಬ್ಬದ", "ದೀಪಾವಳಿ ಹಬ್ಬದ", '
+                                    '"ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವದ".'},
+        'wish': {'type': 'string', 'maxLength': 26, 'default': 'ಹಾರ್ದಿಕ ಶುಭಾಶಯಗಳು'},
+        'salutation': {'type': 'string', 'maxLength': 34,
+                       'default': 'ನಾಡಿನ ಸಮಸ್ತ ಜನತೆಗೆ'},
+        'blessing': {'type': 'string', 'maxLength': 96,
+                     'description': 'One line of blessing. About 60 characters '
+                                    'reads best: this is a poster, not a caption.'},
+        'theme': {'enum': ['sacred', 'lights', 'harvest', 'rajyotsava',
+                           'national', 'serene'], 'default': 'sacred',
+                  'description': 'Changes only the ground and the light; gold '
+                                 'stays the accent. sacred: Ganesha, Navaratri, '
+                                 'Dasara. lights: Deepavali. harvest: Ugadi, '
+                                 'Sankranti, Bisu. rajyotsava. national. serene: '
+                                 'Eid, Christmas, Buddha Purnima.'},
+        'photo': {'type': 'object',
+                  'description': 'Same shape as a story photo: path, nature, '
+                                 'credit, licence, caption, focal. An AI image '
+                                 'is labelled on the poster automatically.'},
+        'keep_clear': {'type': 'array', 'minItems': 2, 'maxItems': 2,
+                       'items': {'type': 'number', 'minimum': 0, 'maximum': 1},
+                       'description': 'REQUIRED with a photo. The band of the '
+                                      'image, as [top, bottom] fractions of its '
+                                      'height, that holds the deity or subject. '
+                                      'No type is ever set inside it.'},
+        'sign_label': {'type': 'string', 'maxLength': 24,
+                       'default': 'ಶುಭ ಕೋರುವವರು'},
+        'date': {'type': 'string', 'maxLength': 30},
+        'tags': {'type': 'array', 'items': {'type': 'string'},
+                 'description': 'Festival hashtags, without #. Channel tags are '
+                                'added automatically.'},
+        'slug': {'type': 'string',
+                 'description': 'Output folder under out/greetings/.'},
+    },
+}
+
+
 def main():
-    for name, doc in (('story', STORY), ('edition', EDITION)):
+    for name, doc in (('story', STORY), ('edition', EDITION),
+                      ('greeting', GREETING)):
         p = os.path.join(HERE, f'{name}.schema.json')
         with open(p, 'w', encoding='utf-8') as f:
             json.dump(doc, f, indent=2, ensure_ascii=False)

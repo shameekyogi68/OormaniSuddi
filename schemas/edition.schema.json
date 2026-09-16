@@ -26,6 +26,11 @@
       "type": "integer",
       "minimum": 1
     },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The shape of this file. Bumped when a field is added or its meaning changes, so an old edition can be read — or refused — knowingly. Absent means 1."
+    },
     "strapline": {
       "type": "string",
       "default": "ಕರಾವಳಿ ಬುಲೆಟಿನ್"

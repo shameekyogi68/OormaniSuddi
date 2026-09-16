@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from PIL import Image
 
-from .tokens import fmt, T, Brand
+from .tokens import fmt, T, Brand, Limits
 from .content import Story, BREAKING_WINDOW_H
 
 KN_DIGITS = re.compile(r'[೦-೯]')
@@ -32,13 +32,20 @@ LAT_DIGITS = re.compile(r'[0-9]')
 
 # Longest headline that can still be set at a commanding size, per format.
 HEADLINE_BUDGET = {
-    'post': 78, 'square': 70, 'story': 78, 'reel': 62,
-    'thumb': 34, 'broadsheet': 74, 'forward': 78, 'yt_post': 70,
+    'post': Limits.headline_chars, 'square': 70, 'story': Limits.headline_chars,
+    'reel': 62, 'thumb': 34, 'broadsheet': 74, 'forward': Limits.headline_chars,
+    'yt_post': 70,
 }
 
 # Platform upload ceilings we care about, in MB.
 SIZE_CEILING = {'post': 8.0, 'square': 8.0, 'story': 8.0, 'reel': 8.0,
                 'thumb': 2.0, 'broadsheet': 8.0, 'forward': 5.0, 'yt_post': 8.0}
+# WhatsApp is the growth route — warn long before the upload ceiling. A 5 MB
+# broadsheet is a file that does not get forwarded on rural data, which makes
+# an 8 MB ceiling the wrong number for the format that is supposed to grow the
+# channel. Both numbers come off Limits.forward_target_kb.
+SIZE_WARN = {'broadsheet': Limits.forward_target_kb / 1000.0 * 1.6,
+             'forward': Limits.forward_target_kb / 1000.0}
 
 
 @dataclass
@@ -66,18 +73,23 @@ class Report:
 def compliance() -> Report:
     """Channel-level obligations, checked once per run rather than per story."""
     r = Report()
-    # What matters to a reader with a complaint is that SOME route is
-    # published and answered. The channel publishes its Instagram DM and the
-    # WhatsApp number in its bio, which is what its one person actually
-    # reads; naming an officer who does not exist would look more compliant
-    # and serve the reader less. So this warns when there is no route at all,
-    # not when there is no name. See tokens.Brand.grievance_line.
-    if not Brand.grievance_line():
-        r.warn.append(
-            'no contact route published. IT Rules 2021 Part III requires a '
-            'news publisher to publish contact details, acknowledge a '
-            'complaint within 24h and dispose of it in 15 days. With '
-            'Brand.handle blank, no card or caption carries any route at all.')
+    # Legibility is a channel-level property of the token system, not of one
+    # story, so it is measured once. Limits.contrast_min had been sitting in
+    # tokens.py with nothing reading it; this is what reads it.
+    from . import legibility
+    for msg in legibility.audit_tokens():
+        r.fail.append(f'contrast: {msg}')
+    if not Brand.grievance_named():
+        r.fail.append(
+            'IT Rules 2021 Part III requires a named Grievance Officer and a '
+            'watched contact. Fill Brand.grievance_officer and '
+            'Brand.grievance_phone or Brand.grievance_email in brand/tokens.py '
+            'before publishing. The Instagram-DM fallback on cards is not '
+            'compliance.')
+    elif not Brand.grievance_line():
+        r.fail.append(
+            'no contact route published. With Brand.handle blank, no card or '
+            'caption carries any route at all.')
     return r
 
 
@@ -108,18 +120,27 @@ def preflight(story: Story, format_key: str = 'post', hook: str = '') -> Report:
                       '(123). Pick one; the house style is Latin, which is what '
                       'Kannada broadcast and print use for figures.')
 
-    if story.deck and len(story.deck) > 190:
-        r.warn.append(f'deck is {len(story.deck)} characters; a standfirst that '
-                      'runs past ~180 stops being a standfirst.')
+    if story.deck and len(story.deck) > Limits.deck_chars:
+        r.warn.append(f'deck is {len(story.deck)} characters against the '
+                      f'{Limits.deck_chars}-character budget in tokens.Limits; '
+                      'a standfirst that runs past it stops being a standfirst.')
 
     for i, p in enumerate(story.points):
-        if len(p) > 150:
-            r.warn.append(f'fact {i + 1} is {len(p)} characters — it will set '
+        if len(p) > Limits.point_chars:
+            r.warn.append(f'fact {i + 1} is {len(p)} characters against the '
+                          f'{Limits.point_chars}-character budget — it will set '
                           'small. Split it or shorten it.')
 
-    if len(story.points) > 4:
-        r.warn.append(f'{len(story.points)} facts; a 4:5 card carries three '
-                      'comfortably and the template will drop the rest.')
+    if len(story.points) > Limits.points_max + 1:
+        r.warn.append(f'{len(story.points)} facts; a 4:5 card carries '
+                      f'{Limits.points_max} comfortably and the template will '
+                      'drop the rest.')
+
+    # The line that decides whether the post is opened at all, measured at the
+    # size it is actually first seen — not at 100% on a desktop screen.
+    from . import legibility
+    for msg in legibility.audit_sizes(format_key):
+        r.warn.append(msg)
 
     if story.category == 'breaking' and not story.is_breaking:
         r.warn.append(f'story is older than {BREAKING_WINDOW_H}h, so the '
@@ -137,15 +158,44 @@ def preflight(story: Story, format_key: str = 'post', hook: str = '') -> Report:
             'offence is alleged. If either is true, set involves_minor / '
             'sexual_offence — the identity guards only run when you do.')
 
-    if story.photo and story.photo.nature == 'ai':
-        r.warn.append('AI-generated imagery will be labelled "ಎಐ ರಚಿತ ಚಿತ್ರ" on '
-                      'the card. Prefer a real photograph, or no photograph.')
+    # Every image that can reach the screen — hero AND gallery — is checked,
+    # not just the hero. A reel's fact cards are drawn from the gallery, and
+    # for a long time those were the frames with no label on them at all.
+    synthetic = [p for p in story.all_photos if p.is_synthetic]
+    if synthetic:
+        r.warn.append(
+            f'{len(synthetic)} of {len(story.all_photos)} image(s) are '
+            f'generated, not photographed. Each will carry "ಎಐ ರಚಿತ ಚಿತ್ರ" on '
+            f'every card that shows it, and the caption repeats it. Prefer a '
+            f'real photograph, or no photograph.')
+    undisclosed = [p for p in story.all_photos if not p.disclosure.strip()]
+    if undisclosed:
+        r.fail.append(
+            f'{len(undisclosed)} image(s) would appear on screen with no '
+            f'disclosure line: {", ".join(os.path.basename(p.path) for p in undisclosed)}. '
+            f'Every image carries its provenance on the card that shows it — '
+            f'give it a credit, and a nature other than "actual".')
 
-    if not story.reel_line and len(story.headline) > 46:
+    # A fact card is glanced at while the anchor is already delivering the
+    # same fact at roughly twice reading speed, so a print-length point on a
+    # reel frame is copy the viewer cannot finish. reel_points is the fix.
+    long_facts = [i for i, p in enumerate(story.points)
+                  if len(p) > 80 and not (i < len(story.reel_points)
+                                          and story.reel_points[i].strip())]
+    if long_facts:
+        r.warn.append(
+            f'fact(s) {", ".join(str(i + 1) for i in long_facts)} run past 80 '
+            f'characters with no reel_points short form. On a narrated reel '
+            f'card that is more copy than the viewer can read before the voice '
+            f'has moved on — write a ~60-character reel_points entry for each. '
+            f'The voice still carries the full point.')
+
+    if not story.reel_line and len(story.headline) > Limits.reel_line_chars:
         r.warn.append(
             f'headline is {len(story.headline)} chars and there is no reel_line. '
             f'In a reel that needs about {len(story.headline) / 7.0:.0f}s on '
-            f'screen to be readable. Add a reel_line of ~45 characters.')
+            f'screen to be readable. Add a reel_line of ~'
+            f'{Limits.reel_line_chars} characters.')
 
     # Every string that will be SET, checked against the faces that will set
     # it. A codepoint no face carries renders as .notdef — the empty box — and
@@ -223,6 +273,11 @@ def inspect(path: str, format_key: str = 'post') -> Report:
     if mb > ceil_:
         r.warn.append(f'{mb:.1f} MB exceeds the {ceil_:.0f} MB target for '
                       f'{format_key}; it will be recompressed on upload.')
+    warn_mb = SIZE_WARN.get(format_key)
+    if warn_mb and mb > warn_mb:
+        r.warn.append(
+            f'{mb:.2f} MB is heavy for a WhatsApp forward of {format_key}; '
+            f'target under {int(warn_mb * 1000)} KB so it actually gets sent.')
 
     a = np.asarray(im.convert('RGB')).astype(np.float32)
     lum = (a * np.array([0.2126, 0.7152, 0.0722])).sum(2)

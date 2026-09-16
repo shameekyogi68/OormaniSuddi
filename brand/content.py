@@ -28,6 +28,15 @@ IST = timezone(timedelta(hours=5, minutes=30))
 BREAKING_WINDOW_H = 12          # after this, a story is news, not breaking
 FILE_PHOTO_LABEL_DAYS = 2       # older imagery must be labelled as archive
 
+# The shape of an edition file. Bumped when a field is added or its meaning
+# changes, so an edition written last year can be read — or refused — knowingly
+# rather than crashing on a key nobody remembers adding. Editions written
+# before this existed have no key and are read as version 1.
+#   1  pre-lock
+#   2  source_urls required on sourced stories (D55)
+#   3  verified_by / verified_at (D59)
+SCHEMA_VERSION = 3
+
 # How each image provenance is disclosed on the card.
 IMAGE_NATURE = {
     'actual':         ('', ''),                                  # from the scene — no label needed
@@ -117,16 +126,42 @@ CATEGORIES_KEYS: list[str] = []   # filled below from tokens, kept here so
 # Verbs that assert a person DID the act. Publishing these about someone who has
 # been arrested but not convicted is a defamation exposure under BNS §356, and
 # once the matter is before a court, a contempt exposure.
+#
+# The list is a FLOOR, not a proof. Kannada builds the same assertion several
+# ways — the bare past (ಕೊಂದ), the participle (ಕೊಂದು), the perfective
+# (ಕೊಂದಿದ್ದಾನೆ), the verbal noun (ಕೊಲೆಗೈದ) — and an earlier version carried only
+# the first of each, which is why tests/legal_corpus.json now measures what
+# gets through instead of assuming nothing does. See D61.
 GUILT_ASSERTING = [
-    'ಕೊಂದ', 'ಕೊಲೆ ಮಾಡಿದ', 'ಹತ್ಯೆ ಮಾಡಿದ', 'ಕದ್ದ', 'ಕಳವು ಮಾಡಿದ',
-    'ಮೋಸ ಮಾಡಿದ', 'ವಂಚಿಸಿದ', 'ಅತ್ಯಾಚಾರ ಮಾಡಿದ', 'ಹಲ್ಲೆ ಮಾಡಿದ',
-    'ಸುಲಿಗೆ ಮಾಡಿದ', 'ದರೋಡೆ ಮಾಡಿದ', 'ಲಂಚ ಪಡೆದ', 'ಸುಟ್ಟ',
+    # killing
+    'ಕೊಂದ', 'ಕೊಂದು', 'ಕೊಂದಿದ್ದಾನೆ', 'ಕೊಂದಿದ್ದಾಳೆ', 'ಕೊಂದಿದ್ದಾರೆ',
+    'ಕೊಲೆ ಮಾಡಿದ', 'ಕೊಲೆಗೈದ', 'ಹತ್ಯೆ ಮಾಡಿದ', 'ಹತ್ಯೆಗೈದ',
+    # theft
+    'ಕದ್ದ', 'ಕದ್ದಿದ್ದಾನೆ', 'ಕದ್ದಿದ್ದಾರೆ', 'ಕಳವು ಮಾಡಿದ', 'ಕಳ್ಳತನ ಮಾಡಿದ',
+    # cheating / fraud
+    'ಮೋಸ ಮಾಡಿದ', 'ವಂಚಿಸಿದ', 'ವಂಚನೆ ಮಾಡಿದ', 'ವಂಚಿಸಿದ್ದಾನೆ',
+    # sexual offences
+    'ಅತ್ಯಾಚಾರ ಮಾಡಿದ', 'ಅತ್ಯಾಚಾರಗೈದ', 'ಲೈಂಗಿಕ ದೌರ್ಜನ್ಯ ಎಸಗಿದ',
+    # assault / violence
+    'ಹಲ್ಲೆ ಮಾಡಿದ', 'ಹಲ್ಲೆಗೈದ', 'ಥಳಿಸಿದ', 'ಇರಿದ', 'ಚುಚ್ಚಿ ಕೊಂದ',
+    # robbery / extortion
+    'ಸುಲಿಗೆ ಮಾಡಿದ', 'ದರೋಡೆ ಮಾಡಿದ', 'ಸುಲಿಗೆಗೈದ',
+    # bribery / corruption
+    'ಲಂಚ ಪಡೆದ', 'ಲಂಚ ಸ್ವೀಕರಿಸಿದ', 'ಹಣ ದೋಚಿದ', 'ದುರುಪಯೋಗ ಮಾಡಿದ',
+    # arson / destruction
+    'ಸುಟ್ಟ', 'ಬೆಂಕಿ ಹಚ್ಚಿದ', 'ನಾಶ ಮಾಡಿದ',
+    # abduction / trafficking
+    'ಅಪಹರಿಸಿದ', 'ಅಪಹರಣ ಮಾಡಿದ', 'ಸಾಗಾಟ ಮಾಡಿದ',
+    # the flat noun-phrase forms that read as findings
+    'ಅಪರಾಧಿ', 'ದೋಷಿ',
 ]
 
 # Any one of these makes the sentence an allegation rather than a finding.
 ALLEGATION_MARKERS = [
-    'ಆರೋಪ', 'ಆರೋಪಿ', 'ಆರೋಪಿತ', 'ಶಂಕಿತ', 'ಎನ್ನಲಾಗಿದೆ', 'ಎಂದು ಆರೋಪಿಸಲಾಗಿದೆ',
-    'ಪ್ರಕರಣ ದಾಖಲು', 'ದೂರು ದಾಖಲು', 'ತನಿಖೆ',
+    'ಆರೋಪ', 'ಆರೋಪಿ', 'ಆರೋಪಿತ', 'ಶಂಕಿತ', 'ಶಂಕೆ', 'ಎನ್ನಲಾಗಿದೆ',
+    'ಎಂದು ಆರೋಪಿಸಲಾಗಿದೆ', 'ಎಂದು ಹೇಳಲಾಗಿದೆ',
+    'ಪ್ರಕರಣ ದಾಖಲು', 'ಪ್ರಕರಣ ದಾಖಲಾಗಿದೆ', 'ದೂರು ದಾಖಲು', 'ದೂರು ದಾಖಲಾಗಿದೆ',
+    'ತನಿಖೆ', 'ವಿಚಾರಣೆ',
 ]
 
 # Categories where a conviction has actually happened, so plain past tense is
@@ -135,7 +170,12 @@ CONVICTED_STATUSES = {'convicted'}
 
 
 def asserts_guilt(text: str) -> list[str]:
-    """Guilt-asserting verbs present in `text` with no allegation marker."""
+    """Guilt-asserting verbs present in `text` with no allegation marker.
+
+    A marker anywhere in the SAME field clears that field. This is deliberate:
+    the field is the unit that travels alone (D29), so "ಕೊಲೆ ಆರೋಪಿ ಬಂಧನ" is
+    safe while "ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ" with ಆರೋಪಿ only in the deck is not.
+    """
     if any(m in text for m in ALLEGATION_MARKERS):
         return []
     return [v for v in GUILT_ASSERTING if v in text]
@@ -144,6 +184,15 @@ def asserts_guilt(text: str) -> list[str]:
 class ContentError(ValueError):
     """Raised when a card would misrepresent something. Not catchable by
     convenience — fix the story, not the exception."""
+
+
+# Own reporting is the only source that does not need a URL. Everything else
+# must point at a page, a notice, or a document the editor can reopen.
+OWN_REPORTING = 'ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ'
+
+
+def is_own_reporting(sources: list[str]) -> bool:
+    return any(OWN_REPORTING in (s or '') for s in sources)
 
 
 # What you are allowed to do with a picture. 'own' means the channel shot it.
@@ -207,10 +256,55 @@ class Photo:
             raise ContentError(
                 f'{self.path}: a photo claiming to show the actual scene must '
                 'carry a caption saying what it shows.')
+        # Generated pictures, including reused stock, must wear the AI stamp.
+        # Labelling them ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ while the credit whispers "AI ಚಿತ್ರ"
+        # is concealment under the IT Rules synthetic-content rules. D57.
+        credit_l = (self.credit or '').upper()
+        generated = (
+            'ಎಐ' in (self.credit or '')
+            or 'AI ಚಿತ್ರ' in (self.credit or '')
+            or 'AI ' in credit_l
+            or credit_l.startswith('AI')
+        )
+        if generated and self.nature not in ('ai', 'graphic'):
+            raise ContentError(
+                f'{self.path}: this credit names an AI image but nature is '
+                f'{self.nature!r}. Generated pictures, including stock, must '
+                "use nature='ai' so the frame says ಎಐ ರಚಿತ ಚಿತ್ರ.")
 
     @property
     def label(self) -> str:
         return IMAGE_NATURE[self.nature][0]
+
+    @property
+    def disclosure(self) -> str:
+        """The line that must appear on any card showing THIS photograph.
+
+        Per-photo, not per-story. A reel's fact cards and its end card show
+        gallery images and the hero respectively, and until this existed only
+        the lead card disclosed anything — so an AI-generated picture could be
+        on screen for twenty seconds with nothing saying so. Under the IT
+        Rules 2021 amendments on synthetically generated information, the
+        label has to travel with the image, not with the story.
+        """
+        bits: list[str] = []
+        for b in (self.label, self.caption):
+            b = (b or '').strip()
+            # A caption that only restates the nature label is noise.
+            if b and b not in bits:
+                bits.append(b)
+        if self.credit:
+            # 'ಕೃಪೆ:' (courtesy), not 'ಚಿತ್ರ:' (image) — every nature label
+            # already ends in ಚಿತ್ರ, so a second 'ಚಿತ್ರ:' here read as
+            # ...ಚಿತ್ರ • ಚಿತ್ರ: ..., the same word twice back to back.
+            # ಕೃಪೆ is also the standard Kannada press credit line.
+            bits.append(f'ಕೃಪೆ: {self.credit}')
+        return '  •  '.join(bits)
+
+    @property
+    def is_synthetic(self) -> bool:
+        """True when this image was generated rather than photographed."""
+        return self.nature in ('ai', 'graphic')
 
 
 @dataclass
@@ -225,6 +319,13 @@ class Story:
     dateline: str = ''                   # bureau, e.g. "ಬ್ರಹ್ಮಾವರ ವರದಿ"
     reporter: str = ''
     sources: list[str] = field(default_factory=list)
+    source_urls: list[str] = field(default_factory=list)
+    # Who opened the source and confirmed the facts, and when. Not a rendering
+    # input — it never appears on a card — but the Chief Editor gate refuses to
+    # write APPROVAL.md without it, which is the second half of D55: no source,
+    # no claim; no human verification, no publication. See D59.
+    verified_by: str = ''
+    verified_at: datetime | None = None
     status: str = 'developing'
     published_at: datetime = field(default_factory=now)
     live_url: str = ''
@@ -234,6 +335,12 @@ class Story:
     correction: str = ''                 # if this card corrects an earlier one
     reel_line: str = ''                  # short headline for video; see AI_BRIEF
     reel_support: str = ''               # supporting sentence for reel scene
+    # Short on-screen forms of `points`, for the reel's fact cards. Same idea
+    # as reel_line: a print fact is written to be read at leisure, and a
+    # narrated reel card is glanced at while a voice is already delivering the
+    # same fact faster than anyone can read it. Index-matched to `points`;
+    # a blank or missing entry falls back to the full point. See D51.
+    reel_points: list[str] = field(default_factory=list)
     is_reel: bool = True                 # whether to produce an individual reel (10/10 editorial score)
     narration_script: str = ''           # broadcast-grade spoken news anchor script
 
@@ -255,10 +362,30 @@ class Story:
             raise ContentError('headline is required')
         if self.status not in STATUS:
             raise ContentError(f'unknown status {self.status!r}')
+        from .tokens import CATEGORIES as _CATS
+        if self.category not in _CATS:
+            raise ContentError(
+                f'unknown category {self.category!r}; choose from {sorted(_CATS)}. '
+                'Unknown names used to fall back silently to explainer styling.')
         if not self.sources:
             raise ContentError(
                 'name at least one source. If it is your own reporting, say so: '
-                'sources=["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"].')
+                f'sources=["{OWN_REPORTING}"].')
+        if not is_own_reporting(self.sources):
+            urls = [u for u in self.source_urls if (u or '').strip()]
+            if not urls:
+                raise ContentError(
+                    'every sourced story needs at least one source_url the editor '
+                    f'can reopen, or mark it as own reporting: sources=["{OWN_REPORTING}"]. '
+                    'A named source without a URL is how invented detail gets a dateline.')
+            for u in urls:
+                if not u.startswith('http'):
+                    raise ContentError(
+                        f'source_url {u!r} must be a real http(s) URL')
+        if self.category == 'obituary' and len(self.sources) < 2 and not is_own_reporting(self.sources):
+            raise ContentError(
+                'an obituary needs two independent sources, or own reporting. '
+                'False death reports are a recurring local-media failure.')
         if self.photo:
             self.photo.validate()
             if (self.photo.nature == 'actual' and self.photo.taken_at
@@ -401,22 +528,22 @@ class Story:
 
     @property
     def credit_line(self) -> str:
-        """The disclosure strip that sits under every photograph."""
-        if not self.photo:
-            return ''
-        bits: list[str] = []
-        for b in (self.photo.label, self.photo.caption):
-            b = (b or '').strip()
-            # A caption that only restates the nature label is noise.
-            if b and b not in bits:
-                bits.append(b)
-        if self.photo.credit:
-            # 'ಕೃಪೆ:' (courtesy), not 'ಚಿತ್ರ:' (image) — every nature label
-            # above already ends in ಚಿತ್ರ, so a second 'ಚಿತ್ರ:' here read as
-            # ...ಚಿತ್ರ • ಚಿತ್ರ: ..., the same word twice back to back.
-            # ಕೃಪೆ is also the standard Kannada press credit line.
-            bits.append(f'ಕೃಪೆ: {self.photo.credit}')
-        return '  •  '.join(bits)
+        """The disclosure strip for the HERO photograph.
+
+        Delegates to Photo.disclosure so a gallery frame shown on a fact card
+        and the hero shown on the lead card are labelled by the same code.
+        """
+        return self.photo.disclosure if self.photo else ''
+
+    @property
+    def has_synthetic_imagery(self) -> bool:
+        """True if ANY image this story can put on screen was generated."""
+        return any(p.is_synthetic for p in self.all_photos)
+
+    @property
+    def all_photos(self) -> list['Photo']:
+        """Every photograph this story can put on screen, hero first."""
+        return ([self.photo] if self.photo else []) + list(self.gallery)
 
 
     # ── JSON in / JSON out ────────────────────────────────────────────────
@@ -444,6 +571,8 @@ class Story:
             d['gallery'] = [Photo.from_dict(p) for p in d['gallery']]
         if 'published_at' in d and d['published_at'] is not None:
             d['published_at'] = parse_dt(d['published_at'])
+        if d.get('verified_at'):
+            d['verified_at'] = parse_dt(d['verified_at'])
         if d.get('quote') is not None:
             q = d['quote']
             if len(q) != 2:
@@ -465,9 +594,44 @@ class Story:
         if self._hook:
             d['hook'] = self._hook
         d['published_at'] = self.published_at.isoformat()
+        d['verified_at'] = (self.verified_at.isoformat()
+                            if self.verified_at else None)
         if self.photo and self.photo.taken_at:
             d['photo']['taken_at'] = self.photo.taken_at.isoformat()
         return d
+
+    # ── the verification record ───────────────────────────────────────────
+    @property
+    def is_verified(self) -> bool:
+        """True when a named person says they opened the sources and checked.
+
+        Deliberately not inferred from `status`: 'confirmed' is what the CARD
+        says about the news, and a model can write that. This is what a person
+        says about their own work, and only a person can fill it in.
+        """
+        return bool((self.verified_by or '').strip())
+
+    @property
+    def verification_line(self) -> str:
+        if not self.is_verified:
+            return ''
+        who = self.verified_by.strip()
+        when = f' · {self.verified_at:%Y-%m-%d %H:%M}' if self.verified_at else ''
+        return f'{who}{when}'
+
+
+import re as _re
+
+# The shapes a report uses to pin an age to a person. Any of them, next to a
+# name, identifies someone. All three shipped in real coastal copy:
+#   "ರಮೇಶ್ (15)"        the bracketed age
+#   "15 ವರ್ಷದ ಬಾಲಕ"     the attributive age
+#   "೧೫ ವರ್ಷದ"          the same in Kannada numerals
+_AGE_SHAPES = [
+    _re.compile(r'\(\s*[\d೦-೯]{1,2}\s*\)'),
+    _re.compile(r'[\d೦-೯]{1,2}\s*ವರ್ಷ'),
+    _re.compile(r'[\d೦-೯]{1,2}\s*ರ\s*ಬಾಲ'),
+]
 
 
 def _looks_like_name(text: str) -> bool:
@@ -475,12 +639,19 @@ def _looks_like_name(text: str) -> bool:
     report identifies someone. Deliberately over-eager: on a story flagged as
     involving a minor, a false positive costs a rewrite and a false negative
     costs an offence."""
-    import re
-    return bool(re.search(r'\(\s*\d{1,2}\s*\)', text))
+    return any(p.search(text) for p in _AGE_SHAPES)
 
 
 # Words that mark a place small enough to identify an individual within it.
-_GRANULAR = ['ನಗರ', 'ಗ್ರಾಮ', 'ಬಡಾವಣೆ', 'ಕಾಲೋನಿ', 'ರಸ್ತೆ', 'ಶಾಲೆ', 'ಕಾಲೇಜು']
+# Coastal Karnataka adds forms a generic Indian list misses — ಪೇಟೆ for a market
+# town, ಮಠ / ದೇವಸ್ಥಾನ for a temple neighbourhood, ಕ್ರಾಸ್ for a junction that
+# everybody local can point at.
+_GRANULAR = [
+    'ನಗರ', 'ಗ್ರಾಮ', 'ಬಡಾವಣೆ', 'ಕಾಲೋನಿ', 'ರಸ್ತೆ', 'ಶಾಲೆ', 'ಕಾಲೇಜು',
+    'ಪೇಟೆ', 'ಕ್ರಾಸ್', 'ಜಂಕ್ಷನ್', 'ವಾರ್ಡ್', 'ಬೀದಿ', 'ಓಣಿ', 'ಮನೆ',
+    'ದೇವಸ್ಥಾನ', 'ಮಠ', 'ಚರ್ಚ್', 'ಮಸೀದಿ', 'ಹಾಸ್ಟೆಲ್', 'ಆಶ್ರಮ',
+    'ಅಂಗನವಾಡಿ', 'ಪಂಚಾಯಿತಿ',
+]
 
 
 def _is_granular_place(place: str) -> bool:
@@ -495,11 +666,22 @@ class Edition:
     date: datetime = field(default_factory=now)
     edition_no: int = 1
     strapline: str = ''      # falls back to tokens.Brand.bulletin
+    schema_version: int = SCHEMA_VERSION
 
     def validate(self) -> 'Edition':
+        if self.schema_version > SCHEMA_VERSION:
+            raise ContentError(
+                f'this edition declares schema_version {self.schema_version}, '
+                f'but this checkout understands {SCHEMA_VERSION}. Update the '
+                'code rather than editing the number down.')
         for s in self.stories:
             s.validate()
         return self
+
+    @property
+    def unverified(self) -> list[Story]:
+        """Stories no named person has confirmed. D59."""
+        return [s for s in self.stories if not s.is_verified]
 
     @property
     def date_kn(self) -> str:
@@ -534,7 +716,8 @@ class Edition:
             return cls.from_dict(json.load(f)).validate()
 
     def to_dict(self) -> dict:
-        return {'date': self.date.isoformat(), 'edition_no': self.edition_no,
+        return {'schema_version': self.schema_version,
+                'date': self.date.isoformat(), 'edition_no': self.edition_no,
                 'strapline': self.strapline,
                 'stories': [s.to_dict() for s in self.stories]}
 

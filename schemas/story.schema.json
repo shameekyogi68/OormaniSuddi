@@ -134,6 +134,26 @@
       "minItems": 1,
       "description": "Who told you. Own reporting counts, but you have to say so: [\"ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ\"]."
     },
+    "source_urls": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 8
+      },
+      "description": "http(s) URLs the editor can reopen. Required unless sources is own reporting (\"ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ\")."
+    },
+    "verified_by": {
+      "type": "string",
+      "description": "The NAME of the person who opened the sources and confirmed the facts. The Chief Editor gate refuses to write APPROVAL.md without it (D59). This is not inferable from status: \"confirmed\" is what the card says about the news, and a model can write that. This is what a person says about their own work."
+    },
+    "verified_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When that check happened, ISO-8601."
+    },
     "status": {
       "enum": [
         "confirmed",
@@ -204,6 +224,7 @@
         "broadsheet",
         "bulletin",
         "carousel",
+        "greeting",
         "quote_card",
         "reel",
         "report_card",
@@ -218,6 +239,14 @@
       "type": "string",
       "maxLength": 60,
       "description": "A SHORT headline for the reel — about 45 characters. A print headline of 75 needs ~11 seconds on screen to be readable, which is most of a scene. Without this the reel still works, it just runs long."
+    },
+    "reel_points": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 80
+      },
+      "description": "SHORT on-screen forms of `points`, one per point, about 60 characters each. A reel fact card is glanced at while the anchor is already delivering the same fact at roughly twice reading speed, so a print-length point is more copy than the viewer can finish. The voice still reads the FULL point either way — this only shortens what is on the frame. Omit an entry (or leave it blank) to fall back to the full point."
     },
     "hook": {
       "type": "string",

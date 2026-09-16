@@ -64,6 +64,8 @@ class C:
     gold_500 = rgb('#F5B301')
     gold_600 = rgb('#D2930A')
     gold_700 = rgb('#96690A')
+    # Bronze — gold on paper is ~1.7:1 and illegible. Use this on light grounds.
+    gold_800 = rgb('#8A6200')
 
     # Signal red — reserved for genuinely breaking / alert states.
     red_400 = rgb('#E8443F')
@@ -103,6 +105,7 @@ class Role:
 
     accent        = C.gold_500
     accent_bright = C.gold_400
+    accent_on_paper = C.gold_800   # gold type on paper / light grounds only
     alert         = C.red_500
 
 
@@ -116,39 +119,58 @@ class Role:
 class Brand:
     name      = 'ಊರ್ಮನಿ ಸುದ್ದಿ'
     tagline   = 'ನಮ್ಮ ಊರು  •  ನಮ್ಮ ಧ್ವನಿ'
-    handle    = '@OormaniSuddi'
+    handle    = '@oormanisuddi'
     # One word, not a list of towns. A list dates itself the moment you cover
     # somewhere that is not on it.
     coverage  = 'ಕರಾವಳಿ'
     bulletin  = 'ಕರಾವಳಿ ಬುಲೆಟಿನ್'
     follow_kn = 'ಪ್ರತಿದಿನದ ಕರಾವಳಿ ಸುದ್ದಿಗಾಗಿ ಫಾಲೋ ಮಾಡಿ'
     sources_kn = 'ಈ ಆವೃತ್ತಿಯ ಮೂಲಗಳು'
+    youtube_url   = 'https://www.youtube.com/@oormanisuddi'
+    instagram_url = 'https://www.instagram.com/oormanisuddi'
+    whatsapp_url  = 'https://chat.whatsapp.com/KZieCRqqaCaDjGADvbVYzg'
+    live_phone    = '9611756514'
 
     # ── Publisher details ────────────────────────────────────────────────
-    grievance_officer = ''
-    grievance_email   = ''
-    contact_email     = ''
+    # IT Rules 2021 Part III: a named Grievance Officer and a watched contact.
+    # Phone is the route that is actually answered. Email is the better paper
+    # trail for the 24h / 15d clock — add it when one exists.
+    grievance_officer = 'Gautam Paduvari'
+    grievance_phone   = '+91 96117 56514'
+    grievance_email   = 'oormanisuddi@gmail.com'
+    contact_email     = 'oormanisuddi@gmail.com'
     corrections_kn    = 'ತಿದ್ದುಪಡಿ ಅಥವಾ ಮಾಹಿತಿಗೆ ಸಂಪರ್ಕಿಸಿ'
+    voice_disclosure_kn = 'ಈ ಧ್ವನಿ ಕಂಪ್ಯೂಟರ್-ನಿರ್ಮಿತ ಕನ್ನಡ ವಾಚನ.'
+
+    @classmethod
+    def grievance_named(cls) -> bool:
+        contact = cls.grievance_email.strip() or cls.grievance_phone.strip()
+        return bool(cls.grievance_officer.strip() and contact)
 
     @classmethod
     def grievance_line(cls) -> str:
         """The line printed on the closing slide and in captions."""
-        if cls.grievance_officer and cls.grievance_email:
-            return (f'{cls.corrections_kn}: {cls.grievance_officer} · '
-                    f'{cls.grievance_email}')
-        if cls.grievance_email:
-            return f'{cls.corrections_kn}: {cls.grievance_email}'
-        # No officer is named on purpose. This is a one-person channel, and
-        # the contact that actually gets read is the channel's own inbox, so
-        # that is what gets published: Instagram DM and the WhatsApp number
-        # in the bio. IT Rules 2021 Part III does ask a news publisher to
-        # name a Grievance Officer, and naming one is the change to make if
-        # the channel ever grows past its owner — but a route nobody watches
-        # is worse for the reader than an honest one that is watched.
-        if cls.handle:
-            return (f'{cls.corrections_kn}: Instagram DM {cls.handle} · '
-                    f'ಬಯೋದಲ್ಲಿರುವ WhatsApp ಸಂಖ್ಯೆ')
-        return ''
+        if not cls.grievance_named():
+            if cls.handle:
+                return (f'{cls.corrections_kn}: Instagram DM {cls.handle} · '
+                        f'ಬಯೋದಲ್ಲಿರುವ WhatsApp ಸಂಖ್ಯೆ')
+            return ''
+        parts = [cls.grievance_officer.strip()]
+        if cls.grievance_phone.strip():
+            parts.append(cls.grievance_phone.strip())
+        if cls.grievance_email.strip():
+            parts.append(cls.grievance_email.strip())
+        return f'{cls.corrections_kn}: ' + ' · '.join(parts)
+
+    @classmethod
+    def channels_block(cls) -> str:
+        """Paste-ready follow block for YouTube descriptions and MASTER_COPY."""
+        return '\n'.join([
+            f'YouTube: {cls.youtube_url}',
+            f'Instagram: {cls.instagram_url}',
+            f'WhatsApp: {cls.whatsapp_url}',
+            f'Live: {cls.live_phone}',
+        ])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -174,7 +196,11 @@ CATEGORIES: dict[str, dict] = {
 
 
 def category(key: str) -> dict:
-    return CATEGORIES.get(key, CATEGORIES['explainer'])
+    """Unknown names fail loudly. A silent fallback hid 'governance' as explainer."""
+    if key not in CATEGORIES:
+        raise KeyError(
+            f'unknown category {key!r}; choose from {sorted(CATEGORIES)}')
+    return CATEGORIES[key]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -321,6 +347,48 @@ class Grade:
 #  MOTION  (reels / shorts)
 # ─────────────────────────────────────────────────────────────────────────────
 
+class Limits:
+    """Every numeric policy in one place. Skills, docs and gates quote these.
+
+    If Step 8 wants 42s and the review gate wants 90s, the test fails here
+    before anyone 'decides' again. D56.
+    """
+    headline_chars = 78
+    reel_line_chars = 46
+    hook_words = 7
+    deck_chars = 190
+    point_chars = 150
+    points_max = 3
+    narration_beat_chars = 135
+    card_beat_seconds = 10.0
+    reel_target_min = 28.0
+    reel_target_max = 45.0
+    reel_warn_seconds = 45.0
+    reel_fail_seconds = 60.0
+    reel_platform_cap = 90.0
+    reel_min_seconds = 8.0
+    lufs = -14.0
+    true_peak_dbtp = -1.5
+    reel_gap_min = 150          # minutes between our own reels
+    reel_slots = ('11:30', '14:30', '17:30', '20:30')
+    carousel_slot = '09:00'
+    story_slot = '09:15'
+    broadsheet_slot = '20:00'
+    bulletin_slot = '08:30'
+    forward_target_kb = 300     # WhatsApp is the growth route
+    # WCAG 2.1 AA. Read by brand/legibility.py, which audits every house
+    # colour pair; nothing in this project sets type in a pair that is not in
+    # that table and above these floors.
+    contrast_min = 4.5          # body text
+    gold_on_light_min = 3.0     # display sizes, and the gold-on-light rule
+    # The smallest a glyph may measure on the screen it is actually read on.
+    # Kannada stacks conjuncts into the body height, so it loses legibility
+    # earlier than Latin at the same nominal size. See legibility.FEED_WIDTH.
+    min_effective_px = 7.0
+    # Daily default path. Bulletin and extra templates are --only on request.
+    daily_templates = ('carousel', 'story_card', 'broadsheet', 'reel')
+
+
 class Motion:
     fps         = 30
     # Durations in seconds
@@ -346,9 +414,13 @@ class Motion:
     settle      = 0.8     # beat after reading, before the cut
     hold_min    = 5.0     # no scene is ever shorter than this
     hold_max    = 12.0
+    reel_target_min = Limits.reel_target_min
+    reel_target_max = Limits.reel_target_max
+    reel_warn_seconds = Limits.reel_warn_seconds
+    reel_fail_seconds = Limits.reel_fail_seconds
 
     # A reel line longer than this cannot be read comfortably in one scene.
-    reel_line_budget = 46          # characters
+    reel_line_budget = Limits.reel_line_chars          # characters
     # Support text is only shown when the headline leaves genuine room.
     support_budget   = 62
 
@@ -401,10 +473,21 @@ class Motion:
     # having stalled. Past this the honest diagnosis is that the card says
     # more than the voice does — reported, not absorbed.
     vo_hold_max = 1.60
-    # A narrated card is heard as well as read, so it does not need the full
-    # silent reading time — but it needs most of it, because the viewer is
-    # reading the Kannada on screen, not the sentence being spoken.
-    reel_read_ease = 0.80
+    # A narrated card is read AND heard, and those are different standards.
+    #
+    # `read_rate` (7 chars/sec) is a cold first read: the text is the only
+    # channel and the viewer must finish it. A news anchor delivers Kannada at
+    # roughly 15 chars/sec — measured, twice as fast — so on a narrated card
+    # the eye is confirming what the ear has already been given, not decoding
+    # it alone. That is genuinely faster, and it is why broadcast puts short
+    # text on screen and lets the voice carry the detail.
+    #
+    # 0.68 is where a card whose narration actually covers it stops being
+    # flagged, while a card carrying materially more than its narration still
+    # is. It is NOT licence to put print copy on a reel frame: the honest fix
+    # for a long fact is a `reel_points` short form (D51), and the warning
+    # that survives this is telling you to write one.
+    reel_read_ease = 0.68
 
     # ── the reel's fact-card type scale ───────────────────────────────────
     # A fact card is read at the same distance, on the same phone, in the same
