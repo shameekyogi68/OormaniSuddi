@@ -54,8 +54,32 @@ Sampled from the logo, not invented. `brand/tokens.py :: C`
 | `ink_300 / ink_400` | dim text | meta, provenance |
 | `paper_0 … paper_300` | text on ink | headline → caption |
 | **`gold_500` `#F5B301`** | **the one brand accent** | rules, numerals, handle, tagline, the plate's sun |
+| `gold_800` `#8A6200` | the accent **on light grounds only** | greeting light themes, paper |
 | `red_500` `#C81E1E` | alert only | breaking chip, live chip |
 | `sea_500` `#0E5C7A` | civic secondary | category rail |
+
+**Gold never goes on paper.** `gold_500` on `paper_50` measures 1.70:1 — not
+"a bit low", unreadable. `Role.accent_on_paper` (bronze `gold_800`) is the
+accent for any light ground, at 5.04:1. This is not a guideline:
+`brand/legibility.py` measures every pair the house sets type in, `compliance()`
+fails the render below the floor, and `FORBIDDEN` in that table asserts that
+plain gold on paper stays illegible — so "fixing" it by brightening the gold
+fails a test instead of shipping on a festival poster. D60.
+
+| Floor | Value | Applies to |
+|---|---|---|
+| `Limits.contrast_min` | 4.5:1 | body text |
+| `Limits.gold_on_light_min` | 3.0:1 | display sizes |
+| `Limits.min_effective_px` | 7px | the line that sells the post, **at the width it is first seen** |
+
+That last one is the one people get wrong. Everything here is designed at 1080
+and consumed at 400 or less: a carousel cover is ~150px in a profile grid, a
+reel's first frame ~200px in the feed, a thumbnail ~210px in a search row. A
+19px provenance line is 2.6px in a carousel grid — it is not small, it is
+absent. That is fine, because the disclosure is also in the caption; what is
+not fine is the headline failing the same test. `legibility.PRIMARY_STEP` names
+the step that has to survive first sight for each format, and preflight checks
+it.
 
 **Gold is on every card. Category colour is confined to the rail.** That is why
 a mixed feed still reads as one publication. Do not tint a headline, a panel or
@@ -103,7 +127,7 @@ Kannada is the hard case and the engine exists to serve it.
 | `kn` | `NotoSansKannada-Bold` | **all headlines** — shapes every conjunct correctly |
 | `kn_var` | `AnekKannada-Variable` | decks, body, meta. Weight 100–800, Width 75–125 |
 | `kn_serif` | `NotoSerifKannada-Bold` | pull-quotes, broadsheet masthead |
-| `latin` | SF (`SFNS.ttf`) | numerals, ALL-CAPS eyebrows, `@OormaniSuddi` |
+| `latin` | SF (`SFNS.ttf`) | numerals, ALL-CAPS eyebrows, `@oormanisuddi` |
 
 **Any Latin face given user copy must go through `typo.font_for()`**, which
 swaps in a Kannada face when the string needs one. SF has no Kannada coverage;
@@ -438,5 +462,23 @@ Before anything goes out:
 - [ ] Nothing critical inside a platform safe zone
 - [ ] Nothing set below 19px
 - [ ] One accent (gold); category colour only on the rail
-- [ ] No border round the canvas, no outlined boxes
+- [ ] No border round the canvas, no outlined boxes (news — greetings follow §12)
 - [ ] Preflight and audit both clean
+
+---
+
+## 12 · Festival greetings — a separate genre
+
+Everything above is the standard for **news**. A festival or occasion wish is
+built to be felt and forwarded rather than believed, and is set by
+`templates/greeting.py` under its own rules (DECISIONS D54):
+
+- Centred and symmetrical. Signed — "ಶುಭ ಕೋರುವವರು" and the brand — never mastheaded.
+- The festival name in the serif, in engraved gold foil. Never flat yellow.
+- Ornament is allowed here and only here, drawn in gold at hairline weight:
+  corner filigree, a lotus divider, an arch window, lamp-light bokeh. Never
+  clip-art, never a continuous border.
+- A theme changes only the ground and the light. Gold stays the one accent.
+- A photograph declares `keep_clear`, and no type ever enters the deity's band.
+- AI imagery is labelled on the poster and in the caption.
+- No hard photo seam: the arch window's foot dissolves into the ground.

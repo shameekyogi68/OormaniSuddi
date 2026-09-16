@@ -1,0 +1,41 @@
+{
+  "_note": "The cut of the reel shipped 14 Sep 2026 22:21 (Ganapathi Video/output/OORMANI_SUDDI_Ganapathi_Reel.mp4, 44.7 s), rebuilt as a project with the house defaults. What shipped differs in four ways: plain upscale instead of AI; organiser credit inside Instagram's caption zone; outro subscribe line in Helvetica; true peak -0.2 dBFS. The clips are still in the footage folder, so --check and --dry-run work on this file.",
+  "title_slug": "OORMANI_SUDDI_Ganapathi_Reel",
+  "footage_dir": "Ganapathi Video",
+  "upscale": "ai",
+  "masthead": {"date": "2026-09-14", "time": "19:15"},
+  "credit_lines": ["ಸಾರ್ವಜನಿಕ ಶ್ರೀ ಗಣೇಶೋತ್ಸವ ಸಮಿತಿ", "ಮಹತೋಭಾರ ಶ್ರೀ ಸೇನೇಶ್ವರ ದೇವಸ್ಥಾನ, ಬೈಂದೂರು"],
+  "captions": [],
+  "outro": {"dur": 2.2, "bg": ["IMG_2577.MOV", 3.0]},
+  "music": {
+    "file": "assets/bgm_options/ganapathi/journey_to_the_golden_temple_tokyorifft.mp3",
+    "license": "Pixabay Content License - 'Journey to the Golden Temple' by TokyoRifft (AI-generated instrumental, no vocals), pixabay.com/music/india-journey-to-the-golden-temple-453092, downloaded 2026-09-14",
+    "offset": 20.0,
+    "level": 0.8,
+    "duck": true
+  },
+  "segments": [
+    {"clip": "IMG_2567.MOV", "in": 0.0,  "out": 1.3,  "note": "hook: firecracker burst"},
+    {"clip": "IMG_2564.MOV", "in": 14.8, "out": 17.3, "note": "truck with idol swings into frame"},
+    {"clip": "IMG_2567.MOV", "in": 10.5, "out": 13.5, "note": "under the archway, idol under canopy"},
+    {"clip": "IMG_2570.MOV", "in": 0.5,  "out": 4.0,  "note": "truck close, marigold garland"},
+    {"clip": "IMG_2570.MOV", "in": 9.0,  "out": 13.0, "note": "idol on truck, closer"},
+    {"clip": "IMG_2596.MOV", "in": 0.0,  "out": 3.2,  "note": "decorated stage, breather"},
+    {"clip": "IMG_2577.MOV", "in": 0.0,  "out": 6.0,  "hero": true, "note": "idol indoors, push-in"},
+    {"clip": "IMG_2578.MOV", "in": 0.0,  "out": 6.0,  "hero": true, "note": "priest decorating, close"},
+    {"clip": "IMG_2608.MOV", "in": 0.0,  "out": 5.0,  "hero": true, "note": "pooja and garland"},
+    {"clip": "IMG_2608.MOV", "in": 10.0, "out": 15.5, "note": "pooja, second angle"},
+    {"clip": "IMG_2577.MOV", "in": 10.0, "out": 13.8, "note": "warm closer, people reacting"}
+  ],
+  "copy": {
+    "headline": "ಮಹತೋಭಾರ ಶ್ರೀ ಸೇನೇಶ್ವರ ದೇವಸ್ಥಾನ, ಬೈಂದೂರು",
+    "question": "ನಿಮಗೆ ಏನನ್ನಿಸುತ್ತೆ? ಕಾಮೆಂಟ್ ಮಾಡಿ · ಊರಿಗೆ ತಲುಪಲಿ ಎಂದು ಶೇರ್ ಮಾಡಿ.",
+    "place": "ಬೈಂದೂರು",
+    "status": "ದೃಢಪಟ್ಟ ವರದಿ",
+    "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ವರದಿಗಾರರಿಂದ",
+    "source": "ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ",
+    "hashtags": ["#ಬೈಂದೂರು", "#Byndoor", "#ByndoorNews", "#ಬೈಂದೂರುಸುದ್ದಿ", "#ಸಂಸ್ಕೃತಿ", "#Culture", "#oormanisuddi", "#ಕರಾವಳಿ"],
+    "first_comment": "ನೀವು ಬೈಂದೂರಿನವರಾ? ರಿಪ್ಲೈ ಮಾಡಿ — @oormanisuddi",
+    "shorts_title": "ಬೈಂದೂರು ಸೇನೇಶ್ವರ ದೇವಸ್ಥಾನ ಗಣಪತಿ ಪ್ರತಿಷ್ಠಾಪನೆ"
+  }
+}

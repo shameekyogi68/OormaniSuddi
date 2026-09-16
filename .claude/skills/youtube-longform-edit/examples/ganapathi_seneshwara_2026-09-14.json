@@ -1,0 +1,54 @@
+{
+  "_note": "The cut shipped on 2026-09-14 (client rated it ~50%). Reference for structure and values, not a template to copy blindly. Section labels were never confirmed by the client, so sections has no labels and no lower thirds or chapters are produced.",
+  "title_slug": "OORMANI_SUDDI_Seneshwara_Ganapathi_Pratishtapana",
+  "footage_dir": "Ganapathi Video",
+  "resolution": [2560, 1440],
+  "fps": 30,
+  "upscale": "ai",
+  "ai_denoise": 0.5,
+  "encode": {"preset": "medium", "crf": 15},
+  "masthead": {"date": "2026-09-14"},
+  "cards": {
+    "intro": {
+      "title": "ಮಹತೋಭಾರ ಶ್ರೀ ಸೇನೇಶ್ವರ ದೇವಸ್ಥಾನ, ಬೈಂದೂರು",
+      "lines": ["ಗಣಪತಿ ಪ್ರತಿಷ್ಠಾಪನಾ ಮಹೋತ್ಸವ"],
+      "bg": ["IMG_2610.MOV", 25],
+      "dur": 5.0
+    },
+    "outro": {"bg": ["IMG_2602.MOV", 12], "dur": 7.0}
+  },
+  "music": {
+    "file": "assets/bgm_options/ganapathi/journey_to_the_golden_temple_tokyorifft.mp3",
+    "license": "Pixabay Content License - 'Journey to the Golden Temple' by TokyoRifft (AI-generated instrumental, no vocals), pixabay.com/music/india-journey-to-the-golden-temple-453092, downloaded 2026-09-14",
+    "offset": 12.0,
+    "levels": {"card": 0.80, "default": 0.62, "sections": {"installation": 0.55, "blessings": 0.55, "adornment": 0.70}},
+    "duck": false
+  },
+  "sections": {},
+  "lower_thirds": [],
+  "cold_open": [],
+  "segments": [
+    {"clip": "IMG_2565.MOV", "in": 0,  "out": 8,  "section": "procession"},
+    {"clip": "IMG_2566.MOV", "in": 0,  "out": 3,  "section": "procession"},
+    {"clip": "IMG_2566.MOV", "in": 9,  "out": 16, "section": "procession"},
+    {"clip": "IMG_2571.MOV", "in": 1,  "out": 7,  "section": "procession"},
+    {"clip": "IMG_2572.MOV", "in": 6,  "out": 16, "section": "procession"},
+    {"clip": "IMG_2574.MOV", "in": 0,  "out": 4,  "section": "procession"},
+    {"clip": "IMG_2574.MOV", "in": 7,  "out": 12, "section": "procession"},
+    {"clip": "IMG_2575.MOV", "in": 0,  "out": 8,  "section": "arrival"},
+    {"clip": "IMG_2575.MOV", "in": 28, "out": 40, "section": "arrival"},
+    {"clip": "IMG_2576.MOV", "in": 0,  "out": 8,  "section": "arrival"},
+    {"clip": "IMG_2595.MOV", "in": 0,  "out": 3,  "section": "arrival"},
+    {"clip": "IMG_2600.MOV", "in": 1,  "out": 7,  "section": "arrival"},
+    {"clip": "IMG_2601.MOV", "in": 0,  "out": 12, "section": "installation"},
+    {"clip": "IMG_2601.MOV", "in": 38, "out": 52, "section": "installation"},
+    {"clip": "IMG_2602.MOV", "in": 8,  "out": 22, "section": "installation"},
+    {"clip": "IMG_2605.MOV", "in": 1,  "out": 9,  "section": "installation"},
+    {"clip": "IMG_2606.MOV", "in": 4,  "out": 11, "section": "blessings"},
+    {"clip": "IMG_2606.MOV", "in": 28, "out": 36, "section": "blessings"},
+    {"clip": "IMG_2606.MOV", "in": 58, "out": 66, "section": "blessings"},
+    {"clip": "IMG_2607.MOV", "in": 1,  "out": 10, "section": "adornment"},
+    {"clip": "IMG_2609.MOV", "in": 1,  "out": 9,  "section": "adornment"},
+    {"clip": "IMG_2610.MOV", "in": 15, "out": 33, "section": "adornment"}
+  ]
+}

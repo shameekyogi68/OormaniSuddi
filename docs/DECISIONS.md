@@ -468,7 +468,7 @@ randomness from a stable digest, never from `hash()`, `id()`, `set` ordering or
 
 ---
 
-## D29 · Brand rules are gilded, not stamped
+## D64 · Brand rules are gilded, not stamped
 
 **Decided.** The masthead rule, the horizon line, the takeaway rail and the
 footer hairline are gradient rules whose alpha tapers to nothing at both ends
@@ -489,7 +489,7 @@ colour.
 
 ---
 
-## D30 · The house grade gets a filmic highlight shoulder
+## D65 · The house grade gets a filmic highlight shoulder
 
 **Decided.** `house_grade` compresses luminance above the 0.82 knee with an
 asymptotic shoulder (`Grade.rolloff = 0.18`); split-tone amounts were raised
@@ -506,7 +506,7 @@ reads as static; layered noise reads as emulsion.
 
 ---
 
-## D31 · The editorial plate is a scene, not a backdrop
+## D66 · The editorial plate is a scene, not a backdrop
 
 **Decided.** The plate's gradients are dithered; the sun carries a broken gold
 reflection down the sea; the ruled-sea spacing opens at 1.33× per line with
@@ -1110,6 +1110,491 @@ every cut time is now exactly known.
 `brand/motion.py :: _transition, _master_narrated_audio` · `brand/tokens.py :: Motion.bgm_*`
 
 ---
+
+## D49 · The disclosure travels with the image, not with the story
+
+`Story.credit_line` read `story.photo` — the hero. That was correct when a
+story was one card with one picture. A narrated reel is five or six cards: the
+fact cards are drawn from `story.gallery`, and the end card (D47) shows the
+hero again. Neither drew a credit at all.
+
+So on a reel whose every image is AI-generated, the label appeared on the
+first card and then vanished for the next sixty seconds — over exactly the
+frames a viewer actually watches.
+
+`Photo.disclosure` moves the label onto the photograph. `Story.credit_line`
+now delegates to it, so the hero and a gallery frame cannot be labelled by two
+different rules. `ChapterScene` and `OutroScene` resolve the picture and the
+Photo object *together* into `self.shown`, which is what makes it structurally
+impossible for a card to label a different image than the one it is showing —
+the previous code could fall back to the hero for the picture while leaving
+the label blank.
+
+The outro's label sits ABOVE the safe line. Instagram parks its caption over
+the bottom ~470px, and a disclosure underneath it is covered on the platform
+this reel is mainly made for. A label the viewer cannot see discloses nothing.
+
+`preflight()` now checks every image the story can put on screen, not just the
+hero, and fails on any that would appear with no disclosure line.
+
+`brand/content.py :: Photo.disclosure, Story.all_photos` · `brand/motion.py :: ChapterScene, OutroScene` · `brand/qa.py`
+
+---
+
+## D50 · Written Kannada and spoken Kannada are different languages
+
+The delivery was fine. The words were wrong.
+
+A TTS engine handed print copy reads print copy, so the anchor was saying
+things no Kannada newsreader would say:
+
+| written | it said | a newsreader says |
+|---|---|---|
+| `25-35 ಕಿ.ಮೀ` | "25 hyphen 35 ಕಿ dot ಮೀ" | ಗಂಟೆಗೆ 25 **ರಿಂದ** 35 **ಕಿಲೋಮೀಟರ್** |
+| `₹1.1 ಲಕ್ಷ` | rupee-sign first, then "1. 1" | 1.1 ಲಕ್ಷ **ರೂಪಾಯಿ** |
+| `40%` | "40 percent" | **ಶೇಕಡಾ** 40 |
+| `9:15 ಕ್ಕೆ` | "nine colon fifteen" | 9 ಗಂಟೆ 15 **ನಿಮಿಷಕ್ಕೆ** |
+| `1,25,000` | digits around commas | 125000 |
+
+`_speech_normalise()` converts each. Two details are load-bearing:
+
+* **A decimal point is not a sentence boundary.** It is protected through the
+  whole pipeline and restored last, because the sentence-spacing pass would
+  otherwise turn "1.1 ಲಕ್ಷ" into "1. 1 ಲಕ್ಷ" — which an engine reads as two
+  numbers and a listener hears as a different amount.
+* **A time takes the case its STEM takes.** ಗಂಟೆ ends in ೆ and takes ಗೆ / ಯ;
+  ನಿಮಿಷ ends in ಅ and takes ಕ್ಕೆ / ದ. Carrying the written particle across
+  unchanged gave "10 ಗಂಟೆಕ್ಕೆ", which is not Kannada. Consuming it
+  unconditionally glued the spoken form onto the next word; never consuming it
+  doubled it.
+
+A hyphen only becomes ರಿಂದ **between two digits**, so ತ್ರಾಸಿ-ಮರವಂತೆ stays one
+place rather than becoming a journey.
+
+`_anchor_cadence()` supplies the performance. edge-tts accepts no SSML, so
+every pause has to be written in as punctuation: a beat after the dateline, a
+beat either side of an attribution, and a full stop that genuinely lands at the
+end of every sentence — which is what produces the falling final intonation.
+Without it the engine trails off flat.
+
+**The engine itself changed.** The default was `translate.google.com`'s
+undocumented `translate_tts`, time-stretched with `atempo=1.15`. That is a
+pronunciation aid, not a broadcast voice, and it is an endpoint that can change
+or refuse traffic without notice on a channel that publishes daily.
+`kn-IN-SapnaNeural` is a real neural voice that takes direction: +9% rate
+(a bulletin's pace; past ~+15% the conjuncts blur), −4Hz pitch (the stock voice
+is tagged "Friendly, Positive" — a customer-service register, not a news one),
++8% volume. Measured on the same sentence, it sits at 183Hz against Google's
+238Hz: the newsreader register rather than the assistant one, and with no
+time-stretch artefacts because it needs no time-stretching.
+
+`brand/voice.py :: _speech_normalise, _anchor_cadence, ANCHOR_RATE, DEFAULT_ENGINE`
+
+---
+
+## D51 · A reel card carries a short form, because the voice is faster than reading
+
+Measured on real copy: the anchor delivers Kannada at roughly **15 characters
+per second**. `read_rate` — a cold first read of unfamiliar text on a moving
+frame — is **7**. The voice is twice as fast as the eye.
+
+So a narrated fact card was in an unwinnable position. It showed the full print
+point (90–115 characters), which needs ~15s to read, while its own narration
+finished in ~9s. Every card was reported short, and the reports were correct:
+the viewer genuinely could not finish reading before the cut.
+
+Three things could give:
+
+* **Hold the card longer.** Rejected past `vo_hold_max` — 6.6s of frozen
+  picture and silence mid-reel reads as the video having stalled (D45).
+* **Slow the anchor.** Rejected. A newsreader's pace is part of sounding like
+  a newsreader; slowing it to match reading speed makes the delivery worse to
+  fix a layout problem.
+* **Put less on the frame.** This is what broadcast actually does, and it is
+  what `reel_points` does here.
+
+`reel_points` is index-matched to `points` — the same relationship `reel_line`
+has to `headline`, one level down. The **voice still reads the full point**
+either way, so nothing is lost from the reel, only from the frame. A blank or
+missing entry falls back to the full point, and `preflight()` warns on any
+point over 80 characters that has no short form.
+
+`reel_read_ease` moved 0.80 → 0.68 at the same time, and that is a change of
+STANDARD, not a tuning: 7 chars/sec is the rate for text that is the only
+channel. On a narrated card the eye confirms what the ear has already been
+given, which is genuinely faster. It is not licence to put print copy on a reel
+frame — the warning that survives it is telling you to write a short form.
+
+On the 2026-09-08 edition this removed every reading-time shortfall (ten of
+them, up to 4.3s each) and took the reels from 62–70s down to 57–64s.
+
+`brand/content.py :: Story.reel_points` · `brand/motion.py :: reel_cards` · `brand/tokens.py :: Motion.reel_read_ease` · `docs/AI_BRIEF.md`
+
+---
+
+## D52 · The Chief Editor's green signal is established, not asserted
+
+The newsroom skill's final step asks a Chief Editor to "watch the full reel
+start to finish" and "read every caption word", then declare the package safe
+to post unseen. Written as prose, that instruction is unenforceable: a
+reviewer — human or model — can write ✅ against it having looked at nothing,
+and the failure is invisible **precisely because** the point of the role is
+that nobody downstream checks again. The user is posting on that promise.
+
+That is the same failure this project refuses everywhere else. `Story.validate`
+does not ask an editor to remember the law. `preflight` does not ask them to
+count characters. `audit_sync` does not ask them to trust that the cuts landed.
+So the Chief Editor does not get to *assert* a package is sound either.
+
+`brand/review.py` splits the role in two, and both halves are mandatory:
+
+* **`review()`** establishes what a machine can establish, and what no opinion
+  may override — the handle's casing in every copy file, that every referenced
+  file exists, that every reel actually carries an audio track and sits inside
+  the platform's duration limit, that synthetic imagery is disclosed in the
+  caption, that a crime `headline` and `reel_line` each carry their own
+  allegation marker, that no string contains a glyph the house fonts cannot
+  set.
+* **`evidence()`** extracts eight frames per reel plus every carousel slide,
+  because a judgement about craft is only worth something if it was made
+  against the thing itself.
+
+**`APPROVAL.md` is the green signal, and its absence is the meaningful state.**
+A folder without one has not been cleared, whatever was said in conversation.
+`approve()` refuses to write it while any check fails, and deletes a stale one
+rather than leaving it standing over a package that now fails. `render.py`
+exits non-zero when the gate holds.
+
+It earned its place on the first run. On a package that had already passed
+every other check in this repository, it caught:
+
+* **eleven copy files and MASTER_COPY.md** still carrying `@OormaniSuddi`
+  after the handle moved to `@oormanisuddi` — nineteen occurrences in
+  MASTER_COPY.md alone, every one of which would have pointed a reader at an
+  account that does not exist;
+* **`schedule.json` and `schedule.txt` pointing at `carousel_06_sources.jpg`**
+  when the rendered file was `carousel_08_sources.jpg` — the range was
+  hardcoded in `publishing_plan()` under a docstring that claimed it was
+  "derived from what was actually rendered". The schedule is the one file a
+  publisher actually follows.
+
+Neither is a subtle fault. Both survived every existing check because nothing
+looked at the finished folder as a whole.
+
+`brand/review.py` · `render.py` · `.agents/skills/second-brain/SKILL.md` Step 13
+
+---
+
+## D54 · A festival greeting is its own genre, not a news card with a festive photo
+
+The first Gauri Ganesha poster was built with the news kit: the masthead
+lockup, a "ಧಾರ್ಮಿಕ ವಿಶೇಷ" dateline slot, an eyebrow rail reading "FESTIVAL
+WISHES" in tracked capitals, a left-aligned headline, hairline rules and a
+footer. Every element was correct by this system's own rules, and the result
+read as a bulletin ABOUT a festival — which is exactly why it was rejected. It
+also set its headline across the deities' pedestal, and credited the picture
+"ಚಿತ್ರ: ಊರ್ಮನಿ ಸುದ್ದಿ" with no AI label on an AI image.
+
+The news rules were not wrong. They were the wrong rules. News grammar exists to
+be believed; a wish exists to be felt and forwarded, and the grammar that does
+that here is far older than this system:
+
+| news card | greeting |
+|---|---|
+| left-aligned, asymmetric | centred, symmetrical |
+| masthead and dateline | signed — ಶುಭ ಕೋರುವವರು, then the brand |
+| no ornament (AGENTS rule 3) | ornament IS the content: drawn, gold, hairline |
+| house_grade cools shadows toward navy | warm_grade keeps lamp light; shadows fall into the theme's ground |
+| headline in the sans | festival name in the serif, in engraved foil |
+
+So `templates/greeting.py` is a separate genre, and its ornament lives in
+`brand/ornament.py`, which nothing else imports — no news template and no
+golden hash can be moved by it. Rule 3 still governs news without exception.
+
+Three things carry over unchanged, because they are not style. **Gold is the
+only accent**: a theme changes only the ground and the light around the
+subject. **Glyph safety** (D46). **Disclosure** (D49): an AI image is labelled
+on the poster and repeated in the caption.
+
+**The deity is never covered.** A photograph must declare `keep_clear`, the
+band of the image that holds the deity or subject, and `_plan()` guarantees no
+type enters it. It tries full bleed; then full bleed with the type up to 14%
+smaller; then the picture inside a temple arch; then it refuses. On the Gauri
+Ganesha photograph that gives full bleed at 9:16 and the arch at 4:5 and 1:1 —
+a portrait subject in a squarer frame genuinely has no room below it for the
+wish. Words across Ganapati's face would not be a layout imperfection on this
+channel, so `_compose()` re-checks the result instead of trusting the solver,
+and the promise is tested on every format.
+
+**Flat yellow is the loudest mark of a cheap poster.** The hero is set in foil:
+a gradient with a darker equator and a reflected band below it, a lit upper
+lip and a shaded lower lip cut from the glyph's own outline, and two shadows. A
+two-stop gradient reads as paint.
+
+**Two faults found by looking, not by testing.** Gold salutation type over the
+photo's marigold garland was gold on yellow; it now sits on a pool of the
+ground shaped to the line, so the flowers either side stay lit. And the first
+arch window ended on a straight cut — the hard photo seam STANDARDS forbids —
+where its foot now dissolves through the picture's own alpha.
+
+`templates/greeting.py` · `brand/ornament.py` · `editions/greetings/` · `tests/test_greeting.py`
+
+---
+
+## D55 · No source, no claim. No approval, no upload
+
+**Decided.** A story that is not own reporting must carry at least one
+`source_url` the editor can reopen. Fetch writes a tip sheet, never finished
+copy. `APPROVAL.md` is still the only green signal, and a person still uploads.
+YouTube is real footage. Generated pictures wear `nature: 'ai'`.
+
+**Replaced.** Headlines piped into Gemini for 3–5 journalistic paragraphs;
+AI reels scheduled to YouTube Shorts; stock reused as `representative`.
+
+**Why.** The legal apparatus was polishing invented input. Analytics already
+showed a 10× gap (37 vs 397) against AI slideshows on YouTube. Labelling
+generated stock as ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ is concealment.
+
+**If you undo it.** The channel publishes fiction with a dateline, and trains
+YouTube to ignore it.
+
+`brand/content.py` · `scripts/fetch_daily_news.py` · `brand/copy.py :: publishing_plan` · AGENTS Rule 7
+
+---
+
+## D56 · Numeric policy lives in `tokens.Limits`
+
+**Decided.** Reel window 28–45 s, warn above 45, fail above 60. Card beat 135
+characters / 10 s. Loudness −14 LUFS / −1.5 dBTP. Slots 11:30 / 14:30 / 17:30 /
+20:30. Skills quote these names; they do not invent competing numbers.
+
+**Replaced.** The same limits written differently in AGENTS, the newsroom skill,
+the registry, and `review.py`.
+
+**If you undo it.** The next deadline writes a third set.
+
+`brand/tokens.py :: Limits`
+
+---
+
+## D57 · Generated images, including stock, are `nature: 'ai'`
+
+**Decided.** A credit that names an AI image cannot wear `representative`.
+The plate is an honest fallback.
+
+**If you undo it.** The IT Rules synthetic-content label is skipped on the
+frames that run longest.
+
+`brand/content.py :: Photo.validate`
+
+---
+
+## D58 · A reel opens on the news
+
+**Decided.** The first spoken beat is the headline, not `ನಮಸ್ಕಾರ, ಕರಾವಳಿ ಸುದ್ದಿ.`
+Captions disclose that the voice is generated.
+
+**If you undo it.** Viewers swipe in the greeting, which is the first 1.5 s
+YouTube and Instagram use to decide distribution.
+
+`brand/voice.py :: narration_beats` · `brand/tokens.py :: Brand.voice_disclosure_kn`
+
+---
+
+## D59 · No human verification, no publication
+
+**Decided.** Every story carries `verified_by` — the NAME of the person who
+opened the sources and checked the facts. `brand/review.py` refuses to write
+`APPROVAL.md` while any story lacks one.
+
+**Replaced.** D55 said "no source, no claim. No approval, no upload" and
+enforced only the first half. `source_url` was required to render; nothing
+anywhere required that a person had actually read it.
+
+**Why.** The legal apparatus — the guilt-verb guard, the POCSO location check,
+the provenance strip — all assume the facts are real. Nothing in the pipeline
+can establish that, and after the intake became a tip sheet the only thing that
+could was a person. An obligation nobody is named for is an obligation nobody
+has.
+
+**Why it is not inferred from `status`.** `status: confirmed` is what the CARD
+says about the news, and a model can write it. `verified_by` is what a person
+says about their own work. Collapsing the two would put the assertion back in
+the hands of the thing that cannot check.
+
+**Where it is enforced.** At the gate, not in `Story.validate()`. A story must
+still be renderable before it is verified — that is how an editor sees the card
+they are checking. The refusal belongs at the door to publication.
+
+**If you undo it.** The system goes back to being extremely careful about the
+provenance of pictures attached to claims nobody read.
+
+`brand/content.py :: Story.verified_by` · `brand/review.py` · `schemas/story.schema.json`
+
+---
+
+## D60 · Legibility is arithmetic, and arithmetic is testable
+
+**Decided.** `brand/legibility.py` measures every colour pair the house sets
+type in, as a WCAG ratio, against `Limits.contrast_min` (4.5) and
+`Limits.gold_on_light_min` (3.0). It also measures the line that sells each
+post at the width that post is FIRST SEEN at — 150px in a profile grid, 200px
+in the Reels grid, 210px in a YouTube search row — against
+`Limits.min_effective_px`.
+
+**Replaced.** Both floors were already written in `tokens.Limits`, and nothing
+read them. "19px minimum" was a rule about the canvas; every deliverable here
+is designed at 1080 and consumed at 400 or less.
+
+**Why.** Gold 500 on ink is 10.7:1. The same gold on paper is 1.70:1 and
+unreadable, and nothing stopped a template reaching for `Role.accent` on a
+light greeting ground. It would have shipped on a festival poster, where
+nobody would have called it a bug. `Role.accent_on_paper` (bronze) exists for
+exactly that case, and `FORBIDDEN` in the pair table now asserts that plain
+gold on paper stays illegible — so "fixing" it by brightening the gold fails a
+test instead of shipping.
+
+**What it deliberately does not do.** It does not complain that small print is
+small. A provenance line at 2.6px in a profile grid is fine, because the
+disclosure obligation is met by the opened post and by the caption. It checks
+the one line that decides whether the post is opened at all.
+
+**The forward.** `Limits.forward_target_kb` stopped being advisory too: the
+broadsheet is fitted to it at save time. Quality steps come down first and
+chroma is the last resort — never 4:2:0, because Kannada matras are one or two
+pixels wide and that is what turns a conjunct into a smear. On real copy it
+lands at ~270 KB from ~660 KB without ever leaving 4:4:4.
+
+**If you undo it.** The channel keeps designing at a size no reader uses.
+
+`brand/legibility.py` · `brand/qa.py` · `brand/surface.py :: _fit_to_size` · `tests/test_legibility.py`
+
+---
+
+## D61 · The legal guard is a word list, so its coverage is measured
+
+**Decided.** `tests/legal_corpus.json` holds Kannada crime headlines as a desk
+would really write them, each labelled by hand with whether it must be refused.
+`tests/test_legal_corpus.py` asserts every one and reports the false-negative
+rate when something slips.
+
+**Replaced.** Section 21 of the system book honestly admitted that legal
+detection is word-based and incomplete. It was an admission with no number
+behind it — nobody knew whether the guard missed one phrasing in fifty or one
+in three.
+
+**Why.** Kannada builds the same assertion several ways: the bare past
+(ಕೊಂದ), the participle (ಕೊಂದು), the perfective (ಕೊಂದಿದ್ದಾನೆ), the verbal noun
+(ಕೊಲೆಗೈದ). The original list carried roughly the first of each. Writing the
+corpus found the holes immediately, and the list now carries the forms a desk
+actually types.
+
+**The rule that keeps it honest.** When a near-miss turns up in production, add
+the row FIRST, watch it fail, then widen the list. A corpus that only ever
+grows with successes measures nothing. The safe lines matter as much as the
+unsafe ones: without them, an over-eager guard that refuses good ಆರೋಪ copy
+would look like an improvement, and it would teach editors to work around the
+check.
+
+**What it does not claim.** This measures the word list against a corpus
+somebody wrote. It does not make the guard complete, and the named editor
+remains the legal actor.
+
+`brand/content.py :: GUILT_ASSERTING` · `tests/legal_corpus.json` · `tests/test_legal_corpus.py`
+
+---
+
+## D62 · The gate records what a machine established, and names who judged the rest
+
+**Decided.** `APPROVAL.md` states plainly that it is a MECHANICAL clearance and
+carries three unfilled seats — taste, culture, news judgement. It reads "not
+yet cleared to publish" until a named person signs them with
+`scripts/sign_off.py`. Every finding carries an error code from `brand/codes.py`
+and the step that owns the fix, and `review_report.json` is written pass or
+fail.
+
+**Replaced.** A green file whose closing line was "I have reviewed every slide,
+every reel, every caption. You can post without watching."
+
+**Why.** No check in `brand/review.py` can tell whether the lead is right,
+whether a deity is treated with dignity, or whether the package looks like the
+channel at its best. The file was claiming a judgement nothing in it had made —
+which is the exact failure the module's own docstring says it exists to
+prevent. A score out of ten from an assistant is not evidence for those three;
+a name is, because a name can be asked about it afterwards.
+
+**Why the codes.** A prose finding can only be read by a person, so a notifier
+cannot react to it, nothing can count it, and the loop-back depends on somebody
+remembering who fixes what. `LAW-01`, `IMG-03`, `SND-02` route themselves.
+
+**Why the failed review is written too.** A notifier most needs to read the
+review that failed.
+
+`brand/review.py` · `brand/codes.py` · `scripts/sign_off.py`
+
+---
+
+## D63 · The intake retrieves; it never supplies what the source lacks
+
+**Decided.** Where a publisher serves the article, `scripts/fetch_daily_news.py`
+fetches the body (via `trafilatura`, optional) so the model condenses
+paragraphs instead of expanding a headline. Every generated lead then goes
+through a groundedness pass: each number, place and proper noun is checked
+against the text it was written from, and anything absent is flagged ⚠️ VERIFY
+on the sheet. Where no body could be had, the sheet says HEADLINE ONLY rather
+than producing something that reads complete.
+
+**Replaced.** D55 made the fetch a tip sheet, which removed the request for
+five journalistic sentences. It left the model working from a headline and an
+RSS blurb, and left the editor with no way to see which words came from where.
+
+**Why.** The flagged tokens are the failure mode, precisely: an invented
+casualty figure, a hospital that was never named, a helpline number a reader in
+Byndoor would actually ring. The pass does not establish truth — nothing here
+can — it points the editor's eye at the two or three words that are not in
+anything we fetched, instead of at all forty.
+
+**Two details that make it work.** Numbers are checked regardless of length,
+because "45" is two characters and is the most dangerous thing a model can
+supply. And Kannada case endings are matched by stem, because ಉಡುಪಿಯಲ್ಲಿ
+against a source saying ಉಡುಪಿ is grammar, not an invented fact — a check that
+cried wolf on every inflection would be switched off within a week.
+
+**If you undo it.** The morning goes back to a sheet that looks equally
+confident whether it was built from five paragraphs or from six words.
+
+`scripts/fetch_daily_news.py` · `tests/test_intake.py`
+
+---
+
+## D67 · A decision with nothing behind it is a paragraph
+
+**Decided.** `docs/_build_traceability.py` maps every D-number to the tests that
+name it, and `tests/test_contract.py :: EveryDecisionIsAccountedFor` fails when
+any decision is enforced by nothing. Three buckets are allowed: named by a
+test, regression-guarded by the golden fingerprints, or recorded as untestable
+with a reason.
+
+**Replaced.** Sixty decisions and several hundred assertions, with no way to
+say which held up which. The first run of the tool found twelve decisions with
+a test naming them and forty-two with nothing.
+
+**Why the golden bucket is separate.** It is a weaker guarantee and saying so
+costs nothing. The golden hash would fail if leading stopped coming from the em
+— but nothing asserts that it does. A regression is caught; the rule is not
+verified. Counting those as "tested" would have made the number look better and
+meant less.
+
+**A defect this found.** D29, D30 and D31 each existed twice — one design
+decision and one legal decision sharing a number — so "see D29" was ambiguous
+in `AGENTS.md`, `CLAUDE.md`, `brand/content.py`, `templates/youtube_thumb.py`
+and the publish skill. Every live reference meant the legal one, so the three
+design decisions became D64–D66 and a test now refuses a duplicate number.
+
+`docs/_build_traceability.py` · `docs/TRACEABILITY.md` · `tests/test_contract.py`
+
+---
+
 
 ## Changing something here
 

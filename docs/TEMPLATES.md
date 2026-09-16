@@ -33,6 +33,7 @@ python3 render.py edition.json --only report_card carousel
 | [`broadsheet`](#broadsheet) | 1080×1620 | edition | One per edition, for readers who want everything at a glance. |
 | [`bulletin`](#bulletin) | 1920×1080 | edition | One per edition. |
 | [`reel`](#reel) | 1080×1920 | edition | One per edition — the lead only. |
+| [`greeting`](#greeting) | 1080×1920 | greeting | Festival and occasion wishes only — Gauri-Ganesha, Deepavali, Ugadi, Rajyotsava, Eid, Christmas and the like. |
 
 ---
 
@@ -268,11 +269,35 @@ The day's edition as a single front page.
 
 **Requires.** `stories`, `date`, `edition_no`, `strapline`
 
-**Also accepts.** `target_seconds`, `voice`, `voiceover`
+**Also accepts.** `target_seconds`, `voice`, `voiceover`, `bgm`
 
 **Limits.** `stories` = 1, `reel_line_chars` = 46, `target_seconds_min` = 8, `target_seconds_max` = 45
 
 **Note.** A reel is a glance in a vertical feed: one story, no sting, headline on frame 0. Writes reel_cover.jpg — set that as the Instagram / Shorts cover. Write a reel_line of ~45 chars. Audio is normalised to -14 LUFS / -1.5 dBTP. Pass voice= a brand.voice.VoiceTrack to cut the reel from MEASURED narration: one card per spoken beat, every cut landing between sentences, and target_seconds no longer applies because the length is the narration's. voiceover= is the older bare-path form, which can only guess where to cut.
+
+---
+
+## `greeting`
+
+A festival wish designed as a poster, not a bulletin: centred, gold foil, ornament, signed by the channel.
+
+**When to use.** Festival and occasion wishes only — Gauri-Ganesha, Deepavali, Ugadi, Rajyotsava, Eid, Christmas and the like. Never for news: a news story set in this template reads as a celebration.
+
+| | |
+|---|---|
+| file | `templates/greeting.py` → `greeting()` |
+| takes | a `Greeting` |
+| output | 1080×1920 at 2× supersample, files |
+| safe inset | 72, 250, 72, 340 (L, T, R, B) |
+| format note | IG story — top chrome ~230px, bottom reply bar ~320px |
+
+**Requires.** `kind: "greeting"`, `occasion`
+
+**Also accepts.** `wish`, `salutation`, `blessing`, `theme`, `photo`, `keep_clear`, `sign_label`, `date`, `tags`, `slug`
+
+**Limits.** `occasion_chars` = 30, `wish_chars` = 26, `salutation_chars` = 34, `blessing_chars` = 96, `themes` = sacred lights harvest rajyotsava national serene
+
+**Note.** Renders wish_9x16.jpg, wish_4x5.jpg and wish_1x1.jpg plus wish_copy.txt. A photograph MUST declare keep_clear — the band of the image, as fractions of its height, that holds the deity or subject — and no type is ever set inside it: the solver moves the picture, frames it in an arch, or refuses. An AI image is labelled on the poster and in the caption automatically. See DECISIONS.md D54.
 
 ---
 

@@ -9,9 +9,12 @@ Then, depending on the job:
 
 | You are about to… | Read |
 |---|---|
-| feed the system news copy | [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) — the JSON contract |
+| feed the system news copy | [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) then [`.agents/skills/second-brain/SKILL.md`](.agents/skills/second-brain/SKILL.md) — four stops, not thirteen |
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
 | pick a template | `python3 render.py --describe` |
+| run a day end to end | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) |
+| edit raw clips into a long-format YouTube video | [`.claude/skills/youtube-longform-edit/SKILL.md`](.claude/skills/youtube-longform-edit/SKILL.md) |
+| edit raw clips into an Instagram Reel / YouTube Short | [`.claude/skills/reels-shorts-edit/SKILL.md`](.claude/skills/reels-shorts-edit/SKILL.md) |
 
 ## Before you touch anything
 
@@ -28,26 +31,51 @@ That is not automatically a bug — but do not re-bless it without looking at
 
 * **The editorial plate's ruled lines and off-centre sun.** A designed graphic,
   not an artifact — deliberately not photographic. `surface.py :: editorial_plate`,
-  and DECISIONS.md D28.
+  DECISIONS.md D66 (why it is a scene) and D28 (why its variation is seeded
+  from a stable digest and never from `hash()`).
 * **`out/reference/` is tracked while the rest of `out/` is ignored.** It is the
   visual baseline, not a build artifact.
 * **Warnings on a clean render.** `preflight()` warns; it does not block. A
   missing `reel_line` on a long headline is a real note worth acting on.
+* **A green `APPROVAL.md` that still says "not yet cleared to publish".** That
+  is correct. The file records what a *machine* established. Taste, cultural
+  dignity and news judgement are signed by a person —
+  `python3 scripts/sign_off.py out/<date> --by "<name>"`. See D62.
+* **The broadsheet saving at a lower JPEG quality than everything else.** It is
+  fitted to `Limits.forward_target_kb`, because its job is to be forwarded on
+  mobile data, not to be pixel-peeped. See D60.
 
 ## Things that are genuinely load-bearing
- 
+
 * **Strict Workspace Isolation**: All actions, file operations, searches, and
   process executions are strictly jailed within this repository. Never read,
-  write, or execute outside `/Users/shameekyogi/Oormani Suddi`.
+  write, or execute outside `/Users/shameekyogi/My Apps/Oormani Suddi`.
 * `Story.validate()` enforces Indian criminal-reporting law, not house style.
   `headline` and `reel_line` are checked for guilt assertion **on their own**,
   because each is displayed with no other copy around it. Never add an override
   flag — see DECISIONS.md D29 for why, and what was published before it existed.
+  The guard is a word list, and `tests/legal_corpus.json` is the measurement of
+  what it catches — when you find a phrasing it misses, add the row **first**,
+  watch it fail, then widen the list. See D61.
+* **No source, no claim. No human verification, no publication.** A story needs
+  a `source_url` to render (D55) and a `verified_by` to be approved (D59). The
+  second one is not inferrable from `status`: "confirmed" is what the card says
+  about the news, and a model can write that.
+* **Numbers live in `tokens.Limits`, once.** Durations, character budgets,
+  loudness, slots, contrast floors. Skills and docs quote those names; they do
+  not restate the values. See D56.
 
+## Numbers you can measure
+
+```bash
+python3 docs/_build_traceability.py     # which decisions are enforced by a test
+python3 scripts/metrics.py report       # which of the guessed numbers hold up
+python3 scripts/correction.py status    # the IT Rules clocks
+```
 
 Regenerate derived files after touching the registry, categories, or Story
 fields — they cannot be edited by hand:
 
 ```bash
-python3 -m templates --dump && python3 schemas/_build.py && python3 docs/_build_templates_md.py
+python3 -m templates --dump && python3 schemas/_build.py && python3 docs/_build_templates_md.py && python3 docs/_build_traceability.py
 ```

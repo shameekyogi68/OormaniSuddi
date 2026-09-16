@@ -55,11 +55,15 @@ thumbnail and the 9:16 story card are both made from it.
         "path": "assets/udupi_coastal_storm.jpg",
         "nature": "representative",
         "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ಸಂಗ್ರಹ",
+        "licence": "own",
         "focal": [0.5, 0.5]
       },
       "location": "ಉಡುಪಿ ಜಿಲ್ಲೆ",
       "dateline": "ಜಿಲ್ಲಾ ವರದಿ",
       "sources": ["ಭಾರತೀಯ ಹವಾಮಾನ ಇಲಾಖೆ", "ಉಡುಪಿ ಜಿಲ್ಲಾಡಳಿತ"],
+      "source_urls": ["https://mausam.imd.gov.in/", "https://udupi.nic.in/"],
+      "verified_by": "Gautam Paduvari",
+      "verified_at": "2026-08-25T07:50:00+05:30",
       "status": "official",
       "published_at": "2026-08-25T08:40:00+05:30"
     }
@@ -95,6 +99,31 @@ the reel still renders — it just runs long, and may drop your last story.
 "headline":  "ಬೈಂದೂರು ಮೂಕಾಂಬಿಕಾ ಏರ್‌ಪೋರ್ಟ್ ಯೋಜನೆ: ಪ್ರಸ್ತಾವನೆ ಹಂತದಲ್ಲೇ ಬಾಕಿ, ಆರಂಭವಾಗದ ಕಾಮಗಾರಿ",
 "reel_line": "ಮೂಕಾಂಬಿಕಾ ಏರ್‌ಪೋರ್ಟ್: ಕಾಮಗಾರಿ ಆರಂಭವಾಗಿಲ್ಲ"
 ```
+
+**And give every fact a `reel_points` short form.** Same reason, one level
+down. A reel's fact card is glanced at while the anchor is already speaking
+that fact — measured, the voice delivers Kannada at roughly twice the speed a
+viewer reads unfamiliar text on a moving frame. A 110-character point on a
+card is therefore copy nobody finishes. `reel_points` is index-matched to
+`points`; the voice still reads the FULL point either way, so nothing is lost
+from the reel, only from the frame.
+
+```json
+"points": [
+  "ವಾರಾಹಿ ನೀರೆತ್ತುವ ಜಲವಿದ್ಯುತ್ ಶೇಖರಣಾ ಯೋಜನೆಯ ಸಮಗ್ರ ಯೋಜನಾ ವರದಿ (DPR) ಸಿದ್ಧತೆಯ ಅಂತಿಮ ಹಂತದಲ್ಲಿದೆ."
+],
+"reel_points": [
+  "ವಾರಾಹಿ ಯೋಜನೆಯ DPR ಅಂತಿಮ ಹಂತದಲ್ಲಿ"
+]
+```
+
+Leave an entry blank, or omit the list, to fall back to the full point.
+
+**Every image is disclosed on the card that shows it**, not just the first
+one. A reel's fact cards come from `gallery` and its end card from `photo`, so
+every one of them carries its own `nature` label and `credit`. An
+AI-generated picture must be `"nature": "ai"` — it will be labelled
+<span>ಎಐ ರಚಿತ ಚಿತ್ರ</span> on every frame it appears in, and in the caption.
 
 **Every photograph needs a `licence`.** One of `own`, `licensed`, `cc`,
 `public-domain`, `handout`, `fair-dealing`. Anything other than `own` also needs
@@ -133,14 +162,49 @@ feed size.
 
 - If a real picture of the actual scene exists → `nature: "actual"`, and you
   **must** also write a `caption` saying what it shows.
-- If the picture is from the archive or merely illustrative → `nature:
+- If the picture is a real photograph of a similar scene → `nature:
   "representative"` or `"file"`. It will be labelled ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ / ಸಂಗ್ರಹ
-  ಚಿತ್ರ on the card. That is correct and must not be worked around.
+  ಚಿತ್ರ. If the picture was generated — including reused stock — `nature`
+  is `"ai"`. A credit that says AI cannot wear `representative`.
 - **If no honest picture exists, omit `photo` entirely.** The story then gets
   `text_card`, which is a good-looking card built from the brand's own sunset
   horizon. Never attach a decorative stock photo to fill the space. Illustrating
   a Brahmāvara story with a highway bridge signposted HONNAVAR is the specific
   failure this system was built to prevent.
+
+### Festival wishes are not stories
+
+A greeting — Gauri-Ganesha, Deepavali, Ugadi, Rajyotsava, Eid, Christmas — is
+**not** a story. Never send it through `report_card` or an edition: it has no
+source, no status and no headline, and news design makes it read as a report
+about the festival. Write a separate file in `editions/greetings/` with
+`"kind": "greeting"`:
+
+```json
+{
+  "kind": "greeting",
+  "slug": "2026-09-13_gauri_ganesha",
+  "occasion": "ಗೌರಿ ಗಣೇಶ ಹಬ್ಬದ",
+  "blessing": "ವಿಘ್ನ ನಿವಾರಕ ಗಣಪತಿ ಹಾಗೂ ತಾಯಿ ಗೌರಿಯ ಕೃಪೆ ಸದಾ ನಿಮ್ಮ ಮೇಲಿರಲಿ",
+  "theme": "sacred",
+  "photo": {"path": "...", "nature": "ai", "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ", "licence": "own"},
+  "keep_clear": [0.32, 0.66]
+}
+```
+
+`python3 render.py editions/greetings/<file>.json` writes `wish_9x16.jpg`,
+`wish_4x5.jpg`, `wish_1x1.jpg` and the caption to `out/greetings/<slug>/`.
+
+- **`keep_clear` is required with a photo.** It is the band of the image, as
+  `[top, bottom]` fractions of its height, holding the deity or subject. No type
+  will ever be set inside it. Look at the picture and measure it; do not guess.
+- **Themes:** `sacred` (Ganesha, Navaratri, Dasara), `lights` (Deepavali),
+  `harvest` (Ugadi, Sankranti, Bisu), `rajyotsava`, `national`, `serene` (Eid,
+  Christmas, Buddha Purnima).
+- **Keep it short.** occasion ≤ 30, wish ≤ 26, blessing ≤ 96 characters; about 60
+  reads best.
+- No photograph is a valid choice — the poster draws a gold mandala instead.
+  Never use a stock image just to fill the frame.
 
 ---
 
@@ -178,6 +242,11 @@ There is no flag to switch any of this off, and you must not add one.
 | photo with no `credit` | name the photographer, the agency, or `"ಊರ್ಮನಿ ಸುದ್ದಿ ವರದಿಗಾರರಿಂದ"` |
 | `nature: "actual"` with no `caption` | say what the picture shows, or change nature |
 | empty `sources` | name who told you; own reporting counts — `["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"]` |
+| sourced story with no `source_urls` | add an http URL the editor can reopen, or mark own reporting |
+| no `verified_by` (blocks APPROVAL.md, not the render) | a PERSON opens the source, checks the facts, and puts their name here. You cannot fill this in on their behalf — see §6 |
+| unknown `category` | pick from the registry; `governance` is not silent explainer |
+| AI credit with `nature: "representative"` | generated frames, including stock, use `nature: "ai"` |
+| obituary with one source | two sources, or own reporting |
 | `live_url` that is not a URL | only a real stream earns ನೇರ ಪ್ರಸಾರ |
 | unknown field name | you typo'd; the error lists the valid fields |
 
@@ -194,8 +263,9 @@ Two things are computed and cannot be asserted:
 
 ## 6 · Things you must not do
 
-1. **Do not write rendering code.** No Pillow, no canvas, no HTML-to-image. Nine
-   templates already exist. If none fits, say so and stop — do not improvise one.
+1. **Do not write rendering code.** No Pillow, no canvas, no HTML-to-image.
+   Eleven templates already exist (`python3 render.py --describe`). If none
+   fits, say so and stop — do not improvise one.
 2. **Do not hard-code a colour, a font size, or a margin.** Every such value
    lives in `brand/tokens.py`. If you think one needs to change, that is a
    design decision for a human, and `docs/DECISIONS.md` explains why it is what
@@ -207,6 +277,17 @@ Two things are computed and cannot be asserted:
    human, not a plausible-looking string.
 5. **Do not suppress a provenance label.** ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ appearing on a card
    is the system working, not a bug.
+6. **Do not fill in `verified_by` yourself, ever.** It is the name of the
+   person who opened the sources and checked the facts. Putting a name there —
+   yours, the channel's, or the editor's — because the gate is asking for one
+   converts the single check a machine cannot perform into a string a machine
+   wrote. If it is missing, the correct output is to say so and stop. D59.
+7. **Do not write a sign-off.** `SIGNOFF.json` and the judgement block in
+   `APPROVAL.md` record a human verdict on taste, cultural dignity and news
+   judgement. You may prepare the evidence — the frames, the numbers, the
+   options — and you may recommend. You may not sign. D62.
+8. **Do not upload anything.** A person posts every item. That is the product,
+   not an inefficiency.
 
 ---
 
