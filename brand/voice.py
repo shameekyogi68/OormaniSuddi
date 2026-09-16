@@ -40,27 +40,44 @@ from typing import Optional
 from .content import Story
 from .tokens import Motion
 
-def load_gemini_key() -> str:
-    """Load Gemini API key from environment or local untracked secret files (.env, .gemini_key)."""
-    key = os.environ.get('GEMINI_API_KEY')
-    if key and key.strip():
-        return key.strip()
+def load_gemini_key(kind: str = 'voice') -> str:
+    """Load a Gemini key. Prefer a split key, then the shared one.
+
+    `kind='voice'` reads GEMINI_API_KEY_VOICE then GEMINI_API_KEY.
+    `kind='text'`  reads GEMINI_API_KEY_TEXT then GEMINI_API_KEY.
+    The Gemini key is reserved for TTS first. Text fetch should use
+    GEMINI_API_KEY_TEXT when it exists so a busy morning cannot starve voice.
+    """
+    names = {
+        'voice': ('GEMINI_API_KEY_VOICE', 'GEMINI_API_KEY'),
+        'text': ('GEMINI_API_KEY_TEXT', 'GEMINI_API_KEY'),
+    }.get(kind, ('GEMINI_API_KEY',))
+    for name in names:
+        key = os.environ.get(name)
+        if key and key.strip():
+            return key.strip()
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     for filename in ['.env', '.gemini_key']:
         p = os.path.join(base_dir, filename)
-        if os.path.exists(p):
-            try:
-                with open(p, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line.startswith('GEMINI_API_KEY='):
-                            val = line.split('=', 1)[1].strip().strip('"').strip("'")
-                            if val:
-                                return val
-                        elif line and not line.startswith('#') and len(line) > 20 and '=' not in line:
-                            return line
-            except Exception:
-                pass
+        if not os.path.exists(p):
+            continue
+        try:
+            with open(p, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            for name in names:
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith(name + '='):
+                        val = line.split('=', 1)[1].strip().strip('"').strip("'")
+                        if val:
+                            return val
+            if kind == 'voice':
+                for line in lines:
+                    line = line.strip()
+                    if line and not line.startswith('#') and len(line) > 20 and '=' not in line:
+                        return line
+        except Exception:
+            pass
     return ''
 
 DEFAULT_GEMINI_KEY = load_gemini_key()
@@ -72,18 +89,262 @@ VOICE_SAPNA = 'kn-IN-SapnaNeural'
 VOICE_GAGAN = 'kn-IN-GaganNeural'
 DEFAULT_VOICE = VOICE_SAPNA
 
+# ── the anchor's delivery ────────────────────────────────────────────────────
+# edge-tts takes no SSML, so these three plus the punctuation written by
+# _anchor_cadence() ARE the performance.
+#
+#   rate   A newsreader reads faster than conversation and slower than
+#          urgency. +9% off Sapna's baseline lands at roughly the pace of a
+#          Kannada evening bulletin; past about +15% the conjuncts blur.
+#   pitch  Down slightly. The stock voice is tagged "Friendly, Positive",
+#          which is a customer-service register, not a news one; a small drop
+#          reads as composed and authoritative without sounding artificial.
+#   volume A touch up, so the anchor sits confidently over the bed rather
+#          than being lifted there by the mix alone.
+ANCHOR_RATE = '+9%'
+ANCHOR_PITCH = '-4Hz'
+ANCHOR_VOLUME = '+8%'
+
+# Google's Kannada voice. This is a DELIBERATE default, reverted after being
+# switched away and judged worse by a native ear.
+#
+# The argument for switching to edge/kn-IN-SapnaNeural was that it is a real
+# neural voice rather than translate.google.com's pronunciation endpoint, and
+# that it sits in a lower register (183Hz against 238Hz measured on the same
+# sentence). Both of those are true and neither turned out to matter: the
+# owner of this channel listened to the two side by side and the Edge voice
+# was markedly worse for Kannada.
+#
+# The lesson is worth keeping, because it is easy to make again: pitch
+# statistics and "neural beats concatenative" are proxies. Whether a Kannada
+# newsreader sounds right is not a measurable property, and it is not one this
+# repository's author can evaluate. On voice, the native ear decides and
+# nothing else gets a vote.
+#
+# Edge remains one setting away — OORMANI_TTS_ENGINE=edge, or engine='edge' —
+# for anyone who wants to compare again.
+DEFAULT_ENGINE = 'google'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  BROADCAST SPEECH NORMALISATION
+#
+#  Print copy and spoken copy are not the same language. A Kannada news anchor
+#  says "ಗಂಟೆಗೆ 25 ರಿಂದ 35 ಕಿಲೋಮೀಟರ್", never "25 hyphen ಕಿ dot ಮೀ"; says
+#  "1.1 ಲಕ್ಷ ರೂಪಾಯಿ", never "rupee-sign 1.1 ಲಕ್ಷ"; and says "ಶೇಕಡಾ 40", with
+#  the word BEFORE the number, where print writes "40%".
+#
+#  A TTS engine handed the print form reads the print form. That was the last
+#  ten percent: the delivery was fine, the words were wrong. Everything here
+#  converts written Kannada journalism into what a newsreader says out loud.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Abbreviations a reader expands silently and an engine spells out letter by
+# letter. Matched longest-first so "ಕಿ.ಮೀ" wins over "ಮೀ".
+SPOKEN_ABBREV = {
+    'ಚ.ಕಿ.ಮೀ': 'ಚದರ ಕಿಲೋಮೀಟರ್',
+    'ಕಿ.ಮೀ': 'ಕಿಲೋಮೀಟರ್', 'ಕಿ.ಮಿ': 'ಕಿಲೋಮೀಟರ್',
+    'ಮಿ.ಮೀ': 'ಮಿಲಿಮೀಟರ್', 'ಸೆ.ಮೀ': 'ಸೆಂಟಿಮೀಟರ್',
+    'ಡಾ.': 'ಡಾಕ್ಟರ್ ', 'ಶ್ರೀ.': 'ಶ್ರೀ ',
+    'ಸಂ.': 'ಸಂಖ್ಯೆ ', 'ನಂ.': 'ನಂಬರ್ ', 'ರೂ.': 'ರೂಪಾಯಿ ',
+}
+_ABBREV_RE = re.compile('|'.join(
+    re.escape(k) for k in sorted(SPOKEN_ABBREV, key=len, reverse=True)))
+
+# Latin acronyms a Kannada anchor pronounces in Kannada. Left in Latin, the
+# engine either spells them in English or skips them entirely.
+LATIN_SAY = {
+    'CCTV': 'ಸಿಸಿಟಿವಿ', 'KSRTC': 'ಕೆಎಸ್ಆರ್‌ಟಿಸಿ', 'FIR': 'ಎಫ್ಐಆರ್',
+    'PSI': 'ಪಿಎಸ್ಐ', 'NH': 'ಎನ್ಎಚ್', 'SP': 'ಎಸ್ಪಿ', 'DC': 'ಡಿಸಿ',
+    'AI': 'ಎಐ', 'ATM': 'ಎಟಿಎಂ', 'GST': 'ಜಿಎಸ್ಟಿ',
+}
+
+# A decimal point is not a sentence boundary. Protected through the whole
+# pipeline and restored last, because the sentence-spacing pass at the end
+# would otherwise turn "1.1 ಲಕ್ಷ" into "1. 1 ಲಕ್ಷ" — which an engine reads as
+# two separate numbers, and a listener hears as a different amount entirely.
+_DECIMAL = ''
+
+
+# ── how a Kannada anchor says a figure ───────────────────────────────────────
+# A decimal point is punctuation to a TTS engine, not a number. Sent "1.10
+# ಲಕ್ಷ" the engine stops at the dot and reads "one" … "ten lakh" — a different
+# amount, delivered with a pause in the middle of it. Sent "ಕೆ. ಜೆ. ಜಾರ್ಜ್" it
+# treats each initial as a finished sentence and leaves a long gap between the
+# letters of a man's name.
+#
+# Neither is fixable downstream: by the time the text reaches the engine the
+# dots are indistinguishable from full stops. So the figures and the initials
+# are written out here the way they are SAID, and no dot survives that is not
+# the end of a sentence.
+
+# (next scale down, how many of it make one of this scale, genitive linker)
+_KN_SCALE_DOWN = {
+    'ಕೋಟಿ':  ('ಲಕ್ಷ',   100, 'ಕೋಟಿಯ'),
+    'ಲಕ್ಷ':   ('ಸಾವಿರ', 100, 'ಲಕ್ಷದ'),
+    'ಸಾವಿರ': ('ನೂರು',   10, 'ಸಾವಿರದ'),
+}
+
+
+def _say_scaled(whole: str, frac: str, scale: str) -> str:
+    """"1.10 ಲಕ್ಷ" → "1 ಲಕ್ಷದ 10 ಸಾವಿರ" — what a newsreader actually says.
+
+    Kannada money is spoken in whole units of the next scale down, never as a
+    decimal. ₹1.10 ಲಕ್ಷ is one lakh and ten thousand rupees, and that is how a
+    bulletin reads it out.
+
+    The fraction is a fraction OF THE SCALE, so it is converted through the
+    ratio between the two scales — a lakh is 100 thousand, a thousand is only
+    10 hundred. Multiplying the hundredths by a flat ten (the first cut of
+    this) turned 1.10 ಲಕ್ಷ into "1 ಲಕ್ಷದ 100 ಸಾವಿರ", which is eleven lakh.
+    """
+    step = _KN_SCALE_DOWN.get(scale)
+    if not step:
+        return f'{whole} ಪಾಯಿಂಟ್ {frac} {scale}'
+    below, ratio, linker = step
+    hundredths = int(frac.ljust(2, '0')[:2])
+    sub = hundredths * ratio // 100
+    if sub == 0:
+        return f'{whole} {scale}'
+    return f'{whole} {linker} {sub} {below}'
+
+
+def _speech_normalise(text: str) -> str:
+    """Turn written Kannada news copy into what an anchor would say aloud."""
+    t = text
+
+    # Abbreviations BEFORE initials. "ಡಾ." is two Kannada letters and a dot,
+    # which is exactly the shape of an initial, so the initials rule would
+    # otherwise strip its dot and leave "ಡಾ ರಮೇಶ್" instead of "ಡಾಕ್ಟರ್ ರಮೇಶ್".
+    t = _ABBREV_RE.sub(lambda m: SPOKEN_ABBREV[m.group(0)], t)
+
+    # Initials: "ಕೆ.ಜೆ. ಜಾರ್ಜ್" / "ಕೆ. ಜೆ. ಜಾರ್ಜ್" → "ಕೆ ಜೆ ಜಾರ್ಜ್".
+    # The dots make an engine treat each letter as a finished sentence and
+    # leave a long gap inside a person's name. Read without them the letters
+    # run together exactly as they are spoken.
+    t = re.sub(r'(?:^|\s)([A-Za-z\u0C80-\u0CFF]{1,2})\.\s*(?=[A-Za-z\u0C80-\u0CFF]{1,2}\.)',
+               r' \1 ', t)
+    t = re.sub(r'(?:^|\s)([A-Za-z\u0C80-\u0CFF]{1,2})\.\s+(?=[A-Za-z\u0C80-\u0CFF])',
+               r' \1 ', t)
+
+    # Money with a scale word is spoken in whole units of the scale below.
+    # The ₹ is consumed here, so ರೂಪಾಯಿ has to be re-attached — it is what
+    # the symbol MEANT, and dropping it leaves an amount with no currency.
+    t = re.sub(r'(₹)?\s*(\d+)\.(\d{1,2})\s*(ಕೋಟಿ|ಲಕ್ಷ|ಸಾವಿರ)',
+               lambda m: _say_scaled(m.group(2), m.group(3), m.group(4))
+               + (' ರೂಪಾಯಿ' if m.group(1) else ''), t)
+
+    # Any decimal left over is read "ಪಾಯಿಂಟ್", never as a stop.
+    t = re.sub(r'(\d+)\.(\d+)', r'\1 ಪಾಯಿಂಟ್ \2', t)
+
+    # Thousands separators: "1,25,000" read around its commas is nonsense.
+    t = re.sub(r'(?<=\d),(?=\d)', '', t)
+
+    # Currency. Kannada puts ರೂಪಾಯಿ AFTER the amount and after the scale word,
+    # so "₹1.1 ಲಕ್ಷ" is "1.1 ಲಕ್ಷ ರೂಪಾಯಿ", not "ರೂಪಾಯಿ 1.1 ಲಕ್ಷ".
+    num = r'[\d' + _DECIMAL + r']+'
+    t = re.sub(r'₹\s*(' + num + r')\s*(ಲಕ್ಷ|ಕೋಟಿ|ಸಾವಿರ)',
+               lambda m: f'{m.group(1)} {m.group(2)} ರೂಪಾಯಿ', t)
+    t = re.sub(r'₹\s*(' + num + r')', lambda m: f'{m.group(1)} ರೂಪಾಯಿ', t)
+    t = re.sub(r'\bRs\.?\s*(' + num + r')',
+               lambda m: f'{m.group(1)} ರೂಪಾಯಿ', t)
+
+    # Percentages: ಶೇಕಡಾ leads the figure in Kannada. An existing ಶೇ / ಶೇಕಡಾ
+    # prefix is absorbed rather than doubled — "ಶೇ 40%" is one statement of
+    # the fact, not two.
+    t = re.sub(r'(?:ಶೇಕಡಾ|ಶೇ\.?)\s*(' + num + r')\s*%', r'ಶೇಕಡಾ \1', t)
+    t = re.sub(r'(' + num + r')\s*%', r'ಶೇಕಡಾ \1', t)
+
+    # A hyphen between two figures is "ರಿಂದ" (from…to), never a dash.
+    t = re.sub(r'(?<=\d)\s*[-–—]\s*(?=\d)', ' ರಿಂದ ', t)
+
+    # Clock times. A trailing dative in the copy — "9:15 ಕ್ಕೆ" — is CONSUMED,
+    # because the spoken form carries its own ("ನಿಮಿಷಕ್ಕೆ"). Leaving it gave
+    # "9 ಗಂಟೆ 15 ನಿಮಿಷಕ್ಕೆ ಕ್ಕೆ", which the engine dutifully read aloud.
+    def _time(m):
+        h, mi, case = int(m.group(1)), int(m.group(2)), m.group(3)
+        # The case particle is re-attached in the form the STEM takes, not the
+        # form the digits took. ಗಂಟೆ ends in ೆ and takes ಗೆ / ಯ; ನಿಮಿಷ ends in
+        # ಅ and takes ಕ್ಕೆ / ದ. Carrying the written particle across unchanged
+        # produced "10 ಗಂಟೆಕ್ಕೆ", which is not Kannada.
+        if mi == 0:
+            stem, dative, genitive = f'{h} ಗಂಟೆ', 'ಗೆ', 'ಯ'
+        else:
+            stem, dative, genitive = f'{h} ಗಂಟೆ {mi} ನಿಮಿಷ', 'ಕ್ಕೆ', 'ದ'
+        if case in ('ಕ್ಕೆ', 'ಗೆ'):
+            return stem + dative
+        if case == 'ರ':
+            return stem + genitive
+        return stem
+    t = re.sub(r'(\d{1,2}):(\d{2})(?:\s+(ಕ್ಕೆ|ಗೆ|ರ))?(?=\s|[,.]|$)', _time, t)
+
+    # Temperature.
+    t = re.sub(r'(' + num + r')\s*°\s*(?:C|ಸಿ)?',
+               lambda m: f'{m.group(1)} ಡಿಗ್ರಿ ಸೆಲ್ಸಿಯಸ್', t)
+
+    t = _ABBREV_RE.sub(lambda m: SPOKEN_ABBREV[m.group(0)], t)
+    for k, v in LATIN_SAY.items():
+        t = re.sub(r'\b' + k + r'\b', v, t)
+
+    return t
+
+
+def _anchor_cadence(text: str) -> str:
+    """Punctuate for the ear rather than the eye.
+
+    edge-tts accepts no SSML, so every pause an anchor makes has to be written
+    into the text as punctuation. This is where delivery stops sounding like a
+    document being read aloud and starts sounding like someone presenting it:
+    a beat after the dateline, a beat around an attribution, and a full stop
+    that genuinely lands at the end of every sentence — which is what produces
+    the falling final intonation. Without it the engine trails off flat.
+    """
+    t = text
+    # A dateline is announced, then held for a beat.
+    t = re.sub(r'^(\S{3,24}(?:ದಲ್ಲಿ|ನಲ್ಲಿ|ಯಲ್ಲಿ|ಬಳಿ|ಸಮೀಪ))\s+(?![,.])',
+               r'\1, ', t)
+    # Attributions take a breath either side, the way a newsreader separates
+    # the claim from whoever made it.
+    for cue in ('ಪೊಲೀಸರ ಪ್ರಕಾರ', 'ಮೂಲಗಳ ಪ್ರಕಾರ', 'ವರದಿಗಳ ಪ್ರಕಾರ',
+                'ಅಧಿಕಾರಿಗಳ ಪ್ರಕಾರ', 'ಸ್ಥಳೀಯರ ಪ್ರಕಾರ',
+                'ಸ್ಥಳೀಯ ವರದಿಗಳ ಪ್ರಕಾರ'):
+        t = re.sub(r'(?<![,ಀ-೿])\s' + cue + r'(?![,ಀ-೿])',
+                   f', {cue},', t)
+    t = re.sub(r',\s*,+', ',', t)
+    t = re.sub(r',\s*\.', '.', t)
+    t = re.sub(r'\s+([,.])', r'\1', t)
+    t = t.strip()
+    if t and t[-1] not in '.!?':
+        t += '.'
+    return t
+
+
+def _pronunciation_map() -> dict[str, str]:
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        'assets', 'pronunciation.json')
+    try:
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+        return {str(k): str(v) for k, v in data.items() if k and v}
+    except Exception:
+        return {}
+
 
 def _spoken(text: str) -> str:
-    """Normalise one beat into something a TTS engine reads cleanly."""
+    """Normalise one beat into something a TTS engine reads like an anchor."""
     t = re.sub(r'[\r\n\t]+', ' ', text)
+    for src, dst in _pronunciation_map().items():
+        t = t.replace(src, dst)
     # Bullets and dashes are typography, not speech. Left in, the engine either
     # pronounces them or stalls on them.
     t = t.replace('▪', '').replace('•', '').replace('·', ',')
     t = t.replace('—', ', ').replace('–', ', ')
+    t = _speech_normalise(t)
     t = re.sub(r'\s+', ' ', t)
     t = re.sub(r'\s*,\s*', ', ', t)
     t = re.sub(r'\s*\.\s*', '. ', t)
-    return t.strip()
+    t = _anchor_cadence(t.strip())
+    return t.replace(_DECIMAL, '.')
 
 
 # Phrases that identify a beat regardless of where a script puts it. Used only
@@ -116,7 +377,10 @@ def _fit_script_to_cards(script: str, keys: list[str]) -> list[tuple[str, str]]:
     holding "ನಮಸ್ಕಾರ." on its own for four seconds while the next one races
     through three sentences.
     """
-    sents = [s.strip() for s in re.split(r'(?<=[.!?।])\s+', script) if s.strip()]
+    # Protect initials and honorifics with dots (e.g. "ಕೆ.ಜೆ.", "ಕೆ. ಜೆ.", "ಡಾ.", "K.J.")
+    cleaned = re.sub(r'(^|\s)([A-Za-z\u0C80-\u0CFF]{1,2})\.\s*', r'\1\2__DOT__ ', script)
+    cleaned = re.sub(r'__DOT__\s*([A-Za-z\u0C80-\u0CFF]{1,2})\.\s*', r'__DOT__\1__DOT__ ', cleaned)
+    sents = [re.sub(r'__DOT__', '.', s).strip() for s in re.split(r'(?<=[.!?।])\s+', cleaned) if s.strip()]
     if not sents:
         return []
 
@@ -204,42 +468,31 @@ def narration_beats(story: Story) -> list[tuple[str, str]]:
 
     beats: list[tuple[str, str]] = []
 
-    # 1. Anchor hook. Rides the headline card with the lead, so it is part of
-    #    the same beat rather than a scene of its own — a greeting with no
-    #    picture behind it is dead air at exactly the moment the platform is
-    #    deciding whether to distribute this at all.
-    is_urgent = any(k in story.headline or k in (story.deck or '')
-                    for k in ['ಅಪಘಾತ', 'ಸಾವು', 'ಕಳವು', 'ಪೊಲೀಸ್', 'ಬಂಧನ',
-                              'ದಾಳಿ', 'ಪಲ್ಟಿ', 'ದುರಂತ'])
-    hook = ('ನಮಸ್ಕಾರ, ಊರ್ಮನಿ ಸುದ್ದಿಯ ಪ್ರಮುಖ ಸುದ್ದಿ.' if is_urgent
-            else 'ನಮಸ್ಕಾರ, ಊರ್ಮನಿ ಸುದ್ದಿಯ ಕರಾವಳಿ ವಿಶೇಷ ವರದಿಗೆ ಸ್ವಾಗತ.')
-
-    # 2. Spoken headline. A print headline is punctuated for the eye; read
-    #    aloud, a colon becomes a stumble.
-    hl = (story.headline or '').strip()
+    # 1. Open on the news. A ನಮಸ್ಕಾರ greeting costs the first 1.5 seconds
+    #    that decide whether the reel is swiped. D58.
+    hl = (story.reel_line or story.headline or '').strip()
     if hl:
         if ':' in hl:
             prefix, rest = [p.strip() for p in hl.split(':', 1)]
-            if any(k in rest for k in ['ಅಪಘಾತ', 'ಸಾವು', 'ಪಲ್ಟಿ']):
-                hl_spoken = f'{prefix} ಬಳಿ ಭೀಕರ ಅಪಘಾತ ಸಂಭವಿಸಿದ್ದು, {rest}'
-            else:
-                hl_spoken = f'{prefix}ದಲ್ಲಿ {rest}'
+            hl_spoken = f'{prefix}, {rest}'
         else:
             hl_spoken = hl
         hl_spoken = hl_spoken.rstrip('.!?;:') + '.'
     else:
         hl_spoken = ''
 
-    # 3. Ground context (deck) joins the lead beat: both belong to the
-    #    headline card, and splitting them would put a cut mid-thought.
+    # Ground context (deck) only joins if headline is missing or very brief.
     deck = (story.deck or '').strip()
-    deck_spoken = (deck.replace(';', ', ಹಾಗೂ').rstrip('.!?;:') + '.') if deck else ''
+    if deck and not hl:
+        deck_spoken = (deck.replace(';', ', ಹಾಗೂ').rstrip('.!?;:') + '.')
+    else:
+        deck_spoken = ''
 
-    beats.append(('lead', _spoken(' '.join(x for x in (hook, hl_spoken, deck_spoken) if x))))
+    beats.append(('lead', _spoken(' '.join(x for x in (hl_spoken, deck_spoken) if x))))
 
-    # 4. Facts — one beat, one card, each.
+    # 4. Facts — one beat, one card, each (capped at 3 for reel pacing & retention).
     transitions = ['ಇನ್ನು, ', 'ಇದೇ ವೇಳೆ, ', 'ಸ್ಥಳೀಯ ವರದಿಗಳ ಪ್ರಕಾರ, ']
-    for idx, pt in enumerate(story.points):
+    for idx, pt in enumerate(story.points[:3]):
         p_clean = pt.strip().rstrip('.!?;:')
         if not p_clean:
             continue
@@ -268,29 +521,84 @@ def build_narration_script(story: Story) -> str:
     return ' '.join(t for _k, t in narration_beats(story))
 
 
-async def _edge_tts_synthesize(text: str, out_path: str, voice: str = VOICE_SAPNA, rate: str = '+5%') -> str:
-    """Synthesize speech using Edge-TTS neural Kannada female news anchor voice."""
+async def _edge_tts_synthesize(text: str, out_path: str,
+                               voice: str = VOICE_SAPNA,
+                               rate: str = ANCHOR_RATE,
+                               pitch: str = ANCHOR_PITCH,
+                               volume: str = ANCHOR_VOLUME) -> str:
+    """Synthesize one beat in the neural Kannada news-anchor voice.
+
+    The three prosody settings are the delivery. edge-tts accepts no SSML, so
+    rate / pitch / volume plus the punctuation written by `_anchor_cadence`
+    are the whole instrument — see ANCHOR_RATE for why each value is what it
+    is.
+    """
     import edge_tts
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-    comm = edge_tts.Communicate(text, voice, rate=rate)
+    comm = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch,
+                                volume=volume)
     await comm.save(out_path)
     return out_path
 
 
 def _google_tts_synthesize(text: str, out_path: str, tempo: float = 1.15) -> str:
     """Synthesize speech using Google's native Indic Kannada voice engine."""
-    sentences = re.split(r'([.!?।])', text)
-    chunks = []
-    curr = ''
-    for part in sentences:
-        if len(curr) + len(part) < 180:
-            curr += part
-        else:
-            if curr.strip():
+    # Split on SENTENCE ends only — a stop followed by whitespace or the end
+    # of the text. The old pattern split on every '.', including the one in
+    # "1.10" and the ones in "ಕೆ. ಜೆ. ಜಾರ್ಜ್", and because each chunk is a
+    # separate HTTP request and a separate MP3 that is then concatenated,
+    # every one of those became an audible gap in the middle of a number or a
+    # person's name. `_speech_normalise` now removes both kinds of dot before
+    # this runs; this is the second line of defence, so a dot that slips
+    # through can no longer cut the audio in half.
+    # The endpoint refuses anything much past 200 characters, so a sentence
+    # longer than the budget is broken further — at a comma, and failing that
+    # at a space. Never mid-token: a split is a separate request and a
+    # separate MP3, so it is an audible gap wherever it lands.
+    LIMIT = 180
+
+    def _split_long(seg: str) -> list[str]:
+        if len(seg) <= LIMIT:
+            return [seg]
+        out, cur = [], ''
+        for piece in re.split(r'(?<=,)\s*', seg):
+            if cur and len(cur) + len(piece) > LIMIT:
+                out.append(cur.strip())
+                cur = piece
+            else:
+                cur += (' ' if cur and not cur.endswith(' ') else '') + piece
+        if cur.strip():
+            out.append(cur.strip())
+        # Still too long (a sentence with no commas) — fall back to words.
+        final = []
+        for c in out:
+            if len(c) <= LIMIT:
+                final.append(c)
+                continue
+            cur = ''
+            for w in c.split():
+                if cur and len(cur) + len(w) + 1 > LIMIT:
+                    final.append(cur)
+                    cur = w
+                else:
+                    cur = f'{cur} {w}'.strip()
+            if cur:
+                final.append(cur)
+        return final
+
+    chunks, curr = [], ''
+    for part in re.split(r'(?<=[.!?।])(?=\s|$)', text):
+        if not part.strip():
+            continue
+        for seg in _split_long(part.strip()):
+            if curr and len(curr) + len(seg) + 1 > LIMIT:
                 chunks.append(curr.strip())
-            curr = part
+                curr = seg
+            else:
+                curr = f'{curr} {seg}'.strip()
     if curr.strip():
         chunks.append(curr.strip())
+    chunks = [c for c in chunks if c.strip()]
 
     temp_dir = out_path + '_gchunks'
     os.makedirs(temp_dir, exist_ok=True)
@@ -410,22 +718,97 @@ class VoiceTrack:
         return next((s for s in self.segments if s.key == key), None)
 
 
+# ── the synthesis cache ──────────────────────────────────────────────────────
+# A beat is synthesised from exactly three things: the normalised text, the
+# engine, and the voice. Nothing else can change its audio. So a re-render
+# after a typo fix in story 3 has no business paying for story 1's narration
+# again — on a morning with four reels that is most of the wait, and on a
+# metered API it is most of the bill.
+#
+# Keyed on the content, so a changed word misses and an unchanged one hits.
+# Delete the folder to invalidate; nothing else needs to know it exists.
+TTS_CACHE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'build', 'tts_cache')
+
+
+def _cache_key(text: str, engine: str, voice: str | None) -> str:
+    import hashlib
+    blob = f'{engine}\x00{voice or ""}\x00{text}'.encode('utf-8')
+    return hashlib.sha256(blob).hexdigest()[:24]
+
+
+def cache_enabled() -> bool:
+    return os.environ.get('OORMANI_TTS_CACHE', '1') not in ('0', 'off', 'no')
+
+
+# The order a failing engine falls through. The native ear chose Google; edge
+# is the neural voice it rejected, which makes it a poor default and a
+# perfectly good lifeboat. A whole day's package must not be lost to one
+# engine having a bad morning — but the fallback is RECORDED, not silent,
+# because a reel narrated by the rejected voice is something the editor has to
+# know about before it goes out.
+FALLBACK_ORDER = {
+    'google': ('google', 'edge', 'gemini'),
+    'edge':   ('edge', 'google', 'gemini'),
+    'gemini': ('gemini', 'google', 'edge'),
+}
+
+# Filled by _synth_one whenever a beat did not come from the chosen engine.
+FALLBACKS_USED: list[tuple[str, str, str]] = []   # (from, to, why)
+
+
+def _synth_with(eng: str, text: str, out_path: str,
+                voice: str | None, api_key: str | None) -> None:
+    if eng == 'gemini':
+        _gemini_tts_synthesize(text, out_path, voice=voice or 'Aoede',
+                               api_key=api_key)
+    elif eng == 'google':
+        _google_tts_synthesize(text, out_path, tempo=1.15)
+    else:
+        asyncio.run(_edge_tts_synthesize(text, out_path,
+                                         voice=voice or DEFAULT_VOICE))
+
+
 def _synth_one(text: str, out_path: str, engine: str,
                voice: str | None, api_key: str | None) -> str:
-    """Render one beat with the selected engine, falling back gracefully."""
+    """Render one beat with the selected engine, falling back gracefully.
+
+    Three behaviours the caller does not have to think about: the cache, the
+    fallback chain, and the record of which engine actually spoke.
+    """
     eng = (os.environ.get('OORMANI_TTS_ENGINE') or engine).lower()
-    if eng == 'gemini':
-        _gemini_tts_synthesize(text, out_path, voice=voice or 'Aoede', api_key=api_key)
-    elif eng == 'edge':
-        asyncio.run(_edge_tts_synthesize(text, out_path,
-                                         voice=voice or DEFAULT_VOICE, rate='+5%'))
+
+    if cache_enabled():
+        key = _cache_key(text, eng, voice)
+        cached = os.path.join(TTS_CACHE, f'{key}{os.path.splitext(out_path)[1] or ".mp3"}')
+        if os.path.exists(cached) and os.path.getsize(cached) > 512:
+            shutil.copy2(cached, out_path)
+            return out_path
     else:
+        cached = ''
+
+    chain = FALLBACK_ORDER.get(eng, (eng,))
+    last: Exception | None = None
+    for i, candidate in enumerate(chain):
         try:
-            _google_tts_synthesize(text, out_path, tempo=1.15)
-        except Exception:
-            asyncio.run(_edge_tts_synthesize(text, out_path,
-                                             voice=voice or DEFAULT_VOICE, rate='+5%'))
-    return out_path
+            _synth_with(candidate, text, out_path, voice, api_key)
+            if os.path.exists(out_path) and os.path.getsize(out_path) > 512:
+                if i:
+                    FALLBACKS_USED.append((eng, candidate, str(last)))
+                    print(f'      ! TTS fell back {eng} → {candidate} ({last})')
+                if cached:
+                    try:
+                        os.makedirs(TTS_CACHE, exist_ok=True)
+                        shutil.copy2(out_path, cached)
+                    except OSError:
+                        pass
+                return out_path
+            last = RuntimeError(f'{candidate} produced an empty file')
+        except Exception as e:      # noqa: BLE001 — every engine fails its own way
+            last = e
+    raise RuntimeError(
+        f'every TTS engine failed for this beat; last was {last}') from last
 
 
 # One PCM format for every piece that goes into the master. The concat
@@ -451,7 +834,7 @@ def _silence(path: str, seconds: float) -> str:
 
 
 def synthesize_track(story: Story, out_path: str,
-                     engine: str = 'google',
+                     engine: str = DEFAULT_ENGINE,
                      voice: str | None = None,
                      api_key: str | None = None,
                      lead_in: float = Motion.vo_lead,
@@ -571,7 +954,7 @@ def synthesize_track(story: Story, out_path: str,
 
 
 def synthesize_narration(story: Story, out_path: str,
-                         engine: str = 'google',
+                         engine: str = DEFAULT_ENGINE,
                          voice: str | None = None,
                          script: str | None = None,
                          api_key: str | None = None) -> tuple[str, float, str]:

@@ -64,7 +64,7 @@ class Surface:
             out = out.resize((self.w, self.h), Image.Resampling.LANCZOS)
         return out.convert('RGB')
 
-    def save(self, path: str, quality: int = 95):
+    def save(self, path: str, quality: int = 95, target_kb: int | None = None):
         img = self.finish()
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         ext = os.path.splitext(path)[1].lower()
@@ -73,9 +73,44 @@ class Surface:
             # rail turns to mush under the default 4:2:0 subsampling.
             img.save(path, 'JPEG', quality=quality, subsampling=0,
                      optimize=True, progressive=True)
+            if target_kb:
+                _fit_to_size(img, path, target_kb, quality)
         else:
             img.save(path, optimize=True)
         return path
+
+
+def _fit_to_size(img: Image.Image, path: str, target_kb: int,
+                 start_quality: int = 95) -> None:
+    """Bring a forward-bound JPEG under its target without wrecking the type.
+
+    A broadsheet is the format meant to grow this channel, and it grows it by
+    being forwarded on rural mobile data. A 5 MB file does not get forwarded;
+    it gets left in the chat. Quality 95 at 4:4:4 is the right choice for a
+    card someone opens — it is the wrong choice for a file someone sends.
+
+    Quality comes down in steps first, because that costs the least. Chroma
+    subsampling is the last resort and is stepped to 4:2:2, never 4:2:0:
+    Kannada matras are one or two pixels wide and 4:2:0 is what turns a
+    coloured conjunct on the category rail into a smear.
+    """
+    import os as _os
+    ceiling = target_kb * 1024
+    if _os.path.getsize(path) <= ceiling:
+        return
+    for q in range(start_quality - 5, 63, -6):
+        img.save(path, 'JPEG', quality=q, subsampling=0,
+                 optimize=True, progressive=True)
+        if _os.path.getsize(path) <= ceiling:
+            return
+    for q in (78, 72, 66):
+        img.save(path, 'JPEG', quality=q, subsampling=1,   # 4:2:2
+                 optimize=True, progressive=True)
+        if _os.path.getsize(path) <= ceiling:
+            return
+    # Still over. Stop rather than degrade further — past this the honest
+    # diagnosis is that the card carries more picture than a forward can, and
+    # qa.inspect() will say so. Silently shipping mush would be worse.
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -489,6 +524,15 @@ def editorial_plate(sf: Surface, box, cat: dict, seed: str = '',
     An earlier version rendered a soft photographic sunset. It was dropped: a
     blurry gradient sun reads as a bad photograph rather than as a designed
     plate, and a bad photograph is exactly what this exists to avoid.
+
+    **It is a family, not one drawing.** With seventeen stock images and seven
+    taluks, a photo-less story is not an exception — and one identical plate
+    appearing four times in a carousel is the thing that makes a feed look
+    generated. Every variable below is drawn from a stable digest of the
+    headline, so a given story's plate is the same forever (the golden test
+    depends on that) while two stories never share one. The grammar does not
+    vary: ink sky lifted toward the category hue, a gold disc ON the horizon
+    line, a ruled sea, a broken glint. Only the weather does. D66.
     """
     ss = sf.ss
     x0, y0, x1, y1 = [v * ss for v in box]
@@ -514,12 +558,24 @@ def editorial_plate(sf: Surface, box, cat: dict, seed: str = '',
     #               of a 16:9 frame empty
     landscape = aspect < 0.8
     horizon = 0.34 if aspect > 1.15 else (0.44 if aspect > 0.8 else 0.40)
+    # The aspect decides where the horizon BELONGS; the seed moves it within a
+    # band narrow enough that the type below it still has its room.
+    horizon = float(np.clip(horizon + rnd.uniform(-0.035, 0.035), 0.28, 0.50))
+
+    # Which coast this plate is. Each is the same geometry under different
+    # weather — the variation a reader notices, and none of it photographic.
+    mood = int(rnd.integers(0, 4))      # 0 clear · 1 banded · 2 overcast · 3 night
 
     # ── sky: ink, lifted toward the category hue near the horizon ────────
     yy = np.linspace(0.0, 1.0, H)[:, None]
+    # How far the sky lifts toward the category hue, and how far the sea does.
+    # Night keeps almost all of the ink; overcast lifts least of the four but
+    # sits flatter, which is what reads as weather rather than as a bug.
+    lift, wet = {0: (0.42, 0.16), 1: (0.50, 0.19),
+                 2: (0.30, 0.13), 3: (0.20, 0.09)}[mood]
     top = np.array(C.ink_950, np.float32)
-    mid = np.array(mix(C.ink_850, rail, 0.42), np.float32)
-    sea = np.array(mix(C.ink_900, rail, 0.16), np.float32)
+    mid = np.array(mix(C.ink_850, rail, lift), np.float32)
+    sea = np.array(mix(C.ink_900, rail, wet), np.float32)
     deep = np.array(C.ink_950, np.float32)
     t_sky = np.clip(yy / horizon, 0, 1) ** 1.5
     t_sea = np.clip((yy - horizon) / (1 - horizon), 0, 1) ** 0.8
@@ -534,42 +590,107 @@ def editorial_plate(sf: Surface, box, cat: dict, seed: str = '',
     d = ImageDraw.Draw(im, 'RGBA')
     hy = int(horizon * H)
 
+    # ── the sky's weather ────────────────────────────────────────────────
+    # Ruled bands, in the same engraved language as the sea, so a cloud is
+    # drawn the way the water is drawn. Never soft, never photographic.
+    if mood in (1, 2):
+        n_band = int(rnd.integers(3, 6)) if mood == 1 else int(rnd.integers(5, 9))
+        for b in range(n_band):
+            # Bands crowd the lower sky. Spread evenly to the top they read as
+            # a ruled grid; gathered near the horizon they read as cloud lying
+            # over the sea, which is what a coastal evening actually looks
+            # like — and it leaves the upper sky clear for the headline.
+            t = (b + float(rnd.uniform(0.0, 0.6))) / n_band
+            by = int(hy * (0.34 + 0.60 * (t ** 0.75)))
+            bh = max(1, int(ss * (2.2 if mood == 1 else 1.3)))
+            # A band is a SEGMENT, never a full rule: it starts somewhere and
+            # ends somewhere, both varying, and never spans the whole frame.
+            bw = W * float(rnd.uniform(0.18, 0.56))
+            bx0 = float(rnd.uniform(-0.06, 1.06 - bw / W)) * W
+            # Alpha varies per band; a stack at one value is a diagram.
+            a_band = float(rnd.uniform(0.016, 0.034 if mood == 1 else 0.026))
+            d.rectangle([int(bx0), by, int(bx0 + bw), by + bh - 1],
+                        fill=alpha(C.paper_50, a_band))
+    elif mood == 3:
+        # Night: a scatter of single-pixel stars, thinning toward the horizon
+        # so the sky still reads as having depth.
+        for _ in range(int(rnd.integers(26, 46))):
+            sx = int(rnd.uniform(0, W))
+            t = float(rnd.uniform(0, 1)) ** 1.8      # crowd the top
+            sy = int(t * hy * 0.88)
+            a_star = 0.30 * (1.0 - sy / max(1.0, hy)) + 0.06
+            sr = max(1, int(ss * 0.7))
+            d.rectangle([sx, sy, sx + sr - 1, sy + sr - 1],
+                        fill=alpha(C.paper_50, a_star))
+
     # ── ruled sea: subtle engraved horizon gradient ──────────────────────
+    # Calm water carries fewer, wider-spaced rules; a rough sea carries more.
+    rules_max = {0: 8, 1: 10, 2: 11, 3: 6}[mood]
     y, gap, k = hy + int(H * 0.040), H * 0.024, 0
-    while y < H and k < 8:
+    while y < H and k < rules_max:
         w = max(1, int(ss * 0.6))
         d.rectangle([0, y, W, y + w - 1],
                     fill=alpha(C.paper_50, max(0.01, 0.05 / (1.0 + k * 0.4))))
-        gap *= 1.4
+        gap *= 1.4 if mood != 2 else 1.28
         y += int(gap)
         k += 1
 
     # ── the sun: a crisp disc sitting ON the horizon, small ──────────────
-    r = int(W * (0.038 if landscape else 0.052))
-    cx = int(W * ((0.70 if landscape else 0.30) + float(rnd.uniform(-0.04, 0.04))))
+    # Size and glow ride with the weather: a clear evening disc is larger and
+    # warmer, an overcast one is small and barely lit, a night one is a moon.
+    base_r = 0.038 if landscape else 0.052
+    r = max(2, int(W * base_r * {0: 1.14, 1: 1.0, 2: 0.82, 3: 0.72}[mood]
+                   * float(rnd.uniform(0.92, 1.08))))
+    # The disc stays on its side of the frame — that placement counterweights
+    # the type and is not a thing to randomise — but not at the same pixel.
+    cx = int(W * ((0.70 if landscape else 0.30) + float(rnd.uniform(-0.07, 0.07))))
+    disc = C.gold_500 if mood != 3 else mix(C.gold_300, C.paper_50, 0.45)
+    glow_a = {0: 0.32, 1: 0.26, 2: 0.15, 3: 0.12}[mood]
     glow = Image.new('RGBA', (r * 8, r * 8), (0, 0, 0, 0))
     ImageDraw.Draw(glow).ellipse([r * 3, r * 3, r * 5, r * 5],
-                                 fill=alpha(C.gold_500, 0.26))
+                                 fill=alpha(disc, glow_a))
     im.alpha_composite(glow.filter(ImageFilter.GaussianBlur(r * 1.2)),
                        (cx - r * 4, hy - r * 4))
-    d.ellipse([cx - r, hy - r, cx + r, hy + r], fill=(*C.gold_500, 255))
+    d.ellipse([cx - r, hy - r, cx + r, hy + r], fill=(*disc, 255))
 
     # ── the sun's reflection: a broken gold glint down the sea ───────────
     # Stippled dashes directly under the sun, narrowing and fading with
     # distance — the one move that makes the plate read as a *scene*.
+    # A calm sea holds a long glint; a rough or overcast one breaks it up.
+    n_glint = {0: 8, 1: 7, 2: 5, 3: 6}[mood]
+    glint_a = {0: 0.38, 1: 0.34, 2: 0.20, 3: 0.22}[mood]
     gy = hy + int(H * 0.022)
     gw, step = r * 1.35, int(H * 0.016)
     j = 0
-    while gy < H - 2 and j < 7:
+    while gy < H - 2 and j < n_glint:
         fw = gw * (1.0 - 0.10 * j) * (0.55 + 0.45 * float(rnd.uniform(0, 1)))
         fx = cx + float(rnd.uniform(-0.18, 0.18)) * gw
-        a_ref = max(0.0, 0.34 - j * 0.052)
+        a_ref = max(0.0, glint_a - j * 0.052)
         if fw >= 1 and a_ref > 0.02:
             hh = max(1, int(ss * 0.8))
             d.rectangle([int(fx - fw), gy, int(fx + fw), gy + hh - 1],
-                        fill=alpha(C.gold_400, a_ref))
+                        fill=alpha(C.gold_400 if mood != 3 else C.gold_300,
+                                   a_ref))
         gy += step
         j += 1
+
+    # ── a headland, on the side the sun is not ───────────────────────────
+    # A flat horizon from edge to edge reads as a diagram. One low silhouette
+    # makes it a coast — drawn as a hard-edged polygon, not a blurred mass,
+    # because the whole plate is engraved rather than photographed. Present on
+    # most plates, absent on some, so even the silhouette is not a signature.
+    if float(rnd.uniform(0, 1)) < 0.72:
+        far_side = 0 if cx > W * 0.5 else 1          # opposite the disc
+        hw = int(W * float(rnd.uniform(0.20, 0.38)))
+        peak = int(H * float(rnd.uniform(0.022, 0.050)))
+        shoulder = int(peak * float(rnd.uniform(0.30, 0.62)))
+        if far_side == 0:
+            pts = [(0, hy), (0, hy - shoulder),
+                   (int(hw * 0.42), hy - peak), (hw, hy)]
+        else:
+            pts = [(W, hy), (W, hy - shoulder),
+                   (W - int(hw * 0.42), hy - peak), (W - hw, hy)]
+        d.polygon(pts, fill=alpha(C.ink_950, 0.82))
 
     # ── the horizon rule, drawn over the sun so it reads as a horizon ────
     d.rectangle([0, hy, W, hy + max(1, ss)], fill=alpha(C.gold_400, 0.62))

@@ -8,8 +8,7 @@ from brand import typo, components as cp
 from brand.surface import (Surface, scrim, rule, vrule, panel, place_photo, grain,
                            radial_glow, paste_logo, duotone, house_grade, cover)
 from brand.tokens import (C, Role, T, Grid, fmt, category, alpha, Grade,
-                          Brand,
-                          Brand)
+                          Brand, Limits)
 from brand.content import Story, Edition
 
 
@@ -138,4 +137,8 @@ def broadsheet(edition: Edition, path: str) -> str:
                    sf.s(m), sf.s(foot_top - 30), f_src, Role.text_faint)
     cp.footer(sf, m, foot_top, cw, right=Brand.coverage)
     grain(sf, Grade.grain, Grade.grain_shadow_bias)
-    return sf.save(path)
+    # The broadsheet exists to be FORWARDED. On coastal mobile data a file
+    # that has to be waited for is a file that gets left in the chat, so this
+    # one deliverable is fitted to a size rather than to a quality number.
+    # Everything else in the house still saves at 95 / 4:4:4.
+    return sf.save(path, target_kb=Limits.forward_target_kb)
