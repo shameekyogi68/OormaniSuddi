@@ -7,10 +7,15 @@ cares about. Missing Krishna Janmashtami in Udupi is a miss a reader remembers
 longer than any good story — and the way it gets missed is never a decision,
 it is a Tuesday.
 
-    python3 scripts/calendar.py                 # the next 30 days
-    python3 scripts/calendar.py --days 90
-    python3 scripts/calendar.py --scaffold ganesha   # start the greeting JSON
-    python3 scripts/calendar.py --reviews       # what is due, and what is overdue
+Not named calendar.py, and it matters: a module of that name in scripts/
+shadows the standard library's `calendar` for anything run from that directory,
+and Python's own date parsing depends on it. It broke trafilatura — and so the
+whole 06:05 intake — the first time the real fetch ran after this was added.
+
+    python3 scripts/whats_on.py                 # the next 30 days
+    python3 scripts/whats_on.py --days 90
+    python3 scripts/whats_on.py --scaffold ganesha   # start the greeting JSON
+    python3 scripts/whats_on.py --reviews       # what is due, and what is overdue
 
 On lunar dates this tool tells you the MONTH and refuses to tell you the day.
 Every Hindu and Islamic festival here moves with its own calendar, and a
@@ -209,7 +214,7 @@ def reviews(mark: str = '') -> int:
               + ('  → DUE' if late else f'  → in {due_in}d'))
         if late:
             print(f'        {r["what"]}')
-            print(f'        mark done: python3 scripts/calendar.py '
+            print(f'        mark done: python3 scripts/whats_on.py '
                   f'--reviews --done {r["id"]}')
     print()
     if overdue:

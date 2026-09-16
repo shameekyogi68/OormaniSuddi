@@ -45,11 +45,11 @@ except Exception:
   # a festival three days out is still a shoot you can arrange, and one that
   # is tomorrow is a card you rush.
   {
-    /usr/bin/env python3 scripts/calendar.py --days 21
-    /usr/bin/env python3 scripts/calendar.py --reviews
+    /usr/bin/env python3 scripts/whats_on.py --days 21
+    /usr/bin/env python3 scripts/whats_on.py --reviews
   } >> "$LOG" 2>&1
 
-  DUE=$(/usr/bin/env python3 scripts/calendar.py --reviews 2>/dev/null | grep -c '⚠️' || true)
+  DUE=$(/usr/bin/env python3 scripts/whats_on.py --reviews 2>/dev/null | grep -c '⚠️' || true)
   if [ "${DUE:-0}" -gt 0 ]; then
     notify "Tip sheet ready · $DUE review(s) due" "$TIPS — see $LOG"
   else

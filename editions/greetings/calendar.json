@@ -1,11 +1,11 @@
 {
   "kind": "editorial_calendar",
   "covers": "2026-09-16 → 2027-09-30",
-  "purpose": "A local channel is judged on whether it turned up for the things its town cares about. Missing Krishna Janmashtami in Udupi, or posting a Rajyotsava card on the 2nd, is the kind of miss a reader remembers longer than any good story. This file is what scripts/calendar.py reads to tell you what is coming.",
+  "purpose": "A local channel is judged on whether it turned up for the things its town cares about. Missing Krishna Janmashtami in Udupi, or posting a Rajyotsava card on the 2nd, is the kind of miss a reader remembers longer than any good story. This file is what scripts/whats_on.py reads to tell you what is coming.",
 
   "how_dates_work": {
     "fixed": "Solar or civil. The date is the date. Safe to schedule against.",
-    "lunar": "Moves every year with the panchanga. The MONTH here is reliable and the DAY is not recorded, because inventing one would be worse than leaving it blank — a greeting posted on the wrong day is more embarrassing than no greeting. Confirm each from a Udupi panchanga at the start of its month; scripts/calendar.py reminds you.",
+    "lunar": "Moves every year with the panchanga. The MONTH here is reliable and the DAY is not recorded, because inventing one would be worse than leaving it blank — a greeting posted on the wrong day is more embarrassing than no greeting. Confirm each from a Udupi panchanga at the start of its month; scripts/whats_on.py reminds you.",
     "season": "Not a day at all — a window the desk should be reporting inside."
   },
 

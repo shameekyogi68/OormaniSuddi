@@ -1661,7 +1661,7 @@ day is a reason to publish less, never a reason to publish less carefully.
 
 **Decided.** `editions/greetings/calendar.json` holds the year's observances,
 the seasons the desk should be reporting inside, and five recurring reviews
-with intervals. `scripts/calendar.py` says what is coming and what is overdue.
+with intervals. `scripts/whats_on.py` says what is coming and what is overdue.
 
 **Why.** A local channel is judged on whether it turned up for the things its
 town cares about. Missing Krishna Janmashtami in Udupi is a miss a reader
@@ -1685,7 +1685,7 @@ rather than anybody's.
 backup nobody has ever restored is a hope, and finding that out after a disk
 failure is finding it out at the only moment it cannot be fixed.
 
-`editions/greetings/calendar.json` · `scripts/calendar.py`
+`editions/greetings/calendar.json` · `scripts/whats_on.py`
 
 ---
 

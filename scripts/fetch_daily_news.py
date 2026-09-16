@@ -40,6 +40,12 @@ FAIL_MARKER = os.path.join(INBOX_DIR, '.fetch_failed')
 MIN_SOURCES = 3
 MAX_RETRIES = 3
 BACKOFF_BASE = 4
+# The text model, overridable without editing code. Google retires these on
+# their own schedule — gemini-2.5-flash went 404 for new users while this
+# pipeline was still asking for it every morning, and the only sign was a line
+# in a log nobody reads. See _optional_extract: a model that is GONE is now
+# reported loudly and not retried.
+TEXT_MODEL = os.environ.get('OORMANI_TEXT_MODEL', 'gemini-3.6-flash')
 HTTP_TIMEOUT = 10
 USER_AGENT = (
     'OormaniSuddi-newsroom/1.0 (+https://instagram.com/oormanisuddi; '
@@ -362,21 +368,112 @@ def _normalise(text: str) -> str:
     return re.sub(r'[^\wಀ-೿]+', ' ', text.lower())
 
 
-# Kannada agglutinates: the source writes ಉಡುಪಿ and the lead writes
-# ಉಡುಪಿಯಲ್ಲಿ, ಉಡುಪಿಗೆ, ಉಡುಪಿಯ. A case ending is grammar, not an invented fact,
-# so a token counts as supported when the source carries any stem of it down
-# to this length. Below four characters a "stem" matches everything and the
-# check stops meaning anything.
+def _place_bridge() -> dict[str, str]:
+    """Latin place name → Kannada, reusing the TTS pronunciation lexicon.
+
+    Coastal headlines are routinely mixed script: "Udupi: ಅಧಿಕ ಲಾಭದ ಆಮಿಷ".
+    The lead then writes ಉಡುಪಿಯಲ್ಲಿ, which appears nowhere in the source as
+    far as a byte comparison is concerned — so the place name, the one thing
+    we are most confident IS supported, got flagged as invented.
+
+    assets/pronunciation.json already carries exactly this mapping, because
+    the TTS engine needed it for the same names. One file, two uses.
+    """
+    path = os.path.join(ROOT, 'assets', 'pronunciation.json')
+    try:
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+        return {str(k).lower(): str(v) for k, v in data.items() if k and v}
+    except Exception:
+        return {}
+
+
+_PLACES = _place_bridge()
+
+
+def _expand_abbreviations(text: str) -> str:
+    """ರೂ. → ರೂಪಾಯಿ, ಕಿ.ಮೀ → ಕಿಲೋಮೀಟರ್, and the rest.
+
+    A source headline writes `ಲಕ್ಷಾಂತರ ರೂ.` and the lead writes `ಲಕ್ಷಾಂತರ
+    ರೂಪಾಯಿ`. That is the same fact spelled out, not a new one — but a byte
+    comparison sees an unsupported word and flags the money, which is exactly
+    the kind of false alarm that trains an editor to skip the flags.
+
+    `brand/voice.SPOKEN_ABBREV` already holds this table, because the TTS
+    engine needed the identical expansions to read a bulletin aloud. Importing
+    it keeps one list rather than two that drift.
+    """
+    try:
+        from brand.voice import SPOKEN_ABBREV, _ABBREV_RE
+    except Exception:
+        return text
+    return _ABBREV_RE.sub(lambda m: SPOKEN_ABBREV[m.group(0)], text)
+
+
+# Kannada agglutinates and it derives, and neither is an invented fact.
+#
+# The source writes ಉಡುಪಿ and the lead writes ಉಡುಪಿಯಲ್ಲಿ. The source writes
+# ಮಳೆ and the lead writes ಮಳೆಯಾಗುವ. The source writes ವಂಚನೆ and the lead
+# writes ವಂಚಿಸಲಾಗಿದೆ. Flagging any of those is how a check meant to catch an
+# invented helpline number ends up firing on thirty leads out of thirty-two —
+# at which point the editor stops reading it and it protects nothing. That
+# happened on the first real run after this was built.
+#
+# So: match in BOTH directions on a stem, and skip tokens that are plainly
+# verb forms. What survives is what the check is actually for — names,
+# places, institutions and figures that appear nowhere in the source.
 _MIN_STEM = 4
 
+# Endings that mark a Kannada verbal or participial form. A verb is how the
+# lead says the thing; it is not a fact the lead is asserting. Nothing
+# dangerous — no name, no number, no institution — ends like this.
+_VERB_TAILS = (
+    'ಲಾಗಿದೆ', 'ಲಾಗಿತ್ತು', 'ಲಾಗುತ್ತದೆ', 'ಲಾಗುವ',
+    'ುತ್ತಿದ್ದ', 'ುತ್ತಿದೆ', 'ುತ್ತಾರೆ', 'ುತ್ತದೆ',
+    'ಾಗಿದೆ', 'ಾಗಿತ್ತು', 'ಾಗುವ', 'ಾಗಿ',
+    'ಿಸಲಾಗಿದೆ', 'ಿಸಿದ', 'ಿಸುವ', 'ಿಸಲು',
+    'ಿದ್ದಾರೆ', 'ಿದ್ದಾನೆ', 'ಿದ್ದಳು', 'ಿದ್ದು', 'ಿದರು', 'ಿತ್ತು', 'ಿದೆ', 'ಿದ',
+    'ಯಾಗಿದೆ', 'ವಾಗಿದೆ', 'ಕೊಂಡು', 'ವುದು', 'ುವುದು',
+)
 
-def _supported(token: str, haystack: str) -> bool:
+
+def _is_verb_form(token: str) -> bool:
+    """A Kannada verb or participle. Deliberately length-gated: short words
+    ending in ಿದ are often nouns, and over-skipping would hide real facts."""
+    return len(token) > 5 and any(token.endswith(t) for t in _VERB_TAILS)
+
+
+def _kannada_share(text: str) -> float:
+    letters = [c for c in text if c.isalpha()]
+    if not letters:
+        return 0.0
+    return sum(1 for c in letters if 'ಀ' <= c <= '೿') / len(letters)
+
+
+# The marker returned when the lead and its source are in different scripts.
+# Google News hands us English headlines; the model writes the lead in
+# Kannada. Every Kannada word then "appears nowhere in the source", which is
+# true and completely useless — it flags the whole lead and tells the editor
+# nothing about which part to doubt.
+#
+# Saying "this one cannot be checked" is a different and far more honest
+# statement than "these words are invented", and it points at the right
+# action: open the link and read it, because nothing here can help you.
+UNCHECKABLE = '⟨source is not in Kannada — open the link⟩'
+
+
+def _supported(token: str, haystack_tokens: set, haystack: str) -> bool:
     low = token.lower()
     if low in haystack:
         return True
     # Latin and digits do not agglutinate — an exact miss is a real miss.
     if not any('ಀ' <= ch <= '೿' for ch in low):
         return False
+    # The lead's word GREW OUT OF a source word:  ಮಳೆ → ಮಳೆಯಾಗುವ
+    for h in haystack_tokens:
+        if low.startswith(h[:_MIN_STEM]):
+            return True
+    # The lead's word is an inflection of a source word: ಉಡುಪಿಯಲ್ಲಿ → ಉಡುಪಿ
     for cut in range(len(low) - 1, _MIN_STEM - 1, -1):
         if low[:cut] in haystack:
             return True
@@ -391,7 +488,19 @@ def unsupported_tokens(lead: str, source_text: str) -> list[str]:
     """
     if not lead.strip() or not source_text.strip():
         return []
-    hay = _normalise(source_text)
+    # A Kannada lead against an English source cannot be grounded word by
+    # word, and pretending otherwise flags everything. Say so instead.
+    if _kannada_share(lead) > 0.5 and _kannada_share(source_text) < 0.15:
+        return [UNCHECKABLE]
+
+    # The source's abbreviations, spelled out the way the lead spells them.
+    hay = _normalise(_expand_abbreviations(source_text))
+    # Bring the Kannada spelling of any Latin place name in the source into
+    # the haystack, so "Udupi:" in the headline supports ಉಡುಪಿಯಲ್ಲಿ in the lead.
+    for latin, kannada in _PLACES.items():
+        if latin in hay:
+            hay += ' ' + kannada.lower()
+    hay_tokens = {t for t in hay.split() if len(t) >= _MIN_STEM}
     out: list[str] = []
     for tok in _TOKEN.findall(lead):
         low = tok.lower()
@@ -403,7 +512,10 @@ def unsupported_tokens(lead: str, source_text: str) -> list[str]:
         is_number = low[0].isdigit()
         if not is_number and len(low) < 3:
             continue
-        if _supported(tok, hay):
+        # A verb is how the lead says the thing, not a claim it is making.
+        if not is_number and _is_verb_form(low):
+            continue
+        if _supported(tok, hay_tokens, hay):
             continue
         if tok not in out:
             out.append(tok)
@@ -413,18 +525,24 @@ def unsupported_tokens(lead: str, source_text: str) -> list[str]:
 def audit_groundedness(tips: list[Tip]) -> int:
     """Flag every lead against the text it was written from. Returns flagged."""
     flagged = 0
+    cross = 0
     for t in tips:
         if not t.lead_kn or t.lead_kn.strip() == t.headline.strip():
             continue                       # nothing was generated; nothing to audit
         haystack = ' '.join([t.headline, t.body or '', t.snippet or ''])
         t.unsupported = unsupported_tokens(t.lead_kn, haystack)
-        if t.unsupported:
+        if t.unsupported == [UNCHECKABLE]:
+            cross += 1
+        elif t.unsupported:
             flagged += 1
     if flagged:
         log(f'  groundedness:   {flagged} lead(s) carry words the source does '
             f'not — flagged for the editor, not dropped')
     else:
-        log('  groundedness:   every generated lead is anchored in its source')
+        log('  groundedness:   every checkable lead is anchored in its source')
+    if cross:
+        log(f'                  {cross} could not be checked (source not in '
+            f'Kannada) — the sheet says so rather than flagging every word')
     return flagged
 
 
@@ -468,16 +586,23 @@ Tips:
 """
 
 
+# Whether the Kannada-lead pass actually ran. The sheet says so either way:
+# an editor reading raw scraped headlines should know that is what they are.
+_EXTRACT_STATE: dict = {'ran': False, 'error': ''}
+
+
 def _optional_extract(tips: list[Tip]) -> None:
     """Optional Kannada leads from supplied text. Never invents. Never required."""
     api_key = load_gemini_key('text')
     if not api_key:
         log('No GEMINI_API_KEY_TEXT / GEMINI_API_KEY — writing raw tips only.')
+        _EXTRACT_STATE['error'] = 'no text API key'
         return
     try:
         from google import genai
     except ImportError:
         log('google.genai not installed — writing raw tips only.')
+        _EXTRACT_STATE['error'] = 'google-genai not installed'
         return
 
     payload = [
@@ -494,7 +619,7 @@ def _optional_extract(tips: list[Tip]) -> None:
         try:
             log(f'  extract pass {attempt}/{MAX_RETRIES}…')
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model=TEXT_MODEL,
                 contents=prompt,
             )
             text = (response.text or '').strip()
@@ -510,11 +635,38 @@ def _optional_extract(tips: list[Tip]) -> None:
                     if facts:
                         tips[i].snippet = ' | '.join(facts[:3])
             log('  extract pass applied (leads only; editor still confirms)')
+            _EXTRACT_STATE['ran'] = True
+            _EXTRACT_STATE['error'] = ''
             return
         except Exception as e:
             last_error = e
+            # A retired model, a bad key or a refused request will fail
+            # identically on all three attempts. Retrying a permanent error
+            # costs twelve seconds of a morning and tells you nothing.
+            msg = str(e)
+            permanent = any(m in msg for m in (
+                'NOT_FOUND', 'no longer available', 'PERMISSION_DENIED',
+                'API key not valid', 'INVALID_ARGUMENT', 'UNAUTHENTICATED'))
+            if permanent:
+                log(f'  extract pass abandoned — this will not succeed on a retry.')
+                break
             if attempt < MAX_RETRIES:
                 time.sleep(BACKOFF_BASE * (2 ** (attempt - 1)))
+
+    # Loudly, and on the sheet itself. The failure mode this replaces was a
+    # tip sheet that looked completely normal while carrying no Kannada leads
+    # at all, because the model behind it had been retired weeks earlier.
+    err = str(last_error)
+    if 'no longer available' in err or 'NOT_FOUND' in err:
+        log('  ' + '=' * 66)
+        log(f'  THE TEXT MODEL {TEXT_MODEL!r} IS GONE.')
+        log('  Google has retired it. The sheet below is RAW HEADLINES — no')
+        log('  Kannada leads were written. Set a current model and re-run:')
+        log('      export OORMANI_TEXT_MODEL=<current-flash-model>')
+        log('  ' + '=' * 66)
+        _EXTRACT_STATE['error'] = f'model {TEXT_MODEL} is retired'
+    else:
+        _EXTRACT_STATE['error'] = err[:160]
     log(f'  extract pass skipped ({last_error}); raw tips still written.')
 
 
@@ -529,6 +681,21 @@ def render_markdown(tips: list[Tip], date_s: str) -> str:
         f'{len(tips)} unique tips. Editor must confirm before `start with content`.',
         '',
     ]
+    # If the Kannada-lead pass did not run, SAY SO here. A sheet of raw scraped
+    # headlines looks identical to a sheet of written leads at a glance, and
+    # the difference matters: one has been through a model that was told to
+    # stay inside the source text, the other has not been through anything.
+    if not _EXTRACT_STATE.get('ran'):
+        why = _EXTRACT_STATE.get('error') or 'the lead pass did not run'
+        lines += [
+            f'> ⚠️ **No Kannada leads were written** — {why}.',
+            '>',
+            '> Everything below is the scraped headline, verbatim. That is not',
+            '> worse, it is just different: nothing has been summarised, so',
+            '> nothing has been summarised wrongly. Write the leads yourself,',
+            '> or fix the cause and re-run.',
+            '',
+        ]
     order = {'crime': 0, 'minor': 0, 'normal': 1}
     ranked = sorted(tips, key=lambda t: (
         0 if t.taluk in ('ಬೈಂದೂರು', 'ಕುಂದಾಪುರ') else 1,
@@ -546,7 +713,12 @@ def render_markdown(tips: list[Tip], date_s: str) -> str:
             f'- We have: {depth.get(t.body_source, t.body_source)}',
             f'- Needs editor: yes',
         ]
-        if t.unsupported:
+        if t.unsupported == [UNCHECKABLE]:
+            lines.append(
+                '- 🔎 **Cannot be checked here** — the source is not in '
+                'Kannada, so nothing in this sheet can tell you which parts '
+                'of the lead came from it. Open the link.')
+        elif t.unsupported:
             lines.append(
                 f'- ⚠️ **VERIFY** — not found in anything we fetched: '
                 + ', '.join(f'`{w}`' for w in t.unsupported))
@@ -556,7 +728,8 @@ def render_markdown(tips: list[Tip], date_s: str) -> str:
         elif t.snippet:
             lines.append(f'- From source: {t.snippet}')
         lines.append('')
-    flagged = sum(1 for t in tips if t.unsupported)
+    flagged = sum(1 for t in tips
+                  if t.unsupported and t.unsupported != [UNCHECKABLE])
     lines += [
         '---',
         '## Before any of this becomes an edition',
@@ -624,12 +797,18 @@ def main() -> int:
         'generated_at': datetime.now().isoformat(timespec='seconds'),
         'note': 'Tips only. Editor confirms before any edition JSON.',
         'extractor': _extractor() or 'none (headlines only)',
+        'text_model': TEXT_MODEL,
+        'leads_written': bool(_EXTRACT_STATE.get('ran')),
+        'leads_error': _EXTRACT_STATE.get('error', ''),
         'counts': {
             'tips': len(unique),
             'full_articles': sum(1 for t in unique if t.body_source == 'article'),
             'rss_only': sum(1 for t in unique if t.body_source == 'rss'),
             'headline_only': sum(1 for t in unique if not t.body_source),
-            'flagged_unsupported': sum(1 for t in unique if t.unsupported),
+            'flagged_unsupported': sum(1 for t in unique
+                                       if t.unsupported and t.unsupported != [UNCHECKABLE]),
+            'uncheckable_cross_script': sum(1 for t in unique
+                                            if t.unsupported == [UNCHECKABLE]),
         },
         'tips': [asdict(t) for t in unique],
     }

@@ -42,7 +42,7 @@ python3 -m unittest discover tests              # + the golden design (~2 min)
 
 python3 scripts/fetch_daily_news.py             # the morning tip sheet
 python3 scripts/sign_off.py out/DATE --by NAME  # sign taste / culture / news
-python3 scripts/calendar.py                     # what is coming, what is overdue
+python3 scripts/whats_on.py                     # what is coming, what is overdue
 python3 scripts/correction.py status            # the IT Rules clocks
 python3 scripts/metrics.py report               # whether the guessed numbers hold
 python3 scripts/verify_narration.py out/DATE    # did the voice say the words

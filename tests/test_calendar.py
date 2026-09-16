@@ -28,7 +28,7 @@ import importlib.util
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _spec = importlib.util.spec_from_file_location(
-    'os_calendar', os.path.join(ROOT, 'scripts', 'calendar.py'))
+    'os_whats_on', os.path.join(ROOT, 'scripts', 'whats_on.py'))
 CAL = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(CAL)
 

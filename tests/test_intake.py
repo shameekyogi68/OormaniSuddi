@@ -27,7 +27,8 @@ import contextlib
 import io
 
 from scripts.fetch_daily_news import (Tip, audit_groundedness, render_markdown,
-                                      unsupported_tokens, EXTRACT_PROMPT)
+                                      unsupported_tokens, EXTRACT_PROMPT,
+                                      UNCHECKABLE, TEXT_MODEL, _PLACES)
 
 
 def audit_quietly(tips):
@@ -144,6 +145,110 @@ class ThePromptCannotAskForInvention(unittest.TestCase):
         for b in banned:
             self.assertNotIn(b, low,
                              f'{b!r} is back in the prompt — that is issue #2')
+
+
+class ItFlagsFactsAndNotGrammar(unittest.TestCase):
+    """The first real run flagged 30 leads out of 32.
+
+    Every one of those was Kannada grammar — a verb the lead used to say the
+    thing, a case ending, a compound. A check that fires on everything is a
+    check the editor stops reading, and then it protects nothing. These are
+    the four causes, each asserted.
+    """
+
+    def test_a_derived_verb_is_not_an_invented_fact(self):
+        """ವಂಚನೆ in the source, ವಂಚಿಸಲಾಗಿದೆ in the lead — and ರೂ. in the
+        source, ರೂಪಾಯಿ in the lead, which is the same fact spelled out."""
+        self.assertEqual(
+            unsupported_tokens('ಲಕ್ಷಾಂತರ ರೂಪಾಯಿ ವಂಚಿಸಲಾಗಿದೆ',
+                               'ಅಧಿಕ ಲಾಭದ ಆಮಿಷ: ಲಕ್ಷಾಂತರ ರೂ. ವಂಚನೆ'), [])
+
+    def test_a_compound_built_on_a_source_word_is_supported(self):
+        """ಮಳೆ in the source, ಮಳೆಯಾಗುವ in the lead."""
+        self.assertEqual(
+            unsupported_tokens('ಗಾಳಿ ಸಹಿತ ಮಳೆಯಾಗುವ ಸಾಧ್ಯತೆ',
+                               'ಕರಾವಳಿಯಲ್ಲಿ ಗಾಳಿ ಸಹಿತ ಮಳೆ ಸಾಧ್ಯತೆ'), [])
+
+    def test_a_latin_place_name_supports_its_kannada_spelling(self):
+        """Coastal headlines are mixed script: "Udupi: ಅಧಿಕ ಲಾಭದ ಆಮಿಷ"."""
+        self.assertEqual(
+            unsupported_tokens('ಉಡುಪಿಯಲ್ಲಿ ವಂಚನೆ',
+                               'Udupi: ಅಧಿಕ ಲಾಭದ ಆಮಿಷ ವಂಚನೆ'), [])
+
+    def test_the_place_bridge_reuses_the_tts_lexicon(self):
+        """One file, two uses — the TTS engine needed the same mapping."""
+        self.assertTrue(_PLACES)
+        for latin in ('udupi', 'kundapura', 'byndoor'):
+            self.assertIn(latin, _PLACES)
+
+    def test_a_kannada_lead_on_an_english_source_says_it_cannot_be_checked(self):
+        """Google News hands us English. Flagging every Kannada word is true
+        and useless; saying so points at the right action."""
+        out = unsupported_tokens(
+            'ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ ಭಾರಿ ಮಳೆ ಸುರಿದಿದೆ ಎಂದು ವರದಿಯಾಗಿದೆ',
+            'Heavy rain lashed the district through Tuesday, officials said.')
+        self.assertEqual(out, [UNCHECKABLE])
+
+    def test_an_invented_fact_still_gets_through_all_of_that(self):
+        """None of the softening may cost the thing this exists to catch."""
+        src = 'ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ ಭಾರಿ ಮಳೆ. ಜಿಲ್ಲಾಡಳಿತ ಎಚ್ಚರಿಕೆ ನೀಡಿದೆ.'
+        flags = unsupported_tokens(
+            'ಉಡುಪಿಯಲ್ಲಿ ಭಾರಿ ಮಳೆ, ಸಹಾಯಕ್ಕೆ 1077 ಸಂಪರ್ಕಿಸಿ', src)
+        self.assertIn('1077', flags)
+
+    def test_the_uncheckable_marker_is_not_counted_as_a_flag(self):
+        t = Tip(headline='Heavy rain in Udupi', source_name='Google News',
+                source_url='https://example.test/a',
+                body='Heavy rain lashed the district on Tuesday.',
+                body_source='article',
+                lead_kn='ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ ಭಾರಿ ಮಳೆ ಸುರಿದಿದೆ ಎಂದು ವರದಿ')
+        audit_quietly([t])
+        md = render_markdown([t], '2026-09-16')
+        self.assertIn('Cannot be checked here', md)
+        # "VERIFY" also appears in the standing instructions at the foot of
+        # every sheet, so the assertion has to be about the TIP, not the file.
+        tip = md.split('## 1.', 1)[1].split('---', 1)[0]
+        self.assertNotIn('VERIFY', tip)
+
+
+class TheModelIsNamedAndItsDeathIsLoud(unittest.TestCase):
+    """gemini-2.5-flash was retired while this pipeline asked for it every
+    morning. The only sign was one line in a log nobody reads, and the sheet
+    looked completely normal while carrying no Kannada leads at all."""
+
+    def test_the_model_is_configurable_without_editing_code(self):
+        import os
+        self.assertTrue(TEXT_MODEL)
+        self.assertEqual(
+            TEXT_MODEL, os.environ.get('OORMANI_TEXT_MODEL', TEXT_MODEL))
+
+    def test_a_sheet_with_no_leads_says_so(self):
+        import scripts.fetch_daily_news as F
+        was = dict(F._EXTRACT_STATE)
+        try:
+            F._EXTRACT_STATE.update({'ran': False, 'error': 'model is retired'})
+            md = render_markdown(
+                [Tip(headline='ಪರೀಕ್ಷೆ', source_name='ಉದಯವಾಣಿ',
+                     source_url='https://example.test/a')], '2026-09-16')
+            self.assertIn('No Kannada leads were written', md)
+            self.assertIn('model is retired', md)
+        finally:
+            F._EXTRACT_STATE.clear()
+            F._EXTRACT_STATE.update(was)
+
+    def test_a_sheet_with_leads_does_not_carry_the_warning(self):
+        import scripts.fetch_daily_news as F
+        was = dict(F._EXTRACT_STATE)
+        try:
+            F._EXTRACT_STATE.update({'ran': True, 'error': ''})
+            md = render_markdown(
+                [Tip(headline='ಪರೀಕ್ಷೆ', source_name='ಉದಯವಾಣಿ',
+                     source_url='https://example.test/a',
+                     lead_kn='ಪರೀಕ್ಷಾ ಸುದ್ದಿ')], '2026-09-16')
+            self.assertNotIn('No Kannada leads were written', md)
+        finally:
+            F._EXTRACT_STATE.clear()
+            F._EXTRACT_STATE.update(was)
 
 
 if __name__ == '__main__':

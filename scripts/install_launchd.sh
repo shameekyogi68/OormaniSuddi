@@ -52,6 +52,51 @@ if [ ! -f "$TEMPLATE" ]; then
   exit 1
 fi
 
+# A second job firing at the SAME hour and minute means two fetches racing for
+# inbox/today.md, and whichever finishes second wins silently. Only a genuine
+# time collision is a problem — the nightly backup at 22:30 is not one.
+#
+# Compared by label and schedule only. The other job's script may well live
+# outside this repository, and nothing here reads outside this repository.
+when_of() {
+  plutil -extract StartCalendarInterval xml1 -o - \
+    "$HOME/Library/LaunchAgents/$1.plist" 2>/dev/null \
+    | grep -A1 -E '>(Hour|Minute)<' | grep '<integer>' \
+    | sed 's/[^0-9]//g' | paste -sd, - 2>/dev/null
+}
+
+OURS="$(when_of "$LABEL" 2>/dev/null)"
+[ -z "$OURS" ] && OURS="6,5"          # what the template ships with
+CLASH=""
+for o in $(launchctl list 2>/dev/null | awk '{print $3}' \
+           | grep -i '^com\.oormanisuddi\.' | grep -v "^$LABEL$"); do
+  [ "$(when_of "$o")" = "$OURS" ] && CLASH="$CLASH $o"
+done
+
+if [ -n "$CLASH" ]; then
+  H="${OURS%%,*}"; M="${OURS##*,}"
+  printf -v AT '%02d:%02d' "$H" "$M" 2>/dev/null || AT="$H:$M"
+  echo "⚠️  Another job already fires at $AT:" >&2
+  for o in $CLASH; do echo "      $o" >&2; done
+  echo >&2
+  echo "    If that one also fetches the tip sheet, installing this as well" >&2
+  echo "    gives you two jobs writing inbox/ at the same minute, and the" >&2
+  echo "    loser is overwritten without saying so." >&2
+  echo >&2
+  echo "    Retire the old one:" >&2
+  for o in $CLASH; do
+    echo "      launchctl unload ~/Library/LaunchAgents/$o.plist" >&2
+    echo "      rm ~/Library/LaunchAgents/$o.plist" >&2
+  done
+  echo >&2
+  echo "    Or, if they genuinely do different things:" >&2
+  echo "      bash scripts/install_launchd.sh --force" >&2
+  if [ "${1:-}" != "--force" ]; then
+    exit 1
+  fi
+  echo "    --force given; installing alongside." >&2
+fi
+
 mkdir -p "$AGENTS" "$ROOT/logs"
 chmod +x "$ROOT/scripts/morning.sh"
 

@@ -98,9 +98,9 @@ position, and readers respect it more than filler.
 ## What is coming
 
 ```bash
-python3 scripts/calendar.py              # the next 30 days
-python3 scripts/calendar.py --days 90    # plan a quarter
-python3 scripts/calendar.py --reviews    # what is overdue
+python3 scripts/whats_on.py              # the next 30 days
+python3 scripts/whats_on.py --days 90    # plan a quarter
+python3 scripts/whats_on.py --reviews    # what is overdue
 ```
 
 Festivals, the seasons the desk should be reporting inside, and five recurring
@@ -109,8 +109,8 @@ from a Udupi panchanga when its month opens. The tool will not guess, because a
 greeting on the wrong day is worse than no greeting.
 
 ```bash
-python3 scripts/calendar.py --scaffold ganesha    # start the greeting JSON
-python3 scripts/calendar.py --reviews --done law_review
+python3 scripts/whats_on.py --scaffold ganesha    # start the greeting JSON
+python3 scripts/whats_on.py --reviews --done law_review
 ```
 
 ---
@@ -220,7 +220,7 @@ applies to every future edition, which is the point.
 ## Weekly
 
 ```bash
-python3 scripts/calendar.py --reviews      # anything overdue?
+python3 scripts/whats_on.py --reviews      # anything overdue?
 python3 scripts/metrics.py add --date ... --asset reel_01.mp4 --format reel \
     --category civic --at 17:30 --seconds 34 --views 412 --reach 380 \
     --saves 9 --shares 14 --watch 62

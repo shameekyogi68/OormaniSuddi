@@ -61,7 +61,7 @@ JSON until the editor has opened each `source_url`.
 ## Before Stop A — what is coming
 
 ```bash
-python3 scripts/calendar.py
+python3 scripts/whats_on.py
 ```
 
 A festival three days out is a shoot you can still arrange; one that is
