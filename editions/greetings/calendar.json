@@ -1,0 +1,139 @@
+{
+  "kind": "editorial_calendar",
+  "covers": "2026-09-16 → 2027-09-30",
+  "purpose": "A local channel is judged on whether it turned up for the things its town cares about. Missing Krishna Janmashtami in Udupi, or posting a Rajyotsava card on the 2nd, is the kind of miss a reader remembers longer than any good story. This file is what scripts/calendar.py reads to tell you what is coming.",
+
+  "how_dates_work": {
+    "fixed": "Solar or civil. The date is the date. Safe to schedule against.",
+    "lunar": "Moves every year with the panchanga. The MONTH here is reliable and the DAY is not recorded, because inventing one would be worse than leaving it blank — a greeting posted on the wrong day is more embarrassing than no greeting. Confirm each from a Udupi panchanga at the start of its month; scripts/calendar.py reminds you.",
+    "season": "Not a day at all — a window the desk should be reporting inside."
+  },
+
+  "observances": [
+    {"id": "rajyotsava", "kn": "ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವ", "en": "Kannada Rajyotsava",
+     "when": "fixed", "date": "11-01", "theme": "rajyotsava", "weight": "high",
+     "note": "The single biggest greeting of the year for a Kannada channel. Red and yellow are the flag's, not the brand's — the greeting theme handles it."},
+
+    {"id": "sankranti", "kn": "ಮಕರ ಸಂಕ್ರಾಂತಿ", "en": "Makara Sankranti",
+     "when": "fixed", "date": "01-15", "theme": "harvest", "weight": "high",
+     "note": "Solar, so it is 14 or 15 January. Confirm which for the year; most years it is the 14th in Karnataka. ಎಳ್ಳು ಬೆಲ್ಲ is the image."},
+
+    {"id": "republic", "kn": "ಗಣರಾಜ್ಯೋತ್ಸವ", "en": "Republic Day",
+     "when": "fixed", "date": "01-26", "theme": "national", "weight": "high"},
+
+    {"id": "bisu", "kn": "ಬಿಸು ಪರ್ಬ", "en": "Bisu Parba / Tulu New Year",
+     "when": "fixed", "date": "04-14", "theme": "harvest", "weight": "high",
+     "note": "Tulu new year, and coastal in a way a statewide channel will not cover. This is a differentiator, not a duty."},
+
+    {"id": "labour", "kn": "ಕಾರ್ಮಿಕರ ದಿನ", "en": "Labour Day",
+     "when": "fixed", "date": "05-01", "theme": "serene", "weight": "low"},
+
+    {"id": "independence", "kn": "ಸ್ವಾತಂತ್ರ್ಯ ದಿನ", "en": "Independence Day",
+     "when": "fixed", "date": "08-15", "theme": "national", "weight": "high"},
+
+    {"id": "gandhi", "kn": "ಗಾಂಧಿ ಜಯಂತಿ", "en": "Gandhi Jayanti",
+     "when": "fixed", "date": "10-02", "theme": "serene", "weight": "medium"},
+
+    {"id": "christmas", "kn": "ಕ್ರಿಸ್ಮಸ್", "en": "Christmas",
+     "when": "fixed", "date": "12-25", "theme": "lights", "weight": "medium",
+     "note": "Coastal Karnataka has a large Christian community. Not optional here."},
+
+    {"id": "newyear", "kn": "ಹೊಸ ವರ್ಷ", "en": "New Year",
+     "when": "fixed", "date": "01-01", "theme": "lights", "weight": "medium"},
+
+    {"id": "shivaratri", "kn": "ಮಹಾಶಿವರಾತ್ರಿ", "en": "Mahashivaratri",
+     "when": "lunar", "month": 2, "theme": "sacred", "weight": "medium",
+     "note": "February or early March. Confirm from the panchanga."},
+
+    {"id": "ugadi", "kn": "ಯುಗಾದಿ", "en": "Ugadi",
+     "when": "lunar", "month": 3, "theme": "harvest", "weight": "high",
+     "note": "Kannada new year. March or April. ಬೇವು ಬೆಲ್ಲ."},
+
+    {"id": "ramnavami", "kn": "ಶ್ರೀರಾಮ ನವಮಿ", "en": "Rama Navami",
+     "when": "lunar", "month": 4, "theme": "sacred", "weight": "medium"},
+
+    {"id": "aati", "kn": "ಆಟಿ ಅಮಾವಾಸ್ಯೆ", "en": "Aati Amavasya",
+     "when": "lunar", "month": 7, "theme": "serene", "weight": "medium",
+     "note": "Coastal and Tulu-specific — ಹಾಲೆ ಮರದ ಕಷಾಯ. Almost nobody statewide covers it, which is exactly why this channel should."},
+
+    {"id": "nagarapanchami", "kn": "ನಾಗರ ಪಂಚಮಿ", "en": "Nagara Panchami",
+     "when": "lunar", "month": 8, "theme": "sacred", "weight": "medium",
+     "note": "Naga worship is strong in coastal Karnataka. Deity dignity rules apply hard — see D54 keep_clear."},
+
+    {"id": "janmashtami", "kn": "ಶ್ರೀಕೃಷ್ಣ ಜನ್ಮಾಷ್ಟಮಿ", "en": "Krishna Janmashtami",
+     "when": "lunar", "month": 8, "theme": "sacred", "weight": "highest",
+     "note": "Udupi's own. Krishna Mutt, Mosaru Kudike, the whole town. If this channel gets one greeting right in the year, it is this one — and it deserves footage, not a card."},
+
+    {"id": "ganesha", "kn": "ಗಣೇಶ ಚತುರ್ಥಿ", "en": "Ganesha Chaturthi",
+     "when": "lunar", "month": 9, "theme": "sacred", "weight": "highest",
+     "note": "Already has a footage playbook and a licensed bed. Plan the shoot, not just the card."},
+
+    {"id": "navaratri", "kn": "ನವರಾತ್ರಿ", "en": "Navaratri / Dasara",
+     "when": "lunar", "month": 10, "theme": "sacred", "weight": "high",
+     "note": "Nine days, so this is a series and not a post. Mysuru Dasara dominates statewide coverage; the coastal angle is the local temples."},
+
+    {"id": "deepavali", "kn": "ದೀಪಾವಳಿ", "en": "Deepavali",
+     "when": "lunar", "month": 11, "theme": "lights", "weight": "highest"},
+
+    {"id": "eid_fitr", "kn": "ಈದ್ ಉಲ್ ಫಿತ್ರ್", "en": "Eid al-Fitr",
+     "when": "lunar", "month": 3, "theme": "serene", "weight": "high",
+     "note": "Islamic lunar — moves ~11 days earlier each year, so the month here drifts. Bhatkal, Ullal and Mangaluru have large communities. Confirm locally."},
+
+    {"id": "eid_adha", "kn": "ಬಕ್ರೀದ್", "en": "Eid al-Adha",
+     "when": "lunar", "month": 5, "theme": "serene", "weight": "medium"},
+
+    {"id": "milad", "kn": "ಈದ್ ಮಿಲಾದ್", "en": "Eid Milad-un-Nabi",
+     "when": "lunar", "month": 8, "theme": "serene", "weight": "medium"},
+
+    {"id": "goodfriday", "kn": "ಶುಭ ಶುಕ್ರವಾರ", "en": "Good Friday",
+     "when": "lunar", "month": 4, "theme": "serene", "weight": "medium",
+     "note": "A greeting is the wrong register for Good Friday. A respectful note, not ಶುಭಾಶಯ."}
+  ],
+
+  "seasons": [
+    {"id": "sw_monsoon", "kn": "ನೈಋತ್ಯ ಮಾನ್ಸೂನ್", "from": "06-01", "to": "09-30",
+     "weight": "highest",
+     "desk": "The channel's busiest and most useful season. NH66 landslides, low-lying flooding, Souparnika and Swarna river levels, school holidays declared by the DC, power cuts. IMD and the Udupi DC are the sources that matter. Weather cards are the most-saved format there is — build the daily habit here."},
+
+    {"id": "fishing_ban", "kn": "ಮೀನುಗಾರಿಕೆ ನಿಷೇಧ", "from": "06-01", "to": "07-31",
+     "weight": "high",
+     "desk": "Annual monsoon trawling ban. Directly affects Malpe, Gangolli and Byndoor harbours — thousands of households. Confirm the exact dates with the Fisheries department each year; they shift."},
+
+    {"id": "exam_season", "kn": "ಪರೀಕ್ಷಾ ಕಾಲ", "from": "03-01", "to": "05-31",
+     "weight": "high",
+     "desk": "SSLC and PUC exams, then results. Timetables, centre changes, results and helplines are pure utility content — the kind that gets saved and forwarded rather than liked. Source: KSEAB, never a WhatsApp forward."},
+
+    {"id": "water_scarcity", "kn": "ನೀರಿನ ಕೊರತೆ", "from": "03-01", "to": "05-31",
+     "weight": "medium",
+     "desk": "Pre-monsoon. Baje and Shiroor dam levels, tanker schedules, borewell notices."},
+
+    {"id": "kambala", "kn": "ಕಂಬಳ", "from": "11-01", "to": "03-31",
+     "weight": "high",
+     "desk": "Coastal Karnataka's own sport and a genuine footage opportunity — real crowds, real sound, and it performs on YouTube in a way a card never will. Animal-welfare framing needs care."},
+
+    {"id": "yakshagana", "kn": "ಯಕ್ಷಗಾನ ಮೇಳ", "from": "11-01", "to": "05-31",
+     "weight": "high",
+     "desk": "Mela season. Badagutittu is the local style — get it right, and get the artists' names right from the organiser rather than from the poster. Footage, not cards."},
+
+    {"id": "ne_monsoon", "kn": "ಈಶಾನ್ಯ ಮಾನ್ಸೂನ್", "from": "10-01", "to": "12-15",
+     "weight": "medium",
+     "desk": "Retreating monsoon and Arabian Sea cyclone watch. INCOIS for sea state, IMD for the rest."}
+  ],
+
+  "recurring_reviews": [
+    {"id": "law_review", "every_days": 90, "weight": "high",
+     "what": "Indian media law moves. The BNS came in, the IT Rules were amended for synthetically generated information, and both will move again. Re-read docs/DECISIONS.md D29, D49 and D59 against what the law actually says now, and check whether the guilt-verb list and the POCSO location rules still match. Put a date in docs/DECISIONS.md whether or not anything changed — 'we looked and nothing moved' is a finding."},
+
+    {"id": "metrics_review", "every_days": 30, "weight": "high",
+     "what": "python3 scripts/metrics.py report. Every number in tokens.Limits is a hypothesis until this argues with it. If a slot or a reel length wins consistently, change the constant, write the decision, and let the test fail until everything agrees."},
+
+    {"id": "licence_audit", "every_days": 180, "weight": "medium",
+     "what": "Walk assets/LICENCES.json against what is actually in assets/bgm_options/. A bed whose licence page has gone dead is a Content ID claim waiting to happen, and the time to find out is not after the strike."},
+
+    {"id": "backup_restore_test", "every_days": 90, "weight": "highest",
+     "what": "A backup nobody has restored is a hope. Untar the newest archive from .backups into /tmp and confirm archive/ and assets/stock/ are actually in it and actually open. This is the single cheapest insurance in the whole system."},
+
+    {"id": "stock_review", "every_days": 90, "weight": "low",
+     "what": "assets/stock/ is the cheapest picture desk there is. Prune frames that dated badly, and check CATALOG.md still describes what is there in words somebody would search for."}
+  ]
+}

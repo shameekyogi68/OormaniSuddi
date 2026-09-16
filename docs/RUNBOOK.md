@@ -66,6 +66,53 @@ At the end of the day:
 python3 scripts/archive_edition.py 2026-09-16
 ```
 
+### A short day
+
+Decided in advance, because deciding it at 07:40 is how a thin story gets
+promoted to a reel. D69.
+
+`--minimal` **is** the normal day: carousel, story card, broadsheet, reel.
+Below that, things drop in this order:
+
+| Drop | Why it goes first |
+|---|---|
+| bulletin | off by default and not going to YouTube anyway (Rule 7) |
+| post cards | the carousel already carries every story |
+| yt_thumbnail | it exists for a video that may not be made |
+| reels, worst story first | one good reel beats three adequate ones |
+| story card | it points at the carousel; the carousel survives without it |
+
+The floor is **one carousel and one broadsheet forward.** That is a day. Two
+usable tips and an honest carousel is a better day than five stories nobody
+checked.
+
+What never drops: `verified_by`, the legal guards, the sign-off. A short day is
+a reason to publish **less**, never a reason to publish less carefully.
+
+If the fetch half-failed and there are not three stories worth running, publish
+the weather card and say nothing else. `ಇಂದು ಯಾವುದೇ ಹೊಸ ಸುದ್ದಿ ಇಲ್ಲ` is a
+position, and readers respect it more than filler.
+
+---
+
+## What is coming
+
+```bash
+python3 scripts/calendar.py              # the next 30 days
+python3 scripts/calendar.py --days 90    # plan a quarter
+python3 scripts/calendar.py --reviews    # what is overdue
+```
+
+Festivals, the seasons the desk should be reporting inside, and five recurring
+reviews. Lunar festivals show the **month** and never the day — confirm each
+from a Udupi panchanga when its month opens. The tool will not guess, because a
+greeting on the wrong day is worse than no greeting.
+
+```bash
+python3 scripts/calendar.py --scaffold ganesha    # start the greeting JSON
+python3 scripts/calendar.py --reviews --done law_review
+```
+
 ---
 
 ## When it goes wrong
@@ -173,11 +220,13 @@ applies to every future edition, which is the point.
 ## Weekly
 
 ```bash
+python3 scripts/calendar.py --reviews      # anything overdue?
 python3 scripts/metrics.py add --date ... --asset reel_01.mp4 --format reel \
     --category civic --at 17:30 --seconds 34 --views 412 --reach 380 \
     --saves 9 --shares 14 --watch 62
 python3 scripts/metrics.py report
 python3 scripts/correction.py weekly       # draft the clarifications post
+bash scripts/backup.sh --status            # three copies, or fewer?
 ```
 
 Two minutes of typing what the app already shows you. Every number in

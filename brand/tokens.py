@@ -387,6 +387,14 @@ class Limits:
     min_effective_px = 7.0
     # Daily default path. Bulletin and extra templates are --only on request.
     daily_templates = ('carousel', 'story_card', 'broadsheet', 'reel')
+    # The reel gate is "drama, public stakes, shareability", and crime wins on
+    # all three every single time. Left alone, a metrics loop that rewards
+    # what performs will walk this channel into being a crime channel — which
+    # is exactly where the legal exposure is, and where local outlets
+    # reliably end up. A cap is the cheapest way to make that a decision
+    # somebody takes rather than a drift nobody notices. D68.
+    crime_reels_per_day = 1
+    crime_share_warn = 0.40     # of an edition's stories, before it is a pattern
 
 
 class Motion:

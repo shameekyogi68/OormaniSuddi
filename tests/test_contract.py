@@ -1285,3 +1285,72 @@ class EveryDecisionIsAccountedFor(unittest.TestCase):
                     why and len(why) > 10,
                     f'{name}[{num}] has no reason; an exemption list nobody '
                     f'defends is a way to make the number look better')
+
+
+class EditorialDriftIsNoticed(unittest.TestCase):
+    """D68: crime wins the reel gate every time, so the gate cannot limit it.
+
+    Step 2's reel test is "drama, public stakes, shareability". Crime scores
+    highest on all three, every day. Add a metrics loop that rewards what
+    performs and the channel walks into being a crime channel — which is
+    exactly where every legal exposure in this system lives, and where local
+    outlets reliably end up. Nobody decides that; it just happens.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from brand import review as R
+        cls.R = R
+
+    def setUp(self):
+        import tempfile
+        self.dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def _edition(self, categories, reels=()):
+        from brand.content import Story, Edition, Photo, now, OWN_REPORTING
+        stories = []
+        for i, c in enumerate(categories):
+            head = ('ಕಳವು ಆರೋಪ: ಬಂಧನ' if c == 'crime'
+                    else f'ಪರೀಕ್ಷಾ ಶೀರ್ಷಿಕೆ {i}')
+            stories.append(Story(
+                headline=head, category=c, sources=[OWN_REPORTING],
+                verified_by='Gautam Paduvari', is_reel=(i in reels),
+                photo=Photo('x.jpg', nature='representative',
+                            credit='ಊರ್ಮನಿ ಸುದ್ದಿ', licence='own')))
+        return Edition(stories=stories, date=now(), edition_no=1)
+
+    def test_two_crime_reels_in_one_day_is_flagged(self):
+        from brand.tokens import Limits
+        ed = self._edition(['crime', 'crime', 'civic'], reels=(0, 1))
+        rep = self.R.review(self.dir, ed)
+        self.assertIn('PUB-04', [f.code for f in rep.findings])
+        self.assertTrue(any('crime reels' in w for w in rep.warn))
+        self.assertEqual(Limits.crime_reels_per_day, 1)
+
+    def test_one_crime_reel_is_a_normal_day(self):
+        ed = self._edition(['crime', 'civic', 'weather'], reels=(0,))
+        rep = self.R.review(self.dir, ed)
+        self.assertFalse([w for w in rep.warn if 'crime reels' in w])
+
+    def test_an_edition_that_is_mostly_crime_is_flagged(self):
+        ed = self._edition(['crime', 'crime', 'crime', 'civic'])
+        rep = self.R.review(self.dir, ed)
+        self.assertTrue(any('are crime' in w for w in rep.warn))
+
+    def test_a_balanced_edition_is_not_flagged(self):
+        ed = self._edition(['crime', 'civic', 'weather', 'health'])
+        rep = self.R.review(self.dir, ed)
+        self.assertFalse([w for w in rep.warn if 'are crime' in w])
+
+    def test_it_warns_and_never_blocks(self):
+        """A real crime day is a real crime day. This is a direction check,
+        not a legal one, and blocking it would be the system overruling an
+        editor on news judgement — which is the one thing it must not do."""
+        ed = self._edition(['crime', 'crime', 'crime'], reels=(0, 1, 2))
+        rep = self.R.review(self.dir, ed)
+        self.assertFalse([f for f in rep.findings
+                          if f.code == 'PUB-04' and f.severity == 'fail'])

@@ -1596,6 +1596,100 @@ design decisions became D64–D66 and a test now refuses a duplicate number.
 ---
 
 
+## D68 · The reel gate cannot be the thing that limits crime
+
+**Decided.** At most one crime reel per edition, and a warning when crime is
+more than 40% of an edition's stories. `tokens.Limits.crime_reels_per_day`,
+checked at the gate as `PUB-04`. It warns; it never blocks.
+
+**Why it is not left to the gate that already exists.** Step 2 chooses reels on
+"drama, public stakes, shareability". Crime scores highest on all three, every
+day, in every newsroom that has ever existed. So the reel gate is not a
+constraint on crime — it is a mechanism that selects for it, and adding the
+metrics loop makes that worse, because crime will also win on views.
+
+**What that drifts into.** A crime channel. Which is precisely where every
+legal exposure in this system lives — the BNS §356 guard, the JJ Act rules, the
+POCSO location check all exist because of crime copy — and it is where local
+outlets reliably end up without anybody deciding to go there. Nobody chooses
+it. It happens one good news day at a time.
+
+**Why it warns rather than blocks.** A real crime day is a real crime day, and
+a system that refuses to cover one would be overruling an editor on news
+judgement, which is the single thing it must not do. The cap exists to make the
+drift a decision somebody takes rather than a direction nobody noticed.
+
+**If you undo it.** The metrics loop added in this same release becomes the
+thing that steers the channel, and it will steer it here.
+
+`brand/tokens.py :: Limits.crime_reels_per_day` · `brand/review.py` · `tests/test_contract.py`
+
+---
+
+## D69 · A bad Tuesday has a defined minimum, decided in advance
+
+**Decided.** `--minimal` renders the four things that ship most mornings —
+carousel, story card, broadsheet, reel. On a day with four hours instead of
+ten, or a morning when the fetch half-failed, that is the edition. Below it,
+the honest floor is: one carousel, one broadsheet forward, and nothing else.
+
+**Replaced.** A daily package of eleven deliverables, a bulletin, a thumbnail
+and up to five reels, on one 8 GB machine, with no definition anywhere of what
+gets dropped first.
+
+**Why.** Every schedule in this project assumed a full day. There was no answer
+to "it is 07:40, the scrape returned two usable tips and I have until nine" —
+so the answer got improvised, and an improvised answer under time pressure is
+how a thin story gets promoted to a reel. Deciding it now, while it is calm,
+is the entire point.
+
+**The order things drop in.** Bulletin first — it is off by default and is not
+going to YouTube anyway. Then the standalone post cards. Then the thumbnail,
+which exists for a video that may not be made. Then reels, one at a time, worst
+story first. The carousel and the broadsheet are last, because the carousel is
+the day's record and the broadsheet is the forward that actually grows the
+channel.
+
+**What never drops.** `verified_by`. The legal guards. The sign-off. A short
+day is a reason to publish less, never a reason to publish less carefully.
+
+`brand/tokens.py :: Limits.daily_templates` · `render.py --minimal` · `docs/RUNBOOK.md`
+
+---
+
+## D70 · The year is on a calendar, not in somebody's head
+
+**Decided.** `editions/greetings/calendar.json` holds the year's observances,
+the seasons the desk should be reporting inside, and five recurring reviews
+with intervals. `scripts/calendar.py` says what is coming and what is overdue.
+
+**Why.** A local channel is judged on whether it turned up for the things its
+town cares about. Missing Krishna Janmashtami in Udupi is a miss a reader
+remembers longer than any good story — and it is never missed by decision, it
+is missed on a Tuesday. The same is true of the reviews: nobody decides to skip
+the law review for a year.
+
+**The rule about lunar dates.** The file records the MONTH and deliberately not
+the day. Every Hindu and Islamic festival here moves with its own calendar, and
+a greeting posted on the wrong day is worse than no greeting, so the tool
+refuses to guess: it fires at the start of the month and says confirm from a
+Udupi panchanga. That is a thing a person does, and the one thing this script
+must not pretend to have done on their behalf.
+
+**What is in it that a generic Indian calendar would miss.** Bisu Parba, Aati
+Amavasya, the Kambala and Yakshagana mela seasons, the monsoon trawling ban at
+Malpe and Gangolli. Those are the entries that make it this channel's calendar
+rather than anybody's.
+
+**The review that matters most.** `backup_restore_test`, every 90 days. A
+backup nobody has ever restored is a hope, and finding that out after a disk
+failure is finding it out at the only moment it cannot be fixed.
+
+`editions/greetings/calendar.json` · `scripts/calendar.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

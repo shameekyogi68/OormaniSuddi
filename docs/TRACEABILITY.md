@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **41/66** decisions are named by at least one test
+- **44/69** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -127,7 +127,7 @@ those carry a reason rather than a test.
 
 ## D29 · Legal guards are validation rules, not guidance
 
-- **Tested by:** `tests/test_contract.py`, `tests/test_legal_corpus.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_legal_corpus.py`
 - Enforced in: `brand/content.py`, `templates/youtube_thumb.py`
 
 ## D30 · A credit is not a licence
@@ -214,7 +214,7 @@ those carry a reason rather than a test.
 
 ## D49 · The disclosure travels with the image, not with the story
 
-- **Tested by:** `tests/test_contract.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`
 - Enforced in: `brand/motion.py`, `templates/greeting.py`
 
 ## D50 · Written Kannada and spoken Kannada are different languages
@@ -258,7 +258,7 @@ those carry a reason rather than a test.
 
 ## D59 · No human verification, no publication
 
-- **Tested by:** `tests/test_contract.py`, `tests/test_intake.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_intake.py`
 - Enforced in: `brand/codes.py`, `brand/content.py`, `brand/review.py`, `scripts/fetch_daily_news.py`
 
 ## D60 · Legibility is arithmetic, and arithmetic is testable
@@ -295,4 +295,17 @@ those carry a reason rather than a test.
 ## D67 · A decision with nothing behind it is a paragraph
 
 - **Tested by:** `tests/test_contract.py`
+
+## D68 · The reel gate cannot be the thing that limits crime
+
+- **Tested by:** `tests/test_contract.py`
+- Enforced in: `brand/review.py`, `brand/tokens.py`
+
+## D69 · A bad Tuesday has a defined minimum, decided in advance
+
+- **Tested by:** `tests/test_calendar.py`
+
+## D70 · The year is on a calendar, not in somebody's head
+
+- **Tested by:** `tests/test_calendar.py`
 

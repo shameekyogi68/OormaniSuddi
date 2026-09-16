@@ -65,6 +65,7 @@ CODES: dict[str, str] = {
     'PUB-01': 'the handle is miscapitalised',
     'PUB-02': 'the schedule routes an AI reel to YouTube (Rule 7)',
     'PUB-03': 'two posts are close enough to compete with each other',
+    'PUB-04': 'the edition is drifting toward being a crime channel',
     # ── OPS ───────────────────────────────────────────────────────────────
     'OPS-01': 'no Grievance Officer is named (IT Rules 2021 Part III)',
     'OPS-02': 'no contact route is published anywhere',

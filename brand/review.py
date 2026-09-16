@@ -395,6 +395,32 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                 f'the story in the edition JSON.',
                 where=f'story {i}')
 
+        # ── editorial drift ───────────────────────────────────────────
+        # Not a legal check and not a quality check: a direction check. The
+        # reel gate rewards drama, stakes and shareability, crime wins on all
+        # three, and nothing anywhere notices the channel turning into a crime
+        # channel one good news day at a time. D68.
+        r.checked.append('crime share of the edition')
+        crime = [i for i, st in enumerate(edition.stories, 1)
+                 if st.category == 'crime']
+        crime_reels = [i for i, st in enumerate(edition.stories, 1)
+                       if st.category == 'crime' and getattr(st, 'is_reel', False)]
+        if len(crime_reels) > Limits.crime_reels_per_day:
+            r.add_warn(
+                'PUB-04',
+                f'{len(crime_reels)} crime reels in one edition (house cap is '
+                f'{Limits.crime_reels_per_day}). Crime always wins the reel '
+                f'gate on drama and shareability, so the gate cannot be the '
+                f'thing that limits it. Promote a civic, weather or culture '
+                f'story to the second reel slot instead.')
+        if edition.stories and len(crime) / len(edition.stories) > Limits.crime_share_warn:
+            r.add_warn(
+                'PUB-04',
+                f'{len(crime)} of {len(edition.stories)} stories are crime '
+                f'({len(crime) / len(edition.stories):.0%}). One day like this '
+                f'is a day. A run of them is what the channel becomes, and it '
+                f'is where every legal exposure in this system lives.')
+
         r.checked.append('grievance officer named')
         if not Brand.grievance_named():
             r.add_fail('OPS-01',

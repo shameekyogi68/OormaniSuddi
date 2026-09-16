@@ -40,7 +40,21 @@ except Exception:
     print('tip sheet ready')
 " 2>/dev/null)
   echo "$(date '+%H:%M:%S')  OK — $TIPS" >> "$LOG"
-  notify "Tip sheet ready" "$TIPS — open inbox/today.md"
+
+  # What is coming, and anything overdue. This is the moment it is useful:
+  # a festival three days out is still a shoot you can arrange, and one that
+  # is tomorrow is a card you rush.
+  {
+    /usr/bin/env python3 scripts/calendar.py --days 21
+    /usr/bin/env python3 scripts/calendar.py --reviews
+  } >> "$LOG" 2>&1
+
+  DUE=$(/usr/bin/env python3 scripts/calendar.py --reviews 2>/dev/null | grep -c '⚠️' || true)
+  if [ "${DUE:-0}" -gt 0 ]; then
+    notify "Tip sheet ready · $DUE review(s) due" "$TIPS — see $LOG"
+  else
+    notify "Tip sheet ready" "$TIPS — open inbox/today.md"
+  fi
   exit 0
 fi
 
