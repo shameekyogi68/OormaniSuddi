@@ -1690,6 +1690,42 @@ failure is finding it out at the only moment it cannot be fixed.
 ---
 
 
+## D71 · The scheduler is not ours to own; the heartbeat is
+
+**Decided.** This project does not install a 06:05 launchd job on a machine
+that already has one. `scripts/fetch_daily_news.py` writes
+`logs/last_fetch.json` on its way through, and `scripts/health.py` reads it. The
+plist we ship stays available and `install_launchd.sh` refuses to install it
+while another job fires at the same hour and minute.
+
+**The situation.** `com.oormanisuddi.daily` runs `~/run_oormani.sh` at 06:05.
+That script is outside this repository, and AGENTS rule 8 makes reading outside
+it fail-closed — so it cannot be inspected, which means retiring it would be
+disabling something nobody here has read. Installing ours alongside is worse:
+two jobs writing `inbox/` at the same minute, and the one that finishes second
+wins silently.
+
+**Why this is not a compromise.** The improvements are in the SCRIPT, not in
+the job. Article-body extraction, the groundedness pass, the model fix —
+anything that calls `fetch_daily_news.py` gets all of them, whoever wrote the
+caller and whenever they wrote it. Owning the scheduler would have added
+nothing except a race.
+
+**What issue #19 actually wanted.** Not "run the fetch on a timer" — it already
+ran on a timer. It wanted somebody to find out when the timer stopped working,
+before noon. That is the heartbeat, and it works regardless of what schedules
+the script, including a cron job, a manual run, or a replacement for
+`run_oormani.sh` written next year by somebody who has never read this file.
+
+**If you undo it.** Either the morning silently runs twice and one result is
+thrown away, or a working routine gets disabled by something that could not
+read it.
+
+`scripts/fetch_daily_news.py :: _heartbeat` · `scripts/health.py` · `scripts/install_launchd.sh`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

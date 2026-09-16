@@ -40,6 +40,7 @@ python3 render.py editions/X.json --minimal      # the four things that ship dai
 python3 -m unittest tests.test_contract         # the contract (instant)
 python3 -m unittest discover tests              # + the golden design (~2 min)
 
+python3 scripts/health.py                       # is anything quietly broken
 python3 scripts/fetch_daily_news.py             # the morning tip sheet
 python3 scripts/sign_off.py out/DATE --by NAME  # sign taste / culture / news
 python3 scripts/whats_on.py                     # what is coming, what is overdue
@@ -55,7 +56,9 @@ On a fresh checkout, once:
 ```bash
 python3 -m pip install --break-system-packages -r requirements.txt
 bash scripts/install_hooks.sh          # contract runs before every commit
-bash scripts/install_launchd.sh        # 06:05 tip sheet, with failure alerts
+# The 06:05 job is already owned by a script outside this repo (D71), so the
+# line below will refuse. It is here for a machine that does not have one:
+# bash scripts/install_launchd.sh
 bash scripts/backup.sh --install       # nightly, 22:30
 ```
 

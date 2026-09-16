@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **44/69** decisions are named by at least one test
+- **45/70** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -308,4 +308,8 @@ those carry a reason rather than a test.
 ## D70 · The year is on a calendar, not in somebody's head
 
 - **Tested by:** `tests/test_calendar.py`
+
+## D71 · The scheduler is not ours to own; the heartbeat is
+
+- **Tested by:** `tests/test_intake.py`
 

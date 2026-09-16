@@ -752,10 +752,43 @@ def render_markdown(tips: list[Tip], date_s: str) -> str:
     return '\n'.join(lines)
 
 
+HEARTBEAT = os.path.join(ROOT, 'logs', 'last_fetch.json')
+
+
+def _heartbeat(ok: bool, counts: dict | None = None, reason: str = '') -> None:
+    """Record that a fetch happened, and how it went.
+
+    Deliberately written INSIDE the repository, by the script itself, rather
+    than by whatever schedules it. The 06:05 job on this machine is owned by
+    something outside this project, and it may be replaced, renamed or moved
+    without anyone touching this code — but any of those still ends up calling
+    this function, because they all end up calling this script.
+
+    That is the whole point of issue #19. The need was never "own the
+    scheduler"; it was "know at 09:00 whether the morning actually ran".
+    """
+    try:
+        os.makedirs(os.path.dirname(HEARTBEAT), exist_ok=True)
+        with open(HEARTBEAT, 'w', encoding='utf-8') as fh:
+            json.dump({
+                'at': datetime.now().isoformat(timespec='seconds'),
+                'ok': ok,
+                'reason': reason,
+                'counts': counts or {},
+                'extractor': _extractor() or 'none',
+                'text_model': TEXT_MODEL,
+                'leads_written': bool(_EXTRACT_STATE.get('ran')),
+            }, fh, indent=2, ensure_ascii=False)
+            fh.write('\n')
+    except OSError:
+        pass
+
+
 def _write_failure(reason: str) -> None:
     os.makedirs(INBOX_DIR, exist_ok=True)
     with open(FAIL_MARKER, 'w', encoding='utf-8') as f:
         f.write(f'{datetime.now().isoformat()} | {reason}\n')
+    _heartbeat(False, reason=reason)
     log(f'Failure marker written: {FAIL_MARKER}')
 
 
@@ -819,6 +852,7 @@ def main() -> int:
     with open(TODAY_JSON, 'w', encoding='utf-8') as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
         f.write('\n')
+    _heartbeat(True, counts=payload['counts'])
     log(f'✅ {len(unique)} tips → {TODAY_MD}')
     print('\n--- FIRST 3 TIPS ---\n')
     print('\n'.join(md.split('\n\n')[:6]))

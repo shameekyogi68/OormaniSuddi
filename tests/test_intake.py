@@ -253,3 +253,92 @@ class TheModelIsNamedAndItsDeathIsLoud(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TheHeartbeat(unittest.TestCase):
+    """D71: the scheduler is not ours to own, so the script records itself.
+
+    The 06:05 job on this machine runs a script outside the repository. That
+    is fine — what matters is not who starts the fetch but whether anybody
+    finds out when it stops. The heartbeat is written by fetch_daily_news.py
+    itself, so it works for a launchd job, a cron line, a manual run, or a
+    replacement written next year by somebody who never read this file.
+    """
+
+    def setUp(self):
+        import tempfile
+        import scripts.fetch_daily_news as F
+        self.F = F
+        self.dir = tempfile.mkdtemp()
+        self.was = F.HEARTBEAT
+        F.HEARTBEAT = __import__('os').path.join(self.dir, 'last_fetch.json')
+
+    def tearDown(self):
+        import shutil
+        self.F.HEARTBEAT = self.was
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def _read(self):
+        import json
+        with open(self.F.HEARTBEAT, encoding='utf-8') as fh:
+            return json.load(fh)
+
+    def test_a_success_is_recorded_with_what_it_produced(self):
+        self.F._heartbeat(True, counts={'tips': 32, 'full_articles': 12})
+        d = self._read()
+        self.assertTrue(d['ok'])
+        self.assertEqual(d['counts']['tips'], 32)
+        self.assertIn('at', d)
+
+    def test_a_failure_is_recorded_with_why(self):
+        self.F._heartbeat(False, reason='Only 2 tips (need 3+)')
+        d = self._read()
+        self.assertFalse(d['ok'])
+        self.assertIn('need 3', d['reason'])
+
+    def test_it_records_whether_leads_were_actually_written(self):
+        """A sheet of raw headlines and a sheet of written leads look the same
+        from outside. The heartbeat is where the difference is visible."""
+        was = dict(self.F._EXTRACT_STATE)
+        try:
+            self.F._EXTRACT_STATE.update({'ran': False, 'error': 'retired'})
+            self.F._heartbeat(True, counts={'tips': 5})
+            self.assertFalse(self._read()['leads_written'])
+            self.F._EXTRACT_STATE.update({'ran': True, 'error': ''})
+            self.F._heartbeat(True, counts={'tips': 5})
+            self.assertTrue(self._read()['leads_written'])
+        finally:
+            self.F._EXTRACT_STATE.clear()
+            self.F._EXTRACT_STATE.update(was)
+
+    def test_it_names_the_model_so_a_retirement_is_diagnosable(self):
+        self.F._heartbeat(True, counts={})
+        self.assertEqual(self._read()['text_model'], self.F.TEXT_MODEL)
+
+    def test_it_never_raises_when_it_cannot_write(self):
+        """A heartbeat that can fail a morning is worse than no heartbeat."""
+        self.F.HEARTBEAT = '/nonexistent-root-dir/x/last_fetch.json'
+        self.F._heartbeat(True, counts={})      # must not raise
+
+
+class TheSchedulerIsNotOurs(unittest.TestCase):
+    """D71, asserted as a property of the shipped scripts."""
+
+    def test_the_installer_refuses_a_time_collision_by_default(self):
+        import os
+        src = open(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'scripts', 'install_launchd.sh'), encoding='utf-8').read()
+        self.assertIn('--force', src)
+        self.assertIn('exit 1', src)
+
+    def test_the_installer_reads_nothing_outside_the_repo(self):
+        """AGENTS rule 8 is fail-closed. The collision check compares labels
+        and schedules from launchctl and LaunchAgents, never a foreign script."""
+        import os
+        src = open(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'scripts', 'install_launchd.sh'), encoding='utf-8').read()
+        self.assertNotIn('run_oormani', src,
+                         'the installer must not reach for a script outside '
+                         'this repository, even to read it')
