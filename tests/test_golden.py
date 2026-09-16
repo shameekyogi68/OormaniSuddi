@@ -16,7 +16,15 @@ whenever real news arrives is worse than no golden test.
 
 Hashes are over decoded pixels, not the JPEG bytes, so they survive a different
 libjpeg. They will still move if Pillow's Lanczos or FreeType's rasteriser
-changes; docs/DECISIONS.md explains why that is worth knowing about.
+changes; docs/DECISIONS.md explains why that is worth knowing about — and
+`PROVENANCE.json`, written beside every render, now records which Pillow, which
+raqm and which font hashes produced it, so a failure here can say WHY and not
+only THAT.
+
+Decisions this suite enforces by construction: D21 (draw at 2x, downsample
+once), D22 (the clock is injectable), D23 (a frozen fixture, never a live
+edition) and D28 (nothing is seeded from `hash()`, whose per-process
+randomisation would make these fingerprints unstable).
 """
 import os
 import sys
