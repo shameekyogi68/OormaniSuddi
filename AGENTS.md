@@ -25,6 +25,12 @@ lessons from the first job) and ships the tools that do the work. For a vertical
 [`STANDARDS.md`](STANDARDS.md)**, then [`docs/DECISIONS.md`](docs/DECISIONS.md)
 before changing any value.
 
+**If the person in this chat says exactly "Start", says "Stop", or approves a
+draft you showed them → follow [`docs/RUNBOOK.md`](docs/RUNBOOK.md)'s "Chat
+workflow" section precisely, every time, regardless of which AI tool you are.**
+It is the editor's own standing instruction for how a conversation, not a
+terminal, drives the daily pipeline.
+
 ---
 
 ## Doing the work

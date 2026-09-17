@@ -22,6 +22,63 @@ is inside this repository.
 
 ---
 
+## Chat workflow: Start / approve / Stop
+
+For running the day through a conversation with an AI assistant instead of
+typing each command by hand. The underlying scripts are exactly the ones
+below — this is a second front door onto them, not a second set of rules.
+Any AI reading `AGENTS.md` follows this precisely; it is a standing editorial
+instruction, not a one-off request to whichever session heard it first.
+
+**You say "Start".** The assistant:
+
+1. Makes sure today has a draft. If `editions/{date}.json` doesn't exist yet,
+   it runs `scripts/fetch_daily_news.py` then `scripts/draft_edition.py`
+   itself. If one already exists, it uses that — it does not discard an
+   edition you may already be partway through.
+2. Opens every story's actual `source_url` and reads the real article — not
+   just the short tip snippet, so you are reading a real account, not a
+   summary of a summary.
+3. Shows you each story in plain language in the chat: what happened, where,
+   which category, and anything flagged (crime, a minor, a sexual offence) or
+   any source link that would not load at all. Nothing is rendered, verified,
+   or published at this point — it stops and waits for you.
+
+**You approve** (say "go", "go ahead", "create the content", or similar).
+The assistant:
+
+1. Marks verified, under your name, exactly the stories it showed you in
+   step 3 — `scripts/verify.py --by "<your name>"`. This is not the
+   automation "What is never automated" (below) refers to: nobody's name is
+   attached without you, in the conversation, having actually seen the real
+   content and told it to proceed. A story it could not actually load for
+   you is left out, never verified on your behalf.
+2. Renders the minimal daily set only —
+   `render.py editions/{date}.json --minimal --out out/{date}` — carousel,
+   story card, broadsheet, reel. Never the bulletin, thumbnail, or
+   standalone post cards unless you specifically ask; minimal is the rule
+   here, not the fallback, because more formats is more time spent posting.
+3. Reports what the Chief Editor gate found (`APPROVAL.md`). Publishing
+   still needs your sign-off — `scripts/sign_off.py out/{date} --by
+   "<name>"` — taste, culture and news judgement stay yours, D62, same as
+   every other day.
+
+**You say "Stop".** The assistant undoes the day so nothing half-finished is
+left lying around:
+
+1. Looks at `assets/daily/{date}/`, if anything is there. A generic scene
+   (a highway, a hospital exterior, a classroom) belongs in `assets/stock/`
+   permanently, so it never has to be generated a second time — it asks you
+   which, if any, are worth keeping, and copies those across first.
+2. Runs `scripts/discard_edition.py {date} --force-assets`, which deletes
+   today's `editions/{date}.json`, the checklist, `out/{date}/`, and
+   `assets/daily/{date}/`. It refuses outright, and touches nothing, if the
+   day was already signed off — "Stop" is only for a day that never got
+   that far; a published day is undone with nothing, it is archived with
+   `scripts/archive_edition.py` instead.
+
+---
+
 ## A normal day
 
 By the time you sit down, this has already happened — 06:10 and again at
@@ -376,3 +433,9 @@ the output less honest.
 
 Uploading. Legal flags. `verified_by`. The sign-off. Answering a complaint.
 Those are the five places a person is the product.
+
+The chat workflow above does not change this: an assistant may only write
+`verified_by` when the actual person, live in the conversation, has just been
+shown the real source content and told it to proceed. That is a person doing
+the thing through a different front door — not a schedule, a script, or an AI
+deciding on its own that something is true.
