@@ -264,3 +264,115 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 ```
 
 
+
+---
+
+### 17. `coastal_idol_maker_ganesha_craftsman.jpg`
+- **Use in Any**: Ganesh Chaturthi idol-making season, traditional clay artisan (ಕುಂಬಾರ) livelihood stories, eco-friendly idol campaigns, or Kumbara community features.
+- **Visual**: An elderly artisan hand-finishing a clay Ganesha idol at a potter's wheel, surrounded by earthen pots in a traditional workshop.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_idol_maker_ganesha_craftsman.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಗಣೇಶ ವಿಗ್ರಹ ರೂಪಿಸುತ್ತಿರುವ ಕುಂಬಾರ ಕಲಾವಿದ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 18. `coastal_ghats_monsoon_homestead.jpg`
+- **Use in Any**: Western Ghats monsoon rainfall, Karkala/Hebri hill-taluk weather stories, rural connectivity, arecanut/farm-belt features, or landslide-risk advisories.
+- **Visual**: A tiled-roof homestead amid areca and coconut palms, with mist-covered Western Ghats hills in the background after rain.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_ghats_monsoon_homestead.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಮಲೆನಾಡು ಗಡಿಯ ಮಳೆಗಾಲದ ಗ್ರಾಮೀಣ ಮನೆ ಮತ್ತು ಬೆಟ್ಟಗಳು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 19. `ambulance_emergency_response_town.jpg`
+- **Use in Any**: Road accidents, 108 ambulance response time stories, medical emergency advisories, or trauma-care access features.
+- **Visual**: A 108 government ambulance moving through a busy coastal town street lined with shops and auto-rickshaws.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/ambulance_emergency_response_town.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಪಟ್ಟಣದ ರಸ್ತೆಯಲ್ಲಿ ಧಾವಿಸುತ್ತಿರುವ 108 ಆರೋಗ್ಯ ಕವಚ ಆಂಬ್ಯುಲೆನ್ಸ್ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 20. `coastal_event_site_police_inspection.jpg`
+- **Use in Any**: Festival/event security arrangements, VIP visit preparation, beach event permissions, or officials' pre-event site inspections.
+- **Visual**: Police officers and civic officials reviewing site plans at a beachside venue being set up for a public event.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_event_site_police_inspection.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಕಡಲತೀರದ ಕಾರ್ಯಕ್ರಮ ಸ್ಥಳದಲ್ಲಿ ಪೊಲೀಸ್ ಹಾಗೂ ಅಧಿಕಾರಿಗಳ ಪೂರ್ವಭಾವಿ ಪರಿಶೀಲನೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 21. `forest_dept_timber_seizure_inspection.jpg`
+- **Use in Any**: Illegal logging busts, forest offence cases, timber seizure news, or Western Ghats conservation enforcement stories.
+- **Visual**: Forest Department officials inspecting and tagging a stack of seized timber logs at a forest checkpost.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/forest_dept_timber_seizure_inspection.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ವಶಪಡಿಸಿಕೊಂಡ ಮರದ ದಿಮ್ಮಿಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತಿರುವ ಅರಣ್ಯ ಇಲಾಖೆ ಅಧಿಕಾರಿಗಳು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 22. `education_scholarship_certificate_ceremony.jpg`
+- **Use in Any**: Scholarship distribution, college graduation/merit-award functions, or education department felicitation events.
+- **Visual**: Students seated with framed certificates at a formal scholarship distribution ceremony, dignitaries on stage behind.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/education_scholarship_certificate_ceremony.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ವಿದ್ಯಾರ್ಥಿವೇತನ ವಿತರಣಾ ಸಮಾರಂಭ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 23. `civic_flooded_road_villagers_complaint.jpg`
+- **Use in Any**: Drainage/waterlogging complaints, monsoon flooding of rural roads, civic negligence stories, or panchayat infrastructure grievances.
+- **Visual**: Villagers pointing at a flooded, muddy rural road beside paddy fields after heavy rain.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/civic_flooded_road_villagers_complaint.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಮಳೆಗಾಲದಲ್ಲಿ ಜಲಾವೃತಗೊಂಡ ಗ್ರಾಮೀಣ ರಸ್ತೆ ಬಗ್ಗೆ ಗ್ರಾಮಸ್ಥರ ಆಕ್ಷೇಪ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
