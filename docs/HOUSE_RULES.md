@@ -25,3 +25,9 @@ the things that are genuinely house style rather than contract.
 - **2026-09-16-01** — ಹಬ್ಬದ ಕಾರ್ಡ್‌ನಲ್ಲಿ ಸಂಘಟಕರ ಹೆಸರು ಕಡ್ಡಾಯ — ಪೋಸ್ಟರ್‌ನಿಂದ ಅಲ್ಲ, ಸಂಘಟಕರಿಂದಲೇ ಪಡೆಯಿರಿ
   - _why:_ organisers reshare what credits them; a name off a poster is how ಸೇನೇಶ್ವರ happened
   - _asked by:_ Gautam Paduvari
+
+## package
+
+- **2026-09-17-02** — Daily default render is carousel only. story_card and broadsheet are dropped entirely — carousel already covers that ground, and every extra format is more time spent posting. A reel is never a default; render one only when scripts/pick_formats.py says the lead story earns it (brand.reach.should_be_reel, D72).
+  - _why:_ editor's own observed performance: carousel outperforms, extra formats waste posting time
+  - _asked by:_ Gautam Paduvari

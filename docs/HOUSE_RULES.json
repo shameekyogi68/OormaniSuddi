@@ -28,6 +28,15 @@
       "added": "2026-09-17",
       "retired": "",
       "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-09-17-02",
+      "said": "Daily default render is carousel only. story_card and broadsheet are dropped entirely — carousel already covers that ground, and every extra format is more time spent posting. A reel is never a default; render one only when scripts/pick_formats.py says the lead story earns it (brand.reach.should_be_reel, D72).",
+      "scope": "package",
+      "why": "editor's own observed performance: carousel outperforms, extra formats waste posting time",
+      "added": "2026-09-17",
+      "retired": "",
+      "by": "Gautam Paduvari"
     }
   ]
 }

@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **50/75** decisions are named by at least one test
+- **51/76** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -318,8 +318,8 @@ those carry a reason rather than a test.
 
 ## D72 · Reach is local penetration, and it is measured that way
 
-- **Tested by:** `tests/test_reach.py`
-- Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`, `scripts/draft_edition.py`
+- **Tested by:** `tests/test_pick_formats.py`, `tests/test_reach.py`
+- Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`, `scripts/draft_edition.py`, `scripts/pick_formats.py`
 
 ## D73 · The newsroom answers in one shape, argues with itself, and remembers
 
@@ -337,4 +337,8 @@ those carry a reason rather than a test.
 ## D76 · "Ready by 8am" needs a number attached to how sure that is
 
 - **Tested by:** `tests/test_draft_edition.py`, `tests/test_verify.py`
+
+## D77 · Carousel is the day; a reel is earned, not defaulted
+
+- **Tested by:** `tests/test_pick_formats.py`
 

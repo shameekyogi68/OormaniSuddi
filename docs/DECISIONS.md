@@ -1968,6 +1968,44 @@ exact complaint that started this (2026-09-17, "no news created for today").
 ---
 
 
+## D77 · Carousel is the day; a reel is earned, not defaulted
+
+**Decided.** The documented daily default narrows from D69's four formats to
+one, plus a decision: `scripts/pick_formats.py` always includes carousel, and
+adds `reel` only when the lead story clears `brand.reach.should_be_reel()`
+(D72) — the same mechanical relevance check the Chief Editor gate already
+reads elsewhere, not a fresh guess. `story_card` and `broadsheet` are dropped
+from the default entirely. House rule 2026-09-17-02 records the editor's own
+reasoning: carousel already covers the ground both of those exist for, and
+every extra file rendered is more time spent posting it, not less.
+
+**Narrows, does not repeal, D69.** `--minimal` and `Limits.daily_templates`
+still exist unchanged in code — `render.py --minimal` still renders all four,
+for whoever explicitly asks for it. What changes is what every documented
+workflow (`docs/RUNBOOK.md`, `.agents/skills/second-brain/SKILL.md`, the
+Start / approve / Stop chat protocol, D76) tells a person or an AI to run by
+default. D69's floor — `verified_by`, the legal guards, the sign-off never
+drop, whatever else does — still holds exactly as written.
+
+**Why a script decides the reel and not a person, each morning.** The
+question "does today's lead deserve a reel" already has a mechanical answer
+sitting in `brand/reach.py`: category fit, local relevance, whether a place
+is even named. Asking a person to re-derive that judgement call by eye every
+morning, when the evidence already exists and is already trusted by the Gate
+stop, is the exact kind of repeated manual decision this project keeps
+finding and removing.
+
+**If you undo it.** Every morning goes back to rendering four files whether
+or not three of them are earning their post — more render time, more time
+spent posting, and a reel on a story nobody was going to watch past frame
+one, which is the one thing `should_be_reel()` already exists to catch.
+
+`scripts/pick_formats.py` · `brand/reach.py :: should_be_reel, formats_for` ·
+`tests/test_pick_formats.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

@@ -145,10 +145,13 @@ EDITION_FILE = editions/{DATE}.json
 ARCHIVE_DIR  = archive/{DATE}
 ```
 
-**Daily default** (minimum viable day):
+**Daily default** (minimum viable day) — carousel, plus a reel only if the
+lead story earns one. House rule 2026-09-17-02:
 
 ```bash
-python3 render.py editions/{DATE}.json --only carousel story_card broadsheet reel --out out/{DATE}
+python3 render.py editions/{DATE}.json \
+    --only $(python3 scripts/pick_formats.py editions/{DATE}.json) \
+    --out out/{DATE}
 ```
 
 Do **not** render the AI bulletin unless the user asks, and never schedule it
@@ -325,9 +328,14 @@ a reader can do about it. Say which story, and what is missing.
 
 ```bash
 mkdir -p assets/daily/{DATE}
-python3 render.py editions/{DATE}.json --minimal --out out/{DATE}
-# --minimal is carousel + story_card + broadsheet + reel: the four things that
-# ship most mornings. Anything else is --only, on request.
+python3 render.py editions/{DATE}.json \
+    --only $(python3 scripts/pick_formats.py editions/{DATE}.json) \
+    --out out/{DATE}
+# Carousel ships every day. pick_formats.py adds a reel only when the lead
+# story earns one (brand.reach.should_be_reel, D72) — house rule
+# 2026-09-17-02. story_card and broadsheet are never in the default at all;
+# anything beyond that, including the bulletin and standalone post cards, is
+# --only, on request.
 
 python3 scripts/verify_narration.py out/{DATE}    # did the voice say the words
 ```
@@ -428,8 +436,9 @@ about it afterwards. (D62)
 Only once `R.is_signed('out/{DATE}')` is true:
 
 > 🟢 ಮುಖ್ಯ ಸಂಪಾದಕರ ಅನುಮೋದನೆ
-> `out/{DATE}/` is postable. Instagram carousel + 0–2 reels + WhatsApp
-> broadsheet. YouTube only if this folder contains real footage.
+> `out/{DATE}/` is postable. Instagram carousel + a reel if the lead story
+> earned one + WhatsApp forwards (one per town). YouTube only if this folder
+> contains real footage.
 
 Embed carousel slides in chat. Present MASTER_COPY / copy files. **A person
 uploads.** Do not connect Instagram or YouTube posting APIs.

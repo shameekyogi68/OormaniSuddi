@@ -36,13 +36,16 @@ terminal, drives the daily pipeline.
 ## Doing the work
 
 ```bash
-python3 render.py editions/2026-08-25.json --only carousel story_card broadsheet reel
-python3 render.py editions/2026-08-25.json      # full package (AI bulletin is HOLD, not YouTube)
 python3 render.py --describe                    # every template + its rules
 python3 render.py --schema story                # the input contract
 python3 render.py --check my.json               # validate, render nothing
 python3 render.py editions/greetings/X.json     # a festival wish: 9:16, 4:5, 1:1
-python3 render.py editions/X.json --minimal      # the four things that ship daily
+python3 render.py editions/X.json --only $(python3 scripts/pick_formats.py editions/X.json)
+                                                 # the daily default: carousel, plus a reel
+                                                 # only if the lead story earns one (D72,
+                                                 # house rule 2026-09-17-02)
+python3 render.py editions/2026-08-25.json --only story_card broadsheet   # on request only
+python3 render.py editions/2026-08-25.json      # full package (AI bulletin is HOLD, not YouTube)
 python3 -m unittest tests.test_contract         # the contract (instant)
 python3 -m unittest discover tests              # + the golden design (~2 min)
 

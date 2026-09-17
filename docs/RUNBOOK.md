@@ -53,11 +53,20 @@ The assistant:
    attached without you, in the conversation, having actually seen the real
    content and told it to proceed. A story it could not actually load for
    you is left out, never verified on your behalf.
-2. Renders the minimal daily set only —
-   `render.py editions/{date}.json --minimal --out out/{date}` — carousel,
-   story card, broadsheet, reel. Never the bulletin, thumbnail, or
-   standalone post cards unless you specifically ask; minimal is the rule
-   here, not the fallback, because more formats is more time spent posting.
+2. Renders carousel only, plus a reel if — and only if — the lead story
+   earns one. House rule 2026-09-17-02:
+   ```bash
+   python3 render.py editions/{date}.json \
+       --only $(python3 scripts/pick_formats.py editions/{date}.json) \
+       --out out/{date}
+   ```
+   `pick_formats.py` decides the reel mechanically, from the same
+   relevance check the Chief Editor gate already trusts (`brand.reach.
+   should_be_reel`, D72) — not a guess, and not every day. `story_card` and
+   `broadsheet` are never in the default at all: carousel already covers
+   that ground, and every extra file is more time spent posting. Never the
+   bulletin, thumbnail, or standalone post cards either, unless you
+   specifically ask for them.
 3. Reports what the Chief Editor gate found (`APPROVAL.md`). Publishing
    still needs your sign-off — `scripts/sign_off.py out/{date} --by
    "<name>"` — taste, culture and news judgement stay yours, D62, same as
@@ -116,13 +125,17 @@ building by hand from `inbox/today.md`, same as before this existed.
 
 ```bash
 python3 render.py editions/2026-09-16.json --check      # validate, render nothing
-python3 render.py editions/2026-09-16.json --minimal    # carousel, story, broadsheet, reel
+python3 render.py editions/2026-09-16.json \
+    --only $(python3 scripts/pick_formats.py editions/2026-09-16.json) \
+    --out out/2026-09-16
 ```
 
-`--minimal` is the four things that ship most mornings. The bulletin, the
-thumbnail and the standalone post cards are real and they are `--only` on
-request; making them the default is how a small desk produces a lot of
-mediocre content instead of four good things.
+Carousel ships every day. `pick_formats.py` adds a reel only when the lead
+story earns one (D72) — house rule 2026-09-17-02. `story_card` and
+`broadsheet` are never in the default; the bulletin, thumbnail and standalone
+post cards are real and they are `--only` on request. Making any of them the
+default is how a small desk produces a lot of mediocre content, and spends
+more time posting it, instead of one good thing.
 
 Then look at what was made:
 
@@ -172,20 +185,22 @@ python3 scripts/archive_edition.py 2026-09-16
 Decided in advance, because deciding it at 07:40 is how a thin story gets
 promoted to a reel. D69.
 
-`--minimal` **is** the normal day: carousel, story card, broadsheet, reel.
-Below that, things drop in this order:
+The format question is already settled, every day, by house rule
+2026-09-17-02: carousel, and `pick_formats.py` adds a reel only when the
+lead story earns one (D72). Bulletin, thumbnail, post cards, story_card and
+broadsheet are never the default regardless of how the day is going — those
+were already `--only` on request (Rule 7), or dropped outright. A short day
+is not about dropping formats; it is about how many **stories** belong in the
+carousel:
 
-| Drop | Why it goes first |
+| Fewer stories than usual? | What to do |
 |---|---|
-| bulletin | off by default and not going to YouTube anyway (Rule 7) |
-| post cards | the carousel already carries every story |
-| yt_thumbnail | it exists for a video that may not be made |
-| reels, worst story first | one good reel beats three adequate ones |
-| story card | it points at the carousel; the carousel survives without it |
+| Two or three solid tips | Ship a two- or three-slide carousel. Short is honest. |
+| A weak tip padding out a fourth slot | Leave it out. `draft_edition.py` already skips anything that needs a rewrite (D76) — do the same by hand for anything it drafted that still reads thin. |
+| Nothing local at all | Publish the weather card alone, or say nothing else. |
 
-The floor is **one carousel and one broadsheet forward.** That is a day. Two
-usable tips and an honest carousel is a better day than five stories nobody
-checked.
+The floor is **one carousel.** That is a day. Two usable tips and an honest
+carousel is a better day than five stories nobody checked.
 
 What never drops: `verified_by`, the legal guards, the sign-off. A short day is
 a reason to publish **less**, never a reason to publish less carefully.
