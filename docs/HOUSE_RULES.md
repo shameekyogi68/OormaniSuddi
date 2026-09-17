@@ -23,6 +23,8 @@ the things that are genuinely house style rather than contract.
   - _why:_ Editor standing instruction (2026-09-17): carousel slides must never be headlines-only; deck is mandatory.
 - **2026-09-17-07** — For daily carousel and bulletin editions, hashtags must include all locations (taluks/places) and categories from all stories featured in the edition, not just the lead story.
   - _why:_ Editor standing instruction (2026-09-17): carousel hashtags must represent all news places and categories covered in the edition.
+- **2026-09-17-08** — WhatsApp group and broadcast messages must follow the tailored format: 🌾 *ಊರ್ಮನಿ ಸುದ್ದಿ · {date}*, tagline, numbered items with place names (1️⃣ *ಸ್ಥಳ*: ಸುದ್ದಿ), and '📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*'. NEVER write 'ಫೋಟೋಗಳು' or 'photos' when using AI-generated imagery.
+  - _why:_ Editor standing instruction (2026-09-17): exact approved WhatsApp group/broadcast format.
 
 ## picture
 
