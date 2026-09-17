@@ -342,3 +342,57 @@ class TheSchedulerIsNotOurs(unittest.TestCase):
         self.assertNotIn('run_oormani', src,
                          'the installer must not reach for a script outside '
                          'this repository, even to read it')
+
+
+class SharedUrlsAreNotArticles(unittest.TestCase):
+    """A listing page embedded as one tip's article is a lie, not a body.
+
+    Found on 2026-09-17: Udayavani's district page hydrates via embedded JSON,
+    a naive <h2>/<h3> regex matches headline text sitting inside that JSON with
+    no real per-article link beside it, and the scraper fell back to the
+    listing page URL for every item — so fetch_body() handed the SAME wrong
+    text to all twelve tips, each stamped body_source='article'. The
+    groundedness pass then flagged real facts as invented because it was
+    comparing against somebody else's headline.
+    """
+
+    def test_a_url_shared_by_two_tips_is_flagged(self):
+        """D75."""
+        from scripts.fetch_daily_news import _shared_urls
+        tips = [Tip(headline='a', source_name='x', source_url='https://p/list'),
+                Tip(headline='b', source_name='x', source_url='https://p/list'),
+                Tip(headline='c', source_name='x', source_url='https://p/one')]
+        self.assertEqual(_shared_urls(tips), {'https://p/list'})
+
+    def test_unique_urls_are_never_flagged(self):
+        from scripts.fetch_daily_news import _shared_urls
+        tips = [Tip(headline='a', source_name='x', source_url=f'https://p/{i}')
+                for i in range(5)]
+        self.assertEqual(_shared_urls(tips), set())
+
+    def test_attach_bodies_never_labels_a_shared_url_as_article(self):
+        from scripts.fetch_daily_news import attach_bodies
+        tips = [Tip(headline='ಸುದ್ದಿ ಒಂದು', source_name='x',
+                    source_url='https://p/list'),
+                Tip(headline='ಸುದ್ದಿ ಎರಡು', source_name='x',
+                    source_url='https://p/list')]
+        with contextlib.redirect_stdout(io.StringIO()):
+            attach_bodies(tips)
+        for t in tips:
+            self.assertNotEqual(t.body_source, 'article',
+                               f'{t.headline} was labelled article from a '
+                               f'URL shared with another tip')
+
+    def test_a_tip_with_no_body_falls_back_to_its_own_snippet(self):
+        """The fix must not throw away real per-tip RSS text along with the
+        fake per-URL body."""
+        from scripts.fetch_daily_news import attach_bodies
+        tips = [Tip(headline='ಒಂದು', source_name='x', source_url='https://p/list',
+                    snippet='ಸ್ವಂತ ತುಣುಕು ಒಂದು'),
+                Tip(headline='ಎರಡು', source_name='x', source_url='https://p/list',
+                    snippet='ಸ್ವಂತ ತುಣುಕು ಎರಡು')]
+        with contextlib.redirect_stdout(io.StringIO()):
+            attach_bodies(tips)
+        self.assertEqual(tips[0].body, 'ಸ್ವಂತ ತುಣುಕು ಒಂದು')
+        self.assertEqual(tips[1].body, 'ಸ್ವಂತ ತುಣುಕು ಎರಡು')
+        self.assertEqual(tips[0].body_source, 'rss')

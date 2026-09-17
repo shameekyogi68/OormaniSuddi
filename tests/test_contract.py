@@ -728,6 +728,20 @@ class EveryImageOnScreenIsDisclosed(unittest.TestCase):
         self.assertTrue(any('no disclosure' in m for m in r.fail),
                         'an undisclosed gallery image must fail preflight')
 
+    def test_story_chapter_defs_produces_safe_badges_and_structure(self):
+        """D46: multi-chapter breakdown builds clean badges without tofu glyphs."""
+        base = next(s for s in self.ed.stories if s.points and s.takeaway)
+        defs = self.M._story_chapter_defs(base)
+        self.assertGreaterEqual(len(defs), 2)
+        for name, badge, text, is_alert in defs:
+            self.assertTrue(name.strip())
+            self.assertTrue(badge.strip())
+            self.assertTrue(text.strip())
+            # D46: no raw bullet ▪ or warning ⚠ glyphs in badge text (drawn vectorially)
+            self.assertNotIn('▪', badge)
+            self.assertNotIn('⚠', badge)
+
+
 
 class TheAnchorSpeaksKannada(unittest.TestCase):
     """D50: print copy and spoken copy are not the same language."""

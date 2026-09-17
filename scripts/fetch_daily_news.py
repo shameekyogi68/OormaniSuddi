@@ -312,6 +312,30 @@ def fetch_body(url: str) -> str:
         return ''
 
 
+def _shared_urls(tips: list[Tip]) -> set[str]:
+    """URLs more than one tip resolved to.
+
+    A genuine per-article scrape gives every tip its own URL. A URL shared by
+    two or more tips is structurally a listing or index page, whatever it
+    looks like — Udayavani's district page embeds every article's JSON for
+    React hydration, and a naive <h2>/<h3> regex over the raw HTML matches
+    headline text sitting INSIDE that embedded JSON, with no real per-article
+    link next to it, so the scraper falls back to the page URL for every item.
+    fetch_body() would then fetch that one page once and hand the same wrong
+    text to every tip that shares it, each one wrongly stamped body_source
+    'article' — which is worse than no body, because it CLAIMS grounding it
+    does not have, and the groundedness pass then flags real facts as invented
+    because it is comparing against somebody else's headline.
+    This is a structural check, not a list of known-bad URLs, so it catches
+    the same class of bug in any scraper, including ones written later.
+    """
+    seen: dict[str, int] = {}
+    for t in tips:
+        if t.source_url:
+            seen[t.source_url] = seen.get(t.source_url, 0) + 1
+    return {u for u, n in seen.items() if n > 1}
+
+
 def attach_bodies(tips: list[Tip]) -> int:
     """Fill `body` where the publisher serves the article. Returns how many."""
     if not _extractor():
@@ -323,12 +347,19 @@ def attach_bodies(tips: list[Tip]) -> int:
                 t.body, t.body_source = t.snippet, 'rss'
         return 0
     got = 0
+    shared = _shared_urls(tips)
+    if shared:
+        log(f'  bodies:         {len(shared)} URL(s) shared by more than one '
+            f'tip — that is a listing page, not an article. Skipped rather '
+            f'than mislabelled.')
     # Crime and minor tips first: those are the ones where an invented detail
     # is not an embarrassment but an exposure.
     order = sorted(range(len(tips)),
                    key=lambda i: 0 if tips[i].risk != 'normal' else 1)
     for i in order[:BODY_BUDGET]:
         t = tips[i]
+        if t.source_url in shared:
+            continue
         body = fetch_body(t.source_url)
         if body:
             t.body, t.body_source = body, 'article'

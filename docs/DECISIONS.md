@@ -1881,6 +1881,43 @@ register goes back to recording intentions rather than licences.
 ---
 
 
+## D75 · A URL two tips share is a listing page, not an article
+
+**Decided.** `attach_bodies()` never fetches or labels a body from a
+`source_url` that more than one tip resolved to. Detected structurally —
+counting URL repeats across the batch — not by naming Udayavani or any other
+site.
+
+**Found running the fetch for real, on 2026-09-17, the first morning anyone
+asked why there was no news.** `scrape_udayavani_html()`'s `<h2>`/`<h3>` regex
+was matching headline text sitting *inside* the page's embedded React
+hydration JSON, with no real per-article link beside it, so every one of its
+twelve tips fell back to the same district listing-page URL. `fetch_body()`
+then fetched that one page once and handed the identical wrong text to all
+twelve, each stamped `body_source: 'article'` — a claim of grounding the sheet
+did not have.
+
+**Why this was worse than having no body at all.** The groundedness pass (D63)
+compared each lead against that shared garbage instead of the tip's own
+source, and flagged real facts as invented because it was reading somebody
+else's headline. 28 of 33 leads were flagged in one run. After the fix: 15,
+which is the genuine remainder from Kannada-grammar edge cases on other
+sources, plus one tip correctly marked "could not be checked" instead of
+flagged, because its source was in English.
+
+**Why a structural check and not a URL blocklist.** A list of known-bad pages
+protects against this one site. Counting repeats catches the same class of
+bug in any scraper, including ones written after this file is.
+
+**If you undo it.** The very system built to catch invented facts starts
+manufacturing false ones to flag, at a rate high enough that an editor learns
+to ignore the flags — which is the same failure as not checking at all.
+
+`scripts/fetch_daily_news.py :: _shared_urls, attach_bodies` · `tests/test_intake.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

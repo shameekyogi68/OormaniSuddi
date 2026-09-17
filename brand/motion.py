@@ -1273,6 +1273,40 @@ _BADGE = {
 }
 
 
+def _story_chapter_defs(st: Story) -> list[tuple[str, str, str, bool]]:
+    """Build (chapter_name, badge_label, text, is_alert) for multi-chapter breakdown."""
+    cat = st.category
+    incident = cat in ('civic', 'crime', 'accident')
+    labels = _BADGE['incident' if incident else 'default']
+
+    defs: list[tuple[str, str, str, bool]] = [
+        ("ಮುಖ್ಯಾಂಶ", "ಬ್ರೇಕಿಂಗ್ ಮುಖ್ಯಾಂಶ", head_line(st, REEL), False)
+    ]
+
+    pts = [p.strip() for p in (st.points or []) if p.strip()]
+    shorts = list(getattr(st, 'reel_points', []) or [])
+
+    if len(pts) >= 1:
+        c1_name = "ಸ್ಥಳ ವಿವರ" if incident else "ಪ್ರಮುಖ ವಿವರ"
+        c1_text = shorts[0].strip() if len(shorts) > 0 and shorts[0].strip() else pts[0]
+        defs.append((c1_name, labels[0], c1_text, False))
+
+    if len(pts) >= 2:
+        c2_name = "ತನಿಖಾ ವಿವರ" if incident else "ಮುಖ್ಯ ಅಂಶ"
+        c2_text = shorts[1].strip() if len(shorts) > 1 and shorts[1].strip() else pts[1]
+        defs.append((c2_name, labels[1], c2_text, False))
+
+    if (st.takeaway or '').strip():
+        badge_txt = 'ಸಾರ್ವಜನಿಕ ಎಚ್ಚರಿಕೆ' if incident else 'ಸಾರ್ವಜನಿಕ ಪ್ರಕಟಣೆ'
+        defs.append(("ಜಾಗೃತಿ", badge_txt, st.takeaway.strip(), True))
+    elif len(pts) >= 3:
+        c3_name = "ಜಾಗೃತಿ" if incident else "ವಿಶೇಷ ಮಾಹಿತಿ"
+        c3_text = shorts[2].strip() if len(shorts) > 2 and shorts[2].strip() else pts[2]
+        defs.append((c3_name, labels[min(2, len(labels) - 1)], c3_text, False))
+
+    return defs
+
+
 def reel_cards(story: Story) -> list[Card]:
     """The cards this story becomes, in order — including the outro.
 

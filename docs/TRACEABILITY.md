@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **48/73** decisions are named by at least one test
+- **49/74** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -326,4 +326,8 @@ those carry a reason rather than a test.
 ## D74 · A licence you cannot point at is one you cannot produce
 
 - **Tested by:** `tests/test_contract.py`
+
+## D75 · A URL two tips share is a listing page, not an article
+
+- **Tested by:** `tests/test_intake.py`
 
