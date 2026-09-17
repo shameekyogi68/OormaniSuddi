@@ -416,7 +416,17 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
     # of a fenced block in a long markdown file at 20:00 is how the wrong
     # town's card goes to the wrong group.
     for place, text in forwards.items():
-        safe = ''.join(c for c in place if c.isalnum() or c in ' _-').strip()
+        # Latin name for the filename. `isalnum()` is False for a Kannada
+        # vowel sign, so filtering on it silently ate them: ಉಡುಪಿ came out as
+        # forward_ಉಡಪ.txt and ಮಂಗಳೂರು as forward_ಮಗಳರ.txt — a filename that
+        # is not the town's name in any language, on the file somebody has to
+        # pick out of a folder at 20:00. copy.PLACE_TAGS already holds the
+        # Latin spelling for exactly this kind of use.
+        safe = copywriter.PLACE_TAGS.get(place.strip(), '')
+        if not safe:
+            safe = ''.join(c for c in place
+                          if c.isalnum() or '\u0c80' <= c <= '\u0cff'
+                          or c in ' _-').strip()
         fp = os.path.join(outdir, f'forward_{safe or "edition"}.txt')
         with open(fp, 'w', encoding='utf-8') as f:
             f.write(text + '\n')

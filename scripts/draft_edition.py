@@ -51,6 +51,7 @@ sys.path.insert(0, ROOT)
 from brand.content import Story, Edition, ContentError, OWN_REPORTING, now  # noqa: E402
 from brand.qa import preflight  # noqa: E402
 from brand.reach import BREADTH, ACTIONABLE  # noqa: E402
+from brand.stock import photo_for  # noqa: E402
 from scripts.fetch_daily_news import (_kannada_share, UNCHECKABLE,  # noqa: E402
                                       _shared_urls, link_opens)
 
@@ -186,6 +187,7 @@ def build(date_s: str, max_stories: int) -> tuple[list[dict], list[str]]:
     stories: list[dict] = []
     notes: list[str] = []
     seen_places: set[str] = set()
+    used_frames: set[str] = set()
     for tip in tips:
         if len(stories) >= max_stories:
             break
@@ -216,6 +218,21 @@ def build(date_s: str, max_stories: int) -> tuple[list[dict], list[str]]:
                         f'render as-is ({rep.fail[0]}). The tip is real; the '
                         f'headline needs a person to shorten it.')
             continue
+        # Every carousel slide carries a photograph (house rule 2026-09-17-03,
+        # enforced as IMG-04). Without this the gate holds every auto-drafted
+        # morning on four counts before anyone has read a word. Only a frame
+        # the story's own words or category earn — brand/stock.py leaves the
+        # rest bare on purpose, for a person to answer.
+        photo = photo_for(story, used_frames)
+        if photo is not None:
+            d['photo'] = {'path': photo.path, 'nature': photo.nature,
+                         'credit': photo.credit, 'licence': photo.licence,
+                         'caption': photo.caption}
+            used_frames.add(os.path.basename(photo.path))
+        else:
+            notes.append(f'no stock frame fits "{d["headline"][:40]}" — pick '
+                        f'one from assets/stock/CATALOG.md or generate one; '
+                        f'the gate will hold the package until you do.')
         stories.append(d)
         if d['location']:
             seen_places.add(d['location'])

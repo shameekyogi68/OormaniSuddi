@@ -392,3 +392,51 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
   "caption": "ಶ್ರೀ ಗಣೇಶ ಚತುರ್ಥಿ ಪೂಜಾ ಮಂಟಪ ಹಾಗೂ ನೈವೇದ್ಯ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
 }
 ```
+
+---
+
+### 25. `health_hospital_campus_outpatients.jpg`
+- **Use in Any**: Hospital news, treatment and admission reports, health department drives, outpatient load, medical college stories, or ambulance/emergency access.
+- **Visual**: A coastal medical college hospital campus with doctors in white coats, patients and attendants on the approach road, and ambulances parked outside.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/health_hospital_campus_outpatients.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಆಸ್ಪತ್ರೆ ಆವರಣ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 26. `coastal_storm_sea_warning.jpg`
+- **Use in Any**: Orange/red rain alerts, sea-storm warnings for fishermen, cyclone advisories, high-tide and kadal kore (coastal erosion) reports.
+- **Visual**: A dark storm sky over a rough coastal sea, rain sheeting across rocks and wind-bent coconut palms.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_storm_sea_warning.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಕರಾವಳಿಯಲ್ಲಿ ಚಂಡಮಾರುತ ಸಹಿತ ಮಳೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```
+
+---
+
+### 27. `crime_scene_police_cordon.jpg`
+- **Use in Any**: Police investigation at a scene, cordoned sites, spot mahazar, or general crime reporting where no other frame fits.
+- **Visual**: Police personnel at a cordoned-off scene in a coastal town setting.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/crime_scene_police_cordon.jpg",
+  "nature": "ai",
+  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಘಟನಾ ಸ್ಥಳದಲ್ಲಿ ಪೊಲೀಸ್ ಪರಿಶೀಲನೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+}
+```

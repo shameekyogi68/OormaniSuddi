@@ -34,7 +34,11 @@ instruction, not a one-off request to whichever session heard it first.
 
 1. Makes sure today has a draft. If `editions/{date}.json` doesn't exist yet,
    it runs `scripts/fetch_daily_news.py` then `scripts/draft_edition.py`
-   itself. If one already exists, it uses that — it does not discard an
+   itself. The draft arrives illustrated — every story carries a frame from
+   `assets/stock/` that its own words or category earned (D80), because a
+   carousel slide without a photograph is blocked at the gate (`IMG-04`).
+   A story the library has nothing honest for is left bare on purpose, and
+   the checklist says which. If one already exists, it uses that — it does not discard an
    edition you may already be partway through.
 2. Opens every story's actual `source_url` and reads the real article — not
    just the short tip snippet, so you are reading a real account, not a

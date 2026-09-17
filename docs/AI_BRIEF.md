@@ -61,7 +61,7 @@ thumbnail and the 9:16 story card are both made from it.
       ],
       "takeaway": "ತುರ್ತು ಸಹಾಯಕ್ಕೆ ಜಿಲ್ಲಾ ವಿಪತ್ತು ನಿರ್ವಹಣಾ ಕೊಠಡಿ 1077 ಸಂಪರ್ಕಿಸಿ.",
       "photo": {
-        "path": "assets/udupi_coastal_storm.jpg",
+        "path": "assets/stock/coastal_storm_sea_warning.jpg",
         "nature": "representative",
         "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ಸಂಗ್ರಹ",
         "licence": "own",

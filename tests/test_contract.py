@@ -30,7 +30,7 @@ def base(**kw):
 
 
 def pic(**kw):
-    d = dict(path='assets/udupi_coastal_storm.jpg', credit='ವರದಿಗಾರರಿಂದ', licence='own')
+    d = dict(path='assets/stock/coastal_storm_sea_warning.jpg', credit='ವರದಿಗಾರರಿಂದ', licence='own')
     d.update(kw)
     return Photo(**d)
 

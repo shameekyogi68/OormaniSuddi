@@ -2110,6 +2110,52 @@ the next one should start by answering that question rather than assuming it.
 ---
 
 
+## D80 · Two rules that were each right and together stopped every morning
+
+**Found by running Start / go / Stop end to end instead of assuming it.**
+House rule 2026-09-17-03 made a photograph mandatory on every carousel slide
+and the gate enforces it as `IMG-04`. `draft_edition.py` (D76) attaches no
+photograph, because it copies text and invents nothing. Both were correct on
+their own. Together they held **every** auto-drafted edition at the gate on
+one count per story, before anybody had read a word — the pipeline could not
+produce an approvable package at all.
+
+**Decided.** `brand/stock.py` is the picture desk when nobody is at it. A
+story gets a frame from `assets/stock/` when its own words or its category
+earn one, and the draft arrives illustrated. What it will not do is attach a
+picture it cannot defend: `sport` and `obituary` have no honest frame in this
+library, so those are left bare and the gate stops the package for a person
+to answer. A fishing harbour on a school story is a lie told in pictures, and
+`docs/AI_BRIEF.md` has said so from the start.
+
+**Three things the first run got wrong, all fixed here.** A raw substring
+match put a farmers' market on a story about a political row, because `ದರ`
+(price) sits inside `ವಿಚಾರದಲ್ಲಿ` — matching now runs per word, from the start
+of the word, which keeps ಮಳೆ → ಮಳೆಯಿಂದ and refuses the accidental middles.
+Two stories of one category took the same frame, so a frame is now used once
+per edition. And the library was thin where the district is busiest, so the
+three loose images sitting in `assets/` — a hospital campus, a coastal storm,
+a police cordon — were moved into `assets/stock/`, catalogued, and every
+reference to their old paths repointed. 27 frames, all catalogued, and a test
+says an uncatalogued one cannot be chosen.
+
+**Also fixed on the same run.** The per-town WhatsApp forwards were being
+written to files whose names were not the town's name in any language:
+`isalnum()` is False for a Kannada vowel sign, so ಉಡುಪಿ was saved as
+`forward_ಉಡಪ.txt` and ಮಂಗಳೂರು as `forward_ಮಗಳರ.txt`. They now carry the Latin
+name from `copy.PLACE_TAGS` — `forward_Udupi.txt` — which is the file
+somebody has to pick out of a folder at 20:00.
+
+**What the end-to-end run now leaves.** One block, four times over: `SRC-02`,
+no `verified_by`. That is the person saying go, and it is the only thing
+between a drafted morning and an approvable one. It is supposed to be there.
+
+`brand/stock.py` · `scripts/draft_edition.py` · `render.py` ·
+`assets/stock/CATALOG.md` · `tests/test_stock.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

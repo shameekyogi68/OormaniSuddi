@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **53/78** decisions are named by at least one test
+- **54/79** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -249,7 +249,7 @@ those carry a reason rather than a test.
 
 ## D57 · Generated images, including stock, are `nature: 'ai'`
 
-- **Tested by:** `tests/test_contract.py`
+- **Tested by:** `tests/test_contract.py`, `tests/test_stock.py`
 - Enforced in: `brand/codes.py`, `brand/content.py`
 
 ## D58 · A reel opens on the news
@@ -350,4 +350,8 @@ those carry a reason rather than a test.
 ## D79 · The 90-day law review, 2026-09-17 — and what it found
 
 - **Tested by:** `tests/test_legal_corpus.py`
+
+## D80 · Two rules that were each right and together stopped every morning
+
+- **Tested by:** `tests/test_stock.py`
 
