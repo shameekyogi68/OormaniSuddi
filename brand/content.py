@@ -660,6 +660,14 @@ _GRANULAR = [
     'ಪೇಟೆ', 'ಕ್ರಾಸ್', 'ಜಂಕ್ಷನ್', 'ವಾರ್ಡ್', 'ಬೀದಿ', 'ಓಣಿ', 'ಮನೆ',
     'ದೇವಸ್ಥಾನ', 'ಮಠ', 'ಚರ್ಚ್', 'ಮಸೀದಿ', 'ಹಾಸ್ಟೆಲ್', 'ಆಶ್ರಮ',
     'ಅಂಗನವಾಡಿ', 'ಪಂಚಾಯಿತಿ',
+    # Added by the 90-day law review, 2026-09-17. The list named four faiths'
+    # places of worship and missed the fifth (ದರ್ಗಾ), and it missed the one
+    # landmark that locates a person most precisely in Karkala and
+    # Moodbidri — a ಬಸದಿ. In a town that size, "the basadi" is an address.
+    # ಕಟ್ಟೆ is the same for a village. The rest are ordinary small places a
+    # report reaches for when it wants to sound specific.
+    'ಬಸದಿ', 'ದರ್ಗಾ', 'ಗುಡಿ', 'ಕಟ್ಟೆ', 'ನಿಲ್ದಾಣ', 'ಅಪಾರ್ಟ್',
+    'ಅಂಗಡಿ', 'ಕ್ಯಾಂಪ್', 'ಕಾರ್ಖಾನೆ', 'ಹೊಟೇಲ್', 'ನಿವಾಸ',
 ]
 
 

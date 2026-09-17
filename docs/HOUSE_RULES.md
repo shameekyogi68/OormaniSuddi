@@ -21,6 +21,8 @@ the things that are genuinely house style rather than contract.
   - _asked by:_ Gautam Paduvari
 - **2026-09-17-04** — Every story in a daily bulletin must have a comprehensive Kannada news description (deck). A carousel is not a headline ticker; the deck explains who, what, where, and why below the headline.
   - _why:_ Editor standing instruction (2026-09-17): carousel slides must never be headlines-only; deck is mandatory.
+- **2026-09-17-07** — For daily carousel and bulletin editions, hashtags must include all locations (taluks/places) and categories from all stories featured in the edition, not just the lead story.
+  - _why:_ Editor standing instruction (2026-09-17): carousel hashtags must represent all news places and categories covered in the edition.
 
 ## picture
 

@@ -73,6 +73,15 @@
       "added": "2026-09-17",
       "retired": "",
       "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-09-17-07",
+      "said": "For daily carousel and bulletin editions, hashtags must include all locations (taluks/places) and categories from all stories featured in the edition, not just the lead story.",
+      "scope": "desk",
+      "why": "Editor standing instruction (2026-09-17): carousel hashtags must represent all news places and categories covered in the edition.",
+      "added": "2026-09-17",
+      "retired": "",
+      "by": ""
     }
   ]
 }

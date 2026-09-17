@@ -39,6 +39,7 @@ CODES: dict[str, str] = {
     'IMG-01': 'an image would appear on screen with no disclosure line',
     'IMG-02': 'a generated image is not wearing nature="ai" (D57)',
     'IMG-03': 'a reel has fewer gallery frames than facts, so a picture repeats',
+    'IMG-04': 'a carousel slide carries no photograph (house rule 2026-09-17-03)',
     # ── TYPE ──────────────────────────────────────────────────────────────
     'TYPE-01': 'a character no house font can set would render as an empty box',
     'TYPE-02': 'a colour pair falls below the contrast floor',

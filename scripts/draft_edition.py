@@ -52,7 +52,7 @@ from brand.content import Story, Edition, ContentError, OWN_REPORTING, now  # no
 from brand.qa import preflight  # noqa: E402
 from brand.reach import BREADTH, ACTIONABLE  # noqa: E402
 from scripts.fetch_daily_news import (_kannada_share, UNCHECKABLE,  # noqa: E402
-                                      _shared_urls)
+                                      _shared_urls, link_opens)
 
 INBOX_JSON = os.path.join(ROOT, 'inbox', 'today.json')
 
@@ -134,6 +134,12 @@ def _story_dict(tip: dict) -> dict | None:
     url = (tip.get('source_url') or '').strip()
     if not url.startswith('http'):
         return None    # nothing an editor can reopen — the whole point of D55
+    if not link_opens(url):
+        # An aggregator hop resolves only under JavaScript, so the person who
+        # clicks it to confirm this story lands on a home page instead. A
+        # story whose source cannot be reopened is exactly what D55 refuses,
+        # and verifying it would mean a name attached to an unchecked claim.
+        return None
     facts = [f.strip() for f in (tip.get('snippet') or '').split('|')
             if f.strip() and len(f.strip()) < 300][:3]
     text = ' '.join([lead, *facts])
@@ -141,6 +147,7 @@ def _story_dict(tip: dict) -> dict | None:
     d = {
         'headline': lead,
         'category': cat,
+        'deck': ' '.join(facts) if facts else '',
         'points': facts,
         'location': tip.get('taluk', '') or '',
         'sources': [tip.get('source_name', 'ಮೂಲ')],

@@ -157,10 +157,11 @@ system blocks identifying detail for you.
 > ✓ "headline": "ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ"
 > ```
 
-**A story with no photograph is fine.** Omit `photo` entirely and the card
-draws an editorial plate — a branded graphic, credited ಗ್ರಾಫಿಕ್ಸ್. Do NOT
-attach a loosely related stock image to avoid an empty-looking post; the plate
-is the designed answer to that, and it is honest.
+**A story with no photograph**: While individual cards may draw an editorial plate,
+the **daily carousel requires 100% photo coverage (house rule 2026-09-17-03)**.
+No carousel slide may appear without an image. Check `assets/stock/` first;
+if no matching evergreen visual exists, generate a fresh AI image directly in chat.
+Never leave a carousel slide unillustrated.
 
 **`hook` goes on the FIRST story.** The YouTube thumbnail and the 9:16 story
 card are both made from the lead, so a `hook` on any other story is ignored and

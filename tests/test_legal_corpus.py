@@ -118,3 +118,46 @@ class TheGuiltGuardIsMeasured(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TheVictimLocationGuardCoversThisDistrictsLandmarks(unittest.TestCase):
+    """POCSO 2012 §23 and BNS §72, measured the same way as the guilt guard.
+
+    Found by the 90-day law review on 2026-09-17 (D79), which is what that
+    review exists for. `_GRANULAR` already carried the coastal forms a generic
+    Indian list misses — ಪೇಟೆ, ಕ್ರಾಸ್, ಮಠ — but it named four faiths' places
+    of worship and missed the fifth, and it missed the one landmark type that
+    locates a person most precisely in Karkala and Moodbidri: a ಬಸದಿ. In a
+    town of that size, "the basadi" is an address.
+
+    The district and the taluk must keep passing. Those are the levels a
+    sexual-offence story is allowed to name, and a guard that refused them
+    would leave no way to say where anything happened at all.
+    """
+
+    def _story(self, location: str):
+        return Story(
+            headline='ಪ್ರಕರಣ ದಾಖಲು, ತನಿಖೆ ಆರಂಭ', category='crime',
+            location=location, sexual_offence=True, sources=[OWN_REPORTING],
+            photo=Photo('x.jpg', nature='representative',
+                        credit='ಊರ್ಮನಿ ಸುದ್ದಿ', licence='own'))
+
+    def _refused(self, location: str) -> bool:
+        try:
+            self._story(location).validate()
+            return False
+        except ContentError:
+            return True
+
+    def test_a_place_small_enough_to_identify_the_victim_is_refused(self):
+        for place in ('ಕಾರ್ಕಳದ ಹಿರಿಯಂಗಡಿ ಬಸದಿ', 'ಉಡುಪಿ ದರ್ಗಾ ಬಳಿ',
+                     'ಹೆಬ್ರಿ ಗುಡಿ', 'ಕುಂದಾಪುರ ಬಸ್ ನಿಲ್ದಾಣ',
+                     'ಮಲ್ಪೆ ಅಪಾರ್ಟ್ಮೆಂಟ್', 'ಕಾಪು ಅಂಗಡಿ ಬಳಿ',
+                     'ಬೈಂದೂರು ಕಟ್ಟೆ', 'ಬ್ರಹ್ಮಾವರ ಕ್ಯಾಂಪ್', 'ಕಾರ್ಖಾನೆ ಬಳಿ'):
+            self.assertTrue(self._refused(place),
+                            f'{place} is granular enough to identify someone')
+
+    def test_the_district_and_the_taluk_are_still_sayable(self):
+        for place in ('ಉಡುಪಿ ಜಿಲ್ಲೆ', 'ಕುಂದಾಪುರ ತಾಲೂಕು', 'ಉಡುಪಿ'):
+            self.assertFalse(self._refused(place),
+                             f'{place} is the level a story may name')

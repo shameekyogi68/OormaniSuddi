@@ -2065,6 +2065,51 @@ attach_bodies, _month_bridge, _supported, _FUNCTION_WORDS` · `tests/test_intake
 ---
 
 
+## D79 · The 90-day law review, 2026-09-17 — and what it found
+
+**Done, and dated, because "we looked and nothing moved" is a finding.** The
+review asks for D29, D49 and D59 to be read against what the law says now, and
+for the guilt-verb list and the POCSO location rules to be checked. Recorded
+here whether or not anything changed, which is the point of putting a date on
+it.
+
+**The guilt list holds.** 41 verbs, 37 corpus rows, all landing where they are
+labelled. Probed against phrasings a coastal desk actually writes —
+`ಮೋಸ ಮಾಡಿದ`, `ವಂಚಿಸಿದ`, `ಸುಲಿಗೆ ಮಾಡಿದ`, `ಅಪಹರಿಸಿದ`, `ಬೆಂಕಿ ಹಚ್ಚಿದ`,
+`ಹಣ ದೋಚಿದ`, `ಲಂಚ ಪಡೆದ` — every one already caught.
+
+**Two phrasings are deliberately NOT added.** `ದಾಳಿ ನಡೆಸಿದ` and
+`ಮಾರಾಟ ಮಾಡಿದ` slip through, and they should. A ದಾಳಿ is as often a Lokayukta
+or police raid as an assault — one ran in this very morning's tips — and
+`ಮಾರಾಟ ಮಾಡಿದ` is ordinary commerce far more often than it is an offence.
+Adding them would refuse legitimate civic copy on most days it fired, which
+buys nothing and teaches the desk to fight the guard. The rule about a word
+list being over-eager stops where the word stops being about guilt.
+
+**The victim-location guard had a real hole, and it was local.** `_GRANULAR`
+already carried the coastal forms a generic Indian list misses — ಪೇಟೆ,
+ಕ್ರಾಸ್, ಮಠ — but it named four faiths' places of worship and missed the
+fifth, ದರ್ಗಾ. And it missed the landmark that locates a person most precisely
+in Karkala and Moodbidri: a **ಬಸದಿ**. In a town that size "the basadi" is an
+address, and a sexual-offence story naming one identifies the victim as surely
+as a street would. Added with ಗುಡಿ, ಕಟ್ಟೆ, ನಿಲ್ದಾಣ, ಅಪಾರ್ಟ್, ಅಂಗಡಿ, ಕ್ಯಾಂಪ್,
+ಕಾರ್ಖಾನೆ, ಹೊಟೇಲ್ and ನಿವಾಸ. The district and the taluk still pass, and a
+test says so — a guard that refused those would leave no way to say where
+anything happened.
+
+**What this review could NOT establish.** Whether the statutes themselves
+moved. That needs somebody qualified reading the current text of the BNS, the
+JJ Act, POCSO and the IT Rules amendments; nothing here browsed a legal
+database, and a word list passing its own corpus is not evidence that the
+corpus still matches the law. This entry records a code-and-corpus review, and
+the next one should start by answering that question rather than assuming it.
+
+`brand/content.py :: _GRANULAR` · `tests/legal_corpus.json` ·
+`tests/test_legal_corpus.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

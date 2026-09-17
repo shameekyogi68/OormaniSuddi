@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **52/77** decisions are named by at least one test
+- **53/78** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -240,7 +240,7 @@ those carry a reason rather than a test.
 ## D55 · No source, no claim. No approval, no upload
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_intake.py`
-- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/review.py`, `scripts/draft_edition.py`
+- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/review.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`
 
 ## D56 · Numeric policy lives in `tokens.Limits`
 
@@ -345,4 +345,9 @@ those carry a reason rather than a test.
 ## D78 · A tip is only worth having if its link opens and its flags mean something
 
 - **Tested by:** `tests/test_intake.py`
+- Enforced in: `scripts/fetch_daily_news.py`
+
+## D79 · The 90-day law review, 2026-09-17 — and what it found
+
+- **Tested by:** `tests/test_legal_corpus.py`
 

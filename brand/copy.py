@@ -75,7 +75,7 @@ PLACE_TAGS = {
     'ಮಂಗಳೂರು': 'Mangaluru', 'ದಕ್ಷಿಣ ಕನ್ನಡ': 'DakshinaKannada',
     'ಉತ್ತರ ಕನ್ನಡ': 'UttaraKannada', 'ಶಿರಸಿ': 'Sirsi', 'ಭಟ್ಕಳ': 'Bhatkal',
     'ಕುಮಟಾ': 'Kumta', 'ಹೊನ್ನಾವರ': 'Honnavar', 'ಬೆಂಗಳೂರು': 'Bengaluru',
-    'ಉಡುಪಿ ಜಿಲ್ಲೆ': 'Udupi',
+    'ಉಡುಪಿ ಜಿಲ್ಲೆ': 'Udupi', 'ಉಳ್ಳಾಲ': 'Ullal',
 }
 
 
@@ -136,6 +136,55 @@ def hashtags(story: Story, limit: int = 8) -> list[str]:
         if len(out) >= limit:
             break
         add(t)
+    return out[:min(limit, IG_HASHTAG_MAX)]
+
+
+def edition_hashtags(edition: Edition, limit: int = 28) -> list[str]:
+    """Places and categories from ALL stories in the edition, de-duplicated and capped.
+
+    House rule 2026-09-17-07: a carousel is an edition, not a single story;
+    its hashtags must represent all towns and topics featured in the swipe set.
+    """
+    out: list[str] = []
+
+    def add(tag: str):
+        t = _tagify(tag)
+        if t and t.lower() not in {x.lower() for x in out}:
+            out.append(t)
+
+    # 1. Locations for every story in the edition
+    for st in edition.stories:
+        loc = st.location or ''
+        for part in re.split(r'[\/|,·•]| - ', loc):
+            part = part.strip()
+            if not part:
+                continue
+            add(part)
+            if part in PLACE_TAGS:
+                add(PLACE_TAGS[part])
+                add(PLACE_TAGS[part] + 'News')
+        for kn, en in PLACE_TAGS.items():
+            if kn and kn in loc:
+                add(kn)
+                add(en)
+                add(en + 'News')
+                add(kn.replace(' ', '') + 'ಸುದ್ದಿ')
+
+    # 2. Categories for every story in the edition
+    for st in edition.stories:
+        for t in CATEGORY_TAGS.get(st.category, []):
+            add(t)
+
+    # 3. Channel core tags
+    for t in CORE_TAGS:
+        add(t)
+
+    # 4. Regional wide tags
+    for t in WIDE_TAGS:
+        if len(out) >= limit:
+            break
+        add(t)
+
     return out[:min(limit, IG_HASHTAG_MAX)]
 
 
@@ -766,7 +815,7 @@ def for_edition(edition: Edition) -> PostCopy:
     earn the tap on its own, the same rule as a single-story caption.
     """
     lead = edition.stories[0]
-    tags = hashtags(lead, limit=8)
+    tags = edition_hashtags(edition, limit=28)
     hook_line = hook(lead)
     heads = '\n'.join(f'▪ {s.headline.strip()}' for s in edition.stories)
     seen: list[str] = []

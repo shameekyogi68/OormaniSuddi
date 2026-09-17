@@ -367,13 +367,21 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                         f'Add gallery photos so the hero photo does not freeze or repeat across facts.',
                         where=f'story {i}')
 
-        # Carousel: the plate is an honest fallback, not a vanity failure.
         if slides:
             unillustrated = [i for i, st in enumerate(edition.stories, 1) if not st.photo]
             if unillustrated:
-                r.add_warn('IMG-01',
-                    f'carousel slides for stories {unillustrated} used the editorial plate. '
-                    f'That is allowed. Prefer stock or a new AI frame when one exists.')
+                # The editor's standing instruction, and it blocks rather than
+                # warns: a warning is a thing you scroll past at 08:00 with a
+                # bulletin due, which is precisely when the slide ships without
+                # a picture. Recoverable in seconds — assets/stock/ is right
+                # there and CATALOG.md says what is in it. House rule
+                # 2026-09-17-03.
+                r.add_fail('IMG-04',
+                    f'carousel slides for stories {unillustrated} carry no '
+                    f'photograph. Every slide in the daily carousel must have '
+                    f'one (house rule 2026-09-17-03): pick a matching frame '
+                    f'from assets/stock/ (see assets/stock/CATALOG.md) or '
+                    f'generate one, and set nature="ai" on anything generated.')
 
         # ── the second half of D55 ────────────────────────────────────────
         # "No source, no claim" was enforced at the contract. "No human

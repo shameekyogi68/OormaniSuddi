@@ -515,3 +515,43 @@ class SourcesWhoseLinksOpen(unittest.TestCase):
 
         self.assertEqual(tips[-1].body_source, 'article',
                          'the one fetchable source was never reached')
+
+
+class TheSheetSaysWhenALinkWillNotOpen(unittest.TestCase):
+    """D78. The notice belongs in the markdown the editor reads, and the
+    audit must stay a pure counting pass.
+
+    This exists because the first version of that notice was appended inside
+    `audit_groundedness`, which has no `lines` to append to — and the whole
+    suite still passed, because every fixture URL in it was an ordinary one.
+    The fetch died on the next real run. So both halves are asserted here
+    with an aggregator URL actually present."""
+
+    def _tip(self, url):
+        return Tip(headline='ಉಡುಪಿಯಲ್ಲಿ ಭಾರಿ ಮಳೆ', source_name='Google News',
+                   source_url=url, snippet='ಉಡುಪಿಯಲ್ಲಿ ಮಳೆ ಸುರಿದಿದೆ.',
+                   lead_kn='ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ ಭಾರಿ ಮಳೆ ಸುರಿದಿದೆ.')
+
+    def test_the_audit_survives_a_tip_whose_link_does_not_open(self):
+        agg = self._tip('https://news.google.com/rss/articles/CBMiabc?oc=5')
+        audit_quietly([agg])          # must not raise
+        self.assertIsInstance(agg.unsupported, list)
+
+    def test_the_sheet_warns_on_an_aggregator_link(self):
+        agg = self._tip('https://news.google.com/rss/articles/CBMiabc?oc=5')
+        md = render_markdown([agg], '2026-09-17')
+        self.assertIn('aggregator', md)
+
+    def test_the_sheet_does_not_warn_on_a_link_that_opens(self):
+        ok = self._tip('https://kannada.newskarnataka.com/udupi/a-real-story')
+        self.assertNotIn('aggregator', render_markdown([ok], '2026-09-17'))
+
+    def test_a_story_is_never_auto_drafted_from_one(self):
+        """D55 asks for a source_url the editor can reopen. This is not one,
+        so no name should ever end up attached to a story built on it."""
+        from scripts.draft_edition import _story_dict
+        self.assertIsNone(_story_dict({
+            'headline': 'ಉಡುಪಿಯಲ್ಲಿ ಭಾರಿ ಮಳೆ', 'lead_kn': 'ಉಡುಪಿಯಲ್ಲಿ ಭಾರಿ ಮಳೆ',
+            'source_url': 'https://news.google.com/rss/articles/CBMiabc?oc=5',
+            'source_name': 'Google News', 'snippet': '', 'taluk': 'ಉಡುಪಿ',
+            'risk': 'normal'}))

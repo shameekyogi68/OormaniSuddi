@@ -3,7 +3,7 @@
 > **Location**: `assets/stock/`  
 > **Licence**: `own`  
 > **Credit**: `AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ`  
-> **Nature**: `ai` (ಎಐ ರಚಿತ ಚಿತ್ರ) — these frames were generated. Never reuse them as `representative`.  
+> **Nature**: `ai` — these frames were generated. Never reuse them as `representative`.  
 
 This library contains **only truly generic, evergreen newsroom stock visuals** that can be reused across any future coastal Karnataka news report whenever specific spot photography is unavailable.
 
@@ -17,9 +17,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/police_dog_squad_investigation.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಘಟನಾ ಸ್ಥಳದಲ್ಲಿ ತನಿಖೆ ನಡೆಸುತ್ತಿರುವ ಪೊಲೀಸ್ ಶ್ವಾನ ದಳ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಘಟನಾ ಸ್ಥಳದಲ್ಲಿ ತನಿಖೆ ನಡೆಸುತ್ತಿರುವ ಪೊಲೀಸ್ ಶ್ವಾನ ದಳ"
 }
 ```
 
@@ -33,9 +33,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/police_cctv_surveillance_monitoring.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಕಣ್ಗಾವಲು ಕ್ಯಾಮೆರಾ ದೃಶ್ಯಾವಳಿಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತಿರುವ ತನಿಖಾ ತಂಡ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಕಣ್ಗಾವಲು ಕ್ಯಾಮೆರಾ ದೃಶ್ಯಾವಳಿಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತಿರುವ ತನಿಖಾ ತಂಡ"
 }
 ```
 
@@ -49,9 +49,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/traffic_police_highway_patrol.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಹೆದ್ದಾರಿಯಲ್ಲಿ ತಪಾಸಣೆ ನಡೆಸುತ್ತಿರುವ ಸಂಚಾರ ಪೊಲೀಸರು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಹೆದ್ದಾರಿಯಲ್ಲಿ ತಪಾಸಣೆ ನಡೆಸುತ್ತಿರುವ ಸಂಚಾರ ಪೊಲೀಸರು"
 }
 ```
 
@@ -65,9 +65,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_nh66_highway_traffic.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಕರಾವಳಿ ರಾಷ್ಟ್ರೀಯ ಹೆದ್ದಾರಿಯಲ್ಲಿ ವಾಹನ ಸಂಚಾರ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಕರಾವಳಿ ರಾಷ್ಟ್ರೀಯ ಹೆದ್ದಾರಿಯಲ್ಲಿ ವಾಹನ ಸಂಚಾರ"
 }
 ```
 
@@ -81,9 +81,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/taluk_revenue_office_files.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಕಂದಾಯ ಇಲಾಖಾ ಕಚೇರಿ ಹಾಗೂ ಸರಕಾರಿ ಕಡತಗಳು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಕಂದಾಯ ಇಲಾಖಾ ಕಚೇರಿ ಹಾಗೂ ಸರಕಾರಿ ಕಡತಗಳು"
 }
 ```
 
@@ -97,9 +97,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_fishing_harbour_docks.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಕರಾವಳಿ ಮೀನುಗಾರಿಕಾ ಬಂದರಿನ ದಕ್ಕೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಕರಾವಳಿ ಮೀನುಗಾರಿಕಾ ಬಂದರಿನ ದಕ್ಕೆ"
 }
 ```
 
@@ -113,9 +113,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/rural_weekly_market_farmers_shandy.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಗ್ರಾಮೀಣ ವಾರದ ಸಂತೆ ಹಾಗೂ ತರಕಾರಿ ಮಾರುಕಟ್ಟೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಗ್ರಾಮೀಣ ವಾರದ ಸಂತೆ ಹಾಗೂ ತರಕಾರಿ ಮಾರುಕಟ್ಟೆ"
 }
 ```
 
@@ -129,9 +129,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/civic_stray_dogs_street_menace.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ನಗರದ ರಸ್ತೆಯಲ್ಲಿ ಬೀಡುಬಿಟ್ಟಿರುವ ಬೀದಿನಾಯಿಗಳು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ನಗರದ ರಸ್ತೆಯಲ್ಲಿ ಬೀಡುಬಿಟ್ಟಿರುವ ಬೀದಿನಾಯಿಗಳು"
 }
 ```
 
@@ -145,9 +145,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_court_complex_judiciary.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ ಸಂಕೀರ್ಣದ ಆವರಣ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ ಸಂಕೀರ್ಣದ ಆವರಣ"
 }
 ```
 
@@ -161,9 +161,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/temple_ganahoma_vedic_ritual.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ದೇವಸ್ಥಾನದಲ್ಲಿ ನಡೆಯುತ್ತಿರುವ ಮಹಾ ಗಣಹೋಮ ಧಾರ್ಮಿಕ ವಿಧಿವಿಧಾನ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ದೇವಸ್ಥಾನದಲ್ಲಿ ನಡೆಯುತ್ತಿರುವ ಮಹಾ ಗಣಹೋಮ ಧಾರ್ಮಿಕ ವಿಧಿವಿಧಾನ"
 }
 ```
 
@@ -177,9 +177,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_badagutittu_yakshagana_performance.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಕರಾವಳಿಯ ಗಂಡುಕಲೆ ಬಡಗುತಿಟ್ಟು ಯಕ್ಷಗಾನ ಬಯಲಾಟ ಪ್ರದರ್ಶನ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಕರಾವಳಿಯ ಗಂಡುಕಲೆ ಬಡಗುತಿಟ್ಟು ಯಕ್ಷಗಾನ ಬಯಲಾಟ ಪ್ರದರ್ಶನ"
 }
 ```
 
@@ -193,9 +193,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_shiva_temple_linga_darshana.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ದೇವಸ್ಥಾನದ ಗರ್ಭಗುಡಿಯಲ್ಲಿ ಶ್ರೀ ಶಿವಲಿಂಗ ದರ್ಶನ ಹಾಗೂ ಮಹಾಮಂಗಳಾರತಿ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ದೇವಸ್ಥಾನದ ಗರ್ಭಗುಡಿಯಲ್ಲಿ ಶ್ರೀ ಶಿವಲಿಂಗ ದರ್ಶನ ಹಾಗೂ ಮಹಾಮಂಗಳಾರತಿ"
 }
 ```
 
@@ -209,9 +209,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/ganeshotsava_idol_devotional_pooja.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಶ್ರೀ ಗಣೇಶೋತ್ಸವದ ಪ್ರಯುಕ್ತ ಪೂಜಿಸಲ್ಪಟ್ಟ ಶ್ರೀ ಮಹಾಗಣಪತಿ ವಿಗ್ರಹ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಶ್ರೀ ಗಣೇಶೋತ್ಸವದ ಪ್ರಯುಕ್ತ ಪೂಜಿಸಲ್ಪಟ್ಟ ಶ್ರೀ ಮಹಾಗಣಪತಿ ವಿಗ್ರಹ"
 }
 ```
 
@@ -225,9 +225,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_vented_dam_river_water.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಜಿಲ್ಲೆಯ ನದಿಗೆ ಅಡ್ಡಲಾಗಿ ನಿರ್ಮಿಸಲಾಗಿರುವ ಕಿಂಡಿ ಅಣೆಕಟ್ಟು ಹಾಗೂ ಹಲಗೆಗಳು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಜಿಲ್ಲೆಯ ನದಿಗೆ ಅಡ್ಡಲಾಗಿ ನಿರ್ಮಿಸಲಾಗಿರುವ ಕಿಂಡಿ ಅಣೆಕಟ್ಟು ಹಾಗೂ ಹಲಗೆಗಳು"
 }
 ```
 
@@ -241,9 +241,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/wildlife_leopard_trap_forest_cage.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಗ್ರಾಮಾಂತರ ಭಾಗದಲ್ಲಿ ಚಿರತೆ ಸೆರೆಹಿಡಿಯಲು ಅರಣ್ಯ ಇಲಾಖೆ ಇರಿಸಿರುವ ಬೋನು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಗ್ರಾಮಾಂತರ ಭಾಗದಲ್ಲಿ ಚಿರತೆ ಸೆರೆಹಿಡಿಯಲು ಅರಣ್ಯ ಇಲಾಖೆ ಇರಿಸಿರುವ ಬೋನು"
 }
 ```
 
@@ -257,9 +257,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/gauri_ganesha_festival_pooja_altar.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಸ್ವರ್ಣ ಗೌರಿ ಹಾಗೂ ಶ್ರೀ ಮಹಾಗಣಪತಿ ಪೂಜಾ ಮಂಟಪ ಮತ್ತು ನೈವೇದ್ಯ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಸ್ವರ್ಣ ಗೌರಿ ಹಾಗೂ ಶ್ರೀ ಮಹಾಗಣಪತಿ ಪೂಜಾ ಮಂಟಪ ಮತ್ತು ನೈವೇದ್ಯ"
 }
 ```
 
@@ -275,9 +275,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_idol_maker_ganesha_craftsman.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಗಣೇಶ ವಿಗ್ರಹ ರೂಪಿಸುತ್ತಿರುವ ಕುಂಬಾರ ಕಲಾವಿದ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಗಣೇಶ ವಿಗ್ರಹ ರೂಪಿಸುತ್ತಿರುವ ಕುಂಬಾರ ಕಲಾವಿದ"
 }
 ```
 
@@ -291,9 +291,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_ghats_monsoon_homestead.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಮಲೆನಾಡು ಗಡಿಯ ಮಳೆಗಾಲದ ಗ್ರಾಮೀಣ ಮನೆ ಮತ್ತು ಬೆಟ್ಟಗಳು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಮಲೆನಾಡು ಗಡಿಯ ಮಳೆಗಾಲದ ಗ್ರಾಮೀಣ ಮನೆ ಮತ್ತು ಬೆಟ್ಟಗಳು"
 }
 ```
 
@@ -307,9 +307,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/ambulance_emergency_response_town.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಪಟ್ಟಣದ ರಸ್ತೆಯಲ್ಲಿ ಧಾವಿಸುತ್ತಿರುವ 108 ಆರೋಗ್ಯ ಕವಚ ಆಂಬ್ಯುಲೆನ್ಸ್ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಪಟ್ಟಣದ ರಸ್ತೆಯಲ್ಲಿ ಧಾವಿಸುತ್ತಿರುವ 108 ಆರೋಗ್ಯ ಕವಚ ಆಂಬ್ಯುಲೆನ್ಸ್"
 }
 ```
 
@@ -323,9 +323,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/coastal_event_site_police_inspection.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಕಡಲತೀರದ ಕಾರ್ಯಕ್ರಮ ಸ್ಥಳದಲ್ಲಿ ಪೊಲೀಸ್ ಹಾಗೂ ಅಧಿಕಾರಿಗಳ ಪೂರ್ವಭಾವಿ ಪರಿಶೀಲನೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಕಡಲತೀರದ ಕಾರ್ಯಕ್ರಮ ಸ್ಥಳದಲ್ಲಿ ಪೊಲೀಸ್ ಹಾಗೂ ಅಧಿಕಾರಿಗಳ ಪೂರ್ವಭಾವಿ ಪರಿಶೀಲನೆ"
 }
 ```
 
@@ -339,9 +339,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/forest_dept_timber_seizure_inspection.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ವಶಪಡಿಸಿಕೊಂಡ ಮರದ ದಿಮ್ಮಿಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತಿರುವ ಅರಣ್ಯ ಇಲಾಖೆ ಅಧಿಕಾರಿಗಳು (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ವಶಪಡಿಸಿಕೊಂಡ ಮರದ ದಿಮ್ಮಿಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತಿರುವ ಅರಣ್ಯ ಇಲಾಖೆ ಅಧಿಕಾರಿಗಳು"
 }
 ```
 
@@ -355,9 +355,9 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/education_scholarship_certificate_ceremony.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ವಿದ್ಯಾರ್ಥಿವೇತನ ವಿತರಣಾ ಸಮಾರಂಭ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ವಿದ್ಯಾರ್ಥಿವೇತನ ವಿತರಣಾ ಸಮಾರಂಭ"
 }
 ```
 
@@ -371,8 +371,24 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/civic_flooded_road_villagers_complaint.jpg",
   "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಮಳೆಗಾಲದಲ್ಲಿ ಜಲಾವೃತಗೊಂಡ ಗ್ರಾಮೀಣ ರಸ್ತೆ ಬಗ್ಗೆ ಗ್ರಾಮಸ್ಥರ ಆಕ್ಷೇಪ"
+}
+```
+
+---
+
+### 24. `ganesh_chaturthi_puja_altar.jpg`
+- **Use in Any**: Ganesh Chaturthi / Ganeshotsava pooja coverage, home and mantapa altar rituals, modaka naivedya, temple Ganapati darshana, or festival greeting bulletins.
+- **Visual**: Clay Ganesha idol on a carved wooden mantapa under a hibiscus and marigold garland, flanked by lit brass deepas and bells, with modakas, coconut, banana, betel leaf, turmeric and kumkuma laid out on a banana leaf below.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/ganesh_chaturthi_puja_altar.jpg",
+  "nature": "ai",
   "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಮಳೆಗಾಲದಲ್ಲಿ ಜಲಾವೃತಗೊಂಡ ಗ್ರಾಮೀಣ ರಸ್ತೆ ಬಗ್ಗೆ ಗ್ರಾಮಸ್ಥರ ಆಕ್ಷೇಪ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಶ್ರೀ ಗಣೇಶ ಚತುರ್ಥಿ ಪೂಜಾ ಮಂಟಪ ಹಾಗೂ ನೈವೇದ್ಯ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
 }
 ```

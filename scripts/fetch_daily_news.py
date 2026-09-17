@@ -59,6 +59,31 @@ UDUPI_KW = (
     'kaup', 'hebri', 'manipal', 'mangalore', 'mangaluru',
 )
 
+# Hosts that stand between the reader and the article. A Google News
+# /rss/articles/ link is an opaque token that only becomes a publisher URL
+# after JavaScript runs: a server-side fetch gets a 580 KB shell, and a person
+# who clicks it lands on the publisher's home page — which happened on
+# 2026-09-17 to the lead story of the day, at the moment it was being checked.
+#
+# This is a list of hosts rather than a structural test because the property
+# is "resolves only under JavaScript", and nothing here runs JavaScript. The
+# structural alternative, if another aggregator turns up, is to fetch the page
+# and ask whether it contains this tip's own headline — real publisher pages
+# do, this shell does not. That costs a request per tip, which is why it is
+# not the default.
+#
+# These tips are still collected: a headline from an outlet we have no feed
+# for is worth knowing about. They are marked in the sheet, and
+# draft_edition.py will not build a story on one, because D55 asks for a
+# source_url the editor can reopen and this is not one.
+AGGREGATOR_HOSTS = ('news.google.com',)
+
+
+def link_opens(url: str) -> bool:
+    """False when the URL is an aggregator hop rather than the article."""
+    return not any(h in (url or '') for h in AGGREGATOR_HOSTS)
+
+
 CRIME_MARK = ('ಕೊಲೆ', 'ಹತ್ಯೆ', 'ಬಂಧನ', 'ದಾಳಿ', 'ಅತ್ಯಾಚಾರ', 'ಹಲ್ಲೆ',
               'murder', 'arrest', 'rape', 'assault')
 MINOR_MARK = ('ಬಾಲಕ', 'ಬಾಲಕಿ', 'ಮಗು', 'ಶಾಲೆ', 'minor', 'child', 'schoolboy')
@@ -176,26 +201,51 @@ def _rss_items(url: str) -> list[tuple[str, str, str]]:
 
 
 def scrape_udayavani_html() -> list[Tip]:
+    """Udupi district headlines, each with its OWN article URL.
+
+    The page is a Next.js app: there is no <a href> to an article anywhere in
+    the served HTML, and the old <h2>/<h3> scrape was reading headline text
+    out of the embedded flight data with no link beside it — so every tip fell
+    back to the district listing URL, twelve tips deep. That is what D75 found
+    and skipped, correctly, but skipping is not the same as fixing: those
+    twelve stories were real Udupi news nobody could open.
+
+    The flight data does carry the pair. Each article object holds a `title`
+    and its `slug`, under a `primaryCategorySlug`, and
+    `/{category}/{slug}` resolves to that article — verified against the page
+    title of a fetched story, not assumed.
+
+    The BODY is still not fetchable, and deliberately is not attempted: this
+    site renders its article text client-side, so what a server-side extractor
+    pulls back is the "more news" rail — 412 characters of OTHER headlines,
+    long enough to pass for an article and be labelled as one. A link a person
+    can open is the win here; a body would be a lie.
+    """
     page = 'https://www.udayavani.com/district-news/udupi-news'
     now = datetime.now().isoformat(timespec='seconds')
     try:
         html = _http_get(page).decode('utf-8', errors='ignore')
-        raw = re.findall(r'<h[23][^>]*>(.*?)</h[23]>', html, re.DOTALL)
-        tips = []
-        for t in raw:
-            title = re.sub(r'<[^<]+?>', '', t).strip()
-            if len(title) <= 15 or 'ಇನ್ನಷ್ಟು' in title:
+        tips, seen = [], set()
+        for m in re.finditer(r'\\"slug\\":\\"([a-z0-9\-]{12,120})\\"', html):
+            slug = m.group(1)
+            window = html[m.start():m.start() + 1800]
+            t = re.search(r'\\"title\\":\\"([^"\\]{15,200})\\"', window)
+            c = re.search(r'\\"primaryCategorySlug\\":\\"([a-z0-9\-]+)\\"', window)
+            if not t or not c:
                 continue
-            hrefs = re.findall(r'href="([^"]+)"', t)
-            link = hrefs[0] if hrefs else page
-            if link.startswith('/'):
-                link = 'https://www.udayavani.com' + link
+            category = c.group(1)
+            # A section's own slug repeats under the section: it is not a story.
+            if slug == category or slug.count('-') < 2 or slug in seen:
+                continue
+            seen.add(slug)
+            title = t.group(1).strip()
+            link = f'https://www.udayavani.com/{category}/{slug}'
             tips.append(Tip(
                 headline=title, source_name='ಉದಯವಾಣಿ', source_url=link,
                 taluk=_guess_taluk(title), risk=_risk(title), fetched_at=now))
             if len(tips) >= 12:
                 break
-        log(f'  Udayavani HTML: {len(tips)} tips')
+        log(f'  Udayavani HTML: {len(tips)} tips, each with its own article URL')
         return tips
     except Exception as e:
         log(f'  Udayavani HTML: skipped ({type(e).__name__})')
@@ -382,6 +432,49 @@ def fetch_body(url: str) -> str:
         return ''
 
 
+def _body_tokens(text: str) -> set:
+    return {w for w in _normalise(text).split() if len(w) >= 4}
+
+
+def _reject_shared_bodies(tips: list[Tip], overlap: float = 0.8) -> int:
+    """Unlabel any body that two different articles came back with.
+
+    D75 caught this when two tips shared a URL. The same lie arrives through
+    a different door when the URLs differ and the CONTENT does not: Udayavani
+    serves its article text client-side, so a server-side extractor pulls the
+    page's "more news" rail instead — 412 characters of other headlines, the
+    same 412 for every story, comfortably past BODY_MIN_CHARS and therefore
+    labelled `article` on all of them.
+
+    A body is only a body if it belongs to one story. Measured by token
+    overlap rather than equality, because the rail differs by the one
+    headline belonging to the page you asked for. Everything in a matching
+    group is rejected — not all but one — because nothing here can tell which
+    of them, if any, was real.
+
+    Returns how many tips were demoted, so the run's count stays honest.
+    """
+    idx = [i for i, t in enumerate(tips) if t.body_source == 'article']
+    toks = {i: _body_tokens(tips[i].body) for i in idx}
+    bad: set = set()
+    for a in range(len(idx)):
+        for b in range(a + 1, len(idx)):
+            i, j = idx[a], idx[b]
+            ti, tj = toks[i], toks[j]
+            if not ti or not tj:
+                continue
+            union = len(ti | tj)
+            if union and len(ti & tj) / union >= overlap:
+                bad.add(i)
+                bad.add(j)
+    for i in bad:
+        tips[i].body, tips[i].body_source = '', ''
+    if bad:
+        log(f'  bodies:         {len(bad)} rejected — the same text came back '
+            f'as more than one article, so it is nobody\'s article (D78).')
+    return len(bad)
+
+
 def _shared_urls(tips: list[Tip]) -> set[str]:
     """URLs more than one tip resolved to.
 
@@ -447,6 +540,7 @@ def attach_bodies(tips: list[Tip]) -> int:
             got += 1
         elif t.snippet:
             t.body, t.body_source = t.snippet, 'rss'
+    got -= _reject_shared_bodies(tips)
     for t in tips:
         if not t.body and t.snippet:
             t.body, t.body_source = t.snippet, 'rss'
@@ -654,7 +748,25 @@ def unsupported_tokens(lead: str, source_text: str) -> list[str]:
     # A Kannada lead against an English source cannot be grounded word by
     # word, and pretending otherwise flags everything. Say so instead.
     if _kannada_share(lead) > 0.5 and _kannada_share(source_text) < 0.15:
-        return [UNCHECKABLE]
+        # Word-for-word grounding across scripts is impossible and flagging
+        # every Kannada word is true and useless. But a FIGURE is a figure in
+        # both scripts, and so is a Latin-script name — and those are the two
+        # most dangerous things a model can add to a lead: a casualty count, a
+        # helpline, an officer who was never named. Giving up on the whole
+        # lead threw them away too. 15 of the 50 tips on 2026-09-17 came from
+        # English sources, so this is a sixth of the sheet going from no check
+        # at all to a check on exactly the parts that can carry a fabrication.
+        hay = _normalise(_expand_abbreviations(source_text))
+        cross = []
+        for tok in _TOKEN.findall(lead):
+            low = tok.lower()
+            if any('ಀ' <= ch <= '೿' for ch in low):
+                continue                     # Kannada: genuinely uncheckable
+            if low in _FUNCTION_WORDS or low in hay:
+                continue
+            if tok not in cross:
+                cross.append(tok)
+        return [UNCHECKABLE] + cross[:6]
 
     # The source's abbreviations, spelled out the way the lead spells them.
     hay = _normalise(_expand_abbreviations(source_text))
@@ -882,6 +994,12 @@ def render_markdown(tips: list[Tip], date_s: str) -> str:
             f'- We have: {depth.get(t.body_source, t.body_source)}',
             f'- Needs editor: yes',
         ]
+        if not link_opens(t.source_url):
+            lines.append(
+                '- 🔗 **This link goes through an aggregator** and may open '
+                'the publisher\'s home page rather than this story. Search '
+                'the headline on the publisher\'s own site before relying on '
+                'it. No story is auto-drafted from a link like this.')
         if t.unsupported == [UNCHECKABLE]:
             lines.append(
                 '- 🔎 **Cannot be checked here** — the source is not in '

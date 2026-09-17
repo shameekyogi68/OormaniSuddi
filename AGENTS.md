@@ -88,11 +88,10 @@ rendering code — eleven finished templates already exist (`python3 render.py -
    ಬ್ರೇಕಿಂಗ್ is computed from the publish timestamp, never asserted. Do not add
    an override flag — it will be used on a deadline, and then the whole system
    is decoration.
-2. **Strict Image Policy: High-Quality AI Imagery Only or Clean Editorial Plate (No Low-Quality Web Scrapes).**
-   Only high-quality AI-generated images created directly via the chat/agent environment may be used.
-   If AI image generation is unavailable (e.g. quota limits), leave the story WITHOUT a photo — the template
-   will automatically render the clean brand editorial graphic plate. NEVER fetch, scrape, or attach low-quality,
-   compressed, or generic real web images.
+2. **Strict Image Policy: 100% Carousel Photo Coverage (No Slide Without an Image; Zero Low-Quality Scrapes).**
+   Every single carousel story slide MUST carry a high-quality photograph (100% photo coverage). No carousel slide may appear without an image or fall back to an editorial plate.
+   Always check `assets/stock/` first for an evergreen match; if none exists, immediately generate a fresh high-quality AI image in chat using `generate_image`.
+   NEVER fetch, scrape, or attach low-quality, compressed, or generic real web images.
    **Gemini API Key Reservation**: The Gemini API key is STRICTLY reserved for voiceover synthesis (TTS).
    It must NEVER be used for image generation under any circumstance.
    Furthermore, all AI-generated images and rendered carousel slides MUST be displayed directly in the chat
@@ -158,14 +157,14 @@ rendering code — eleven finished templates already exist (`python3 render.py -
 ## Standard Publishing Workflow: Carousel + Individual Reels (10x Reach)
 
 Whenever raw news copy is provided for a bulletin:
-1. **Flawless Kannada Copy**: Natural, concise, grammatically verified Kannada. Numbers must always use Latin numerals (`25`, `29.6`), never Kannada numerals (`೨೫`). Headlines stay under 78 characters; punchy `reel_line` under 46 characters. Crime copy must strictly use allegation markers (ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ).
-2. **Visual Standards: High-Quality AI Imagery Only or Clean Editorial Plate (Zero Low-Quality Scrapes)**:
-   - **Inspect Evergreen Stock Library FIRST (`assets/stock/`)**: On `start`, always check `assets/stock/` (and `assets/stock/CATALOG.md`) BEFORE generating new AI images. If a truly generic newsroom visual already exists (e.g. police dog squad, CCTV monitoring, traffic patrol, NH66 highway traffic, fishing harbour, taluk revenue office, rural market), REUSE it directly with `nature: 'ai'` (these frames were generated), `licence: 'own'`, and a truthful caption. Generate fresh AI images ONLY if no suitable stock image exists.
-   - **Generate Fresh Editorial Imagery Only When Needed**: Use `generate_image` strictly when the story requires a unique visual scene not covered in stock.
+1. **Flawless Kannada Copy & Mandatory News Description (`deck`)**: Natural, concise, grammatically verified Kannada. Numbers must always use Latin numerals (`25`, `29.6`), never Kannada numerals (`೨೫`). Headlines stay under 78 characters; punchy `reel_line` under 46 characters. Crime copy must strictly use allegation markers (ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ). **Every story MUST carry a rich, informative `deck` (standfirst/description)**: A carousel is a news medium, not a headline ticker; the `deck` explains what happened, where, and who was involved directly below the headline on every card.
+2. **Visual Standards: 100% Photo Coverage on All Carousel Slides (Stock or Chat AI Generation; Zero Scrapes)**:
+   - **Mandatory 100% Photo Coverage on Carousel**: Every story slide in the daily carousel MUST carry photography. No slide may be left unillustrated or fall back to an editorial graphic plate.
+   - **Inspect Evergreen Stock Library FIRST (`assets/stock/`)**: On `start`, always check `assets/stock/` (and `assets/stock/CATALOG.md`) BEFORE generating new AI images. If a truly generic newsroom visual already exists (e.g. police dog squad, CCTV monitoring, traffic patrol, NH66 highway traffic, fishing harbour, taluk revenue office, rural market), REUSE it directly with `nature: 'ai'` (these frames were generated), `licence: 'own'`, and a truthful caption.
+   - **Generate Fresh Editorial Imagery Whenever Stock Does Not Match**: Use `generate_image` in chat immediately when the story requires a visual scene not covered in stock.
    - **STRICT PROHIBITION**: NEVER fetch, scrape, or attach low-quality, pixelated, or random real web photos.
-   - If AI image generation is unavailable (e.g. quota limits), leave the story WITHOUT a photo — the template will automatically render the clean brand editorial plate (`editorial_plate`).
    - **Gemini API Key Strict Reservation**: The Gemini API key is strictly reserved for voice synthesis (TTS). NEVER use it for image generation.
-   - Every generated image, including reused stock, carries `nature: 'ai'`, `credit: 'AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ'`, `licence: 'own'`, and an honest `caption`. `representative` is only for a real photograph of a similar scene.
+   - **Clean Photo Disclosure (No Duplicate AI Labels)**: `Photo.disclosure` automatically prepends the nature tag (`ಎಐ ರಚಿತ ಚಿತ್ರ • `). Therefore, `caption` must ONLY describe the visual scene, never repeating `(ಎಐ ರಚಿತ ಚಿತ್ರ)` or `AI ಚಿತ್ರ`. The `credit` field must simply be `ಊರ್ಮನಿ ಸುದ್ದಿ` (never `AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ`). The printed disclosure line will say 'ಎಐ ರಚಿತ ಚಿತ್ರ' exactly once at the beginning.
    - **In-Chat Display**: All generated AI images and rendered carousel slides MUST be displayed directly in the chat response.
    - **Mandatory 10/10 Cultural & Legal Cross-Check**: The Visual Culture & Legal Expert inspects every image. Zero tolerance for distortions or mockery of sacred coastal traditions (Yakshagana, Hulivesha, Daivaradhane, temple rituals). Zero minor faces, victim trauma, or gore. Must score a verified 10/10 before layout; otherwise regenerate on loop.
 3. **Edition JSON**: Save to `editions/YYYY-MM-DD.json`.
@@ -188,6 +187,7 @@ Whenever raw news copy is provided for a bulletin:
    - The Legal & Monetization Expert audits the full package; zero tolerance for ad-limitation or legal risks.
 6. **Complete Copy & Schedule Plan**:
    - The time-scheduled publishing timetable is **generated** — `render.py` writes `schedule.txt` and `schedule.json` from what it actually rendered.
+   - **Hyperlocal Multi-Story Hashtags (House rule 2026-09-17-07)**: In daily carousels/editions, hashtags must cover all locations (taluks/places) and categories from all stories featured in the swipe set, ensuring every region covered gets discovered.
    - Ready-to-copy Instagram captions with First Comments (pinned questions).
    - Ready-to-copy YouTube Shorts Titles (<60 chars, mobile search optimized), Descriptions (with snippet and timestamps), and Tags for every single reel.
 7. **Session Wrap & Stock Archival (`stop` / `close` workflow)**:

@@ -1419,3 +1419,64 @@ class AMusicLicenceMustBeProducible(unittest.TestCase):
         for r in blocked[:3]:
             self.assertTrue(os.path.exists(os.path.join(root, r['path'])),
                             f'{r["path"]} was deleted rather than blocked')
+
+
+class EveryCarouselSlideCarriesAPhotograph(unittest.TestCase):
+    """House rule 2026-09-17-03, enforced as IMG-04.
+
+    It blocks rather than warns, on purpose. A warning is a line you scroll
+    past at 08:00 with a bulletin due, which is exactly the morning a slide
+    ships with a blank plate where a picture should be. The fix costs
+    seconds — assets/stock/ is right there, and CATALOG.md says what is in
+    it — so the block is cheap to clear and the warning was not cheap to
+    ignore.
+    """
+
+    def setUp(self):
+        import tempfile
+        from brand import review as R
+        from brand.content import Story, Edition, Photo, OWN_REPORTING
+        self.R, self.dir = R, tempfile.mkdtemp()
+        self.Story, self.Edition, self.Photo = Story, Edition, Photo
+        self.OWN = OWN_REPORTING
+        import os
+        for n in ('carousel_01_cover.jpg', 'carousel_02.jpg'):
+            open(os.path.join(self.dir, n), 'wb').close()
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def _story(self, photo):
+        return self.Story(
+            headline='ಬೈಂದೂರಿನಲ್ಲಿ ಭಾರಿ ಮಳೆ, ಜಿಲ್ಲಾಡಳಿತ ಎಚ್ಚರಿಕೆ',
+            category='weather', location='ಬೈಂದೂರು',
+            sources=[self.OWN], verified_by='Gautam Paduvari', photo=photo)
+
+    def _stock(self):
+        return self.Photo('assets/stock/coastal_nh66_highway_traffic.jpg',
+                          nature='ai', credit='AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ',
+                          licence='own', caption='ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ')
+
+    def _codes(self, ed):
+        rep = self.R.review(self.dir, ed)
+        return {f.code for f in rep.findings if f.severity == 'fail'}
+
+    def test_a_slide_with_no_photograph_blocks_the_package(self):
+        ed = self.Edition(stories=[self._story(self._stock()),
+                                   self._story(None)], edition_no=1)
+        self.assertIn('IMG-04', self._codes(ed))
+
+    def test_every_slide_illustrated_clears_this_check(self):
+        ed = self.Edition(stories=[self._story(self._stock()),
+                                   self._story(self._stock())], edition_no=1)
+        self.assertNotIn('IMG-04', self._codes(ed))
+
+    def test_the_code_means_what_the_registry_says_it_means(self):
+        """It had been raised as IMG-01, which the registry defines as a
+        missing disclosure line — a different failure entirely. Two faults
+        sharing one code is a code that cannot be looked up."""
+        from brand.codes import CODES
+        self.assertIn('IMG-04', CODES)
+        self.assertIn('carousel', CODES['IMG-04'])
+        self.assertIn('disclosure', CODES['IMG-01'])
