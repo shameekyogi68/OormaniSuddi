@@ -67,7 +67,14 @@ The assistant:
    that ground, and every extra file is more time spent posting. Never the
    bulletin, thumbnail, or standalone post cards either, unless you
    specifically ask for them.
-3. Reports what the Chief Editor gate found (`APPROVAL.md`). Publishing
+3. Points you at the caption files. Every rendered post writes
+   `{post}_caption.txt` beside the artwork — `carousel_caption.txt`,
+   `reel_caption.txt` — holding the caption and nothing else, so posting is
+   open, select all, paste. House rule 2026-09-17-06. A YouTube post gets
+   `TITLE` / `DESCRIPTION` / `TAGS` instead, since a title cannot go in a
+   description box. The first comment and the WhatsApp forward stay in
+   `_copy.txt` and `MASTER_COPY.md`, deliberately out of the caption.
+4. Reports what the Chief Editor gate found (`APPROVAL.md`). Publishing
    still needs your sign-off — `scripts/sign_off.py out/{date} --by
    "<name>"` — taste, culture and news judgement stay yours, D62, same as
    every other day.

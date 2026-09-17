@@ -605,5 +605,10 @@ def package(g: Greeting, outdir: str, formats=None) -> list[tuple[str, str]]:
         f.write('═══ WHATSAPP — STATUS & FORWARD ' + '═' * 37 + '\n\n')
         f.write(c['whatsapp'] + '\n\n')
         f.write('═══ ALT TEXT ' + '═' * 56 + '\n\n' + c['alt_text'] + '\n')
-    print('  ✓ wish_copy.txt  ·  wish_copy.json')
+    # The caption on its own, same as every other post (house rule
+    # 2026-09-17-06): one file, nothing in it but what you paste.
+    with open(os.path.join(outdir, 'wish_caption.txt'), 'w',
+              encoding='utf-8') as f:
+        f.write(c['instagram'].strip() + '\n')
+    print('  ✓ wish_copy.txt  ·  wish_copy.json  ·  wish_caption.txt')
     return made

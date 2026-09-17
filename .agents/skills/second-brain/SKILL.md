@@ -215,6 +215,7 @@ SERIOUS per story.
 ### Copy rules
 
 - Headline ≤ 78, `reel_line` ≤ 46, hook ≤ 7 words (lead only), deck ≤ 190
+- **Deck is MANDATORY on every story (House rule 2026-09-17-04)**: Explains the news details (who, what, where, why) below the headline. A carousel is not a headline ticker; never leave `deck` empty.
 - Points: max 3, each ≤ 150. Latin numerals only.
 - Crime: `headline` AND `reel_line` each carry ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ / ಪ್ರಕರಣ ದಾಖಲು
 - Every story: `sources` plus `source_urls` (http), **or**
@@ -282,20 +283,21 @@ image. Do not redesign the masthead.
 1. Own or licensed real photograph
 2. Official handout
 3. Stock in `assets/stock/` — if it was generated, `nature: "ai"`
-4. New AI image, shown in chat, `nature: "ai"`
-5. Editorial plate (omit `photo`) — **allowed**. "Zero plate" is vanity.
+4. New AI image, generated directly in chat, `nature: "ai"`
+5. **No unillustrated carousel slides allowed (Standing instruction 2026-09-17-03)**: Every slide in the daily carousel MUST carry a photo. If no stock matches, generate a fresh AI image in chat. Do NOT fall back to an unillustrated editorial plate on carousel slides.
 
 ```json
 "photo": {
   "path": "assets/stock/police_dog_squad_investigation.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಪೊಲೀಸ್ ಶ್ವಾನ ದಳ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಘಟನಾ ಸ್ಥಳದಲ್ಲಿ ತನಿಖೆ ನಡೆಸುತ್ತಿರುವ ಪೊಲೀಸ್ ಶ್ವಾನ ದಳ"
 }
 ```
 
-**Never** scrape the web. **Never** use Gemini for images. **Never** label an
+- **Clean photo disclosure (House rule 2026-09-17-05)**: `Photo.disclosure` automatically prepends the nature tag (`ಎಐ ರಚಿತ ಚಿತ್ರ • `). NEVER repeat `AI ಚಿತ್ರ` in `credit` or `(ಎಐ ರಚಿತ ಚಿತ್ರ)` in `caption`. Credit is just `ಊರ್ಮನಿ ಸುದ್ದಿ` and caption is pure scene description.
+- **Never** scrape the web. **Never** use Gemini for images. **Never** label an
 AI frame `representative`. That word is for a real photograph of a similar
 scene.
 
@@ -358,6 +360,14 @@ Reels open **on the news**. Do not write `ನಮಸ್ಕಾರ, ಕರಾವಳ
 
 AI reels are **Instagram only**. `schedule.txt` must not say YouTube Shorts
 for them.
+
+**Captions go in their own files.** Every rendered post writes
+`{post}_caption.txt` — the caption and nothing else, so posting is select-all
+and paste (house rule 2026-09-17-06). A YouTube post gets `TITLE` /
+`DESCRIPTION` / `TAGS` instead. Never put the first comment or the WhatsApp
+forward in that file; they are a second and third paste, not part of the
+caption. Point the editor at those files rather than pasting captions into
+chat.
 
 WhatsApp forward text is in `*_copy.txt` under `WHATSAPP FORWARD`. That is
 the growth product. Broadsheet at 20:00.

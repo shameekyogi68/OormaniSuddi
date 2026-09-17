@@ -37,6 +37,42 @@
       "added": "2026-09-17",
       "retired": "",
       "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-09-17-03",
+      "said": "Every carousel slide must have a photo (100% visual photo coverage). No carousel story slide may be published without an image; always pick a matching evergreen photo from assets/stock/ or generate a fresh AI image in chat.",
+      "scope": "picture",
+      "why": "Editor standing instruction (2026-09-17): no carousel slide should ever be without an image.",
+      "added": "2026-09-17",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-09-17-04",
+      "said": "Every story in a daily bulletin must have a comprehensive Kannada news description (deck). A carousel is not a headline ticker; the deck explains who, what, where, and why below the headline.",
+      "scope": "desk",
+      "why": "Editor standing instruction (2026-09-17): carousel slides must never be headlines-only; deck is mandatory.",
+      "added": "2026-09-17",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-09-17-05",
+      "said": "Photo disclosure must never duplicate 'ಎಐ ರಚಿತ ಚಿತ್ರ' or 'AI ಚಿತ್ರ'. Photo.disclosure automatically prepends the nature label. The caption must only describe the visual scene, and credit must just be 'ಊರ್ಮನಿ ಸುದ್ದಿ' without repeating 'AI ಚಿತ್ರ'.",
+      "scope": "picture",
+      "why": "Editor standing instruction (2026-09-17): avoid repetitive stutter of AI image labels on disclosure lines.",
+      "added": "2026-09-17",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-09-17-06",
+      "said": "Every post that gets rendered also gets its own caption file — {post}_caption.txt — containing the caption and nothing else: no headings, no first comment, no WhatsApp forward. A YouTube post gets TITLE / DESCRIPTION / TAGS instead, because a title cannot be pasted into a description box. The working sheet stays in _copy.txt and MASTER_COPY.md.",
+      "scope": "package",
+      "why": "posting is select-all-and-paste on a phone; anything else in the file is something that eventually gets pasted with it",
+      "added": "2026-09-17",
+      "retired": "",
+      "by": "Gautam Paduvari"
     }
   ]
 }

@@ -701,6 +701,47 @@ def plan_text(plan: list[Slot], date_kn: str = '') -> str:
     return '\n'.join(out).rstrip() + '\n'
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+#  THE CAPTION FILE
+#  House rule 2026-09-17-06. Every post already ships a `_copy.txt` that
+#  carries the caption, the first comment, the WhatsApp forward and the
+#  YouTube fields under banner headings — a working sheet to read. Posting is
+#  a different job: at 08:00 on a phone you want one file whose entire
+#  contents are the thing you paste, so select-all is always the right move
+#  and there is nothing to accidentally paste with it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Which platform a post belongs to, by its own file stem. The AI-card formats
+# are Instagram's; only the 16:9 bulletin and its thumbnail are YouTube's —
+# AGENTS rule 7, YouTube gets real footage, not card reels.
+YOUTUBE_POSTS = ('bulletin', 'youtube_thumb', 'yt_thumb')
+
+
+def platform_of(name: str) -> str:
+    """'youtube' or 'instagram', decided from a post's file stem."""
+    n = (name or '').lower()
+    return 'youtube' if any(k in n for k in YOUTUBE_POSTS) else 'instagram'
+
+
+def caption_text(c: PostCopy, platform: str = 'instagram') -> str:
+    """The paste-ready caption for one post, and nothing else.
+
+    No banner rules, no section headings, no first comment, no WhatsApp
+    forward — those live in `_copy.txt` and `MASTER_COPY.md`, which is what
+    they are for. A caption file that carries anything but the caption is a
+    caption file somebody eventually pastes the wrong half of.
+
+    YouTube is the one exception, and only because it has to be: a title
+    cannot go in the description box. Three labelled fields is the smallest
+    honest shape for a video post.
+    """
+    if platform == 'youtube':
+        return (f'TITLE\n{c.youtube_title.strip()}\n\n'
+                f'DESCRIPTION\n{c.youtube_description.strip()}\n\n'
+                f'TAGS\n{", ".join(c.youtube_tags)}\n')
+    return c.instagram.strip() + '\n'
+
+
 def for_story(story: Story) -> PostCopy:
     tags = hashtags(story)
     return PostCopy(

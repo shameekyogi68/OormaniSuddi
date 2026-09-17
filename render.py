@@ -137,6 +137,13 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None)
         if voice_script:
             f.write('\n═══ KANNADA VOICEOVER NARRATION SCRIPT (READ-OVER) ' + '═' * 20 + '\n\n')
             f.write(voice_script + '\n')
+
+    # And the caption on its own, in its own file — the one you open on a
+    # phone at 08:00 and select all of. House rule 2026-09-17-06.
+    stem = name[:-5] if name.endswith('_copy') else name
+    with open(os.path.join(outdir, f'{stem}_caption.txt'), 'w',
+              encoding='utf-8') as f:
+        f.write(copywriter.caption_text(c, copywriter.platform_of(stem)))
     return txt
 
 
@@ -360,6 +367,10 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
         '',
         'AI-card reels: Instagram only. YouTube gets real footage.',
         'Paste the first comment the moment you post.',
+        '',
+        'To post: open the matching `*_caption.txt`, select all, paste. Those '
+        'files hold the caption and nothing else. Everything below is the '
+        'working sheet.',
         '',
         '## Schedule',
         '',
