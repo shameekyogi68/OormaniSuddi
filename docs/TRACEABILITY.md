@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **49/74** decisions are named by at least one test
+- **50/75** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -240,7 +240,7 @@ those carry a reason rather than a test.
 ## D55 · No source, no claim. No approval, no upload
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_intake.py`
-- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/review.py`
+- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/review.py`, `scripts/draft_edition.py`
 
 ## D56 · Numeric policy lives in `tokens.Limits`
 
@@ -259,8 +259,8 @@ those carry a reason rather than a test.
 
 ## D59 · No human verification, no publication
 
-- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_intake.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/review.py`, `scripts/fetch_daily_news.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_draft_edition.py`, `tests/test_intake.py`, `tests/test_verify.py`
+- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/review.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`, `scripts/verify.py`
 
 ## D60 · Legibility is arithmetic, and arithmetic is testable
 
@@ -279,6 +279,7 @@ those carry a reason rather than a test.
 ## D63 · The intake retrieves; it never supplies what the source lacks
 
 - **Tested by:** `tests/test_intake.py`
+- Enforced in: `scripts/draft_edition.py`
 
 ## D64 · Brand rules are gilded, not stamped
 
@@ -305,6 +306,7 @@ those carry a reason rather than a test.
 ## D69 · A bad Tuesday has a defined minimum, decided in advance
 
 - **Tested by:** `tests/test_calendar.py`
+- Enforced in: `scripts/draft_edition.py`
 
 ## D70 · The year is on a calendar, not in somebody's head
 
@@ -317,7 +319,7 @@ those carry a reason rather than a test.
 ## D72 · Reach is local penetration, and it is measured that way
 
 - **Tested by:** `tests/test_reach.py`
-- Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`
+- Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`, `scripts/draft_edition.py`
 
 ## D73 · The newsroom answers in one shape, argues with itself, and remembers
 
@@ -329,5 +331,10 @@ those carry a reason rather than a test.
 
 ## D75 · A URL two tips share is a listing page, not an article
 
-- **Tested by:** `tests/test_intake.py`
+- **Tested by:** `tests/test_draft_edition.py`, `tests/test_intake.py`
+- Enforced in: `scripts/draft_edition.py`
+
+## D76 · "Ready by 8am" needs a number attached to how sure that is
+
+- **Tested by:** `tests/test_draft_edition.py`, `tests/test_verify.py`
 

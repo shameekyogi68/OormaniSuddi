@@ -1918,6 +1918,56 @@ to ignore the flags — which is the same failure as not checking at all.
 ---
 
 
+## D76 · "Ready by 8am" needs a number attached to how sure that is
+
+**Decided.** After every successful morning fetch, `scripts/draft_edition.py`
+runs automatically and turns `inbox/today.json` into `editions/{date}.json` —
+every `headline`, `deck`, `point` and `takeaway` copied verbatim from a tip
+the fetch already grounded, nothing written. It skips, rather than guesses,
+anything needing a judgement call: an English-only tip, a story that fails
+its own legal validation, one whose headline would hard-fail `render.py`'s
+preflight. `verified_by` is never set — it cannot be; that is the one field
+only a person can fill in (D59), and the gate refuses `APPROVAL.md` without
+it (`SRC-02`). `scripts/verify.py` turns filling it in into one command per
+story instead of hand-editing JSON. The launchd schedule (D71) now fires
+twice, 06:10 and 07:00, so one missed wake does not cost the morning.
+
+**Why this, and not full automation.** The user's request was that the only
+thing left at 8am is posting. Taken literally that means no human check
+before publication — which is exactly the line D59 and D62 exist to hold, for
+reasons already paid for in this project's own history (D29: what was
+published before `Story.validate()` existed). The honest answer was to say
+that line plainly and then automate everything up to it: a person now opens
+`inbox/checklist_{date}.md`, confirms each source is true, and runs
+`scripts/verify.py` — four short commands instead of reading 30+ raw tips and
+hand-building JSON from scratch.
+
+**Why draft, not just fetch.** The tip sheet already existed (D55). What
+"ready by 8am" was missing was not more data — it was the mechanical
+reshaping into `Story` objects, done every single morning by hand, that
+carries no judgement of its own. A script can copy a field and run the
+existing legal and rendering checks against it; it cannot decide a fact is
+true. Drawing the line there, instead of at "produce a tip sheet" or at
+"publish", is what actually removes the manual work without removing the
+check that work exists to satisfy.
+
+**Why it can safely be unattended.** Every failure mode routes to "skip and
+say why", never to "guess and move on": `ContentError` (bad law), a failed
+preflight (bad render), an English-only or unsourced tip, a listing-page URL
+shared by more than one tip (D75, reused directly via `_shared_urls` rather
+than re-implemented). A morning with nothing safely draftable produces an
+empty edition and a note explaining why, not a broken one.
+
+**If you undo it.** The morning goes back to a tip sheet nobody turns into an
+edition until someone notices there is no news for the day — which is the
+exact complaint that started this (2026-09-17, "no news created for today").
+
+`scripts/draft_edition.py` · `scripts/verify.py` · `scripts/morning.sh` ·
+`scripts/launchd/com.oormanisuddi.morning.plist.template` · `tests/test_draft_edition.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

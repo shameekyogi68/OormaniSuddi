@@ -58,15 +58,19 @@ fi
 #
 # Compared by label and schedule only. The other job's script may well live
 # outside this repository, and nothing here reads outside this repository.
-when_of() {
-  plutil -extract StartCalendarInterval xml1 -o - \
-    "$HOME/Library/LaunchAgents/$1.plist" 2>/dev/null \
+when_of_file() {
+  plutil -extract StartCalendarInterval xml1 -o - "$1" 2>/dev/null \
     | grep -A1 -E '>(Hour|Minute)<' | grep '<integer>' \
     | sed 's/[^0-9]//g' | paste -sd, - 2>/dev/null
 }
 
+when_of() { when_of_file "$HOME/Library/LaunchAgents/$1.plist"; }
+
+# Read from the TEMPLATE, not a hardcoded string — a fallback that has to be
+# kept in sync by hand with whatever the template happens to say today is
+# exactly the kind of drift this project exists to refuse elsewhere (D56).
 OURS="$(when_of "$LABEL" 2>/dev/null)"
-[ -z "$OURS" ] && OURS="6,5"          # what the template ships with
+[ -z "$OURS" ] && OURS="$(when_of_file "$TEMPLATE")"
 CLASH=""
 for o in $(launchctl list 2>/dev/null | awk '{print $3}' \
            | grep -i '^com\.oormanisuddi\.' | grep -v "^$LABEL$"); do
@@ -106,17 +110,29 @@ sed "s|__ROOT__|$ROOT|g" "$TEMPLATE" > "$PLIST"
 
 launchctl unload "$PLIST" 2>/dev/null
 if launchctl load "$PLIST"; then
-  echo "✓ $LABEL installed — the tip sheet is fetched at 06:05 IST daily."
+  # "6,10,7,0" -> "06:10 and 07:00" — pairs of (hour, minute) from the array.
+  WHEN="$(when_of_file "$TEMPLATE" | awk -F, '{
+    out=""; for (i=1;i<=NF;i+=2) {
+      if (out!="") out=out" and ";
+      out=out sprintf("%02d:%02d", $i, $(i+1))
+    }
+    print out
+  }')"
+  echo "✓ $LABEL installed — fires at ${WHEN:-06:10 and 07:00} IST,"
+  echo "  so one missed wake does not cost the morning."
   echo "  root:   $ROOT"
   echo "  plist:  $PLIST"
   echo "  logs:   $ROOT/logs/fetch-YYYY-MM-DD.log"
   echo
+  echo "  Each run fetches the tips, then drafts editions/{date}.json from"
+  echo "  them — every field copied, nothing written, verified_by left empty."
   echo "  A failure puts a notification on screen; it does not fail silently."
   echo "  Check any time:  bash scripts/install_launchd.sh --status"
   echo "  Remove:          bash scripts/install_launchd.sh --remove"
   echo
-  echo "  Note: the sheet is TIPS. Nothing becomes an edition until you open"
-  echo "  the source and fill verified_by."
+  echo "  The draft still needs a person: open inbox/checklist_{date}.md,"
+  echo "  confirm each source, then scripts/verify.py. Nothing renders or"
+  echo "  approves on its own (D59)."
 else
   echo "✗ launchctl refused to load $PLIST" >&2
   exit 1

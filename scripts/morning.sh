@@ -49,11 +49,31 @@ except Exception:
     /usr/bin/env python3 scripts/whats_on.py --reviews
   } >> "$LOG" 2>&1
 
+  # Turn the tip sheet into a real, renderable edition — every field copied
+  # from the tips, nothing written. verified_by stays empty on every story;
+  # this is what collapses the morning from "read 33 tips and write JSON" to
+  # "open four links and run one command each" (D76). It never overwrites an
+  # edition that already exists — a human may already be mid-edit.
+  DRAFT_MSG="tip sheet ready"
+  if [ ! -f "editions/$DATE.json" ]; then
+    if /usr/bin/env python3 scripts/draft_edition.py --date "$DATE" >> "$LOG" 2>&1; then
+      DRAFT_MSG="$(/usr/bin/env python3 -c "
+import json
+d=json.load(open('editions/$DATE.json',encoding='utf-8'))
+print(f\"{len(d['stories'])} stories drafted — open inbox/checklist_$DATE.md\")
+" 2>/dev/null || echo 'edition drafted')"
+    else
+      echo "$(date '+%H:%M:%S')  draft_edition: nothing safely auto-drafted — build editions/$DATE.json by hand from inbox/today.md" >> "$LOG"
+    fi
+  else
+    echo "$(date '+%H:%M:%S')  editions/$DATE.json already exists — not touching it" >> "$LOG"
+  fi
+
   DUE=$(/usr/bin/env python3 scripts/whats_on.py --reviews 2>/dev/null | grep -c '⚠️' || true)
   if [ "${DUE:-0}" -gt 0 ]; then
-    notify "Tip sheet ready · $DUE review(s) due" "$TIPS — see $LOG"
+    notify "$DRAFT_MSG · $DUE review(s) due" "$TIPS"
   else
-    notify "Tip sheet ready" "$TIPS — open inbox/today.md"
+    notify "$DRAFT_MSG" "$TIPS"
   fi
   exit 0
 fi

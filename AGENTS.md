@@ -44,6 +44,8 @@ python3 scripts/health.py                       # is anything quietly broken
 python3 scripts/house_rule.py list              # standing instructions in force
 python3 scripts/house_rule.py where "…"         # where does this change belong
 python3 scripts/fetch_daily_news.py             # the morning tip sheet
+python3 scripts/draft_edition.py                # tip sheet -> editions/{date}.json, unverified (D76)
+python3 scripts/verify.py editions/DATE.json --story N --by NAME   # the one thing a person must do
 python3 scripts/sign_off.py out/DATE --by NAME  # sign taste / culture / news
 python3 scripts/whats_on.py                     # what is coming, what is overdue
 python3 scripts/correction.py status            # the IT Rules clocks
@@ -58,9 +60,10 @@ On a fresh checkout, once:
 ```bash
 python3 -m pip install --break-system-packages -r requirements.txt
 bash scripts/install_hooks.sh          # contract runs before every commit
-# The 06:05 job is already owned by a script outside this repo (D71), so the
-# line below will refuse. It is here for a machine that does not have one:
-# bash scripts/install_launchd.sh
+# The 06:05 job outside this repo (D71) is not ours and stays as it is. Our
+# own job fires at 06:10 and 07:00 — offset so it never races that one — and
+# fetches, then drafts the edition (D76):
+bash scripts/install_launchd.sh
 bash scripts/backup.sh --install       # nightly, 22:30
 ```
 

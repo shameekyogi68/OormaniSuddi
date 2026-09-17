@@ -29,6 +29,15 @@ python3 render.py my.json             # render the full package
 `templates/registry.json` is the same table on disk. Prefer reading those over
 guessing.
 
+**Before writing `editions/{date}.json`, check whether it already exists.**
+Most mornings it does — `scripts/draft_edition.py` runs automatically after
+the fetch and builds it straight from the tip sheet, with `verified_by` left
+empty on every story (D76). If it exists, you are extending or completing that
+file, not starting over: read it first, keep any story that already has a
+`verified_by` exactly as it is (a person checked that one — do not touch its
+copy), and add to it rather than overwrite it. Only replace it wholesale if
+the person working with you says to.
+
 ---
 
 ## 2 · What you write

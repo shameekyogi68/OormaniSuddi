@@ -24,24 +24,38 @@ is inside this repository.
 
 ## A normal day
 
-```bash
-# 06:05 runs automatically — see "who runs the morning" below.
-# To run it by hand at any time:
-python3 scripts/fetch_daily_news.py
+By the time you sit down, this has already happened — 06:10 and again at
+07:00, see "who runs the morning" below:
 
-# Read the sheet. It is TIPS. Open the source URLs.
-open inbox/today.md
+```bash
+python3 scripts/fetch_daily_news.py       # writes inbox/today.json + .md
+python3 scripts/draft_edition.py          # writes editions/{date}.json + a checklist
 ```
 
-Anything marked **⚠️ VERIFY** carries a word that was in no text we fetched —
-an invented figure, an officer who was never named, a helpline nobody gave us.
-Read those first. Either find the word in the source or cut it.
+`draft_edition.py` copies three or four stories straight from the tip sheet
+into `editions/{date}.json` — every `headline`, `deck` and `point` is text
+already there, nothing written. It never sets `verified_by`; it cannot (D59,
+D76). What is left is:
 
-Then write the edition. Three or four stories is a day; eleven is a week's
-worth of mediocre. Every story needs:
+```bash
+open inbox/checklist_2026-09-16.md
+```
 
-- `sources`, and `source_urls` unless it is own reporting
-- `verified_by` — **your name**, once you have opened the source yourself
+For each story: open its source URL, confirm it is true, then
+
+```bash
+python3 scripts/verify.py editions/2026-09-16.json --story 1 --by "Gautam Paduvari"
+# or, once every source checks out:
+python3 scripts/verify.py editions/2026-09-16.json --all --by "Gautam Paduvari"
+python3 scripts/verify.py editions/2026-09-16.json --status   # what's left
+```
+
+Never put your name on `--by` for a story you have not actually opened —
+`verified_by` is the one claim in this whole pipeline that a person, not a
+script, is making. The checklist also lists anything the fetch found but
+`draft_edition.py` declined to auto-draft — a headline that would fail a
+legal check, one too long for the render, an English-only tip. Those need
+building by hand from `inbox/today.md`, same as before this existed.
 
 ```bash
 python3 render.py editions/2026-09-16.json --check      # validate, render nothing
@@ -177,30 +191,30 @@ Run `scripts/sign_off.py`. See D62.
 
 ### Who runs the morning, and how you know it worked
 
-`com.oormanisuddi.daily` fires at 06:05 and runs `~/run_oormani.sh`, which
-lives outside this repository. This project deliberately does **not** install a
-second job at the same minute — two of them writing `inbox/` means the loser is
-overwritten in silence. See D71.
+`com.oormanisuddi.daily` fires at 06:05 and runs `~/run_oormani.sh`, outside
+this repository — this project cannot inspect it and does not try to (D71).
 
-That costs nothing, because the improvements live in the script rather than in
-the job: whatever calls `scripts/fetch_daily_news.py` gets article-body
-extraction, the groundedness pass and the current text model.
+`com.oormanisuddi.morning` is this repository's own job, installed with
+`bash scripts/install_launchd.sh`. It fires twice — **06:10** (five minutes
+after the outside job, so it is never racing it for `inbox/`) and **07:00**
+(an independent second attempt, in case the Mac was asleep at 06:10) — and
+each run does the whole chain: fetch the tips, then draft the edition
+(D76). Firing twice costs nothing because both scripts refuse to redo work
+that already exists — `draft_edition.py` never overwrites an
+`editions/{date}.json` that is already there, and a repeat fetch is harmless.
 
-What you need instead is to know it ran:
+Either way, know it ran:
 
 ```bash
 python3 scripts/health.py        # "morning fetch — ran 2h ago, 32 tips"
+                                  # "today's edition — 2/4 verified"
 cat logs/last_fetch.json         # the raw record
 ```
 
-If health says the last success was more than 30 hours ago, something stopped
-calling the script. Run it by hand, then look at whatever is scheduled.
-
-If you ever retire the outside job, ours is ready:
-
-```bash
-bash scripts/install_launchd.sh  # refuses while another job holds 06:05
-```
+If health says the last fetch success was more than 30 hours ago, something
+stopped calling the script. Run it by hand, then look at whatever is
+scheduled — `bash scripts/install_launchd.sh --status` for ours,
+`launchctl list | grep oormani` for both.
 
 ### The morning fetch produced nothing
 

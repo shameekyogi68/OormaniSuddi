@@ -160,6 +160,13 @@ with `"kind": "greeting"` and render that file. Deity `keep_clear` is mandatory.
 If `inbox/today.md` exists, treat it as a **tip sheet**. Do not paste it into
 JSON until the editor has opened each `source_url`.
 
+Most mornings `scripts/draft_edition.py` has already turned that tip sheet
+into `editions/{DATE}.json`, unverified (D76) — check for it before writing
+one yourself. If it exists: leave any story that already carries a
+`verified_by` untouched, and point the editor at
+`inbox/checklist_{DATE}.md` and `scripts/verify.py` rather than re-copying the
+tip sheet by hand.
+
 ---
 
 ## Before Stop A — what is coming

@@ -86,6 +86,29 @@ def check_fetch() -> list[str]:
     return out
 
 
+def check_edition() -> list[str]:
+    """Does today have a draft, and how far is it from postable."""
+    from datetime import date
+    today = date.today().isoformat()
+    path = os.path.join(ROOT, 'editions', f'{today}.json')
+    if not os.path.exists(path):
+        return [f'{WARN} today\'s edition — none yet. '
+                f'python3 scripts/draft_edition.py']
+    try:
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+    except Exception as e:
+        return [f'{BAD} today\'s edition — unreadable ({e})']
+    stories = data.get('stories', [])
+    verified = sum(1 for s in stories if (s.get('verified_by') or '').strip())
+    left = len(stories) - verified
+    if left == 0 and stories:
+        return [f'{OK} today\'s edition — {len(stories)} stories, all '
+               f'verified. Render, then sign off.']
+    return [f'{WARN} today\'s edition — {verified}/{len(stories)} verified. '
+           f'python3 scripts/verify.py editions/{today}.json --status']
+
+
 def check_clocks() -> list[str]:
     try:
         from brand import corrections as C
@@ -224,8 +247,8 @@ def check_tests() -> list[str]:
 def main() -> int:
     print(f'\n  ಊರ್ಮನಿ ಸುದ್ದಿ — health   {datetime.now():%Y-%m-%d %H:%M}\n')
     lines: list[str] = []
-    for fn in (check_fetch, check_clocks, check_reviews, check_house,
-               check_music, check_backups, check_git, check_tests):
+    for fn in (check_fetch, check_edition, check_clocks, check_reviews,
+               check_house, check_music, check_backups, check_git, check_tests):
         try:
             lines += fn()
         except Exception as e:                      # never fail the check
