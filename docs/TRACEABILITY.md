@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **51/76** decisions are named by at least one test
+- **52/77** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -244,7 +244,7 @@ those carry a reason rather than a test.
 
 ## D56 · Numeric policy lives in `tokens.Limits`
 
-- **Tested by:** `tests/test_contract.py`
+- **Tested by:** `tests/test_contract.py`, `tests/test_intake.py`
 - Enforced in: `brand/codes.py`, `brand/house.py`, `brand/tokens.py`, `scripts/house_rule.py`
 
 ## D57 · Generated images, including stock, are `nature: 'ai'`
@@ -332,7 +332,7 @@ those carry a reason rather than a test.
 ## D75 · A URL two tips share is a listing page, not an article
 
 - **Tested by:** `tests/test_draft_edition.py`, `tests/test_intake.py`
-- Enforced in: `scripts/draft_edition.py`
+- Enforced in: `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`
 
 ## D76 · "Ready by 8am" needs a number attached to how sure that is
 
@@ -341,4 +341,8 @@ those carry a reason rather than a test.
 ## D77 · Carousel is the day; a reel is earned, not defaulted
 
 - **Tested by:** `tests/test_pick_formats.py`
+
+## D78 · A tip is only worth having if its link opens and its flags mean something
+
+- **Tested by:** `tests/test_intake.py`
 

@@ -396,3 +396,122 @@ class SharedUrlsAreNotArticles(unittest.TestCase):
         self.assertEqual(tips[0].body, 'ಸ್ವಂತ ತುಣುಕು ಒಂದು')
         self.assertEqual(tips[1].body, 'ಸ್ವಂತ ತುಣುಕು ಎರಡು')
         self.assertEqual(tips[0].body_source, 'rss')
+
+
+class TheFlagsPointAtFactsNotAtGrammar(unittest.TestCase):
+    """D78. Measured on the run of 2026-09-17: 26 of 50 leads carried a flag, and
+    the single most-flagged token in the whole sheet was ಹಾಗೂ — "and". The
+    others were postpositions (ರಂದು, ವೇಳೆ), connectives (ಸಂಬಂಧಿಸಿದಂತೆ,
+    ಹಿನ್ನೆಲೆಯಲ್ಲಿ), case-marked forms of ordinary nouns (ಸಭೆಯ, ನಗರದ) and one
+    month name the source had abbreviated.
+
+    D75 already wrote down what that costs: flags at a rate that high teach
+    an editor to skip them, which is the same failure as not checking at all.
+    So these assert the noise is gone — and the class below asserts that
+    removing it did not blunt the check."""
+
+    def test_a_conjunction_is_never_an_invented_fact(self):
+        self.assertEqual(
+            unsupported_tokens('ಮಳೆ ಹಾಗೂ ಗಾಳಿ ಸಾಧ್ಯತೆ',
+                               'ಮಳೆ, ಗಾಳಿ ಸಾಧ್ಯತೆ ಇದೆ.'), [])
+
+    def test_postpositions_and_connectives_are_not_facts(self):
+        for lead in ('ಸಭೆ ನಡೆದ ವೇಳೆ ಚರ್ಚೆ',
+                     'ದೂರುಗಳ ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಪರಿಶೀಲನೆ',
+                     'ಪ್ರಕರಣಕ್ಕೆ ಸಂಬಂಧಿಸಿದಂತೆ ತನಿಖೆ'):
+            flags = unsupported_tokens(lead, 'ಸಭೆ ನಡೆಯಿತು. ದೂರು ದಾಖಲಾಗಿದೆ. '
+                                             'ಪ್ರಕರಣ ತನಿಖೆ ಮುಂದುವರಿದಿದೆ.')
+            for noise in ('ವೇಳೆ', 'ಹಿನ್ನೆಲೆಯಲ್ಲಿ', 'ಸಂಬಂಧಿಸಿದಂತೆ'):
+                self.assertNotIn(noise, flags, lead)
+
+    def test_a_case_marker_on_a_short_noun_is_not_a_new_claim(self):
+        """ಸಭೆ is three aksharas, so it never enters the haystack's token
+        set — and every inflected form of it was therefore flagged."""
+        self.assertNotIn('ಸಭೆಗೆ', unsupported_tokens(
+            'ಉಡುಪಿಯಲ್ಲಿ ಸಭೆಗೆ ಚಾಲನೆ', 'ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ ಸಭೆ ನಡೆಯಿತು.'))
+        self.assertEqual(unsupported_tokens(
+            'ನಗರದ ರಸ್ತೆ ಹಾಳಾಗಿದೆ', 'ನಗರ ವ್ಯಾಪ್ತಿಯ ರಸ್ತೆ ಹದಗೆಟ್ಟಿದೆ.'), [])
+
+    def test_a_month_the_source_abbreviated_is_the_same_month(self):
+        """A coastal headline writes ಸೆ.18, never ಸೆಪ್ಟೆಂಬರ್ 18."""
+        self.assertEqual(unsupported_tokens(
+            'ಸೆಪ್ಟೆಂಬರ್ 18 ರಂದು ಹೆಬ್ರಿಗೆ ಭೇಟಿ',
+            'ಸೆ.18ರಂದು ಹೆಬ್ರಿಗೆ ಭೇಟಿ ನೀಡಲಿದ್ದಾರೆ.'), [])
+
+    def test_the_month_bridge_reads_the_one_month_list(self):
+        """Derived from brand.content.KN_MONTHS, not a second table that
+        would drift from the datelines (D56)."""
+        from scripts.fetch_daily_news import _month_bridge
+        from brand.content import KN_MONTHS
+        self.assertIn(KN_MONTHS[6].lower(), _month_bridge('ಜು.27ರವರೆಗೆ ಮಳೆ'))
+        self.assertEqual(_month_bridge('ಯಾವ ತಿಂಗಳೂ ಇಲ್ಲ'), '')
+
+
+class QuietingTheNoiseDidNotBluntTheCheck(unittest.TestCase):
+    """The whole point of the pass is the invented figure, the invented
+    helpline and the place that was never in the story. If widening the
+    stopword list or the morphology had cost any of those, it would have
+    traded a check for a comfortable-looking number."""
+
+    SRC = 'ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ ಭಾರಿ ಮಳೆ ಸುರಿದಿದೆ. ಜಿಲ್ಲಾಡಳಿತ ಎಚ್ಚರಿಕೆ ನೀಡಿದೆ.'
+
+    def test_an_invented_casualty_figure_still_flags(self):
+        self.assertIn('45', unsupported_tokens(
+            'ಉಡುಪಿಯಲ್ಲಿ ಮಳೆ, 45 ಮಂದಿ ದಾಖಲು', self.SRC))
+
+    def test_an_invented_helpline_still_flags(self):
+        self.assertIn('1077', unsupported_tokens(
+            'ಸಹಾಯಕ್ಕೆ 1077 ಸಂಪರ್ಕಿಸಿ', self.SRC))
+
+    def test_a_place_the_source_never_named_still_flags(self):
+        self.assertIn('ಮಂಗಳೂರು', unsupported_tokens(
+            'ಮಂಗಳೂರು ಬಂದರು ಬಂದ್', self.SRC))
+
+    def test_no_stopword_carries_a_number_or_a_name(self):
+        """A stopword list is only safe while nothing in it could ever be a
+        fact. A digit or a capitalised name in there would silently hide
+        one."""
+        from scripts.fetch_daily_news import _FUNCTION_WORDS
+        for w in _FUNCTION_WORDS:
+            self.assertFalse(any(ch.isdigit() for ch in w), w)
+
+
+class SourcesWhoseLinksOpen(unittest.TestCase):
+    """Google News supplied 15 of the 33 tips on 2026-09-17 and produced a
+    body for none of them: its /rss/articles/ link is an opaque token that
+    only becomes a URL after JavaScript runs, so trafilatura sees a shell and
+    the editor who clicks it lands on a home page. That is a source_url which
+    does not satisfy what D55 asks of one."""
+
+    def test_the_district_feeds_are_scoped_to_places_we_cover(self):
+        from scripts.fetch_daily_news import NEWSKARNATAKA_FEEDS
+        from brand.copy import PLACE_TAGS
+        self.assertTrue(NEWSKARNATAKA_FEEDS)
+        for place, url in NEWSKARNATAKA_FEEDS:
+            self.assertIn(place, PLACE_TAGS,
+                          f'{place} is not a place this channel covers')
+            self.assertTrue(url.startswith('https://'), url)
+
+    def test_a_dead_source_cannot_starve_a_live_one(self):
+        """The body budget counts articles GOT, not attempts. Counting
+        attempts is what produced zero full articles out of thirty-three:
+        fifteen unresolvable links spent the whole allowance before a
+        fetchable one was reached."""
+        import scripts.fetch_daily_news as F
+        tips = [Tip(headline=f'ಸುದ್ದಿ {i}', source_name='dead',
+                    source_url=f'https://dead.example/{i}', snippet='x')
+                for i in range(F.BODY_BUDGET + 5)]
+        tips.append(Tip(headline='ಜೀವಂತ', source_name='live',
+                        source_url='https://live.example/a', snippet='x'))
+        body = 'ಉಡುಪಿ ಜಿಲ್ಲೆಯಲ್ಲಿ ಭಾರಿ ಮಳೆ ಸುರಿದಿದೆ. ' * 20
+
+        real = F.fetch_body
+        F.fetch_body = lambda url: body if 'live.example' in url else ''
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                F.attach_bodies(tips)
+        finally:
+            F.fetch_body = real
+
+        self.assertEqual(tips[-1].body_source, 'article',
+                         'the one fetchable source was never reached')

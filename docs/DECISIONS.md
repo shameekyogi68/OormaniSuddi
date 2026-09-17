@@ -2006,6 +2006,65 @@ one, which is the one thing `should_be_reel()` already exists to catch.
 ---
 
 
+## D78 · A tip is only worth having if its link opens and its flags mean something
+
+**Decided.** Two halves of one problem, both found by measuring the morning
+of 2026-09-17 rather than by reading the code.
+
+**The links.** Google News supplied 15 of that morning's 33 tips and produced
+an article body for **none** of them: a `/rss/articles/` URL is an opaque
+token that only becomes a real address after JavaScript runs. `trafilatura`
+gets a 580 KB shell with no link in it, and a person who clicks it lands on
+the publisher's home page — which is what happened when the day's lead story
+was opened to be verified, and the honest answer had to be "I could not check
+this one." Udayavani's RSS returns nothing at all, so its twelve tips fall
+back to one district listing URL and are skipped by D75 as they should be.
+Six tips of thirty-three had a source anybody could actually reopen.
+
+So the intake now reads two district-scoped publisher feeds first —
+News Karnataka's Udupi and Mangaluru feeds, and Vartha Bharati's Karavali
+section. Real article URLs, and 2,000–2,400 characters of extractable text
+each. **Measured after: 50 tips, 12 full articles, against 33 and zero.**
+
+**The budget counted the wrong thing.** `BODY_BUDGET` capped *attempts*, so
+fifteen unresolvable links spent the whole allowance before a fetchable one
+was ever reached. It now counts articles actually got, with `BODY_ATTEMPTS`
+as the separate politeness ceiling. That single line is most of the zero.
+
+**The flags.** 26 leads of 50 carried a flag, and the most-flagged token in
+the entire sheet was `ಹಾಗೂ` — "and". The rest were postpositions (`ರಂದು`,
+`ವೇಳೆ`), connectives (`ಸಂಬಂಧಿಸಿದಂತೆ`), case-marked ordinary nouns (`ಸಭೆಯ`,
+`ನಗರದ`) and a month the source had abbreviated (`ಸೆ.18` against the lead's
+`ಸೆಪ್ಟೆಂಬರ್`). Three fixes: the stopword list now holds the words that cannot
+be a fact in any sentence; a lead's case marker is stripped and the bare stem
+looked for, which is what `ಸಭೆ` needed because at three aksharas it never
+entered the haystack's token set at all; and an abbreviated month is bridged
+to its full name, derived from `KN_MONTHS` rather than a second table.
+
+**What that leaves.** The same 50 leads now flag single occurrences of actual
+nouns and figures — a place name, an institution, a number — which is what
+the pass was built to surface. The invented casualty figure, the invented
+helpline and the place the source never named all still flag; there is a test
+class whose only job is to prove that widening the list did not blunt the
+check.
+
+**Why this matters more than it looks.** D75 already wrote down the cost:
+flags at that rate teach an editor to skip them, and an ignored check is the
+same as no check. The groundedness pass is the machine's only automatic
+defence against an invented fact reaching a card, and it was spending its
+credibility on the word "and".
+
+**If you undo it.** The morning goes back to a sheet whose links do not open,
+whose leads rest on headlines, and whose warnings are mostly grammar — all
+three of which look like a working newsroom right up until somebody has to
+verify something.
+
+`scripts/fetch_daily_news.py :: scrape_newskarnataka_kn, scrape_varthabharati_kn,
+attach_bodies, _month_bridge, _supported, _FUNCTION_WORDS` · `tests/test_intake.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

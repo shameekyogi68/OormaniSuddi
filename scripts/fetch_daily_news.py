@@ -267,6 +267,74 @@ def scrape_oneindia_kannada() -> list[Tip]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  PUBLISHERS WHOSE LINKS ACTUALLY OPEN
+#  Measured on 2026-09-17, against the morning's own 33 tips: Google News
+#  supplied 15 of them and produced a body for none, because its /rss/articles/
+#  link is an opaque token that only resolves after JavaScript runs. A reader
+#  who clicks it lands on the publisher's home page, which is exactly what
+#  happened when the day's lead story was opened to be verified. Udayavani's
+#  RSS returns nothing at all, so its twelve tips all fall back to one district
+#  listing URL (D75) and are skipped for bodies by design.
+#
+#  That left six tips out of thirty-three whose source could be fetched and
+#  checked. These two feeds are the answer: district-scoped, real article URLs
+#  an editor can reopen, and text trafilatura can actually extract — 2,000 to
+#  2,400 characters a story, against zero from the aggregator.
+# ─────────────────────────────────────────────────────────────────────────────
+
+NEWSKARNATAKA_FEEDS = (
+    ('ಉಡುಪಿ', 'https://kannada.newskarnataka.com/udupi/feed'),
+    ('ಮಂಗಳೂರು', 'https://kannada.newskarnataka.com/mangaluru/feed'),
+)
+
+
+def scrape_newskarnataka_kn() -> list[Tip]:
+    """District feeds, one per place we cover. The taluk comes from the feed
+    itself rather than from guessing at the headline — this is the only
+    source that states it."""
+    now = datetime.now().isoformat(timespec='seconds')
+    tips: list[Tip] = []
+    alive = 0
+    for place, url in NEWSKARNATAKA_FEEDS:
+        try:
+            items = _rss_items(url)
+        except Exception as e:
+            log(f'  NewsKarnataka:  {place} skipped ({type(e).__name__})')
+            continue
+        alive += 1
+        for title, link, desc in items[:8]:
+            blob = title + ' ' + desc
+            tips.append(Tip(
+                headline=title, source_name='News Karnataka',
+                source_url=link or url, snippet=desc[:400],
+                # The feed's own district beats a keyword guess, but a
+                # headline naming a taluk inside the district is better still.
+                taluk=_guess_taluk(blob) or place,
+                risk=_risk(blob), fetched_at=now))
+    if alive:
+        log(f'  NewsKarnataka:  {len(tips)} tips from {alive} district feed(s)')
+    return tips
+
+
+def scrape_varthabharati_kn() -> list[Tip]:
+    """The Karavali section. Small, and entirely coastal."""
+    url = 'https://www.varthabharati.in/karavali/feed'
+    now = datetime.now().isoformat(timespec='seconds')
+    try:
+        items = _rss_items(url)
+        tips = [Tip(headline=title, source_name='ವಾರ್ತಾ ಭಾರತಿ',
+                    source_url=link or url, snippet=desc[:400],
+                    taluk=_guess_taluk(title + ' ' + desc),
+                    risk=_risk(title + ' ' + desc), fetched_at=now)
+                for title, link, desc in items[:8]]
+        log(f'  VarthaBharati:  {len(tips)} tips')
+        return tips
+    except Exception as e:
+        log(f'  VarthaBharati:  skipped ({type(e).__name__})')
+        return []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  ARTICLE BODIES
 #  A headline plus an RSS blurb is thin material. Where the publisher actually
 #  serves the article, fetching it turns "write five sentences from a headline"
@@ -281,7 +349,9 @@ def scrape_oneindia_kannada() -> list[Tip]:
 
 BODY_MIN_CHARS = 220
 BODY_MAX_CHARS = 4000
-BODY_BUDGET = 12          # articles fetched per run; be a polite guest
+BODY_BUDGET = 12          # articles GOT per run; be a polite guest
+BODY_ATTEMPTS = 30        # and a ceiling on tries, so dead links cannot
+                          # turn a polite fetch into a crawl
 
 
 def _extractor():
@@ -356,10 +426,21 @@ def attach_bodies(tips: list[Tip]) -> int:
     # is not an embarrassment but an exposure.
     order = sorted(range(len(tips)),
                    key=lambda i: 0 if tips[i].risk != 'normal' else 1)
-    for i in order[:BODY_BUDGET]:
+    # The budget counts articles we actually GOT, not attempts. Spending it on
+    # attempts means a source whose links never resolve — an aggregator token
+    # that only becomes a URL after JavaScript runs — consumes the whole
+    # allowance and every fetchable story is left resting on its headline.
+    # Measured on 2026-09-17: fifteen such attempts, zero bodies, and the tips
+    # that would have worked were never reached. BODY_ATTEMPTS is the separate
+    # politeness ceiling, so a bad morning still cannot turn into a crawl.
+    attempts = 0
+    for i in order:
+        if got >= BODY_BUDGET or attempts >= BODY_ATTEMPTS:
+            break
         t = tips[i]
         if t.source_url in shared:
             continue
+        attempts += 1
         body = fetch_body(t.source_url)
         if body:
             t.body, t.body_source = body, 'article'
@@ -388,9 +469,31 @@ def attach_bodies(tips: list[Tip]) -> int:
 _FUNCTION_WORDS = {
     'ಮತ್ತು', 'ಅಥವಾ', 'ಎಂದು', 'ಇದೆ', 'ಆಗಿದೆ', 'ಎಂಬ', 'ಈ', 'ಆ', 'ಅವರು',
     'ನಂತರ', 'ಬಳಿಕ', 'ಜೊತೆಗೆ', 'ಬಗ್ಗೆ', 'ಮೇಲೆ', 'ಕುರಿತು', 'ಇಲ್ಲ',
+    # Measured against the run of 2026-09-17, where 26 leads of 50 were
+    # flagged and the most-flagged token in the whole sheet was ಹಾಗೂ — "and".
+    # None of these can be an invented fact in any sentence: they are
+    # conjunctions, postpositions and connectives. Flagging them buries the
+    # one flag that matters, which is the failure D75 names by name.
+    'ಹಾಗೂ', 'ರಂದು', 'ವೇಳೆ', 'ಮೂಲಕ', 'ಪ್ರಕಾರ', 'ಕಾರಣ', 'ಆದರೆ', 'ಸಹಿತ',
+    'ಹಿನ್ನೆಲೆಯಲ್ಲಿ', 'ಸಂಬಂಧಿಸಿದಂತೆ', 'ಕುರಿತಂತೆ', 'ಸೇರಿದಂತೆ', 'ಒಳಗೊಂಡ',
+    'ಸಂಪೂರ್ಣ', 'ನಿಗದಿತ', 'ವಿವಿಧ', 'ಹೆಚ್ಚು', 'ಮಾಡಲು', 'ಸಿಗುವ', 'ಇದ್ದು',
     'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for',
     'is', 'was', 'were', 'has', 'have', 'said', 'says',
 }
+
+# Kannada case endings. The source writes ಸಭೆ and the lead writes ಸಭೆಯ or
+# ಸಭೆಗೆ; the source writes ನಗರ and the lead writes ನಗರದ. Those are the same
+# noun wearing a case marker, not a new claim. `_supported`'s prefix rules
+# miss them whenever the SOURCE word is short, because a three-akshara word
+# never enters the haystack's token set — and three aksharas is an ordinary
+# Kannada noun. Stripping the marker off the lead's word and testing the bare
+# stem is the direct fix, and it is morphology rather than a fuzzier match.
+_CASE_TAILS = (
+    'ಗಳನ್ನು', 'ಗಳಿಗೆ', 'ಗಳಲ್ಲಿ', 'ಗಳಿಂದ', 'ವನ್ನು', 'ಯನ್ನು', 'ನ್ನು',
+    'ಯಲ್ಲಿ', 'ದಲ್ಲಿ', 'ನಲ್ಲಿ', 'ಅಲ್ಲಿ', 'ಯಿಂದ', 'ದಿಂದ', 'ನಿಂದ',
+    'ಕ್ಕೆ', 'ಗಳು', 'ಗಳ', 'ಗೆ', 'ಯ', 'ದ', 'ನ', 'ರ',
+)
+_MIN_CASE_STEM = 3
 
 _TOKEN = re.compile(r'[ಀ-೿]{3,}|[A-Z][A-Za-z]{2,}|\d[\d.,]*')
 
@@ -493,6 +596,26 @@ def _kannada_share(text: str) -> float:
 UNCHECKABLE = '⟨source is not in Kannada — open the link⟩'
 
 
+def _month_bridge(source_text: str) -> str:
+    """Full Kannada month names for any month the source abbreviated.
+
+    A coastal headline writes ಸೆ.18 or ಜು.27, never ಸೆಪ್ಟೆಂಬರ್ 18. The month
+    list is `brand.content.KN_MONTHS` — the one this project already sets
+    datelines from — so there is no second table to keep in step with it.
+    """
+    try:
+        from brand.content import KN_MONTHS
+    except Exception:
+        return ''
+    out = []
+    for month in KN_MONTHS:
+        for n in (1, 2, 3):
+            if len(month) > n and f'{month[:n]}.' in source_text:
+                out.append(month.lower())
+                break
+    return ' '.join(out)
+
+
 def _supported(token: str, haystack_tokens: set, haystack: str) -> bool:
     low = token.lower()
     if low in haystack:
@@ -508,6 +631,15 @@ def _supported(token: str, haystack_tokens: set, haystack: str) -> bool:
     for cut in range(len(low) - 1, _MIN_STEM - 1, -1):
         if low[:cut] in haystack:
             return True
+    # The same, for a source word too short to be in haystack_tokens at all:
+    # ಸಭೆಯ → ಸಭೆ, ನಗರದ → ನಗರ. The marker comes off and the bare stem is
+    # looked for whole, so this stays morphology and does not become a
+    # three-character prefix match against everything.
+    for tail in _CASE_TAILS:
+        if low.endswith(tail):
+            stem = low[:-len(tail)]
+            if len(stem) >= _MIN_CASE_STEM and stem in haystack:
+                return True
     return False
 
 
@@ -531,6 +663,12 @@ def unsupported_tokens(lead: str, source_text: str) -> list[str]:
     for latin, kannada in _PLACES.items():
         if latin in hay:
             hay += ' ' + kannada.lower()
+    # And the month a headline abbreviates. A source writes ಸೆ.18 and the
+    # lead spells ಸೆಪ್ಟೆಂಬರ್ 18 — the same date, and the DAY is still checked
+    # as a figure on its own. ಸೆಪ್ಟೆಂಬರ್ was the most-flagged word of the
+    # 2026-09-17 sheet purely because of this. Derived from KN_MONTHS rather
+    # than a second table of abbreviations, which would drift from it.
+    hay += ' ' + _month_bridge(source_text)
     hay_tokens = {t for t in hay.split() if len(t) >= _MIN_STEM}
     out: list[str] = []
     for tok in _TOKEN.findall(lead):
@@ -832,6 +970,10 @@ def main() -> int:
     all_tips: list[Tip] = []
     alive = 0
     for name, scraper in (
+        # District feeds first: their links open and their bodies extract,
+        # so they are the tips most likely to survive to a checked story.
+        ('News Karnataka KN', scrape_newskarnataka_kn),
+        ('Vartha Bharati KN', scrape_varthabharati_kn),
         ('Udayavani HTML', scrape_udayavani_html),
         ('Udayavani RSS', scrape_udayavani_rss),
         ('Google News EN', scrape_google_news_en),
