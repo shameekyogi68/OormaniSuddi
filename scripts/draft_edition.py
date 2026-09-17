@@ -78,6 +78,18 @@ CATEGORY_HINTS = [
 # floor, exactly like content.GUILT_ASSERTING — over-eager on purpose.
 SEXUAL_OFFENCE_MARK = ('ಅತ್ಯಾಚಾರ', 'ಲೈಂಗಿಕ ದೌರ್ಜನ್ಯ', 'ಲೈಂಗಿಕ ಕಿರುಕುಳ')
 
+# Which taluk to reach for FIRST when several clean tips are competing for the
+# same handful of morning slots. The editor's own ranking of the coverage
+# area, not a guess — house rule 2026-09-17-01. This does not add, remove, or
+# rename a place (copy.PLACE_TAGS is untouched); it only breaks ties among tips
+# that already have one.
+TALUK_PRIORITY = {
+    'ಕುಂದಾಪುರ': 1.0, 'ಬೈಂದೂರು': 1.0,
+    'ಉಡುಪಿ': 0.7, 'ಮಣಿಪಾಲ': 0.7,
+    'ಕಾರ್ಕಳ': 0.4, 'ಬ್ರಹ್ಮಾವರ': 0.4, 'ಹೆಬ್ರಿ': 0.4,
+    'ಕಾಪು': 0.4, 'ಮಂಗಳೂರು': 0.4,
+}
+
 
 def _category_for(text: str, risk: str) -> str:
     if risk in ('crime', 'minor'):
@@ -97,7 +109,10 @@ def _score(tip: dict) -> float:
     cat = _category_for(text, tip.get('risk', 'normal'))
     score = BREADTH.get(cat, 0.5) * 0.4
     if tip.get('taluk'):
-        score += 0.3
+        # A story from a lower-priority taluk still outranks one with no
+        # taluk at all — the floor of 0.4 keeps that true even at the bottom
+        # of TALUK_PRIORITY (house rule 2026-09-17-01).
+        score += 0.3 * TALUK_PRIORITY.get(tip['taluk'], 0.4)
     if any(w in text for w in ACTIONABLE):
         score += 0.2
     if tip.get('risk') != 'normal':

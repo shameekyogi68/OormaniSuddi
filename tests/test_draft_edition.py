@@ -167,6 +167,34 @@ class MaxStoriesIsRespected(WithInbox):
         self.assertEqual(len(stories), 3)
 
 
+class TaluksArePickedInThePreferredOrder(WithInbox):
+    """House rule 2026-09-17-01: when more clean tips exist than there are
+    morning slots, Kundapura and Byndoor go in first, then Udupi/Manipal,
+    then the rest — not whichever tip happened to sort first otherwise."""
+
+    def test_kundapura_and_byndoor_beat_lower_priority_taluks_for_a_slot(self):
+        places = ['ಮಂಗಳೂರು', 'ಕಾಪು', 'ಹೆಬ್ರಿ', 'ಬ್ರಹ್ಮಾವರ', 'ಕಾರ್ಕಳ',
+                 'ಉಡುಪಿ', 'ಮಣಿಪಾಲ', 'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು']
+        self.write_tips([
+            tip(f'{p} ಸುದ್ದಿ', f'https://www.example.com/{i}', taluk=p)
+            for i, p in enumerate(places)
+        ])
+        stories, _ = de.build('2026-09-17', 2)
+        locations = {s['location'] for s in stories}
+        self.assertEqual(locations, {'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು'})
+
+    def test_udupi_and_manipal_outrank_karkala_brahmavara_hebri_kaup_mangalore(self):
+        places = ['ಮಂಗಳೂರು', 'ಕಾಪು', 'ಹೆಬ್ರಿ', 'ಬ್ರಹ್ಮಾವರ', 'ಕಾರ್ಕಳ',
+                 'ಉಡುಪಿ', 'ಮಣಿಪಾಲ']
+        self.write_tips([
+            tip(f'{p} ಸುದ್ದಿ', f'https://www.example.com/{i}', taluk=p)
+            for i, p in enumerate(places)
+        ])
+        stories, _ = de.build('2026-09-17', 2)
+        locations = {s['location'] for s in stories}
+        self.assertEqual(locations, {'ಉಡುಪಿ', 'ಮಣಿಪಾಲ'})
+
+
 class RiskFlagsCarryForward(WithInbox):
 
     def test_minor_risk_sets_involves_minor_defaulting_to_caution(self):

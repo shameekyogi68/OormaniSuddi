@@ -16,6 +16,9 @@ the things that are genuinely house style rather than contract.
 - **2026-09-16-02** — Weather takeaway always names the helpline number, not just 'contact the DC'
   - _why:_ a takeaway people can act on is the strongest forward predictor (D72)
   - _asked by:_ Gautam Paduvari
+- **2026-09-17-01** — When picking which tips to auto-draft each morning, prefer taluks in this order: ಕುಂದಾಪುರ (Kundapura) and ಬೈಂದೂರು (Byndoor) highest, then ಉಡುಪಿ (Udupi) and ಮಣಿಪಾಲ (Manipal), then ಕಾರ್ಕಳ (Karkala), ಬ್ರಹ್ಮಾವರ (Brahmavara), ಹೆಬ್ರಿ (Hebri), ಕಾಪು (Kaup), ಮಂಗಳೂರು (Mangalore).
+  - _why:_ editor's own priority ranking of the coverage area, 2026-09-17
+  - _asked by:_ Gautam Paduvari
 
 ## picture
 
