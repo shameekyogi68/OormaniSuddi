@@ -41,9 +41,10 @@ python3 render.py --schema story                # the input contract
 python3 render.py --check my.json               # validate, render nothing
 python3 render.py editions/greetings/X.json     # a festival wish: 9:16, 4:5, 1:1
 python3 render.py editions/X.json --only $(python3 scripts/pick_formats.py editions/X.json)
-                                                 # the daily default: carousel, plus a reel
-                                                 # only if the lead story earns one (D72,
-                                                 # house rule 2026-09-17-02)
+                                                 # the daily default: carousel + ONE reel —
+                                                 # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ with 3+ stories, else the lead
+                                                 # reel if it earns one (D81, 2026-09-18-02)
+python3 render.py editions/X.json --only roundup  # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ on its own
 python3 render.py editions/2026-08-25.json --only story_card broadsheet   # on request only
 python3 render.py editions/2026-08-25.json      # full package (AI bulletin is HOLD, not YouTube)
 python3 -m unittest tests.test_contract         # the contract (instant)
@@ -187,6 +188,9 @@ Whenever raw news copy is provided for a bulletin:
    - The Legal & Monetization Expert audits the full package; zero tolerance for ad-limitation or legal risks.
 6. **Complete Copy & Schedule Plan**:
    - The time-scheduled publishing timetable is **generated** — `render.py` writes `schedule.txt` and `schedule.json` from what it actually rendered.
+   - **Dedicated 1-Click Copy Files (`{stem}_caption.txt` & `{stem}_whatsapp.txt`, House rules 2026-09-17-06 & 08)**:
+     - `carousel_caption.txt`: Clean, complete Instagram caption (Lead hook, swipe prompt, headlines list, CTA question, sources, grievance contact, and multi-story hashtags) with ZERO extraneous banner headers or labels. Open on phone, Select All, Paste.
+     - `carousel_whatsapp.txt`: Tailored WhatsApp group & broadcast digest (`🌾 *ಊರ್ಮನಿ ಸುದ್ದಿ · {date}*`, tagline, numbered emoji items `1️⃣ *ಸ್ಥಳ*: ಸುದ್ದಿ`, direct Instagram CTA `📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*`, source credits, handle). NEVER mention "ಫೋಟೋಗಳು" when using AI imagery.
    - **Hyperlocal Multi-Story Hashtags (House rule 2026-09-17-07)**: In daily carousels/editions, hashtags must cover all locations (taluks/places) and categories from all stories featured in the swipe set, ensuring every region covered gets discovered.
    - Ready-to-copy Instagram captions with First Comments (pinned questions).
    - Ready-to-copy YouTube Shorts Titles (<60 chars, mobile search optimized), Descriptions (with snippet and timestamps), and Tags for every single reel.

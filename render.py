@@ -100,14 +100,17 @@ def load(path: str):
 #  RENDER
 # ─────────────────────────────────────────────────────────────────────────────
 
-def write_copy(subject, outdir: str, name: str, voice_script: str | None = None) -> str:
+def write_copy(subject, outdir: str, name: str, voice_script: str | None = None,
+               post=None) -> str:
     """Write the post copy next to the artwork.
 
     Artwork on its own is not a post. Every render gets a .txt you can paste
-    from and a .json a scheduler can read.
+    from and a .json a scheduler can read. `post` is a prebuilt PostCopy, for
+    a format whose caption is not the edition's or the story's default — the
+    speed-news reel, which has nothing to swipe.
     """
-    c = (copywriter.for_edition(subject) if isinstance(subject, Edition)
-         else copywriter.for_story(subject))
+    c = post or (copywriter.for_edition(subject) if isinstance(subject, Edition)
+                 else copywriter.for_story(subject))
     d = c.to_dict()
     if voice_script:
         d['voiceover_script'] = voice_script
@@ -144,6 +147,10 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None)
     with open(os.path.join(outdir, f'{stem}_caption.txt'), 'w',
               encoding='utf-8') as f:
         f.write(copywriter.caption_text(c, copywriter.platform_of(stem)))
+    if getattr(c, 'whatsapp', ''):
+        with open(os.path.join(outdir, f'{stem}_whatsapp.txt'), 'w',
+                  encoding='utf-8') as f:
+            f.write(c.whatsapp.strip() + '\n')
     return txt
 
 
@@ -314,6 +321,30 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
             else:
                 print('  · lead story is_reel=false; skipping reel.')
 
+    # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the day's stories as one quick-news reel (D81). Through
+    # the engine, so the gate reviews it, the caption file is written, and the
+    # schedule knows it exists; the first version was a side script that did
+    # none of the three.
+    if run('roundup'):
+        if len(ed.stories) < Limits.roundup_min_stories:
+            print(f'  · speed news needs {Limits.roundup_min_stories}+ stories '
+                  f'(this edition has {len(ed.stories)}) — skipped')
+        else:
+            _t = time.time()
+            p = os.path.join(outdir, 'roundup.mp4')
+            res = TP.render('roundup', ed, p)
+            used = replace(ed, stories=ed.stories[:res['stories']])
+            write_copy(used, outdir, 'roundup_copy',
+                       voice_script='\n'.join(res['spoken']),
+                       post=copywriter.for_roundup(used, res['seconds']))
+            if os.path.exists(res['cover']):
+                made.append((res['cover'], 'story'))
+            if res['dropped']:
+                print(f'  ⚠ left out of speed news (still on the carousel): '
+                      + ' · '.join(h[:30] for h in res['dropped']))
+            log.done('roundup', seconds=round(time.time() - _t, 1),
+                     stories=res['stories'])
+
     # The 16:9 long-form cut. yt_thumbnail.jpg above is built for THIS video —
     # without it the channel renders a thumbnail for a video that does not
     # exist, and a sub-60s vertical reel is a Short, which ignores custom
@@ -346,7 +377,8 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         has_carousel=os.path.exists(os.path.join(outdir, 'carousel_01_cover.jpg')),
         has_story_card=os.path.exists(os.path.join(outdir, 'story_9x16.jpg')),
         has_broadsheet=os.path.exists(os.path.join(outdir, 'broadsheet.jpg')),
-        carousel_last=slides[-1] if slides else '')
+        carousel_last=slides[-1] if slides else '',
+        has_roundup=os.path.exists(os.path.join(outdir, 'roundup.mp4')))
     if plan:
         with open(os.path.join(outdir, 'schedule.txt'), 'w', encoding='utf-8') as f:
             f.write(copywriter.plan_text(plan, ed.date_kn))
@@ -386,7 +418,7 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
     if os.path.exists(car):
         lines += ['## Carousel', '', '```', _read(car), '```', '']
     for name in sorted(os.listdir(outdir)):
-        if re.fullmatch(r'reel(_\d+)?_copy\.txt', name):
+        if re.fullmatch(r'(reel(_\d+)?|roundup)_copy\.txt', name):
             lines += [f'## {name}', '', '```',
                       _read(os.path.join(outdir, name)), '```', '']
     # ── the forwards, one per town ────────────────────────────────────────

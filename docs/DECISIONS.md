@@ -2156,6 +2156,69 @@ between a drafted morning and an approvable one. It is supposed to be there.
 ---
 
 
+## D81 · ಸ್ಪೀಡ್ ನ್ಯೂಸ್: the day as one quick-news reel, built into the engine
+
+**Decided.** With three or more stories, the daily reel is ಸ್ಪೀಡ್ ನ್ಯೂಸ್ —
+`render.py --only roundup`, `brand/speednews.py`. A place and one line per
+story, spoken by the anchor while it is on screen, each story cut to its own
+measured narration, a counter and one progress segment per story, a two-second
+follow card, under 45 seconds. On a thin day the lead-story reel (D39) is
+still the reel, and only if the lead earns it. Never both. House rule
+2026-09-18-02, which retires 2026-09-17-02.
+
+**Why D39 is narrowed, not overturned.** D39 said four headlines in 30s is a
+slideshow the viewer swipes off, and for the reel it was written about it was
+right. Speed news is a different, proven grammar — every Kannada channel runs
+it — and it answers D39's objection with the two things a slideshow lacks: the
+anchor is saying the line while it is on screen, and the viewer can see it is
+story 3 of 8 with the next one two seconds away.
+
+**Found by watching the first attempt frame by frame.** It was a side script,
+`scripts/render_roundup_reel.py`, and it had fourteen faults:
+
+- The wipe moved whole frames, so its gold edge sliced Kannada headlines
+  mid-akshara on every cut. Now the wipe moves pictures only: story text is
+  gone before it starts and lands after it, and the chrome sits above it.
+- It used `fmt('story')`, whose right margin is 72px. Headlines ran under the
+  like/comment/share rail and the handle footer sat under the caption. Now
+  `fmt('reel')`: right 220, bottom 480, and a test holds every block inside.
+- The anchor's words went to the TTS engine raw, skipping `voice._spoken`
+  and everything D53 learned about ₹, initials and decimals.
+- Each story was held to a 4.6s floor, then eight seconds of logo closed it:
+  51s for eight headlines. The first engine render then capped stories at
+  6.0s while two narrations ran longer — which starts the next voice on top
+  of this one. Now a story is exactly as long as it is said; a line too long
+  for the format is reported for a shorter `reel_line`, never cut.
+- Every Google clip ends on ~0.38s of silence; eight of those is three
+  seconds. Trimmed at the ends only — the beat after the place name stays —
+  with a light extra pace for the format (`Motion.speed_tempo`).
+- It mastered to −11.8 LUFS in one loudnorm pass. Two passes now land on
+  −14.0, with a limiter for the tenth of a dB linear mode cannot promise.
+- The gate matched `reel(_\d+)?\.mp4`, so `roundup_reel_9x16.mp4` was cleared
+  with no duration, audio or silence check at all. It is `roundup.mp4` now and
+  the gate reviews it, and every reel now carries a loudness check (`SND-07`).
+- Its caption was typed into the script with that day's eight headlines, and
+  said "swipe" on a video. `copy.for_roundup` builds it from the edition and
+  carries both disclosures a synthetic anchor over generated pictures owes.
+- Its cover landed as `roundup_reel_cover_cover.jpg`, because `_write_cover`
+  was handed the cover's path instead of the video's; and 35 intermediate
+  files were left in the delivery folder. Intermediates live in `build/`.
+- The AI-image disclosure was 18px of grey over a crowd. It is a solid pill,
+  on every frame that shows the picture, including through the wipe.
+
+**Measured after.** Today's eight stories: 44.9s, all eight in, −14.0 LUFS,
+gate clean.
+
+**If you undo it.** The day's reel goes back to being a script outside the
+engine, and every fault above comes back with it — most of them invisible to
+every check, which is how they shipped the first time.
+
+`brand/speednews.py` · `templates/roundup.py` · `scripts/pick_formats.py` ·
+`brand/review.py` · `brand/copy.py :: for_roundup` · `tests/test_speednews.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

@@ -45,8 +45,10 @@ instruction, not a one-off request to whichever session heard it first.
    summary of a summary.
 3. Shows you each story in plain language in the chat: what happened, where,
    which category, and anything flagged (crime, a minor, a sexual offence) or
-   any source link that would not load at all. Nothing is rendered, verified,
-   or published at this point — it stops and waits for you.
+   any source link that would not load at all. **Always asks you if you have any
+   additional news, press releases, or info to add** before proceeding to render.
+   Nothing is rendered, verified, or published at this point — it stops and waits
+   for you.
 
 **You approve** (say "go", "go ahead", "create the content", or similar).
 The assistant:
@@ -57,20 +59,19 @@ The assistant:
    attached without you, in the conversation, having actually seen the real
    content and told it to proceed. A story it could not actually load for
    you is left out, never verified on your behalf.
-2. Renders carousel only, plus a reel if — and only if — the lead story
-   earns one. House rule 2026-09-17-02:
+2. Renders the carousel plus ONE reel. House rule 2026-09-18-02, D81:
    ```bash
    python3 render.py editions/{date}.json \
        --only $(python3 scripts/pick_formats.py editions/{date}.json) \
        --out out/{date}
    ```
-   `pick_formats.py` decides the reel mechanically, from the same
-   relevance check the Chief Editor gate already trusts (`brand.reach.
-   should_be_reel`, D72) — not a guess, and not every day. `story_card` and
-   `broadsheet` are never in the default at all: carousel already covers
-   that ground, and every extra file is more time spent posting. Never the
-   bulletin, thumbnail, or standalone post cards either, unless you
-   specifically ask for them.
+   With three or more stories the reel is **ಸ್ಪೀಡ್ ನ್ಯೂಸ್** — the whole day as
+   one quick-news video: a place and one line per story, read by the anchor
+   while it is on screen, a counter and a progress segment per story, under
+   45 seconds. On a thin day it is the lead-story reel instead, and only if
+   the lead earns one (`brand.reach.should_be_reel`, D72). Never both.
+   `story_card` and `broadsheet` are never in the default; nor the bulletin,
+   thumbnail, or standalone post cards unless you specifically ask.
 3. Points you at the caption files. Every rendered post writes
    `{post}_caption.txt` beside the artwork — `carousel_caption.txt`,
    `reel_caption.txt` — holding the caption and nothing else, so posting is
@@ -141,8 +142,9 @@ python3 render.py editions/2026-09-16.json \
     --out out/2026-09-16
 ```
 
-Carousel ships every day. `pick_formats.py` adds a reel only when the lead
-story earns one (D72) — house rule 2026-09-17-02. `story_card` and
+Carousel ships every day, plus one reel: ಸ್ಪೀಡ್ ನ್ಯೂಸ್ with 3+ stories, the
+lead-story reel on a thin day if the lead earns it (D81, D72) — house rule
+2026-09-18-02. `story_card` and
 `broadsheet` are never in the default; the bulletin, thumbnail and standalone
 post cards are real and they are `--only` on request. Making any of them the
 default is how a small desk produces a lot of mediocre content, and spends
@@ -197,8 +199,8 @@ Decided in advance, because deciding it at 07:40 is how a thin story gets
 promoted to a reel. D69.
 
 The format question is already settled, every day, by house rule
-2026-09-17-02: carousel, and `pick_formats.py` adds a reel only when the
-lead story earns one (D72). Bulletin, thumbnail, post cards, story_card and
+2026-09-18-02: the carousel, plus ಸ್ಪೀಡ್ ನ್ಯೂಸ್ with 3+ stories or the
+lead-story reel on a thin day if it earns one (D81, D72). Bulletin, thumbnail, post cards, story_card and
 broadsheet are never the default regardless of how the day is going — those
 were already `--only` on request (Rule 7), or dropped outright. A short day
 is not about dropping formats; it is about how many **stories** belong in the

@@ -182,6 +182,26 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
                'between sentences, and target_seconds no longer applies '
                'because the length is the narration\'s. voiceover= is the '
                'older bare-path form, which can only guess where to cut.'),
+    Spec(key='roundup', module='roundup', entry='render_roundup',
+         takes='edition', format='reel', size=(1080, 1920), produces='file',
+         summary='ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the day\'s stories as one quick-news reel.',
+         when='The daily reel when the edition has three or more stories. A '
+              'place and one line per story, spoken by the anchor while it is '
+              'on screen. The lead-story reel is for a day with one story big '
+              'enough to carry a video on its own.',
+         requires=['stories', 'date', 'edition_no', 'strapline'],
+         limits={'stories_min': 3, 'reel_line_chars': 46,
+                 'target_seconds_max': 45},
+         notes='Each story is cut to its own measured narration (2.8–6.0s), '
+               'with a counter and one progress segment per story. The wipe '
+               'moves pictures only: story text is gone before it starts and '
+               'returns after it lands, so a cut never slices a headline. Laid '
+               'out in the Reels safe zone, clear of the action rail and the '
+               'caption. Every word spoken goes through the TTS normaliser; '
+               'audio is measured and corrected in two passes to -14 LUFS. '
+               'When the day runs past 45s the tail stories are left out and '
+               'reported — the carousel still carries them. Writes '
+               'roundup_cover.jpg and roundup_caption.txt.'),
     Spec(key='greeting', module='greeting', entry='greeting',
          takes='greeting', format='story', size=(1080, 1920), produces='files',
          summary='A festival wish designed as a poster, not a bulletin: '

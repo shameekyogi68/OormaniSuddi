@@ -51,6 +51,7 @@ CODES: dict[str, str] = {
     'SND-04': 'a pause inside the speech is longer than a designed beat gap',
     'SND-05': 'a narration beat is over the character budget',
     'SND-06': 'the spoken track does not match the script it was given',
+    'SND-07': 'a reel is mastered more than 1.5 LU off the house loudness',
     # ── VID ───────────────────────────────────────────────────────────────
     'VID-01': 'a reel is outside the house duration window (D56)',
     'VID-02': 'a reel would be refused or cropped by the platform',

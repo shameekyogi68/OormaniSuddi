@@ -369,6 +369,8 @@ class Limits:
     card_beat_seconds = 10.0
     reel_target_min = 28.0
     reel_target_max = 45.0
+    # A speed-news reel of one or two stories is just a reel. D81.
+    roundup_min_stories = 3
     reel_warn_seconds = 45.0
     reel_fail_seconds = 60.0
     reel_platform_cap = 90.0
@@ -427,6 +429,24 @@ class Motion:
     # news exists. The masthead already brands every scene. See D39.
     reel_intro  = 0.0
     reel_outro  = 2.4     # follow CTA; long enough for the handle and brand to land smoothly
+
+    # ── ಸ್ಪೀಡ್ ನ್ಯೂಸ್: the day's stories as one quick reel (D81) ──────────
+    # Each story is cut to its own narration, not held to a reading floor:
+    # the anchor is saying the line while it is on screen, which is the whole
+    # grammar of the format. The first roundup held every story for 4.6s+ and
+    # closed on 8s of logo — 51s for eight headlines.
+    speed_cross     = 0.26   # the wipe; pictures only, text is never on it
+    speed_gap       = 0.16   # breath after a story; with the wipe and the
+                             # next voice waiting for it to land, the anchor
+                             # pauses ~0.46s between stories
+    speed_story_min = 2.8    # a place and a line still has to be seen
+    speed_story_max = 6.0    # past this it is no longer speed news — a
+                             # WARNING to shorten reel_line, never a cut:
+                             # capping below the narration made two voices
+                             # speak at once on the first real render
+    speed_tempo     = 1.06   # on top of the house 1.15 — speed news is read
+                             # briskly; still well inside intelligible
+    speed_end       = 2.0    # follow card — two seconds, not a speech
 
     # ── reading, measured honestly ────────────────────────────────────────
     # 11 chars/sec was wishful. Kannada is an abugida: one akshara carries a

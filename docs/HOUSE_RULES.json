@@ -33,9 +33,9 @@
       "id": "2026-09-17-02",
       "said": "Daily default render is carousel only. story_card and broadsheet are dropped entirely — carousel already covers that ground, and every extra format is more time spent posting. A reel is never a default; render one only when scripts/pick_formats.py says the lead story earns it (brand.reach.should_be_reel, D72).",
       "scope": "package",
-      "why": "editor's own observed performance: carousel outperforms, extra formats waste posting time",
+      "why": "editor's own observed performance: carousel outperforms, extra formats waste posting time  · retired: superseded by the speed-news daily reel rule of 2026-09-18 (D81); its carousel-only and no story_card/broadsheet parts are restated there",
       "added": "2026-09-17",
-      "retired": "",
+      "retired": "2026-09-18",
       "by": "Gautam Paduvari"
     },
     {
@@ -91,6 +91,24 @@
       "added": "2026-09-17",
       "retired": "",
       "by": ""
+    },
+    {
+      "id": "2026-09-18-01",
+      "said": "Before asking for approval or 'go' on the morning draft, always ask the editor if they have any additional news, press releases, or info to add to today's edition.",
+      "scope": "desk",
+      "why": "Editor preference: ensure any spot news, local tips or press releases from the editor are incorporated before rendering.",
+      "added": "2026-09-18",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-09-18-02",
+      "said": "The daily render is the carousel plus ONE reel. With 3 or more stories that reel is ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (render.py --only roundup): a place and one line per story, spoken by the anchor while it is on screen, under 45 seconds. On a thin day of 1-2 stories, the lead-story reel only if scripts/pick_formats.py says the lead earns it. Never both reels. story_card and broadsheet stay out of the default.",
+      "scope": "package",
+      "why": "editor's instruction 2026-09-18: news reels should be quick news; supersedes 2026-09-17-02, which said a reel is never a default",
+      "added": "2026-09-18",
+      "retired": "",
+      "by": "Gautam Paduvari"
     }
   ]
 }

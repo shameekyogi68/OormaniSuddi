@@ -154,6 +154,19 @@ def _has_audio(path: str) -> bool:
     return 'audio' in out
 
 
+def _loudness_lufs(path: str) -> float | None:
+    """Integrated loudness of the file's audio, EBU R128."""
+    try:
+        out = subprocess.run(
+            ['ffmpeg', '-hide_banner', '-nostats', '-i', path, '-af',
+             'ebur128=framelog=quiet', '-f', 'null', '-'],
+            capture_output=True, text=True, timeout=120).stderr
+        m = re.findall(r'I:\s+(-?[\d.]+)\s+LUFS', out)
+        return float(m[-1]) if m else None
+    except Exception:
+        return None
+
+
 def _peak_dbfs(path: str) -> float | None:
     try:
         out = subprocess.run(
@@ -233,7 +246,10 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
 
     files = sorted(os.listdir(outdir))
     texts = [f for f in files if f.endswith(('.txt', '.md', '.json'))]
-    reels = [f for f in files if re.fullmatch(r'reel(_\d+)?\.mp4', f)]
+    # roundup.mp4 is the speed-news reel (D81). It was once rendered by a
+    # side script under another name and this pattern never saw it, so it
+    # was cleared with no duration, audio or loudness check at all.
+    reels = [f for f in files if re.fullmatch(r'(reel(_\d+)?|roundup)\.mp4', f)]
     # Festival wish posters (D54) are deliverables too; without this a
     # greetings folder was rejected as having nothing in it.
     slides = [f for f in files
@@ -304,6 +320,15 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                 f'{REEL_TARGET_MAX:.0f}s for completion rate.', where=f)
         if mb > UPLOAD_CEILING_MB:
             r.add_warn('PKG-04', f'{f} is {mb:.0f}MB; that is a slow upload on mobile data.', where=f)
+        # Loudness. The platforms normalise to about -14 LUFS, so a reel
+        # mastered hot is turned down and sounds squashed next to its
+        # neighbours, and one mastered quiet sounds thin. The first speed-news
+        # reel measured -11.8 and nothing here noticed.
+        if _has_audio(p):
+            lufs = _loudness_lufs(p)
+            if lufs is not None and abs(lufs - Limits.lufs) > 1.5:
+                r.add_warn('SND-07', f'{f} measures {lufs:.1f} LUFS against the '
+                           f'house {Limits.lufs:.0f}. Re-master it.', where=f)
         # A cover is what the shelf shows. Missing, the platform picks frame 0.
         cover = f.replace('.mp4', '_cover.jpg')
         if cover not in files:

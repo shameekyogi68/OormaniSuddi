@@ -33,6 +33,7 @@ python3 render.py edition.json --only report_card carousel
 | [`broadsheet`](#broadsheet) | 1080×1620 | edition | One per edition, for readers who want everything at a glance. |
 | [`bulletin`](#bulletin) | 1920×1080 | edition | One per edition. |
 | [`reel`](#reel) | 1080×1920 | edition | One per edition — the lead only. |
+| [`roundup`](#roundup) | 1080×1920 | edition | The daily reel when the edition has three or more stories. |
 | [`greeting`](#greeting) | 1080×1920 | greeting | Festival and occasion wishes only — Gauri-Ganesha, Deepavali, Ugadi, Rajyotsava, Eid, Christmas and the like. |
 
 ---
@@ -274,6 +275,30 @@ The day's edition as a single front page.
 **Limits.** `stories` = 1, `reel_line_chars` = 46, `target_seconds_min` = 8, `target_seconds_max` = 45
 
 **Note.** A reel is a glance in a vertical feed: one story, no sting, headline on frame 0. Writes reel_cover.jpg — set that as the Instagram / Shorts cover. Write a reel_line of ~45 chars. Audio is normalised to -14 LUFS / -1.5 dBTP. Pass voice= a brand.voice.VoiceTrack to cut the reel from MEASURED narration: one card per spoken beat, every cut landing between sentences, and target_seconds no longer applies because the length is the narration's. voiceover= is the older bare-path form, which can only guess where to cut.
+
+---
+
+## `roundup`
+
+ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the day's stories as one quick-news reel.
+
+**When to use.** The daily reel when the edition has three or more stories. A place and one line per story, spoken by the anchor while it is on screen. The lead-story reel is for a day with one story big enough to carry a video on its own.
+
+| | |
+|---|---|
+| file | `templates/roundup.py` → `render_roundup()` |
+| takes | a `Edition` |
+| output | 1080×1920 at 2× supersample, file |
+| safe inset | 72, 230, 220, 480 (L, T, R, B) |
+| format note | IG Reel / YT Short — right action rail 200px, bottom caption block up to 470px |
+
+**Requires.** `stories`, `date`, `edition_no`, `strapline`
+
+**Also accepts.** —
+
+**Limits.** `stories_min` = 3, `reel_line_chars` = 46, `target_seconds_max` = 45
+
+**Note.** Each story is cut to its own measured narration (2.8–6.0s), with a counter and one progress segment per story. The wipe moves pictures only: story text is gone before it starts and returns after it lands, so a cut never slices a headline. Laid out in the Reels safe zone, clear of the action rail and the caption. Every word spoken goes through the TTS normaliser; audio is measured and corrected in two passes to -14 LUFS. When the day runs past 45s the tail stories are left out and reported — the carousel still carries them. Writes roundup_cover.jpg and roundup_caption.txt.
 
 ---
 

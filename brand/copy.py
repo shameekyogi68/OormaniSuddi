@@ -525,6 +525,43 @@ def taluk_forwards(edition) -> dict[str, str]:
     return out
 
 
+def edition_whatsapp(edition: Edition, instagram_url: str | None = None) -> str:
+    """Tailored WhatsApp group / broadcast digest for the daily edition.
+
+    Numbered emoji bullets, location prefixes, direct Instagram CTA
+    (never mentioning 'photos' when AI imagery is used), source credits, and
+    brand handle. House rule 2026-09-17-08.
+    """
+    emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+    items = []
+    for i, s in enumerate(edition.stories):
+        num = emojis[i] if i < len(emojis) else f'{i+1}️⃣'
+        loc = f'*{s.location}*: ' if s.location else ''
+        head = s.headline.strip()
+        if s.location and head.startswith(f'{s.location}:'):
+            head = head[len(f'{s.location}:'):].strip()
+        items.append(f'{num} {loc}{head}')
+    headlines_block = '\n'.join(items)
+
+    seen: list[str] = []
+    for s in edition.stories:
+        for src in s.sources:
+            if src not in seen:
+                seen.append(src)
+
+    link_target = instagram_url or '[ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಪೋಸ್ಟ್ ಲಿಂಕ್]'
+
+    tagline = Brand.tagline.replace('  •  ', ' • ')
+    blocks = [
+        f'🌾 *{Brand.name} · {edition.date_kn}*\n{tagline}',
+        f'ಇಂದಿನ ಪ್ರಮುಖ ಕರಾವಳಿ ಮುಖ್ಯಾಂಶಗಳು:\n\n{headlines_block}',
+        f'📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*\n👉 {link_target}',
+        f'📌 ಮೂಲ: ' + ' · '.join(seen),
+        f'— {Brand.handle}',
+    ]
+    return '\n\n'.join(blocks)
+
+
 def x_post(story: Story) -> str:
     line = (story.reel_line or story.headline).strip()
     tail = f'\n\n{Brand.handle}'
@@ -679,7 +716,8 @@ def publishing_plan(n_reels: int, has_bulletin: bool = False,
                     has_carousel: bool = True, has_story_card: bool = True,
                     has_broadsheet: bool = True,
                     carousel_last: str = '',
-                    bulletin_is_footage: bool = False) -> list[Slot]:
+                    bulletin_is_footage: bool = False,
+                    has_roundup: bool = False) -> list[Slot]:
     """The day's upload order, derived from what was actually rendered.
 
     AI-card reels are Instagram-only. The 16:9 AI bulletin is off by default
@@ -716,7 +754,18 @@ def publishing_plan(n_reels: int, has_bulletin: bool = False,
             'Posted just after, so the people who open Stories first are sent '
             'to a post that already exists.'))
 
-    for i, at in enumerate(_reel_times(n_reels)):
+    if has_roundup:
+        # The day's reel when it is speed news (D81). It takes the first reel
+        # window; any single-story reels follow it.
+        plan.append(Slot(
+            _reel_times(1)[0], 'roundup.mp4  (cover: roundup_cover.jpg)',
+            'Instagram Reels',
+            'ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the day in one reel. Caption: roundup_caption.txt',
+            'Instagram only (Rule 7). Set roundup_cover.jpg as the cover; it '
+            'is story one with its headline up, not frame 0.'))
+
+    for i, at in enumerate(_reel_times(n_reels + (1 if has_roundup else 0))
+                           [1 if has_roundup else 0:]):
         n = i + 1
         plan.append(Slot(
             at, f'reel_{n:02d}.mp4  (cover: reel_{n:02d}_cover.jpg)',
@@ -807,6 +856,53 @@ def for_story(story: Story) -> PostCopy:
     )
 
 
+def for_roundup(edition: Edition, seconds: float = 0.0) -> PostCopy:
+    """Copy for the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ reel — the day's stories in one video (D81).
+
+    Not `for_edition`, whose second line is "ಸ್ವೈಪ್ ಮಾಡಿ": a reel has nothing
+    to swipe. Every story is listed with its PLACE first, because the place
+    is what makes somebody in Kundapura stop scrolling, and the caption
+    carries both disclosures the video owes — a synthetic anchor, and
+    generated pictures where there are any.
+    """
+    lead = edition.stories[0]
+    n = len(edition.stories)
+    hook_line = hook(lead)
+    when = f', {round(seconds)} ಸೆಕೆಂಡಿನಲ್ಲಿ' if seconds >= 1 else ''
+    heads = []
+    for s in edition.stories:
+        place = (s.location or '').strip() or Brand.coverage
+        line = (s.reel_line or s.headline).strip()
+        heads.append(f'▪ {line}' if _leads_with_place(line, place)
+                     else f'▪ {place}: {line}')
+    seen: list[str] = []
+    for s in edition.stories:
+        for src in s.sources:
+            if src not in seen:
+                seen.append(src)
+    blocks = [hook_line, f'ಇಂದಿನ {n} ಕರಾವಳಿ ಸುದ್ದಿ{when}.', '\n'.join(heads),
+              cta(lead), f'{M_SOURCE} ಮೂಲ: ' + ' · '.join(seen)]
+    if any(s.photo is not None and s.photo.nature == 'ai' for s in edition.stories):
+        blocks.append('ಈ ವೀಡಿಯೊದ ಚಿತ್ರಗಳು ಎಐ ರಚಿತ ಸಾಂದರ್ಭಿಕ ಚಿತ್ರಗಳು.')
+    if Brand.voice_disclosure_kn:
+        blocks.append(Brand.voice_disclosure_kn)
+    g = Brand.grievance_line()
+    if g:
+        blocks.append(g)
+    tags = edition_hashtags(edition, limit=12)
+    blocks.append(' '.join(f'#{t}' for t in tags))
+    return PostCopy(
+        hook=hook_line,
+        instagram=_join(blocks),
+        hashtags=tags,
+        alt_text=(f'{Brand.name} ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — {edition.date_kn}. '
+                  f'{n} ಸುದ್ದಿಗಳು. {lead.headline}'),
+        whatsapp=edition_whatsapp(edition),
+        x_post=x_post(lead),
+        first_comment=first_comment(lead),
+    )
+
+
 def for_edition(edition: Edition) -> PostCopy:
     """Copy for the carousel / bulletin. The reel uses for_story(lead).
 
@@ -843,11 +939,7 @@ def for_edition(edition: Edition) -> PostCopy:
         hashtags=tags,
         alt_text=(f'{Brand.name} {Brand.bulletin} — {edition.date_kn}. '
                   f'{n} ಸುದ್ದಿಗಳ ಸಂಗ್ರಹ. {lead.headline}'),
-        whatsapp=_join([f'*{Brand.name} · {edition.date_kn}*', heads.replace('▪', '•'),
-                        'ಮೂಲ: ' + ' · '.join(seen),
-                        Brand.grievance_line(),
-                        Brand.whatsapp_url,
-                        f'— {Brand.handle}']),
+        whatsapp=edition_whatsapp(edition),
         x_post=x_post(lead),
         first_comment=first_comment(lead),
         youtube_title=youtube_title(edition, 'long'),

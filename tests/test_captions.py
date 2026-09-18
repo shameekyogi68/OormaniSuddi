@@ -142,5 +142,40 @@ class EveryPostKindGetsOne(unittest.TestCase):
                                 'reel_caption.txt'])
 
 
+class WhatsAppGroupDigestFormat(unittest.TestCase):
+    """House rule 2026-09-17-08: tailored WhatsApp digest for the daily edition."""
+
+    def setUp(self):
+        self.st1 = story(headline='ಬೈಂದೂರಿನಲ್ಲಿ ಭಾರಿ ಮಳೆ, ಜಿಲ್ಲಾಡಳಿತ ಎಚ್ಚರಿಕೆ', location='ಬೈಂದೂರು')
+        self.st2 = story(headline='ಉಡುಪಿಯಲ್ಲಿ ಕರಾವಳಿ ಉತ್ಸವಕ್ಕೆ ದಿನಾಂಕ ನಿಗದಿ', location='ಉಡುಪಿ')
+        self.ed = Edition(stories=[self.st1, self.st2], edition_no=1)
+
+    def test_format_has_brand_tagline_and_numbered_emojis(self):
+        w = C.edition_whatsapp(self.ed)
+        self.assertIn('🌾 *ಊರ್ಮನಿ ಸುದ್ದಿ ·', w)
+        self.assertIn('ನಮ್ಮ ಊರು • ನಮ್ಮ ಧ್ವನಿ', w)
+        self.assertIn('1️⃣ *ಬೈಂದೂರು*: ಬೈಂದೂರಿನಲ್ಲಿ ಭಾರಿ ಮಳೆ', w)
+        self.assertIn('2️⃣ *ಉಡುಪಿ*: ಉಡುಪಿಯಲ್ಲಿ ಕರಾವಳಿ ಉತ್ಸವಕ್ಕೆ', w)
+        self.assertIn('📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*', w)
+        self.assertIn('👉 [ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಪೋಸ್ಟ್ ಲಿಂಕ್]', w)
+        self.assertIn('📌 ಮೂಲ:', w)
+        self.assertNotIn('ಫೋಟೋಗಳು', w)
+        self.assertNotIn('photos', w.lower())
+
+    def test_custom_instagram_link_substitution(self):
+        w = C.edition_whatsapp(self.ed, instagram_url='https://instagram.com/p/test123')
+        self.assertIn('👉 https://instagram.com/p/test123', w)
+
+    def test_carousel_render_writes_whatsapp_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            render.write_copy(self.ed, tmp, 'carousel_copy')
+            w_path = os.path.join(tmp, 'carousel_whatsapp.txt')
+            self.assertTrue(os.path.exists(w_path))
+            with open(w_path, encoding='utf-8') as f:
+                content = f.read()
+            self.assertIn('1️⃣ *ಬೈಂದೂರು*:', content)
+            self.assertNotIn('═', content)
+
+
 if __name__ == '__main__':
     unittest.main()

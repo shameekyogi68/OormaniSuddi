@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **54/79** decisions are named by at least one test
+- **55/80** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -173,8 +173,8 @@ those carry a reason rather than a test.
 
 ## D39 · A reel is the lead story, and it opens on the news
 
-- **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/motion.py`, `brand/tokens.py`, `templates/reel.py`
+- **Tested by:** `tests/test_contract.py`, `tests/test_speednews.py`
+- Enforced in: `brand/motion.py`, `brand/speednews.py`, `brand/tokens.py`, `templates/reel.py`
 
 ## D40 · The 4K bulletin is the same design at twice the size, not a bigger canvas
 
@@ -245,12 +245,12 @@ those carry a reason rather than a test.
 ## D56 · Numeric policy lives in `tokens.Limits`
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_intake.py`
-- Enforced in: `brand/codes.py`, `brand/house.py`, `brand/tokens.py`, `scripts/house_rule.py`
+- Enforced in: `brand/codes.py`, `brand/house.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/house_rule.py`
 
 ## D57 · Generated images, including stock, are `nature: 'ai'`
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_stock.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`
+- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/speednews.py`
 
 ## D58 · A reel opens on the news
 
@@ -328,6 +328,7 @@ those carry a reason rather than a test.
 ## D74 · A licence you cannot point at is one you cannot produce
 
 - **Tested by:** `tests/test_contract.py`
+- Enforced in: `brand/speednews.py`
 
 ## D75 · A URL two tips share is a listing page, not an article
 
@@ -354,4 +355,9 @@ those carry a reason rather than a test.
 ## D80 · Two rules that were each right and together stopped every morning
 
 - **Tested by:** `tests/test_stock.py`
+
+## D81 · ಸ್ಪೀಡ್ ನ್ಯೂಸ್: the day as one quick-news reel, built into the engine
+
+- **Tested by:** `tests/test_pick_formats.py`, `tests/test_speednews.py`
+- Enforced in: `brand/copy.py`, `brand/review.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/pick_formats.py`, `scripts/render_roundup_reel.py`, `templates/roundup.py`
 

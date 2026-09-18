@@ -145,8 +145,9 @@ EDITION_FILE = editions/{DATE}.json
 ARCHIVE_DIR  = archive/{DATE}
 ```
 
-**Daily default** (minimum viable day) — carousel, plus a reel only if the
-lead story earns one. House rule 2026-09-17-02:
+**Daily default** — the carousel plus ONE reel. With 3+ stories that reel is
+ಸ್ಪೀಡ್ ನ್ಯೂಸ್, the whole day as one quick-news video; on a thin day it is the
+lead-story reel, and only if the lead earns it. House rule 2026-09-18-02, D81:
 
 ```bash
 python3 render.py editions/{DATE}.json \
@@ -333,11 +334,11 @@ mkdir -p assets/daily/{DATE}
 python3 render.py editions/{DATE}.json \
     --only $(python3 scripts/pick_formats.py editions/{DATE}.json) \
     --out out/{DATE}
-# Carousel ships every day. pick_formats.py adds a reel only when the lead
-# story earns one (brand.reach.should_be_reel, D72) — house rule
-# 2026-09-17-02. story_card and broadsheet are never in the default at all;
-# anything beyond that, including the bulletin and standalone post cards, is
-# --only, on request.
+# Carousel ships every day, plus one reel: ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (roundup) when there
+# are 3+ stories, otherwise the lead-story reel only if the lead earns it
+# (brand.reach.should_be_reel, D72). House rule 2026-09-18-02, D81.
+# story_card and broadsheet are never in the default; the bulletin and
+# standalone post cards are --only, on request.
 
 python3 scripts/verify_narration.py out/{DATE}    # did the voice say the words
 ```
@@ -361,16 +362,12 @@ Reels open **on the news**. Do not write `ನಮಸ್ಕಾರ, ಕರಾವಳ
 AI reels are **Instagram only**. `schedule.txt` must not say YouTube Shorts
 for them.
 
-**Captions go in their own files.** Every rendered post writes
-`{post}_caption.txt` — the caption and nothing else, so posting is select-all
-and paste (house rule 2026-09-17-06). A YouTube post gets `TITLE` /
-`DESCRIPTION` / `TAGS` instead. Never put the first comment or the WhatsApp
-forward in that file; they are a second and third paste, not part of the
-caption. Point the editor at those files rather than pasting captions into
-chat.
+**Captions and WhatsApp digests go in their own files.** Every rendered post writes:
+- `{post}_caption.txt`: the caption and nothing else (Lead hook, swipe prompt, headlines list, CTA question, sources, grievance, and multi-story hashtags), so posting is select-all and paste (house rule 2026-09-17-06). A YouTube post gets `TITLE` / `DESCRIPTION` / `TAGS` instead. Never put the first comment or the WhatsApp forward in that file; they are a second and third paste.
+- `{post}_whatsapp.txt`: clean tailored WhatsApp digest (`🌾 *ಊರ್ಮನಿ ಸುದ್ದಿ · {date}*`, tagline, numbered items `1️⃣ *ಸ್ಥಳ*: ಸುದ್ದಿ`, direct Instagram CTA `📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*`, source credits, handle). House rule 2026-09-17-08. NEVER write "ಫೋಟೋಗಳು" when using AI imagery.
+Point the editor at those files rather than pasting captions into chat.
 
-WhatsApp forward text is in `*_copy.txt` under `WHATSAPP FORWARD`. That is
-the growth product. Broadsheet at 20:00.
+WhatsApp forward text is also in `*_copy.txt` under `WHATSAPP FORWARD` and in `MASTER_COPY.md`. That is the growth product. Broadsheet at 20:00.
 
 **And one forward per town**, in `out/{DATE}/forward_<town>.txt`, listed in
 MASTER_COPY. Send each to that town's groups — not all of them to everyone.

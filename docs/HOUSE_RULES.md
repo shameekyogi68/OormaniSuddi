@@ -25,6 +25,8 @@ the things that are genuinely house style rather than contract.
   - _why:_ Editor standing instruction (2026-09-17): carousel hashtags must represent all news places and categories covered in the edition.
 - **2026-09-17-08** — WhatsApp group and broadcast messages must follow the tailored format: 🌾 *ಊರ್ಮನಿ ಸುದ್ದಿ · {date}*, tagline, numbered items with place names (1️⃣ *ಸ್ಥಳ*: ಸುದ್ದಿ), and '📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*'. NEVER write 'ಫೋಟೋಗಳು' or 'photos' when using AI-generated imagery.
   - _why:_ Editor standing instruction (2026-09-17): exact approved WhatsApp group/broadcast format.
+- **2026-09-18-01** — Before asking for approval or 'go' on the morning draft, always ask the editor if they have any additional news, press releases, or info to add to today's edition.
+  - _why:_ Editor preference: ensure any spot news, local tips or press releases from the editor are incorporated before rendering.
 
 ## picture
 
@@ -38,9 +40,16 @@ the things that are genuinely house style rather than contract.
 
 ## package
 
-- **2026-09-17-02** — Daily default render is carousel only. story_card and broadsheet are dropped entirely — carousel already covers that ground, and every extra format is more time spent posting. A reel is never a default; render one only when scripts/pick_formats.py says the lead story earns it (brand.reach.should_be_reel, D72).
-  - _why:_ editor's own observed performance: carousel outperforms, extra formats waste posting time
-  - _asked by:_ Gautam Paduvari
 - **2026-09-17-06** — Every post that gets rendered also gets its own caption file — {post}_caption.txt — containing the caption and nothing else: no headings, no first comment, no WhatsApp forward. A YouTube post gets TITLE / DESCRIPTION / TAGS instead, because a title cannot be pasted into a description box. The working sheet stays in _copy.txt and MASTER_COPY.md.
   - _why:_ posting is select-all-and-paste on a phone; anything else in the file is something that eventually gets pasted with it
   - _asked by:_ Gautam Paduvari
+- **2026-09-18-02** — The daily render is the carousel plus ONE reel. With 3 or more stories that reel is ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (render.py --only roundup): a place and one line per story, spoken by the anchor while it is on screen, under 45 seconds. On a thin day of 1-2 stories, the lead-story reel only if scripts/pick_formats.py says the lead earns it. Never both reels. story_card and broadsheet stay out of the default.
+  - _why:_ editor's instruction 2026-09-18: news reels should be quick news; supersedes 2026-09-17-02, which said a reel is never a default
+  - _asked by:_ Gautam Paduvari
+
+## Retired
+
+Kept, because knowing a rule was dropped and when is worth more than a tidy file.
+
+- ~~2026-09-17-02~~ (2026-09-17 → 2026-09-18) — Daily default render is carousel only. story_card and broadsheet are dropped entirely — carousel already covers that ground, and every extra format is more time spent posting. A reel is never a default; render one only when scripts/pick_formats.py says the lead story earns it (brand.reach.should_be_reel, D72).
+  - editor's own observed performance: carousel outperforms, extra formats waste posting time  · retired: superseded by the speed-news daily reel rule of 2026-09-18 (D81); its carousel-only and no story_card/broadsheet parts are restated there

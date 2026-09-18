@@ -1,13 +1,14 @@
 """
-Carousel every day; a reel only when the lead story earns it. D77, house
-rule 2026-09-17-02.
+Carousel every day; on a thin day, a reel only when the lead story earns it.
+D77, now house rule 2026-09-18-02 (D81).
 =============================================================================
 `pick_formats.py` replaces "render the same four formats every morning"
 with a decision made from evidence already trusted elsewhere:
 `brand.reach.should_be_reel()` (D72), the same relevance check the Chief
 Editor gate already reads. story_card and broadsheet are dropped from the
 default entirely — the editor's own call, not something to re-derive here —
-so this suite is really only about the one live decision left: reel or not.
+so this suite is about the thin-day decision: one or two stories, reel or
+not. Three or more stories go out as speed news; tests/test_speednews.py.
 """
 from __future__ import annotations
 
