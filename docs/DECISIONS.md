@@ -2219,6 +2219,55 @@ every check, which is how they shipped the first time.
 ---
 
 
+## D82 · Sound effects are made here, registered, and tied to the cut
+
+**Decided.** Every sound effect a reel plays is from the house set,
+`brand/sfx.py`: synthesised from a fixed seed, so `python3 -m brand.sfx`
+rebuilds byte-identical files; registered in `assets/LICENCES.json` as
+`kind: sfx`, `licence: own`. Nothing outside the register is played — by the
+speed-news reel or by the lead-story engine, whose `_sfx_set` used to reach
+first for `sfx/pro_*.wav`.
+
+**Why.** A sound effect draws a Content ID claim exactly as a music bed does,
+and D74 had only audited beds. `sfx/pro_*.wav` have no record anywhere and
+sit beside a deleted `sfx/downloaded/` folder of numbered third-party files —
+nobody can say which of those they were cut from, so nobody could answer a
+claim on one. The four older files (`whoosh`, `news_impact`, `tech_ping`,
+`camera_shutter`) were synthesised by a script that was itself deleted; the
+new set supersedes them with the same provenance, recorded this time.
+
+**The set, and what each is for.** `open` — a short low hit on frame 0, under
+the anchor's first word. `whoosh` — centred on every picture wipe, panned left
+to right with it. `tick` — a quiet tock as each headline lands. `outro` — a
+three-note ident as the follow card's logo arrives. Gains are low on purpose:
+in speed news the anchor is the programme and the effects are punctuation.
+Measured on the first render: frame 0 went from −91 dB (silence) to −7 dB,
+and the 3–7 kHz band rises 13 dB exactly at the wipe centre.
+
+**`allowed_paths(kind)`.** Rows without a kind are beds, as every row was
+before. A render asking for an allowed bed must never be handed a 0.14s tick.
+
+**Same release: the reel and its cover redesigned (D81 continued).** Square
+corners, as STANDARDS Rule 3 always required — the first cut used rounded
+pills. Each story arrives on a lower-third band that sweeps in from the left
+and runs to the foot of the frame, with the place tag on its gold top edge;
+the headline rises onto solid ground instead of floating on a shadow over a
+busy photograph. A firmer Ken Burns push (`Motion.speed_push`), because the
+house value is tuned for 6–12s scenes and barely moved in five. The follow
+card animates. And the cover is a title card, not frame 0.8: ಸ್ಪೀಡ್ ನ್ಯೂಸ್ at a
+size that reads on the profile grid, the count and length, the towns, the lead
+line — all inside the centre 3:4 the grid crops to, which a test holds.
+
+**If you undo it.** The engine goes back to playing files nobody can account
+for, and the first claim is the one nobody can answer.
+
+`brand/sfx.py` · `assets/sfx/` · `assets/LICENCES.json` · `brand/music.py ::
+allowed_paths` · `brand/motion.py :: _sfx_set` · `brand/speednews.py ::
+sfx_cues, render_cover` · `tests/test_speednews.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

@@ -75,6 +75,42 @@
       "path": "assets/bgm_options/10_Clean_News_Stinger_Intro.mp3",
       "status": "blocked",
       "licence": "unverified"
+    },
+    {
+      "path": "assets/sfx/whoosh.wav",
+      "kind": "sfx",
+      "title": "House SFX — picture wipe",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
+    },
+    {
+      "path": "assets/sfx/tick.wav",
+      "kind": "sfx",
+      "title": "House SFX — headline landing",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
+    },
+    {
+      "path": "assets/sfx/open.wav",
+      "kind": "sfx",
+      "title": "House SFX — frame-0 news hit",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
+    },
+    {
+      "path": "assets/sfx/outro.wav",
+      "kind": "sfx",
+      "title": "House SFX — follow-card ident",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
     }
   ]
 }

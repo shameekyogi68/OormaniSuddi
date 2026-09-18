@@ -1778,21 +1778,25 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
 #  AUDIO
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _sfx_set(sfx_dir: str) -> dict:
-    """The broadcast hits, resolved to whatever this install actually has."""
-    def pick(*names):
-        for n in names:
-            p = os.path.join(sfx_dir, n)
-            if os.path.exists(p):
-                return p
-        return None
-    return {
-        'impact': pick('pro_impact.wav', 'news_impact.wav'),
-        'whoosh': pick('pro_whoosh.wav', 'whoosh.wav'),
-        'ping':   pick('tech_ping.wav'),
-        'outro':  pick('pro_outro_hit.wav', 'pro_news_ident.wav',
-                       'pro_impact.wav', 'news_impact.wav'),
-    }
+def _sfx_set(sfx_dir: str | None = None) -> dict:
+    """The broadcast hits — only ones the licence register allows.
+
+    This used to reach first for sfx/pro_*.wav, which have no licence record
+    anywhere and sit beside a deleted folder of numbered third-party files.
+    A hit nobody can account for is a Content ID claim nobody can answer, so
+    the set is now the house one from brand/sfx.py, registered as `own`, and
+    anything not allowed in assets/LICENCES.json is simply not played. D82.
+    `sfx_dir` is kept for callers; it no longer widens what may be used.
+    """
+    from .music import allowed_paths
+    ok = {os.path.basename(p): os.path.join(BASE, p)
+          for p in allowed_paths('sfx')}
+
+    def pick(name):
+        p = ok.get(name)
+        return p if p and os.path.exists(p) else None
+    return {'impact': pick('open.wav'), 'whoosh': pick('whoosh.wav'),
+            'ping': pick('tick.wav'), 'outro': pick('outro.wav')}
 
 
 def _master_narrated_audio(total: float, plan: list, lead_in: float,

@@ -203,7 +203,7 @@ def check_music() -> list[str]:
     except Exception as e:
         return [f'{WARN} music licences — could not check ({e})']
     if not problems:
-        n = len(music.allowed_paths())
+        n = len(music.allowed_paths('bed'))
         return [f'{OK} music licences — register clean, {n} bed(s) usable']
     out = [f'{BAD} music licences — {len(problems)} problem(s). Every video '
            f'that used an unverified bed is exposed, and a strike is how you '

@@ -30,12 +30,21 @@ def load() -> dict:
 SELF_MADE = ('own',)
 
 
-def allowed_paths() -> dict[str, dict]:
+def allowed_paths(kind: str | None = None) -> dict[str, dict]:
+    """Allowed rows, optionally of one kind: 'bed' or 'sfx'.
+
+    A row with no `kind` is a music bed, which is what every row was before
+    sound effects joined the register. The filter matters: a render that
+    asks for "an allowed bed" must never be handed a 0.14s tick.
+    """
     out = {}
     for row in load().get('tracks', []):
         path = (row.get('path') or '').replace('\\', '/')
-        if path and row.get('status') == 'allowed':
-            out[path] = row
+        if not path or row.get('status') != 'allowed':
+            continue
+        if kind is not None and row.get('kind', 'bed') != kind:
+            continue
+        out[path] = row
     return out
 
 

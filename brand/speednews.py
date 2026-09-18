@@ -32,7 +32,9 @@ WHAT KEEPS IT HONEST
     that learned ₹, initials and decimals the hard way (D53). The first
     attempt called the TTS engine raw and skipped all of it.
   * Every frame showing a generated picture carries its disclosure on a
-    solid pill, legible at phone size — not 18px of grey over a crowd.
+    solid label, legible at phone size — not 18px of grey over a crowd.
+  * The sound effects are the house set (brand/sfx.py, D82): synthesised
+    here, registered as `own`, each one tied to a picture edit.
   * Loudness is measured and corrected in two passes to the house −14 LUFS.
     Single-pass loudnorm on a clip this short landed at −11.8.
 """
@@ -163,7 +165,23 @@ def plan(vo_durs: list[float], end_vo: float,
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  DRAWING
+#  The grammar is broadcast speed news: the picture is full bleed and keeps
+#  moving; each story arrives on a lower-third BAND that sweeps in from the
+#  left with the place tag sitting on its top edge; the chrome above never
+#  moves. Square corners and one gold accent throughout (STANDARDS, Rule 3) —
+#  the first cut used rounded pills, which is exactly what the house rules out.
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _ease_out(u: float) -> float:
+    u = min(1.0, max(0.0, u))
+    return 1 - (1 - u) ** 3
+
+
+def _ease_back(u: float) -> float:
+    u = min(1.0, max(0.0, u))
+    c = 1.4
+    return 1 + (c + 1) * (u - 1) ** 3 + c * (u - 1) ** 2
+
 
 def _tile(w: int, h: int, draw) -> Image.Image:
     """Draw at 2x into a transparent tile and bring it down to size."""
@@ -172,9 +190,20 @@ def _tile(w: int, h: int, draw) -> Image.Image:
     return big.resize((w, h), Image.Resampling.LANCZOS)
 
 
-def _pill(d: ImageDraw.ImageDraw, box, fill):
-    x0, y0, x1, y1 = box
-    d.rounded_rectangle(box, radius=(y1 - y0) / 2, fill=fill)
+def _tag(text: str, f_size: int, bg, fg, pad_x: int = 18, h: int | None = None,
+         weight: int | None = None) -> Image.Image:
+    """A square-cornered label: gold on ink, or ink on gold."""
+    fam = 'kn' if weight is None else 'kn_var'
+    f = typo.font(fam, f_size, weight)
+    w = int(typo.text_width(text, f) + pad_x * 2)
+    h = h or int(f_size * 1.55)
+
+    def draw(im):
+        s = S2
+        ImageDraw.Draw(im).rectangle((0, 0, w * s, h * s), fill=bg)
+        typo.draw_text(im, text, pad_x * s, (h * 0.5 + f_size * 0.36) * s,
+                       typo.font(fam, f_size * s, weight), fg)
+    return _tile(w, h, draw)
 
 
 class Layout:
@@ -193,18 +222,15 @@ class Layout:
 
 def _scrims(W: int, H: int) -> Image.Image:
     """The same darkening on every scene, so a cut never changes the frame's
-    brightness. Top for the chrome, bottom for the story block."""
-    a = np.zeros(H, np.float32)
+    brightness. Strong at the top for the chrome; lighter through the middle
+    now that the headline has its own band; dark again under the band, where
+    the platform draws its caption."""
     ys = np.arange(H, dtype=np.float32)
-    # Top: enough under the brand row and the disclosure pill to hold them
-    # on a sunlit signboard. Bottom: full strength BY the headline, not below
-    # it — the first cut ramped from 0.40H to 0.92H, which left a three-line
-    # headline sitting on half-strength shade over a busy market crowd.
     top = np.clip(1.0 - ys / (H * 0.30), 0, 1) ** 1.25 * 0.82
-    u = np.clip((ys - H * 0.34) / (H * 0.24), 0, 1)
-    bot = (u * u * (3 - 2 * u)) * 0.86
-    bot = np.maximum(bot, np.clip((ys - H * 0.58) / (H * 0.30), 0, 1) * 0.96)
-    a = np.maximum(top, bot)
+    u = np.clip((ys - H * 0.42) / (H * 0.30), 0, 1)
+    mid = (u * u * (3 - 2 * u)) * 0.55
+    low = np.clip((ys - H * 0.70) / (H * 0.22), 0, 1) * 0.92
+    a = np.maximum(top, np.maximum(mid, low))
     col = np.zeros((H, 1, 4), np.uint8)
     col[:, 0, :3] = C.ink_950
     col[:, 0, 3] = (a * 255).astype(np.uint8)
@@ -212,126 +238,161 @@ def _scrims(W: int, H: int) -> Image.Image:
 
 
 def _photo_plate(st: Story, W: int, H: int, direction: int):
+    """A firmer push than the lead reel's: on a five-second story the house
+    Ken Burns (tuned for 6–12s scenes) barely moved and read as a still."""
     if st.photo and os.path.exists(st.photo.path):
         return KenBurns(st.photo.path, W, H, focal=st.photo.focal,
-                        direction=direction)
+                        zoom=Motion.speed_push, direction=direction)
     sf = Surface(W, H, 1)
     editorial_plate(sf, (0, 0, W, H), category(st.category), seed=st.headline)
     grain(sf, 4.0, 0.55)
     return sf.img.convert('RGB')
 
 
+def _disclosure_tag(photo, max_w: int) -> Image.Image | None:
+    """The honesty label for a picture, on solid ground (D57)."""
+    text = photo.disclosure if photo else ''
+    if not text:
+        return None
+    f = typo.font('kn_var', 24, 540)
+    text = typo.ellipsize(text, f, max_w - 36, sep='  •  ')
+    return _tag(text, 24, (*C.ink_950, 190), (*C.paper_50, 255),
+                pad_x=16, h=42, weight=540)
+
+
 class StorySlate:
-    """One story: a moving picture, and a text block that is only on screen
-    while no wipe is."""
+    """One story: a moving picture, and a band that is only on screen while
+    no wipe is."""
 
     def __init__(self, it: Item, L: Layout, index: int, dur: float):
         self.it, self.L, self.i, self.dur = it, L, index, dur
         self.photo = _photo_plate(it.story, L.W, L.H, 1 if index % 2 == 0 else -1)
-        self.block, self.block_xy = self._block()
-        self.disclosure = self._disclosure()
+        self._build()
+        self.disclosure = _disclosure_tag(it.story.photo, L.top_x1 - L.x0)
 
     def picture(self, t: float) -> Image.Image:
         if isinstance(self.photo, KenBurns):
             return self.photo.frame(t / self.dur).convert('RGBA')
         return self.photo.convert('RGBA')
 
-    def _block(self):
+    def _build(self):
         L, it = self.L, self.it
         cat = category(it.story.category)
-        chip_f = typo.font('kn', 38)
-        cat_f = typo.font('kn_var', 28, 560)
-        src_f = typo.font('kn_var', 25, 470)
-        head = typo.fit(it.line, 'kn', 88 * S2, 56 * S2, L.cw * S2,
-                        3 * 88 * 1.26 * S2, leading=1.24, max_lines=3)
-        chip_w = int(typo.text_width(it.place, chip_f) + 44)
-        chip_h = 60
-        src = 'ಮೂಲ: ' + ' · '.join(it.story.sources[:2])
-        src = typo.ellipsize(src, src_f, L.cw)
-        gap1, gap2 = 30, 24
-        head_h = head.height / S2
-        h = int(chip_h + gap1 + head_h + gap2 + 34)
-        w = L.cw
+        # The place is the hook — it is what stops somebody in Kundapura —
+        # so it is the loudest thing after the headline: ink on gold.
+        self.place_tag = _tag(it.place, 40, (*C.gold_500, 255), (*C.ink_950, 255),
+                              pad_x=20, h=64)
+        self.cat_tag = _tag(cat['kn'], 26, (*C.ink_900, 235), (*C.paper_200, 255),
+                            pad_x=14, h=40, weight=620)
+        head = typo.fit(it.line, 'kn', 84 * S2, 54 * S2, L.cw * S2,
+                        3 * 84 * 1.24 * S2, leading=1.22, max_lines=3)
+        hh = int(head.height / S2) + 12
+        self.head = _tile(L.cw, hh, lambda im: typo.draw_block(
+            im, head, 0, 0, (*C.paper_50, 255), box_w=L.cw * S2))
+        src = typo.ellipsize('ಮೂಲ: ' + ' · '.join(it.story.sources[:2]),
+                             typo.font('kn_var', 25, 480), L.cw)
+        self.src = _tile(L.cw, 38, lambda im: typo.draw_text(
+            im, src, 0, 28 * S2, typo.font('kn_var', 25 * S2, 480),
+            (*C.paper_300, 255)))
 
-        def draw(im):
-            d = ImageDraw.Draw(im)
-            s = S2
-            _pill(d, (0, 0, chip_w * s, chip_h * s), (*C.gold_500, 255))
-            typo.draw_text(im, it.place, 22 * s, 43 * s,
-                           typo.font('kn', 38 * s), (*C.ink_950, 255))
-            typo.draw_text(im, cat['kn'], (chip_w + 20) * s, 42 * s,
-                           typo.font('kn_var', 28 * s, 600), (*C.paper_50, 235),
-                           shadow=(0, 2 * s, 8 * s, (0, 0, 0, 200)))
-            typo.draw_block(im, head, 0, (chip_h + gap1) * s, (*C.paper_50, 255),
-                            shadow=(0, 3 * s, 16 * s, (0, 0, 0, 205)),
-                            box_w=L.cw * s)
-            typo.draw_text(im, src, 0, (chip_h + gap1 + head_h + gap2 + 26) * s,
-                           typo.font('kn_var', 25 * s, 470),
-                           (*C.paper_300, 255),
-                           shadow=(0, 2 * s, 8 * s, (0, 0, 0, 200)))
-
-        tile = _tile(w, h, draw)
-        return tile, (L.x0, L.bottom - h)
-
-    def _disclosure(self) -> Image.Image | None:
-        """The honesty label for THIS picture, on solid ground (D57)."""
-        ph = self.it.story.photo
-        text = ph.disclosure if ph else ''
-        if not text:
-            return None
-        L = self.L
-        f = typo.font('kn_var', 24, 520)
-        text = typo.ellipsize(text, f, L.top_x1 - L.x0 - 40, sep='  •  ')
-        w = int(typo.text_width(text, f) + 36)
-        h = 44
-
-        def draw(im):
-            d = ImageDraw.Draw(im)
-            s = S2
-            _pill(d, (0, 0, w * s, h * s), (*C.ink_950, 176))
-            typo.draw_text(im, text, 18 * s, 30 * s, typo.font('kn_var', 24 * s, 520),
-                           (*C.paper_50, 255))
-        return _tile(w, h, draw)
+        # Band geometry, bottom-anchored to the caption line. The place tag
+        # straddles the band's top edge, the way a broadcast strap sits.
+        pad_top, gap, pad_bot = 58, 14, 30
+        band_h = pad_top + hh + gap + self.src.height + pad_bot
+        self.band_y = L.bottom - band_h
+        self.head_y = self.band_y + pad_top
+        self.src_y = self.head_y + hh + gap
+        self.tag_y = self.band_y - self.place_tag.height // 2
+        # The band runs to the foot of the frame. Stopped at the caption line
+        # it floated, with the picture showing again underneath; run through,
+        # it is one lower third, and the platform's caption lands on dark.
+        band = Image.new('RGBA', (L.W, L.H - self.band_y), (*C.ink_950, 214))
+        d = ImageDraw.Draw(band)
+        d.rectangle((0, 0, L.W, 3), fill=(*C.gold_500, 255))
+        self.band = band
 
     def text_alpha(self, t: float, is_first: bool) -> tuple[float, float]:
-        """(opacity, rise px). Gone before the next wipe, back after this one."""
+        """(opacity, rise px) of the headline. Gone before the next wipe,
+        back only once this one has landed."""
         XF = Motion.speed_cross
         if is_first:
             a_in, rise = 1.0, 0.0            # headline on frame 0 (D39)
         else:
-            # From the moment the wipe has LANDED, never during it — the
-            # first cut began at 55% of the wipe, over a half-old picture.
-            u = min(1.0, max(0.0, (t - XF) / 0.20))
-            e = 1 - (1 - u) ** 3
-            a_in, rise = e, 22 * (1 - e)
+            e = _ease_out((t - XF - 0.10) / 0.22)
+            a_in, rise = e, 26 * (1 - e)
         u_out = min(1.0, max(0.0, (self.dur - XF - t) / 0.14))
         return a_in * u_out, rise
 
+    def draw(self, f: Image.Image, t: float, is_first: bool):
+        """The band sweeps in, the tag drops onto it, the headline rises,
+        the source line follows — about 0.4s, and all of it before the
+        anchor is two words in."""
+        XF, L = Motion.speed_cross, self.L
+        out = min(1.0, max(0.0, (self.dur - XF - t) / 0.14))
+        if out <= 0.0:
+            return
+        k = 99.0 if is_first else t - XF      # time since the wipe landed
+        sweep = _ease_out(k / 0.22)
+        if sweep > 0:
+            w = max(1, int(L.W * sweep))
+            f.alpha_composite(_fade(self.band.crop((0, 0, w, self.band.height)), out),
+                              (0, self.band_y))
+        tag = _ease_back((k - 0.08) / 0.24)
+        if tag > 0:
+            dy = int(18 * (1 - min(1.0, tag)))
+            a = min(1.0, tag) * out
+            f.alpha_composite(_fade(self.place_tag, a), (L.x0, self.tag_y - dy))
+            f.alpha_composite(_fade(self.cat_tag, a),
+                              (L.x0 + self.place_tag.width + 12,
+                               self.tag_y + (self.place_tag.height - self.cat_tag.height) // 2 - dy))
+        a, rise = self.text_alpha(t, is_first)
+        if a > 0.002:
+            f.alpha_composite(_fade(self.head, a), (L.x0, int(self.head_y + rise)))
+        s = _ease_out((k - 0.24) / 0.2) * out
+        if s > 0.002:
+            f.alpha_composite(_fade(self.src, s), (L.x0, self.src_y))
+
 
 class EndSlate:
-    """Two seconds: the logo, the name, the handle, one follow line."""
+    """Two seconds: the logo lands, the name and handle rise, one line."""
 
     def __init__(self, L: Layout, dur: float):
         self.L, self.dur = L, dur
         W, H = L.W, L.H
         sf = Surface(W, H, 1)
         grain(sf, 4.0, 0.55)
-        base = sf.img.convert('RGBA')
-        d = ImageDraw.Draw(base)
-        d.rectangle((0, 0, W, H), fill=(*C.ink_950, 255))
-        lg = logo(260, 'circle')
-        base.alpha_composite(lg, ((W - 260) // 2, int(H * 0.33)))
-        cy = int(H * 0.33) + 300
-        typo.draw_text(base, Brand.name, W / 2, cy + 60, typo.font('kn', 68),
-                       (*C.paper_50, 255), anchor_x='c')
-        typo.draw_text(base, Brand.handle, W / 2, cy + 150,
-                       typo.font('latin', 56, 700), (*C.gold_500, 255), anchor_x='c')
-        typo.draw_text(base, Brand.follow_kn, W / 2, cy + 226,
-                       typo.font('kn_var', 34, 520), (*C.paper_200, 255), anchor_x='c')
-        self.img = base
+        base = Image.new('RGBA', (W, H), (*C.ink_950, 255))
+        base.alpha_composite(sf.img.convert('RGBA'))
+        self.base = base
+        self.logo = logo(280, 'circle')
+        self.cy = int(H * 0.30)
+        name = _tile(W, 96, lambda im: typo.draw_text(
+            im, Brand.name, W * S2 / 2, 76 * S2, typo.font('kn', 70 * S2),
+            (*C.paper_50, 255), anchor_x='c'))
+        handle = _tile(W, 80, lambda im: typo.draw_text(
+            im, Brand.handle, W * S2 / 2, 60 * S2, typo.font('latin', 56 * S2, 700),
+            (*C.gold_500, 255), anchor_x='c'))
+        follow = _tag('ಫಾಲೋ ಮಾಡಿ', 40, (*C.gold_500, 255), (*C.ink_950, 255),
+                      pad_x=34, h=72)
+        tail = _tile(W, 56, lambda im: typo.draw_text(
+            im, Brand.follow_kn, W * S2 / 2, 40 * S2,
+            typo.font('kn_var', 32 * S2, 520), (*C.paper_300, 255), anchor_x='c'))
+        y = self.cy + 330
+        self.rows = [(name, (0, y), 0.18), (handle, (0, y + 100), 0.28),
+                     (follow, ((W - follow.width) // 2, y + 210), 0.40),
+                     (tail, (0, y + 306), 0.50)]
 
     def picture(self, t: float) -> Image.Image:
-        return self.img
+        f = self.base.copy()
+        s = 0.62 + 0.38 * _ease_back(t / 0.42)
+        lg = self.logo.resize((max(1, int(280 * s)),) * 2, Image.Resampling.LANCZOS)
+        f.alpha_composite(_fade(lg, min(1.0, t / 0.18)),
+                          ((self.L.W - lg.width) // 2, self.cy + (280 - lg.height) // 2))
+        for img, (x, y), t0 in self.rows:
+            e = _ease_out((t - t0) / 0.3)
+            if e > 0.002:
+                f.alpha_composite(_fade(img, e), (x, int(y + 22 * (1 - e))))
+        return f
 
 
 class Chrome:
@@ -339,57 +400,60 @@ class Chrome:
 
     def __init__(self, L: Layout, n: int, date_kn: str):
         self.L, self.n = L, n
-        W = L.W
 
         def brand(im):
             s = S2
-            im.alpha_composite(logo(64 * s, 'circle'), (0, 0))
-            typo.draw_text(im, Brand.name, 82 * s, 32 * s, typo.font('kn', 34 * s),
+            im.alpha_composite(logo(70 * s, 'circle'), (0, 0))
+            typo.draw_text(im, Brand.name, 88 * s, 46 * s, typo.font('kn', 36 * s),
                            (*C.paper_50, 255), shadow=(0, 2 * s, 8 * s, (0, 0, 0, 190)))
-            typo.draw_text(im, f'ಸ್ಪೀಡ್ ನ್ಯೂಸ್  ·  {date_kn}', 82 * s, 66 * s,
-                           typo.font('kn_var', 26 * s, 600), (*C.gold_400, 255),
-                           shadow=(0, 2 * s, 8 * s, (0, 0, 0, 190)))
-        self.brand = _tile(620, 80, brand)
+        self.brand = _tile(420, 72, brand)
+        self.label = _tag('ಸ್ಪೀಡ್ ನ್ಯೂಸ್', 26, (*C.gold_500, 255), (*C.ink_950, 255),
+                          pad_x=12, h=40)
+        self.date = _tile(420, 40, lambda im: typo.draw_text(
+            im, date_kn, 0, 30 * S2, typo.font('kn_var', 26 * S2, 560),
+            (*C.paper_200, 255), shadow=(0, 2 * S2, 8 * S2, (0, 0, 0, 190))))
         self.counters = [self._counter(i + 1) for i in range(n)]
 
     def _counter(self, k: int) -> Image.Image:
         num, of = f'{k}', f'/{self.n}'
-        f1, f2 = typo.font('latin', 50, 760), typo.font('latin', 34, 600)
+        f1, f2 = typo.font('latin', 54, 780), typo.font('latin', 34, 600)
         w = int(typo.text_width(num, f1) + typo.text_width(of, f2) + 8)
 
         def draw(im):
             s = S2
-            w1 = typo.text_width(num, typo.font('latin', 50 * s, 760))
-            typo.draw_text(im, num, 0, 50 * s, typo.font('latin', 50 * s, 760),
+            w1 = typo.text_width(num, typo.font('latin', 54 * s, 780))
+            typo.draw_text(im, num, 0, 54 * s, typo.font('latin', 54 * s, 780),
                            (*C.paper_50, 255), shadow=(0, 2 * s, 8 * s, (0, 0, 0, 190)))
-            typo.draw_text(im, of, w1 + 4 * s, 50 * s, typo.font('latin', 34 * s, 600),
-                           (*C.paper_300, 255), shadow=(0, 2 * s, 8 * s, (0, 0, 0, 190)))
-        return _tile(w, 64, draw)
+            typo.draw_text(im, of, w1 + 4 * s, 54 * s, typo.font('latin', 34 * s, 600),
+                           (*C.gold_400, 255), shadow=(0, 2 * s, 8 * s, (0, 0, 0, 190)))
+        return _tile(w, 70, draw)
 
     def progress(self, frame: Image.Image, idx: int, p: float, end: bool):
         """Segments, one per story — filled, filling, or still to come."""
         L = self.L
-        gap, y, h = 8, L.st, 7
+        gap, y, h = 8, L.st, 6
         span = L.top_x1 - L.x0
         seg = (span - gap * (self.n - 1)) / self.n
         d = ImageDraw.Draw(frame)
         for k in range(self.n):
             x0 = L.x0 + k * (seg + gap)
-            d.rounded_rectangle((x0, y, x0 + seg, y + h), radius=h / 2,
-                                fill=(*C.paper_50, 70))
+            d.rectangle((x0, y, x0 + seg, y + h), fill=(*C.paper_50, 64))
             fill = 1.0 if (end or k < idx) else (p if k == idx else 0.0)
             if fill > 0:
-                d.rounded_rectangle((x0, y, x0 + max(h, seg * fill), y + h),
-                                    radius=h / 2, fill=(*C.gold_500, 255))
+                d.rectangle((x0, y, x0 + max(1, seg * fill), y + h),
+                            fill=(*C.gold_500, 255))
 
     def draw(self, frame: Image.Image, idx: int, p: float, end: bool):
         L = self.L
         self.progress(frame, idx, p, end)
         if end:
             return
-        frame.alpha_composite(self.brand, (L.x0, L.st + 30))
+        y = L.st + 30
+        frame.alpha_composite(self.brand, (L.x0, y))
+        frame.alpha_composite(self.label, (L.x0 + 88, y + 70))
+        frame.alpha_composite(self.date, (L.x0 + 88 + self.label.width + 14, y + 70))
         c = self.counters[idx]
-        frame.alpha_composite(c, (L.top_x1 - c.width, L.st + 34))
+        frame.alpha_composite(c, (L.top_x1 - c.width, y))
 
 
 def _fade(tile: Image.Image, a: float) -> Image.Image:
@@ -446,6 +510,17 @@ class Timeline:
             return 0.0
         return self.slates[cur].text_alpha(t - self.starts[cur], cur == 0)[0]
 
+    def band_on(self, t: float) -> bool:
+        """Is any part of a story's band drawn at t — the test's handle on
+        'nothing of the story block is on screen during a wipe'."""
+        cur, wiping, _s = self.at(t)
+        if cur >= self.n or wiping:
+            return False
+        sl = self.slates[cur]
+        tl = t - self.starts[cur]
+        return (cur == 0 or tl - Motion.speed_cross > 0) and \
+            tl < sl.dur - Motion.speed_cross
+
     def frame(self, t: float) -> Image.Image:
         XF, L = Motion.speed_cross, self.L
         cur, wiping, shown = self.at(t)
@@ -457,18 +532,113 @@ class Timeline:
             f = self._base(cur, t - self.starts[cur])
         is_end = shown >= self.n
         if not is_end and self.slates[shown].disclosure is not None:
-            f.alpha_composite(self.slates[shown].disclosure, (L.x0, L.st + 128))
-        if cur < self.n:
-            sl = self.slates[cur]
-            a, rise = sl.text_alpha(t - self.starts[cur], cur == 0)
-            if a > 0.002:
-                x, y = sl.block_xy
-                f.alpha_composite(_fade(sl.block, a), (x, int(y + rise)))
+            f.alpha_composite(self.slates[shown].disclosure, (L.x0, L.st + 160))
+        if cur < self.n and not wiping:
+            self.slates[cur].draw(f, t - self.starts[cur], cur == 0)
         p = 0.0
         if not is_end:
             p = min(1.0, max(0.0, (t - self.starts[shown]) / self.scenes[shown].dur))
         self.chrome.draw(f, min(shown, self.n - 1), p, is_end)
         return f
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  THE COVER
+#  Not a frame of the video. The shelf shows a reel cover at two sizes: the
+#  profile grid crops it to the centre 3:4 and shows it about a third of a
+#  screen wide, and the Reels tab shows the whole 9:16. The first cover was
+#  frame 0.8 — a three-line headline that shrinks to ~25px on the grid, with
+#  a "1/8" counter and a progress bar that mean nothing on a still. This is a
+#  title card: one huge word, the date, how many stories and how long, and
+#  the TOWNS — the hook for a hyperlocal channel — all inside the 3:4 crop.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def cover_safe(W: int, H: int) -> tuple[int, int]:
+    """(top, bottom) of the profile grid's centre 3:4 crop."""
+    crop_h = int(W * 4 / 3)
+    top = (H - crop_h) // 2
+    return top, top + crop_h
+
+
+def render_cover(items: list[Item], date_kn: str, seconds: float, path: str,
+                 W: int, H: int) -> dict:
+    """Draw the cover and return where each element landed (for the tests)."""
+    lead = items[0].story
+    top, bot = cover_safe(W, H)
+    pad = 84
+    f = Image.new('RGBA', (W, H), (*C.ink_950, 255))
+    if lead.photo and os.path.exists(lead.photo.path):
+        f = KenBurns(lead.photo.path, W, H, focal=lead.photo.focal,
+                     zoom=0.0).frame(1.0).convert('RGBA')
+    ys = np.arange(H, dtype=np.float32)
+    a = 0.40 + 0.52 * np.clip((ys - top) / (bot - top), 0, 1) ** 0.9
+    a = np.maximum(a, np.clip(1 - ys / (top + 260), 0, 1) * 0.85)
+    col = np.zeros((H, 1, 4), np.uint8)
+    col[:, 0, :3] = C.ink_950
+    col[:, 0, 3] = (np.clip(a, 0, 0.94) * 255).astype(np.uint8)
+    f.alpha_composite(Image.fromarray(np.repeat(col, W, 1), 'RGBA'))
+    boxes = {}
+
+    y = top + 70
+    f.alpha_composite(logo(104, 'circle'), (pad, y))
+    f.alpha_composite(_tile(560, 80, lambda im: typo.draw_text(
+        im, Brand.name, 0, 60 * S2, typo.font('kn', 48 * S2), (*C.paper_50, 255))),
+        (pad + 124, y + 14))
+    boxes['brand'] = (pad, y, pad + 684, y + 104)
+
+    y = top + 300
+    n, secs = len(items), int(round(seconds))
+    kicker = _tag(f'ಇಂದಿನ {n} ಸುದ್ದಿ  ·  {secs} ಸೆಕೆಂಡ್', 36, (*C.gold_500, 255),
+                  (*C.ink_950, 255), pad_x=22, h=62)
+    f.alpha_composite(kicker, (pad, y))
+    y += kicker.height + 26
+    title = typo.fit('ಸ್ಪೀಡ್ ನ್ಯೂಸ್', 'kn', 176 * S2, 120 * S2, (W - 2 * pad) * S2,
+                     200 * S2, leading=1.1, max_lines=1)
+    th = int(title.height / S2) + 16
+    f.alpha_composite(_tile(W - 2 * pad, th, lambda im: typo.draw_block(
+        im, title, 0, 0, (*C.paper_50, 255), box_w=(W - 2 * pad) * S2,
+        shadow=(0, 4 * S2, 22 * S2, (0, 0, 0, 200)))), (pad, y))
+    boxes['title'] = (pad, y, W - pad, y + th)
+    y += th + 10
+    ImageDraw.Draw(f).rectangle((pad, y, pad + 180, y + 6), fill=(*C.gold_500, 255))
+    y += 36
+    f.alpha_composite(_tile(W - 2 * pad, 56, lambda im: typo.draw_text(
+        im, date_kn, 0, 42 * S2, typo.font('kn_var', 40 * S2, 600),
+        (*C.paper_200, 255))), (pad, y))
+    y += 96
+
+    # The towns, in the order they come — the reason somebody here stops.
+    places, x, row_y = [], pad, y
+    for it in items:
+        if it.place not in places:
+            places.append(it.place)
+    for p in places[:8]:
+        tg = _tag(p, 38, (*C.ink_950, 225), (*C.gold_400, 255), pad_x=20, h=66)
+        if x + tg.width > W - pad:
+            x, row_y = pad, row_y + tg.height + 14
+        f.alpha_composite(tg, (x, row_y))
+        ImageDraw.Draw(f).rectangle((x, row_y, x + 5, row_y + tg.height),
+                                    fill=(*C.gold_500, 255))
+        x += tg.width + 14
+    boxes['places'] = (pad, y, W - pad, row_y + 66)
+    y = row_y + 66 + 44
+
+    lead_line = typo.fit(items[0].line, 'kn', 54 * S2, 42 * S2, (W - 2 * pad) * S2,
+                         2 * 54 * 1.25 * S2, leading=1.24, max_lines=2)
+    lh = int(lead_line.height / S2) + 12
+    if y + lh <= bot - 90:
+        f.alpha_composite(_tile(W - 2 * pad, lh, lambda im: typo.draw_block(
+            im, lead_line, 0, 0, (*C.paper_50, 235), box_w=(W - 2 * pad) * S2,
+            shadow=(0, 2 * S2, 12 * S2, (0, 0, 0, 200)))), (pad, y))
+        boxes['lead'] = (pad, y, W - pad, y + lh)
+
+    disc = _disclosure_tag(lead.photo, W - 2 * pad)
+    if disc is not None:
+        dy = bot - 40 - disc.height
+        f.alpha_composite(disc, (pad, dy))
+        boxes['disclosure'] = (pad, dy, pad + disc.width, dy + disc.height)
+    f.convert('RGB').save(path, quality=93, subsampling=0, optimize=True)
+    return boxes
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -506,7 +676,7 @@ def _bed_path() -> str:
     """The music bed, only if the licence register allows it (D74)."""
     try:
         from .music import allowed_paths
-        for p in allowed_paths():
+        for p in allowed_paths('bed'):
             full = p if os.path.isabs(p) else os.path.join(BASE, p)
             if os.path.exists(full):
                 return full
@@ -515,37 +685,89 @@ def _bed_path() -> str:
     return ''
 
 
-def _audio(items: list[Item], starts: list[float], end_start: float,
-           end_vo: str, total: float, work: str) -> str:
-    ins, parts, labels = [], [], []
-    for k, (it, s0) in enumerate(zip(items, starts)):
-        lead = LEAD_FIRST if k == 0 else LEAD_NEXT
-        ms = int(round((s0 + lead) * 1000))
+def sfx_cues(starts: list[float], n: int) -> list[tuple[str, float, float]]:
+    """(effect, when, gain) — every hit tied to a picture edit, not a guess.
+
+    open    frame 0, under the anchor's first word: a low, short hit.
+    whoosh  centred on every wipe, travelling with it left to right.
+    tick    as each headline lands — quiet, under the first syllable.
+    outro   as the follow card's logo arrives.
+
+    Gains are relative to the voice before mastering, and deliberately low:
+    in speed news the anchor is the programme and the effects are punctuation.
+    """
+    XF = Motion.speed_cross
+    cues = [('open', 0.0, 0.42)]
+    for i in range(1, n + 1):
+        cues.append(('whoosh', starts[i] + XF / 2 - 0.21, 0.34))
+        if i < n:
+            cues.append(('tick', starts[i] + XF + 0.10, 0.22))
+    cues.append(('outro', starts[n] + XF + 0.02, 0.46))
+    return [(k, max(0.0, t), g) for k, t, g in cues]
+
+
+def _sfx_paths() -> dict[str, str]:
+    """Only effects the licence register allows (D82)."""
+    try:
+        from .music import allowed_paths
+        out = {}
+        for p in allowed_paths('sfx'):
+            full = p if os.path.isabs(p) else os.path.join(BASE, p)
+            if os.path.exists(full):
+                out[os.path.splitext(os.path.basename(p))[0]] = full
+        return out
+    except Exception:
+        return {}
+
+
+def _audio(items: list[Item], starts: list[float], total: float, end_vo: str,
+           work: str) -> str:
+    n = len(items)
+    ins, parts, voice, fx = [], [], [], []
+    k = 0
+    for i, it in enumerate(items):
+        lead = LEAD_FIRST if i == 0 else LEAD_NEXT
+        ms = int(round((starts[i] + lead) * 1000))
         ins += ['-i', it.vo]
         parts.append(f'[{k}:a]aresample=48000,adelay={ms}|{ms}[v{k}]')
-        labels.append(f'[v{k}]')
-    k = len(items)
-    ms = int(round((end_start + 0.18) * 1000))
+        voice.append(f'[v{k}]')
+        k += 1
+    ms = int(round((starts[n] + Motion.speed_cross + 0.30) * 1000))
     ins += ['-i', end_vo]
     parts.append(f'[{k}:a]aresample=48000,adelay={ms}|{ms}[v{k}]')
-    labels.append(f'[v{k}]')
-    voice = f'{"".join(labels)}amix=inputs={len(labels)}:normalize=0[vo]'
-    parts.append(voice)
+    voice.append(f'[v{k}]')
+    k += 1
+    parts.append(f'{"".join(voice)}amix=inputs={len(voice)}:normalize=0[vo]')
+
+    paths = _sfx_paths()
+    for name, when, gain in sfx_cues(starts, n):
+        if name not in paths:
+            continue
+        ms = int(round(when * 1000))
+        ins += ['-i', paths[name]]
+        parts.append(f'[{k}:a]aresample=48000,volume={gain},'
+                     f'adelay={ms}|{ms}[f{k}]')
+        fx.append(f'[f{k}]')
+        k += 1
+
+    layers = ['[vo]']
+    if fx:
+        parts.append(f'{"".join(fx)}amix=inputs={len(fx)}:normalize=0[fx]')
+        layers.append('[fx]')
 
     bed = _bed_path()
-    mix = os.path.join(work, 'mix.wav')
     if bed:
-        k += 1
+        end_start = starts[n]
         ins += ['-stream_loop', '-1', '-i', bed]
-        # Under the anchor, then up for the end card, then away.
+        # Under the anchor, up for the end card, then away.
         parts.append(
             f'[{k}:a]aresample=48000,atrim=0:{total:.2f},'
-            f"volume='if(gte(t,{end_start:.2f}),0.30,0.12)':eval=frame,"
+            f"volume='if(gte(t,{end_start:.2f}),0.26,0.11)':eval=frame,"
             f'afade=t=out:st={max(0.0, total - 0.9):.2f}:d=0.9[bed]')
-        parts.append('[vo][bed]amix=inputs=2:duration=longest:normalize=0,'
-                     f'atrim=0:{total:.2f}[a]')
-    else:
-        parts.append(f'[vo]apad,atrim=0:{total:.2f}[a]')
+        layers.append('[bed]')
+    parts.append(f'{"".join(layers)}amix=inputs={len(layers)}:duration=longest:'
+                 f'normalize=0,apad,atrim=0:{total:.2f}[a]')
+    mix = os.path.join(work, 'mix.wav')
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', *ins,
                     '-filter_complex', ';'.join(parts), '-map', '[a]',
                     '-ac', '2', '-c:a', 'pcm_s16le', mix], check=True)
@@ -638,13 +860,12 @@ def render_roundup(edition: Edition, path: str, fps: int = Motion.fps) -> dict:
     print()
     total, starts = tl.total, tl.starts
 
-    audio = _audio(items, starts[:n], starts[n], end_vo, total, work)
+    audio = _audio(items, starts, total, end_vo, work)
     _mux(raw, audio, path)
 
     # The shelf tile: story one with its headline up.
     cov = os.path.splitext(path)[0] + '_cover.jpg'
-    tl.frame(0.8).convert('RGB').save(cov, quality=92, subsampling=0,
-                                      optimize=True)
+    render_cover(items, edition.date_kn, total, cov, W, H)
 
     shutil.rmtree(work, ignore_errors=True)
     print(f'  ✓ {os.path.basename(path)}  ({total:.1f}s, {n} stories)  '

@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **55/80** decisions are named by at least one test
+- **56/81** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -328,7 +328,7 @@ those carry a reason rather than a test.
 ## D74 · A licence you cannot point at is one you cannot produce
 
 - **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/speednews.py`
+- Enforced in: `brand/sfx.py`, `brand/speednews.py`
 
 ## D75 · A URL two tips share is a listing page, not an article
 
@@ -360,4 +360,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_pick_formats.py`, `tests/test_speednews.py`
 - Enforced in: `brand/copy.py`, `brand/review.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/pick_formats.py`, `scripts/render_roundup_reel.py`, `templates/roundup.py`
+
+## D82 · Sound effects are made here, registered, and tied to the cut
+
+- **Tested by:** `tests/test_speednews.py`
+- Enforced in: `brand/motion.py`, `brand/speednews.py`
 

@@ -68,20 +68,27 @@ class NoWipeEverCutsAHeadline(unittest.TestCase):
 
 class ItLivesInTheReelsSafeZone(unittest.TestCase):
 
-    def test_the_story_block_clears_the_action_rail_and_the_caption(self):
+    def test_the_story_text_clears_the_action_rail_and_the_caption(self):
         W, H = _size()
         sl, st, sr, sb = fmt('reel').safe
         L = sn.Layout(W, H)
         long = ('ಉಡುಪಿ ಜಿಲ್ಲೆಯ ಕುಂದಾಪುರ ತಾಲೂಕಿನ ಬೇಳೂರು ಗ್ರಾಮ ಪಂಚಾಯಿತಿ '
                 'ಕಚೇರಿಗೆ ಲೋಕಾಯುಕ್ತ ಅಧಿಕಾರಿಗಳ ತಂಡ ದಾಳಿ ನಡೆಸಿದೆ')
         it = sn.items_for(Edition(stories=[story(long)], edition_no=1))[0]
-        sl_ = sn.StorySlate(it, L, 0, 4.0)
-        x, y = sl_.block_xy
-        self.assertLessEqual(x + sl_.block.width, W - sr,
+        s = sn.StorySlate(it, L, 0, 4.0)
+        self.assertLessEqual(L.x0 + s.head.width, W - sr,
                              'the headline runs under the like/share rail')
-        self.assertLessEqual(y + sl_.block.height, H - sb,
-                             'the story block sits under the caption overlay')
-        self.assertGreaterEqual(y, st)
+        self.assertLessEqual(s.src_y + s.src.height, H - sb,
+                             'the story text sits under the caption overlay')
+        self.assertGreaterEqual(s.tag_y, st)
+        self.assertLessEqual(L.x0 + s.place_tag.width + 12 + s.cat_tag.width, W - sr)
+
+    def test_every_label_has_square_corners(self):
+        """STANDARDS, Rule 3. The first cut used rounded pills."""
+        it = sn.items_for(Edition(stories=[story()], edition_no=1))[0]
+        s = sn.StorySlate(it, sn.Layout(*_size()), 0, 4.0)
+        for tag in (s.place_tag, s.cat_tag):
+            self.assertGreater(tag.getpixel((0, 0))[3], 200, 'a rounded corner')
 
     def test_it_is_the_reel_format_not_the_story_format(self):
         """fmt('story') has a 72px right margin — the first cut used it."""
@@ -244,3 +251,67 @@ class ItIsTheDailyReel(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TheCoverIsATitleCardNotAFrame(unittest.TestCase):
+    """The first cover was frame 0.8: a three-line headline that is ~25px on
+    the profile grid, and a "1/8" counter that means nothing on a still."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        ed = Edition(stories=[story(), story('ಕರಾಟೆ ಸ್ವರ್ಣ', 'ಕಾಪು'),
+                              story('ಬಂದರು ಪರಿಶೀಲನೆ', 'ಉಡುಪಿ')], edition_no=1)
+        W, H = _size()
+        self.W, self.H = W, H
+        self.boxes = sn.render_cover(sn.items_for(ed), ed.date_kn, 41.0,
+                                     os.path.join(self.tmp.name, 'c.jpg'), W, H)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_everything_that_matters_survives_the_grid_crop(self):
+        top, bot = sn.cover_safe(self.W, self.H)
+        for name in ('brand', 'title', 'places', 'lead'):
+            x0, y0, x1, y1 = self.boxes[name]
+            self.assertGreaterEqual(y0, top, name)
+            self.assertLessEqual(y1, bot, name)
+
+    def test_the_title_is_big_enough_to_read_on_the_grid(self):
+        """The grid shows a cover about a third as wide as the phone."""
+        x0, y0, x1, y1 = self.boxes['title']
+        self.assertGreaterEqual((y1 - y0) / 3, 40)
+
+
+class TheSoundIsOursAndOnTheCut(unittest.TestCase):
+    """D82. Every effect is from the house set, and tied to a picture edit."""
+
+    def test_only_registered_effects_can_be_played(self):
+        from brand import music
+        allowed = {os.path.join(sn.BASE, p) for p in music.allowed_paths('sfx')}
+        for p in sn._sfx_paths().values():
+            self.assertIn(p, allowed)
+
+    def test_an_effect_is_never_mistaken_for_a_music_bed(self):
+        self.assertNotIn('/sfx/', sn._bed_path())
+
+    def test_a_whoosh_sits_on_every_wipe_and_the_ident_on_the_end(self):
+        starts = [0.0, 4.0, 8.0, 12.0]
+        cues = sn.sfx_cues(starts, 3)
+        wh = [t for k, t, _g in cues if k == 'whoosh']
+        self.assertEqual(len(wh), 3)
+        for s0, t in zip(starts[1:], wh):
+            self.assertAlmostEqual(t + 0.21, s0 + Motion.speed_cross / 2, 2)
+        self.assertEqual([k for k, _t, _g in cues].count('outro'), 1)
+        self.assertEqual(cues[0][:2], ('open', 0.0))
+
+    def test_the_house_set_rebuilds_to_the_same_bytes(self):
+        """Owned because it is reproducible: the same seed, the same file."""
+        import hashlib
+        from brand import sfx
+        def digest():
+            with open(sfx.path('tick'), 'rb') as fh:
+                return hashlib.md5(fh.read()).hexdigest()
+        before = digest()
+        sfx.build()
+        after = digest()
+        self.assertEqual(before, after)

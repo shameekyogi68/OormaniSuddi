@@ -447,6 +447,8 @@ class Motion:
     speed_tempo     = 1.06   # on top of the house 1.15 — speed news is read
                              # briskly; still well inside intelligible
     speed_end       = 2.0    # follow card — two seconds, not a speech
+    speed_push      = 0.16   # Ken Burns travel per story; the house 0.11 is
+                             # tuned for 6–12s and barely moves in five
 
     # ── reading, measured honestly ────────────────────────────────────────
     # 11 chars/sec was wishful. Kannada is an abugida: one akshara carries a
