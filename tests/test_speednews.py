@@ -70,18 +70,27 @@ class ItLivesInTheReelsSafeZone(unittest.TestCase):
 
     def test_the_story_text_clears_the_action_rail_and_the_caption(self):
         W, H = _size()
-        sl, st, sr, sb = fmt('reel').safe
         L = sn.Layout(W, H)
         long = ('ಉಡುಪಿ ಜಿಲ್ಲೆಯ ಕುಂದಾಪುರ ತಾಲೂಕಿನ ಬೇಳೂರು ಗ್ರಾಮ ಪಂಚಾಯಿತಿ '
                 'ಕಚೇರಿಗೆ ಲೋಕಾಯುಕ್ತ ಅಧಿಕಾರಿಗಳ ತಂಡ ದಾಳಿ ನಡೆಸಿದೆ')
         it = sn.items_for(Edition(stories=[story(long)], edition_no=1))[0]
         s = sn.StorySlate(it, L, 0, 4.0)
-        self.assertLessEqual(L.x0 + s.head.width, W - sr,
+        self.assertLessEqual(L.x0 + s.head.width, W - fmt('reel').safe[2],
                              'the headline runs under the like/share rail')
-        self.assertLessEqual(s.src_y + s.src.height, H - sb,
+        self.assertLessEqual(s.src_y + s.src.height, H - Motion.speed_bottom,
                              'the story text sits under the caption overlay')
-        self.assertGreaterEqual(s.tag_y, st)
-        self.assertLessEqual(L.x0 + s.place_tag.width + 12 + s.cat_tag.width, W - sr)
+        self.assertGreaterEqual(s.tag_y, Motion.speed_top)
+        self.assertLessEqual(L.x0 + s.place_tag.width + 12 + s.cat_tag.width,
+                             W - fmt('reel').safe[2])
+
+    def test_the_frame_is_used_top_to_bottom(self):
+        """D83. With the lead reel's 230/480 margins the first redesign sat
+        bunched in the middle of the frame. Still clear of Instagram's own
+        header (~120px) and caption block (~340px)."""
+        self.assertLess(Motion.speed_top, fmt('reel').safe[1])
+        self.assertLess(Motion.speed_bottom, fmt('reel').safe[3])
+        self.assertGreaterEqual(Motion.speed_top, 120)
+        self.assertGreaterEqual(Motion.speed_bottom, 340)
 
     def test_every_label_has_square_corners(self):
         """STANDARDS, Rule 3. The first cut used rounded pills."""
@@ -315,3 +324,36 @@ class TheSoundIsOursAndOnTheCut(unittest.TestCase):
         sfx.build()
         after = digest()
         self.assertEqual(before, after)
+
+
+class ThePictureIsNeverCut(unittest.TestCase):
+    """D83. The day's pictures were square and wide; laid full bleed on 9:16
+    a square one lost 44% of its width and the widest 71%, and the band then
+    covered the lower half of what was left."""
+
+    def _slate(self, w, h, headline='ಬೇಳೂರು ಗ್ರಾಮ ಪಂಚಾಯಿತಿಗೆ ಲೋಕಾಯುಕ್ತ ದಾಳಿ'):
+        from PIL import Image
+        d = tempfile.mkdtemp()
+        p = os.path.join(d, 'x.jpg')
+        Image.new('RGB', (w, h), (90, 120, 150)).save(p)
+        ph = Photo(p, nature='ai', credit='ಊರ್ಮನಿ ಸುದ್ದಿ', licence='own',
+                   caption='ಸಾಂದರ್ಭಿಕ')
+        it = sn.items_for(Edition(stories=[story(headline, photo=ph)],
+                                  edition_no=1))[0]
+        return sn.StorySlate(it, sn.Layout(*_size()), 0, 4.0)
+
+    def test_the_window_keeps_the_pictures_own_shape(self):
+        for w, h in ((1024, 1024), (1024, 523), (1376, 768), (768, 1024)):
+            s = self._slate(w, h)
+            self.assertAlmostEqual(s.win_w / s.win_h, w / h, delta=0.02, msg=(w, h))
+            self.assertLessEqual(s.win_w, _size()[0])
+
+    def test_the_band_never_covers_the_picture(self):
+        for w, h in ((1024, 1024), (1024, 523), (768, 1024)):
+            s = self._slate(w, h)
+            self.assertLessEqual(s.win_y + s.win_h, s.band_y, (w, h))
+            self.assertGreaterEqual(s.win_y, sn.Layout(*_size()).win_top)
+
+    def test_the_headline_sits_on_the_same_line_whatever_the_picture(self):
+        a, b = self._slate(1024, 1024), self._slate(1024, 523)
+        self.assertEqual(a.src_y + a.src.height, b.src_y + b.src.height)

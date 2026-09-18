@@ -301,9 +301,14 @@ class KenBurns:
         sc = 1.0 + self.zoom * (1.0 - e)          # settle INTO the frame
         cw, ch = self.w * sc, self.h * sc
         pw, ph = self.plate.size
-        dx = (pw - cw) * (0.5 + self.drift * self.dir * (e - 0.5))
-        dy = (ph - ch) * 0.5
-        box = (dx, dy, dx + cw, dy + ch)
+        # Clamped to the plate. The plate is int(size * (1 + travel)), so when
+        # a window has exactly the photograph's shape (speed news, D83) the
+        # crop can overhang it by a fraction of a pixel, and PIL refuses a
+        # negative offset outright rather than rounding it.
+        cw, ch = min(cw, pw), min(ch, ph)
+        dx = max(0.0, (pw - cw) * (0.5 + self.drift * self.dir * (e - 0.5)))
+        dy = max(0.0, (ph - ch) * 0.5)
+        box = (dx, dy, min(pw, dx + cw), min(ph, dy + ch))
         im = self.plate.resize((self.w, self.h), Image.Resampling.BICUBIC, box)
         if self.fade is not None:
             im = im.convert('RGBA')

@@ -447,8 +447,14 @@ class Motion:
     speed_tempo     = 1.06   # on top of the house 1.15 — speed news is read
                              # briskly; still well inside intelligible
     speed_end       = 2.0    # follow card — two seconds, not a speech
-    speed_push      = 0.16   # Ken Burns travel per story; the house 0.11 is
-                             # tuned for 6–12s and barely moves in five
+    speed_push      = 0.05   # a settle INTO the whole picture, never a crop
+                             # that stays — the photo ends the story entire
+    # Where speed news may put things, measured against Instagram's own
+    # chrome on a 1080x1920 frame: the Reels header takes ~120px at the top,
+    # username + two caption lines + audio ~340px at the bottom. fmt('reel')
+    # keeps 230/480 for the lead reel; speed news uses the frame (D83).
+    speed_top       = 150
+    speed_bottom    = 380
 
     # ── reading, measured honestly ────────────────────────────────────────
     # 11 chars/sec was wishful. Kannada is an abugida: one akshara carries a

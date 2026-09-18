@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **56/81** decisions are named by at least one test
+- **57/82** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -365,4 +365,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_speednews.py`
 - Enforced in: `brand/motion.py`, `brand/speednews.py`
+
+## D83 · Speed news shows the whole picture, and uses the whole frame
+
+- **Tested by:** `tests/test_speednews.py`
+- Enforced in: `brand/motion.py`, `brand/speednews.py`, `brand/tokens.py`
 

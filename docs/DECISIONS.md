@@ -2268,6 +2268,43 @@ sfx_cues, render_cover` · `tests/test_speednews.py`
 ---
 
 
+## D83 · Speed news shows the whole picture, and uses the whole frame
+
+**Decided.** Each story's photograph is fitted WHOLE into a window, as large
+as the frame allows, over a blurred and darkened copy of itself; the band and
+headline start below it. The headline is pinned to the same line on every
+story — the caption line — and the picture is centred in the room above.
+Speed news uses its own top and bottom (`Motion.speed_top` 150,
+`speed_bottom` 380) instead of the lead reel's 230 / 480.
+
+**Found by the editor, the day after D82: "images are half cut", and "too
+middle".** Both were right, and measurable. The day's pictures are square and
+wide — 1:1, 1.73:1, 1.96:1 — and D82 laid them full bleed on a 9:16 frame,
+which cuts away 44% of a square picture's width and 71% of the widest; the
+band then covered the lower half of what remained. And the lead reel's margins,
+reused, left dead bands above and below the content.
+
+**Why pin the text and float the picture, not the reverse.** Tried the other
+way first: the band followed the picture down. A wide picture then pulled the
+headline up under it and left the foot of the frame empty, and the headline
+jumped to a different height on every story. The eye should find the news in
+the same place eight times running; the picture is what is allowed to vary.
+
+**The margins still clear the platform.** Instagram's Reels header is about
+120px on a 1080×1920 frame, and username + two caption lines + audio about
+340px. A test holds both, and the right margin is still the action rail's.
+
+**Also fixed.** `KenBurns.frame` could compute a crop a fraction of a pixel
+outside its plate when a window has exactly the photograph's shape, and PIL
+refuses a negative offset rather than rounding it. Clamped to the plate.
+
+`brand/speednews.py :: StorySlate, Layout, _backdrop` · `brand/motion.py ::
+KenBurns.frame` · `brand/tokens.py :: Motion.speed_top, speed_bottom` ·
+`tests/test_speednews.py`
+
+---
+
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

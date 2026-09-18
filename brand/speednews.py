@@ -207,46 +207,52 @@ def _tag(text: str, f_size: int, bg, fg, pad_x: int = 18, h: int | None = None,
 
 
 class Layout:
-    """Where everything goes, from the REELS safe zone (D81)."""
+    """Where everything goes (D81, D83).
+
+    The right margin is the Reels action rail, from fmt('reel'). Top and
+    bottom are speed news's own, measured against Instagram's chrome: the
+    lead-reel values (230 / 480) left the first redesign bunched into the
+    middle of the frame with dead bands above and below it.
+    """
 
     def __init__(self, W: int, H: int):
         F = fmt('reel')
         self.W, self.H = W, H
-        self.sl, self.st, self.sr, self.sb = F.safe
+        self.sl, _st, self.sr, _sb = F.safe
+        self.st = Motion.speed_top
+        self.sb = Motion.speed_bottom
         self.x0 = self.sl
         self.x1 = W - self.sr              # clear of the action rail
         self.top_x1 = W - self.sl          # the rail does not reach the top band
         self.bottom = H - self.sb          # clear of the caption overlay
         self.cw = self.x1 - self.x0
+        self.win_top = self.st + 150       # under the chrome
 
 
 def _scrims(W: int, H: int) -> Image.Image:
-    """The same darkening on every scene, so a cut never changes the frame's
-    brightness. Strong at the top for the chrome; lighter through the middle
-    now that the headline has its own band; dark again under the band, where
-    the platform draws its caption."""
+    """For a story with no photograph: darken the plate under the chrome and
+    the band, the same on every such scene."""
     ys = np.arange(H, dtype=np.float32)
-    top = np.clip(1.0 - ys / (H * 0.30), 0, 1) ** 1.25 * 0.82
-    u = np.clip((ys - H * 0.42) / (H * 0.30), 0, 1)
-    mid = (u * u * (3 - 2 * u)) * 0.55
-    low = np.clip((ys - H * 0.70) / (H * 0.22), 0, 1) * 0.92
-    a = np.maximum(top, np.maximum(mid, low))
+    top = np.clip(1.0 - ys / (H * 0.25), 0, 1) ** 1.25 * 0.70
+    low = np.clip((ys - H * 0.55) / (H * 0.25), 0, 1) * 0.80
+    a = np.maximum(top, low)
     col = np.zeros((H, 1, 4), np.uint8)
     col[:, 0, :3] = C.ink_950
     col[:, 0, 3] = (a * 255).astype(np.uint8)
     return Image.fromarray(np.repeat(col, W, 1), 'RGBA')
 
 
-def _photo_plate(st: Story, W: int, H: int, direction: int):
-    """A firmer push than the lead reel's: on a five-second story the house
-    Ken Burns (tuned for 6–12s scenes) barely moved and read as a still."""
-    if st.photo and os.path.exists(st.photo.path):
-        return KenBurns(st.photo.path, W, H, focal=st.photo.focal,
-                        zoom=Motion.speed_push, direction=direction)
-    sf = Surface(W, H, 1)
-    editorial_plate(sf, (0, 0, W, H), category(st.category), seed=st.headline)
-    grain(sf, 4.0, 0.55)
-    return sf.img.convert('RGB')
+def _backdrop(path: str, W: int, H: int) -> Image.Image:
+    """The same photograph, blurred and darkened, filling the frame behind
+    the picture window — so a square or wide picture sits in a frame that
+    belongs to it rather than in black bars."""
+    from PIL import ImageFilter
+    from .surface import cover
+    im = cover(Image.open(path).convert('RGB'), W // 4, H // 4, (0.5, 0.5))
+    im = im.filter(ImageFilter.GaussianBlur(10)).resize((W, H),
+                                                        Image.Resampling.BICUBIC)
+    shade = Image.new('RGB', (W, H), C.ink_950)
+    return Image.blend(im, shade, 0.62).convert('RGBA')
 
 
 def _disclosure_tag(photo, max_w: int) -> Image.Image | None:
@@ -256,26 +262,29 @@ def _disclosure_tag(photo, max_w: int) -> Image.Image | None:
         return None
     f = typo.font('kn_var', 24, 540)
     text = typo.ellipsize(text, f, max_w - 36, sep='  •  ')
-    return _tag(text, 24, (*C.ink_950, 190), (*C.paper_50, 255),
+    return _tag(text, 24, (*C.ink_950, 200), (*C.paper_50, 255),
                 pad_x=16, h=42, weight=540)
 
 
 class StorySlate:
-    """One story: a moving picture, and a band that is only on screen while
-    no wipe is."""
+    """One story: the WHOLE picture in a window, and a band beneath it that
+    is only on screen while no wipe is (D83).
+
+    The first redesign laid every photograph full bleed. The day's pictures
+    are square and wide — 1:1, 1.7:1, 1.96:1 — so filling a 9:16 frame cut
+    away 44% of a square one's width and 71% of the widest, and then the
+    band covered the lower half of what was left. Here the picture is fitted
+    whole, as large as the frame allows, and the band starts where it ends.
+    """
 
     def __init__(self, it: Item, L: Layout, index: int, dur: float):
         self.it, self.L, self.i, self.dur = it, L, index, dur
-        self.photo = _photo_plate(it.story, L.W, L.H, 1 if index % 2 == 0 else -1)
-        self._build()
-        self.disclosure = _disclosure_tag(it.story.photo, L.top_x1 - L.x0)
+        self._text()
+        self._picture(index)
+        self._band()
+        self.disclosure = _disclosure_tag(it.story.photo, self.win_w - 24)
 
-    def picture(self, t: float) -> Image.Image:
-        if isinstance(self.photo, KenBurns):
-            return self.photo.frame(t / self.dur).convert('RGBA')
-        return self.photo.convert('RGBA')
-
-    def _build(self):
+    def _text(self):
         L, it = self.L, self.it
         cat = category(it.story.category)
         # The place is the hook — it is what stops somebody in Kundapura —
@@ -284,32 +293,66 @@ class StorySlate:
                               pad_x=20, h=64)
         self.cat_tag = _tag(cat['kn'], 26, (*C.ink_900, 235), (*C.paper_200, 255),
                             pad_x=14, h=40, weight=620)
-        head = typo.fit(it.line, 'kn', 84 * S2, 54 * S2, L.cw * S2,
-                        3 * 84 * 1.24 * S2, leading=1.22, max_lines=3)
-        hh = int(head.height / S2) + 12
-        self.head = _tile(L.cw, hh, lambda im: typo.draw_block(
+        head = typo.fit(it.line, 'kn', 80 * S2, 54 * S2, L.cw * S2,
+                        3 * 80 * 1.22 * S2, leading=1.22, max_lines=3)
+        self.hh = int(head.height / S2) + 12
+        self.head = _tile(L.cw, self.hh, lambda im: typo.draw_block(
             im, head, 0, 0, (*C.paper_50, 255), box_w=L.cw * S2))
         src = typo.ellipsize('ಮೂಲ: ' + ' · '.join(it.story.sources[:2]),
                              typo.font('kn_var', 25, 480), L.cw)
         self.src = _tile(L.cw, 38, lambda im: typo.draw_text(
             im, src, 0, 28 * S2, typo.font('kn_var', 25 * S2, 480),
             (*C.paper_300, 255)))
+        self.pad_top, self.gap = 58, 14
+        self.text_h = self.pad_top + self.hh + self.gap + self.src.height
 
-        # Band geometry, bottom-anchored to the caption line. The place tag
-        # straddles the band's top edge, the way a broadcast strap sits.
-        pad_top, gap, pad_bot = 58, 14, 30
-        band_h = pad_top + hh + gap + self.src.height + pad_bot
-        self.band_y = L.bottom - band_h
-        self.head_y = self.band_y + pad_top
-        self.src_y = self.head_y + hh + gap
+    def _picture(self, index: int):
+        L, st = self.L, self.it.story
+        room = L.bottom - self.text_h - L.win_top     # tallest the window may be
+        self.kb = None
+        if st.photo and os.path.exists(st.photo.path):
+            w, h = Image.open(st.photo.path).size
+            a = w / h
+            ww, wh = L.W, int(round(L.W / a))
+            if wh > room:                              # fit whole, never crop
+                wh, ww = room, int(round(room * a))
+            self.win_w, self.win_h = ww, wh
+            self.win_x = (L.W - ww) // 2
+            self.bg = _backdrop(st.photo.path, L.W, L.H)
+            self.kb = KenBurns(st.photo.path, ww, wh, focal=st.photo.focal,
+                               zoom=Motion.speed_push, drift=0.0,
+                               direction=1 if index % 2 == 0 else -1)
+        else:
+            self.win_w, self.win_h, self.win_x = L.W, room, 0
+            sf = Surface(L.W, L.H, 1)
+            editorial_plate(sf, (0, 0, L.W, L.H), category(st.category),
+                            seed=st.headline)
+            grain(sf, 4.0, 0.55)
+            self.bg = sf.img.convert('RGBA')
+        # Centred in the room above the band. A wide picture then has the
+        # blurred backdrop above and below it, instead of pulling the headline
+        # up after it and leaving the foot of the frame empty.
+        self.win_y = L.win_top + (room - self.win_h) // 2
+
+    def _band(self):
+        L = self.L
+        # The text is pinned to the same line on every story — the caption
+        # line — so the headline never jumps as the pictures change, and the
+        # frame is used top to bottom rather than bunched in the middle.
+        self.band_y = L.bottom - self.text_h
+        self.head_y = self.band_y + self.pad_top
+        self.src_y = self.head_y + self.hh + self.gap
         self.tag_y = self.band_y - self.place_tag.height // 2
-        # The band runs to the foot of the frame. Stopped at the caption line
-        # it floated, with the picture showing again underneath; run through,
-        # it is one lower third, and the platform's caption lands on dark.
-        band = Image.new('RGBA', (L.W, L.H - self.band_y), (*C.ink_950, 214))
-        d = ImageDraw.Draw(band)
-        d.rectangle((0, 0, L.W, 3), fill=(*C.gold_500, 255))
+        band = Image.new('RGBA', (L.W, L.H - self.band_y), (*C.ink_950, 226))
+        ImageDraw.Draw(band).rectangle((0, 0, L.W, 3), fill=(*C.gold_500, 255))
         self.band = band
+
+    def picture(self, t: float) -> Image.Image:
+        f = self.bg.copy()
+        if self.kb is not None:
+            f.alpha_composite(self.kb.frame(t / self.dur).convert('RGBA'),
+                              (self.win_x, self.win_y))
+        return f
 
     def text_alpha(self, t: float, is_first: bool) -> tuple[float, float]:
         """(opacity, rise px) of the headline. Gone before the next wipe,
@@ -448,10 +491,10 @@ class Chrome:
         self.progress(frame, idx, p, end)
         if end:
             return
-        y = L.st + 30
+        y = L.st + 20
         frame.alpha_composite(self.brand, (L.x0, y))
-        frame.alpha_composite(self.label, (L.x0 + 88, y + 70))
-        frame.alpha_composite(self.date, (L.x0 + 88 + self.label.width + 14, y + 70))
+        frame.alpha_composite(self.label, (L.x0 + 88, y + 66))
+        frame.alpha_composite(self.date, (L.x0 + 88 + self.label.width + 14, y + 66))
         c = self.counters[idx]
         frame.alpha_composite(c, (L.top_x1 - c.width, y))
 
@@ -492,7 +535,7 @@ class Timeline:
     def _base(self, i: int, t_local: float) -> Image.Image:
         sc = self.scenes[i]
         f = sc.picture(t_local).copy()
-        if isinstance(sc, StorySlate):
+        if isinstance(sc, StorySlate) and sc.kb is None:
             f.alpha_composite(self.scrim)
         return f
 
@@ -532,7 +575,10 @@ class Timeline:
             f = self._base(cur, t - self.starts[cur])
         is_end = shown >= self.n
         if not is_end and self.slates[shown].disclosure is not None:
-            f.alpha_composite(self.slates[shown].disclosure, (L.x0, L.st + 160))
+            # Inside the picture window's corner: the label sits ON the
+            # picture it describes, which is the whole point of it (D57).
+            sl = self.slates[shown]
+            f.alpha_composite(sl.disclosure, (sl.win_x + 12, sl.win_y + 12))
         if cur < self.n and not wiping:
             self.slates[cur].draw(f, t - self.starts[cur], cur == 0)
         p = 0.0
