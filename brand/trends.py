@@ -1,9 +1,9 @@
 """
 ಊರ್ಮನಿ ಸುದ್ದಿ — what people are searching today, and which of it is ours. D86.
 ===============================================================================
-`scripts/trending_tags.py` writes `inbox/trends_<date>.json` every morning
-from Google Trends (Karnataka first, then India); the trend-scout agent adds
-what it finds trending on Instagram and YouTube, which publish no feed.
+An optional `inbox/trends_<date>.json`, written by hand or by a desk when
+there is a real trend worth knowing about, lists what people are searching.
+Nothing scrapes it any more (D92); with no file, no trend reaches a post.
 
 A trend is only ever put on a post that is ABOUT it. That is not caution for
 its own sake:
@@ -16,13 +16,14 @@ its own sake:
     signal that stops it being shown to anyone else.
 
 So a trend earns its place by matching words in the story's own copy — the
-same test the picture desk uses (`stock._mentions`). An unrelated trend gets
+per-word test in `_mentions` below. An unrelated trend gets
 the channel less reach, not more.
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import date as _date
 
 from .content import Story
@@ -59,6 +60,21 @@ _COMMON = {'ಕನ್ನಡ', 'ಕರ್ನಾಟಕ', 'ಸುದ್ದಿ', '�
            'national', 'team', 'match', 'score', 'update', 'kannada'}
 
 
+def _mentions(text: str, word: str) -> bool:
+    """True when a WORD of `text` is `word` or grows out of it.
+
+    Kannada agglutinates, so a plain `in` test is the natural reach — and it
+    is wrong: `ದರ` (price) sits inside `ವಿಚಾರದಲ್ಲಿ` (on the matter of).
+    Matching per word, from the start of the word, keeps ಮಳೆ → ಮಳೆಯಿಂದ
+    while refusing the accidental middles. A two-word key (ರೆಡ್ ಅಲರ್ಟ್) is
+    matched as a phrase that starts at a word boundary. (Moved here from the
+    deleted stock library, D92.)
+    """
+    if ' ' in word:
+        return re.search(r'(?:^|\s)' + re.escape(word), text) is not None
+    return any(w.startswith(word) for w in text.split())
+
+
 def matches(story: Story, item: dict) -> list[str]:
     """The words of `item` this story actually says. [] means not ours.
 
@@ -66,7 +82,6 @@ def matches(story: Story, item: dict) -> list[str]:
     multi-word trend needs two of its distinctive words: one shared word is
     a coincidence, two is the same subject.
     """
-    from .stock import _mentions
     text = _text(story)
     low = text.lower()
     term = (item.get('term') or '').strip()

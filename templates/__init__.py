@@ -13,8 +13,8 @@ AI given a pile of news copy — can answer three questions without guessing:
 `registry.json` is this same table, dumped for anything that is not Python.
 Regenerate it with `python3 -m templates --dump`.
 
-Adding a template: write `templates/<name>.py`, add a Spec below, re-dump the
-JSON, and add a row to docs/TEMPLATES.md. Nothing else needs to know.
+There are three news formats and a greeting (D92). Adding a fourth news
+format is a decision, not a file: write it down in docs/DECISIONS.md first.
 """
 from __future__ import annotations
 
@@ -53,142 +53,43 @@ class Spec:
 _COMMON = ['headline', 'category', 'sources', 'status', 'published_at']
 
 TEMPLATES: dict[str, Spec] = {t.key: t for t in [
-    Spec(key='report_card', module='report_card', entry='report_card',
-         takes='story', format='post', size=(1080, 1350), produces='file',
-         summary='The flagship 4:5 news post: full-bleed photograph over an '
-                 'editorial stack.',
-         when='The default for almost everything. With a photograph it leads '
-              'on the picture; without one it draws an editorial plate, so the '
-              'post still has a visual.',
-         requires=_COMMON,
-         accepts=['photo', 'deck', 'points', 'takeaway', 'location', 'dateline',
-                  'reporter'],
-         limits={'headline_chars': 78, 'deck_chars': 190, 'points': 3,
-                 'point_chars': 150},
-         notes='Drops content in editorial order when it cannot fit everything: '
-               'advisory, then standfirst, then facts from the bottom. On '
-               'weather / health / civic / breaking the advisory survives '
-               'instead, because the helpline is the point.'),
-
-    Spec(key='text_card', module='text_card', entry='text_card',
-         takes='story', format='post', size=(1080, 1350), produces='file',
-         summary='4:5 typographic poster with no photograph.',
-         when='Only when you deliberately want a pure typographic poster with '
-              'no visual at all. For an ordinary story with no photograph, use '
-              'report_card — it draws a plate.',
-         requires=_COMMON,
-         accepts=['deck', 'points', 'takeaway', 'numbers', 'location', 'dateline'],
-         limits={'headline_chars': 78, 'deck_chars': 190, 'points': 3},
-         notes='Sets the headline much larger than report_card, because it has '
-               'the whole frame.'),
-
-    Spec(key='quote_card', module='quote_card', entry='quote_card',
-         takes='story', format='square', size=(1080, 1080), produces='file',
-         summary='A single voice on a duotone bed.',
-         when='Use when the story IS somebody\'s words — a statement, an order '
-              'read out, a reaction.',
-         requires=_COMMON + ['quote'],
-         accepts=['photo', 'location'],
-         limits={'quote_chars': 240},
-         notes='quote is a two-item list: [text, attribution]. The photograph, '
-               'if any, is flattened to two tones so it cannot fight the words.'),
-
-    Spec(key='stat_card', module='stat_card', entry='stat_card',
-         takes='story', format='square', size=(1080, 1080), produces='file',
-         summary='Big numerals with Kannada labels.',
-         when='Use when the story IS the number — rainfall totals, budgets, '
-              'turnout, case counts.',
-         requires=_COMMON + ['numbers'],
-         accepts=['deck', 'location'],
-         limits={'headline_chars': 70, 'numbers': 3},
-         notes='numbers is a list of [value, label] pairs. Three reads best; '
-               'four starts to crowd.'),
-
-    Spec(key='story_card', module='story_card', entry='story_card',
-         takes='story', format='story', size=(1080, 1920), produces='file',
-         summary='9:16 still for Instagram Stories and WhatsApp status.',
-         when='One per edition, usually the lead. Also the right format for a '
-              'single urgent alert.',
-         requires=_COMMON,
-         accepts=['photo', 'deck', 'location'],
-         limits={'headline_chars': 78},
-         notes='Critical content stays inside a 72/250/72/340 safe inset. The '
-               'band below it carries the handle rather than dead black.'),
-
-    Spec(key='youtube_thumb', module='youtube_thumb', entry='youtube_thumb',
-         takes='story', format='thumb', size=(1280, 720), produces='file',
-         summary='16:9 thumbnail built to survive a 6× reduction.',
-         when='One per video. Pass a short hook=, NOT the headline.',
-         requires=_COMMON,
-         accepts=['photo', 'location', 'hook'],
-         limits={'hook_chars': 34, 'hook_words': 7},
-         notes='In a YouTube feed this is about 210 px wide. Anything longer '
-               'than about seven words stops being readable there, and the '
-               'renderer warns when you exceed it.'),
-
-    Spec(key='carousel', module='carousel', entry='carousel',
-         takes='edition', format='square', size=(1080, 1080), produces='files',
-         summary="The day's bulletin as a swipeable set: cover → one slide per "
-                 'story → sources and follow.',
-         when='One per edition. This is the highest-reach format for a daily '
-              'round-up.',
-         requires=['stories', 'date', 'edition_no', 'strapline'],
-         accepts=[],
-         limits={'stories': 6},
-         notes='Returns a list of paths. Slides carry a segmented progress bar; '
-               'a slide whose story has no photograph is set as a statement '
-               'card rather than left half-empty.'),
-
-    Spec(key='broadsheet', module='broadsheet', entry='broadsheet',
-         takes='edition', format='broadsheet', size=(1080, 1620), produces='file',
-         summary="The day's edition as a single front page.",
-         when='One per edition, for readers who want everything at a glance. '
-              'Also the best thing to forward on WhatsApp.',
-         requires=['stories', 'date', 'edition_no', 'strapline'],
-         accepts=[],
-         limits={'stories': 5},
-         notes='Lead story plus up to four in two columns; column cells are as '
-               'tall as their content, not a fixed fraction.'),
-
-    Spec(key='bulletin', module='bulletin', entry='bulletin',
-         takes='edition', format='bulletin', size=(1920, 1080), produces='file',
-         summary='16:9 long-form bulletin for YouTube.',
-         when='One per edition. This is what the youtube_thumb is FOR — a '
-              'vertical clip under 60s is a Short, and Shorts do not take a '
-              'custom thumbnail.',
-         requires=['stories', 'date', 'edition_no', 'strapline'],
-         accepts=['target_seconds'],
-         limits={'stories': 8, 'reel_line_chars': 46},
-         notes='Same engine as the reel at a landscape aspect: the type lays '
-               'out as a broadcast lower-third instead of a full-height column. '
-               'Opens the 1,000-subs + 4,000-watch-hours monetisation path, '
-               'which a Shorts-only channel cannot realistically reach.'),
-
-    Spec(key='reel', module='reel', entry='render_reel',
-         takes='edition', format='reel', size=(1080, 1920), produces='file',
-         summary='9:16 Short of the LEAD story, with mastered audio.',
-         when='One per edition — the lead only. The carousel and the 16:9 '
-              'bulletin carry the rest. Opens on the news, not a logo sting.',
-         requires=['stories', 'date', 'edition_no', 'strapline'],
-         accepts=['target_seconds', 'voice', 'voiceover', 'bgm'],
-         limits={'stories': 1, 'reel_line_chars': 46,
-                 'target_seconds_min': 8, 'target_seconds_max': 45},
-         notes='A reel is a glance in a vertical feed: one story, no sting, '
-               'headline on frame 0. Writes reel_cover.jpg — set that as the '
-               'Instagram / Shorts cover. Write a reel_line of ~45 chars. '
-               'Audio is normalised to -14 LUFS / -1.5 dBTP. Pass voice= a '
-               'brand.voice.VoiceTrack to cut the reel from MEASURED '
-               'narration: one card per spoken beat, every cut landing '
-               'between sentences, and target_seconds no longer applies '
-               'because the length is the narration\'s. voiceover= is the '
-               'older bare-path form, which can only guess where to cut.'),
+    # The three news formats (D92). A story runs in exactly one of them, named
+    # by its `segment`: speed → roundup, saara → saara, mukhya → mukhya.
+    Spec(key='saara', module='saara', entry='saara',
+         takes='edition', format='post', size=(1080, 1350), produces='files',
+         summary='ಸುದ್ದಿ ಸಾರ — the day\'s text bulletin: index cover → one slide '
+                 'per story → sources and follow. No pictures, ever.',
+         when='Stories with segment "saara". The everyday digest: useful, '
+              'quick to read, forwarded. Needs Limits.saara_min_stories to '
+              'Limits.saara_max_stories stories.',
+         requires=['stories', 'date', 'segment: "saara"'],
+         accepts=['deck', 'points', 'location', 'category'],
+         limits={'stories_min': 2, 'stories_max': 6, 'points': 3},
+         notes='Paper & Red (D92). A photograph on a saara story is ignored. '
+               'Writes saara_01_cover.jpg, saara_02.jpg … saara_NN_sources.jpg, '
+               'saara_copy.txt and saara_caption.txt.'),
+    Spec(key='mukhya', module='mukhya', entry='mukhya',
+         takes='story', format='post', size=(1080, 1350), produces='files',
+         summary='ಮುಖ್ಯ ಸುದ್ದಿ — one breaking or top story: photo cover → '
+                 'ಏನಾಗಿದೆ? → source and corrections.',
+         when='Stories with segment "mukhya": breaking news, or the day\'s '
+              'story that deserves its own post. Always a picture — a real '
+              'one first; AI only when the editor was asked and said generate '
+              '(photo_plan "ai", photo.approved_by).',
+         requires=_COMMON + ['photo', 'segment: "mukhya"'],
+         accepts=['deck', 'points', 'location', 'takeaway'],
+         limits={'per_day': 2, 'points': 3},
+         notes='Paper & Red (D92). A breaking story\'s kicker is the red '
+               'ಬ್ರೇಕಿಂಗ್ block, computed from published_at, never asserted. '
+               'Writes mukhya_<k>_01_cover.jpg, _02_points.jpg, _03_source.jpg '
+               'and mukhya_<k>_copy.txt / _caption.txt.'),
     Spec(key='roundup', module='roundup', entry='render_roundup',
          takes='edition', format='reel', size=(1080, 1920), produces='file',
          summary='ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the day\'s stories as one quick-news reel.',
-         when='The daily reel when the edition has three or more stories. A '
-              'place and one line per story, spoken by the anchor while it is '
-              'on screen. The lead-story reel is for a day with one story big '
-              'enough to carry a video on its own.',
+         when='Stories with segment "speed": the day\'s quick hits, three or '
+              'more. A place and one line per story, spoken by the anchor '
+              'while it is on screen. A story without a picture gets a '
+              'type-only frame.',
          requires=['stories', 'date', 'edition_no', 'strapline'],
          limits={'stories_min': 3, 'reel_line_chars': 46,
                  'target_seconds_max': 45},
@@ -200,7 +101,7 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
                'caption. Every word spoken goes through the TTS normaliser; '
                'audio is measured and corrected in two passes to -14 LUFS. '
                'When the day runs past 45s the tail stories are left out and '
-               'reported — the carousel still carries them. Writes '
+               'reported. Paper & Red (D92). Writes '
                'roundup_cover.jpg and roundup_caption.txt.'),
     Spec(key='greeting', module='greeting', entry='greeting',
          takes='greeting', format='story', size=(1080, 1920), produces='files',
@@ -230,19 +131,9 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
 # ─────────────────────────────────────────────────────────────────────────────
 
 def choose(story) -> str:
-    """Which single-story template this story wants.
-
-    Explicit beats clever — pass a template name if you know it. These defaults
-    are right often enough to save an argument every time.
-    """
-    if getattr(story, 'quote', None):
-        return 'quote_card'
-    if getattr(story, 'numbers', None) and not getattr(story, 'photo', None):
-        return 'stat_card'
-    # report_card for everything else, photo or not: without a photograph it
-    # draws an editorial plate, so every post in the feed carries a visual.
-    # text_card is still there when you deliberately want a pure text poster.
-    return 'report_card'
+    """The format a story runs in — read off its segment (D92)."""
+    from brand.content import SEGMENTS
+    return SEGMENTS.get(getattr(story, 'segment', ''), ('', 'saara'))[1]
 
 
 def get(key: str) -> Spec:
@@ -268,7 +159,7 @@ def dump_json(path: str | None = None) -> str:
     return path
 
 
-# Convenience re-exports, so `from templates import report_card` still works.
+# Convenience re-exports, so `from templates import saara` works.
 def __getattr__(name):
     if name in TEMPLATES:
         return TEMPLATES[name].fn()

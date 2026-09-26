@@ -98,8 +98,9 @@ class JsonDoor(unittest.TestCase):
         self.assertEqual(again.is_reel, False)
 
     def test_is_reel_default_and_aliases(self):
+        # The lead-story reel is gone (D92); the field is read and ignored.
         s_default = Story.from_dict({'headline': 'ಪರೀಕ್ಷೆ', 'sources': ['ಮೂಲ']})
-        self.assertTrue(s_default.is_reel)
+        self.assertFalse(s_default.is_reel)
 
         s_false = Story.from_dict({'headline': 'ಪರೀಕ್ಷೆ', 'sources': ['ಮೂಲ'], 'is_reel': False})
         self.assertFalse(s_false.is_reel)
@@ -173,19 +174,17 @@ class CriminalReporting(unittest.TestCase):
             base(headline='ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ', category='crime',
                  reel_line='ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ').validate()
 
-    def test_a_thumbnail_hook_cannot_assert_guilt(self):
-        """D41: the hook is guarded exactly like a headline."""
-        """`hook` replaces the headline on the thumbnail, so it carries the
-        headline's exposure. Story.validate() cannot see it — it is not a Story
-        field — so the template enforces it on the same terms. Without this the
-        guard is one `--hook` away from being decoration."""
-        import tempfile
-        from templates.youtube_thumb import youtube_thumb
-        st = base(headline='ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ', category='crime')
-        with tempfile.TemporaryDirectory() as d:
-            with self.assertRaisesRegex(ContentError, 'hook'):
-                youtube_thumb(st, os.path.join(d, 't.jpg'),
-                              hook='ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ')
+    def test_a_hook_cannot_assert_guilt(self):
+        """D41: the hook is guarded exactly like a headline.
+
+        It is the caption's first line and it travels alone — the thumbnail
+        template that used to guard it is gone (D92), so Story.validate()
+        guards it now."""
+        d = base(headline='ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ',
+                 category='crime').to_dict()
+        d['hook'] = 'ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ'
+        with self.assertRaisesRegex(ContentError, 'hook'):
+            Story.from_dict(d).validate()
 
     def test_ageing_out_of_breaking_does_not_relax_the_guilt_guard(self):
         """Demotion is a presentation decision. It must not turn a defamation
@@ -265,40 +264,27 @@ class Copy(unittest.TestCase):
 
     def test_plan_never_lists_an_asset_that_was_not_rendered(self):
         """D43: the plan is derived from what was actually made."""
-        plan = self.C.publishing_plan(n_reels=0, has_bulletin=False,
-                                      has_carousel=False, has_story_card=False,
-                                      has_broadsheet=True)
+        plan = self.C.publishing_plan(has_saara=False, has_roundup=True)
         assets = ' '.join(s.asset for s in plan)
-        self.assertIn('broadsheet', assets)
-        for absent in ('bulletin.mp4', 'carousel', 'reel_', 'story_9x16'):
+        self.assertIn('roundup.mp4', assets)
+        for absent in ('saara_', 'mukhya_', 'bulletin', 'broadsheet',
+                       'story_9x16', 'carousel_'):
             self.assertNotIn(absent, assets)
 
-    def test_plan_spaces_reels_so_they_do_not_compete_with_each_other(self):
-        plan = self.C.publishing_plan(n_reels=4)
-        mins = sorted(int(s.at[:2]) * 60 + int(s.at[3:])
-                      for s in plan if 'Reels' in s.platform)
-        self.assertEqual(len(mins), 4)
-        for a, b in zip(mins, mins[1:]):
-            self.assertGreaterEqual(b - a, 150, 'reels closer than 2.5h')
+    def test_breaking_mukhya_goes_up_first(self):
+        """D92: a breaking ಮುಖ್ಯ ಸುದ್ದಿ is posted the moment it clears."""
+        plan = self.C.publishing_plan(has_saara=True, has_roundup=True,
+                                      mukhya=[(1, True, '')])
+        self.assertEqual(plan[0].at, 'NOW')
+        self.assertIn('mukhya_1_01_cover.jpg', plan[0].asset)
 
-    def test_ai_bulletin_is_off_by_default_and_held_off_youtube(self):
-        plan = self.C.publishing_plan(n_reels=3)
-        self.assertFalse(any('bulletin.mp4' in s.asset for s in plan))
-        held = self.C.publishing_plan(n_reels=1, has_bulletin=True)
-        bulletin = next(s for s in held if 'bulletin.mp4' in s.asset)
-        self.assertIn('HOLD', bulletin.platform)
-        self.assertNotEqual(bulletin.platform, 'YouTube')
-        footage = self.C.publishing_plan(
-            n_reels=1, has_bulletin=True, bulletin_is_footage=True)
-        yt = next(s for s in footage if 'bulletin.mp4' in s.asset)
-        self.assertEqual(yt.platform, 'YouTube')
-
-    def test_ai_reels_are_instagram_only(self):
-        plan = self.C.publishing_plan(n_reels=2)
-        reels = [s for s in plan if 'reel_' in s.asset]
-        self.assertTrue(reels)
-        for s in reels:
-            self.assertEqual(s.platform, 'Instagram Reels')
+    def test_every_format_is_instagram_only(self):
+        """AGENTS rule 9: AI card formats never go to YouTube."""
+        plan = self.C.publishing_plan(has_saara=True, has_roundup=True,
+                                      mukhya=[(1, False, ''), (2, False, '')])
+        self.assertEqual(len(plan), 4)
+        for s in plan:
+            self.assertIn('Instagram', s.platform)
             self.assertNotIn('YouTube', s.platform)
 
     def test_hook_stays_inside_the_instagram_fold(self):
@@ -1222,17 +1208,6 @@ class LockV10(unittest.TestCase):
                                           reel_line='ಕುಂದಾಪುರಕ್ಕೆ ಭಾರಿ ಮಳೆ')))
         self.assertNotIn('ನಮಸ್ಕಾರ', beats['lead'])
         self.assertIn('ಮಳೆ', beats['lead'])
-
-    def test_tip_sheet_does_not_invent_copy(self):
-        from scripts.fetch_daily_news import Tip, render_markdown
-        md = render_markdown([
-            Tip(headline='Udupi rain', source_name='ಉದಯವಾಣಿ',
-                source_url='https://example.test/u', snippet='40 mm',
-                taluk='ಉಡುಪಿ', risk='normal'),
-        ], '2026-09-16')
-        self.assertIn('TIPS, not copy', md)
-        self.assertIn('https://example.test/u', md)
-        self.assertNotIn('official statement', md.lower())
 
 
 if __name__ == '__main__':

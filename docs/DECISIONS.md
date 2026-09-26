@@ -1285,6 +1285,29 @@ looked at the finished folder as a whole.
 
 ---
 
+## D53 · A dot that is not a sentence end is heard, never seen
+
+*(Entry written 2026-09-27 from the code and tests it had always been cited
+by; the decision itself dates from the narrated reels.)* A TTS engine reads
+every dot as a full stop, and two of those shipped before a listener, not
+the pipeline, caught them: "₹1.10 ಲಕ್ಷ" was read as "one" … "ten lakh" — a
+different amount with a pause inside it — and "ಕೆ. ಜೆ. ಜಾರ್ಜ್" came out with
+long gaps between the letters of a man's name. Neither is fixable after the
+text reaches the engine, so the narration normaliser writes figures and
+initials out the way an anchor SAYS them before synthesis: money with a
+scale word in whole units of the scale below, with ರೂಪಾಯಿ after it
+(₹1.10 ಲಕ್ಷ → 1 ಲಕ್ಷದ 10 ಸಾವಿರ ರೂಪಾಯಿ, through the real ratio between scales,
+not a flat ten); any other decimal as ಪಾಯಿಂಟ್; initials without their dots
+(ಕೆ ಜೆ ಜಾರ್ಜ್); abbreviations such as ಡಾ. expanded before the initials rule
+can mistake them for one. Every voice in the engine — the ಸ್ಪೀಡ್ ನ್ಯೂಸ್
+anchor included — goes through it.
+
+`brand/voice.py :: _speech_normalise, _say_scaled` ·
+`tests/test_contract.py :: ThingsTheEngineReadsAsAFullStop` ·
+`tests/test_speednews.py`
+
+---
+
 ## D54 · A festival greeting is its own genre, not a news card with a festive photo
 
 The first Gauri Ganesha poster was built with the news kit: the masthead
@@ -2485,7 +2508,13 @@ the festival; a minor's death, 15 days old, with nothing new).
 
 ---
 
-### D89 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
+## D93 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
+
+*(Numbered D89 when written; renumbered D93 on 2026-09-27 because a second,
+unrelated D89 — the dispatcher, below — already carried that number. Code
+comments and gate codes PUB-10/PUB-11 that say "D89" about carousel
+visibility mean this entry. The carousel and ಕಾನೂನು ಕವಚ it governed were
+retired by D92.)*
 
 **Context (2026-09-25):**
 Two critical failures broke editorial trust on carousel posts:
@@ -2602,6 +2631,75 @@ backup as nine days old, sorting by name instead of time.
 `brand/stock.py :: WITHDRAWN` · `scripts/morning.sh` ·
 `scripts/health.py :: check_backups` · `tests/test_stock.py ::
 AFrameWithTextInItIsNeverAttached`
+
+---
+## D92 · Three formats, one story in one of them, pasted news, real pictures first
+
+**Decided (2026-09-27, the year's final upgrade).** After a month on air the
+owner and co-founder found the channel repetitive — the same stories every day
+as a carousel AND a reel, in the same dark look — and built on AI pictures and
+scraped leads. From this decision on:
+
+1. **Three news formats, and only three.** Everything else was deleted.
+
+   | key | name | shape | pictures |
+   |---|---|---|---|
+   | `roundup` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | 9:16 reel, one frame per story | a picture if the story has one; otherwise a type-only frame |
+   | `saara` | ಸುದ್ದಿ ಸಾರ | 4:5 carousel: index cover → one slide per story → sources | **never** — it is the text bulletin |
+   | `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ | 4:5 carousel for ONE story: photo cover → ಏನಾಗಿದೆ? → source & corrections | **always** — breaking and top stories |
+
+   Festival greetings (`greeting`) and the two footage skills stay; they are
+   not news formats.
+
+2. **One story, one format.** Every story carries `segment` — `speed`,
+   `saara` or `mukhya` — and is rendered in that format only. A story cannot
+   be on the ಸುದ್ದಿ ಸಾರ and in the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ on the same day: the field
+   holds one value. The editor says which; when they do not, the desk proposes
+   and the editor confirms before anything renders. A story already published
+   on an earlier day is refused (DUP-01) unless it is a real follow-up
+   (`follows_up`, with a new fact).
+
+3. **Real pictures first; AI only when there is none, and only after asking.**
+   A ಮುಖ್ಯ ಸುದ್ದಿ cannot render without a picture (IMG-04), and the desk may
+   not supply one on its own: the story records the editor's answer in
+   `photo_plan` — `real` (the editor is sending a photograph) or `ai` (the
+   editor said generate). Every AI picture carries `photo.approved_by`, the
+   name of the person who said yes; `Photo.validate()` refuses one without it.
+   An AI picture never shows an identifiable face standing in for a real,
+   named person. The stock library is gone: a reused generated frame was
+   wrong-topic, carried invented text, and repeated across days (D85, D91).
+
+4. **Pasted news in, no scraping.** The editor pastes copy and says what to
+   make. The pasted text is kept as the story's source
+   (`scripts/intake.py source`), the fact desk checks every figure against it
+   offline, and a person still verifies (D59). The morning fetch, the
+   automatic draft, the trend scraper and their schedule are deleted.
+
+5. **One look — Paper & Red.** Light paper, ink type, the logo's exact colours
+   (`tokens.C`): red for the news (the kicker, ಬ್ರೇಕಿಂಗ್, the half of a
+   headline after its colon), sunset gold for the brand (the line under every
+   photograph, the stroke under the red wordmark, numeral chips, accent
+   rules). Gold is a fill on paper, never small type; gold type uses
+   `gold_800`. Crime and death headlines are ink only — no red on a person's
+   name. Left-aligned, one heavy weight (the headline), square corners. The
+   Grievance Officer line stays on every closing slide (IT Rules 2021).
+
+**Why.** The month's record: seven days of carousel + speed news on the same
+stories; 21 of 39 stock frames carrying fake text; a photoreal "SP" standing
+in for a named officer; 10 of 12 stories on 23–24 Sept carrying claims their
+source did not contain (D84, D88); a morning fetch that ran 2h43m when it ran
+at all. Each of the five points above removes a cause rather than adding a
+check on top of it.
+
+**Retired by this decision:** D25 (every slide carries a visual), D32–D41 and
+D43–D44 (post cards, thumbnail, broadsheet, 16:9 bulletin, the lead reel as a
+daily format), D76 (the morning draft), D80, D85, D91 (the stock library),
+and the daily-default half of D81. Their text stays above as the record.
+
+`brand/content.py :: Story.segment, Story.photo_plan, Photo.approved_by` ·
+`templates/saara.py` · `templates/mukhya.py` · `brand/paper.py` ·
+`brand/speednews.py` · `brand/review.py :: IMG-04, DUP-01` ·
+`scripts/intake.py` · `tests/test_formats.py`
 
 ---
 

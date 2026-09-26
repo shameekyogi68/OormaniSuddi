@@ -152,7 +152,8 @@ class TheSkillTeachesTheRouting(unittest.TestCase):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         with open(os.path.join(root, '.agents', 'skills', 'second-brain',
                                'SKILL.md'), encoding='utf-8') as fh:
-            cls.skill = fh.read()
+            # Whitespace-normalised: the skill is prose, re-wrapped freely.
+            cls.skill = ' '.join(fh.read().split())
 
     def test_the_skill_reads_house_rules_every_run(self):
         self.assertIn('house_rule.py list', self.skill)
@@ -168,18 +169,21 @@ class TheSkillTeachesTheRouting(unittest.TestCase):
             self.assertIn(field, self.skill)
 
     def test_the_skill_bounds_iteration(self):
-        self.assertIn('at most twice', self.skill)
-        self.assertIn('HELD', self.skill)
+        self.assertIn('Two passes, then HELD', self.skill)
 
     def test_the_skill_has_an_adversary_that_cannot_veto(self):
         self.assertIn('Adversary', self.skill)
-        self.assertIn('It makes the case; the human decides', self.skill)
+        self.assertIn('It has no veto', self.skill)
+        self.assertIn('the editor decides', self.skill)
 
     def test_the_skill_forbids_scores_out_of_ten(self):
-        self.assertIn('PASS / FIX / BLOCK', self.skill)
+        self.assertIn('PASS · FIX', self.skill)
+        self.assertIn('BLOCK', self.skill)
+        self.assertIn('Scores out of 10 are not evidence', self.skill)
 
     def test_the_skill_says_a_house_rule_cannot_amend_the_contract(self):
-        self.assertIn('cannot amend the contract', self.skill)
+        self.assertIn('`AGENTS.md` beats a house rule', self.skill)
+        self.assertIn('contradicts the contract, stop', self.skill)
 
 
 if __name__ == '__main__':

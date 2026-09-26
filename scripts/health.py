@@ -8,17 +8,15 @@ One page, everything that can go quietly wrong. Run it when you sit down.
 
 It answers the questions that only have a bad answer once it is too late:
 
-  * Did the morning fetch run, and did it produce leads or just headlines?
+  * Does today have an edition, and how far is it from postable?
   * Is anything past a statutory clock?
   * Is there more than one copy of the published record?
   * Is a recurring review overdue?
   * Is the code pushed, and do the fast suites still pass?
 
-Everything it reads lives inside this repository. The 06:05 schedule on this
-machine is owned by a script outside it, and that is fine — whatever calls
-`fetch_daily_news.py` writes `logs/last_fetch.json` on the way through, so this
-can tell you whether the morning worked without knowing or caring who started
-it. Issue #19 was never about owning the scheduler.
+Everything it reads lives inside this repository. There is no morning job to
+watch any more: news is pasted in by the editor (D92), so the first question
+is simply whether today's edition exists and is verified.
 """
 from __future__ import annotations
 
@@ -41,59 +39,14 @@ def _age(iso: str) -> timedelta | None:
         return None
 
 
-def check_fetch() -> list[str]:
-    out = []
-    hb = os.path.join(ROOT, 'logs', 'last_fetch.json')
-    if not os.path.exists(hb):
-        return [f'{WARN} morning fetch — never recorded a run.',
-                '      Whatever runs at 06:05 has not called '
-                'scripts/fetch_daily_news.py since this check was added.',
-                '      Run it once by hand to confirm the path works:',
-                '        python3 scripts/fetch_daily_news.py']
-    try:
-        with open(hb, encoding='utf-8') as fh:
-            d = json.load(fh)
-    except Exception as e:
-        return [f'{BAD} morning fetch — heartbeat unreadable ({e})']
-
-    age = _age(d.get('at', ''))
-    hours = age.total_seconds() / 3600 if age else 999
-    when = f'{hours:.0f}h ago' if hours < 48 else f'{hours / 24:.0f} days ago'
-
-    if not d.get('ok'):
-        out.append(f'{BAD} morning fetch — FAILED {when}: {d.get("reason", "")}')
-    elif hours > 30:
-        out.append(f'{BAD} morning fetch — last succeeded {when}. '
-                   f'Something has stopped running it.')
-    else:
-        c = d.get('counts', {})
-        out.append(f'{OK} morning fetch — ran {when}, {c.get("tips", 0)} tips, '
-                   f'{c.get("full_articles", 0)} full articles')
-
-    if d.get('ok'):
-        if not d.get('leads_written'):
-            out.append(f'{WARN} …but NO Kannada leads were written. The sheet '
-                       f'is raw headlines.')
-            out.append(f'      text model: {d.get("text_model", "?")} — if it '
-                       f'has been retired, set OORMANI_TEXT_MODEL.')
-        if d.get('extractor') == 'none':
-            out.append(f'{WARN} …and no article bodies (trafilatura missing), '
-                       f'so leads rest on headlines alone.')
-        flagged = d.get('counts', {}).get('flagged_unsupported', 0)
-        if flagged:
-            out.append(f'      {flagged} lead(s) carry words the source does '
-                       f'not — read those first in inbox/today.md')
-    return out
-
-
 def check_edition() -> list[str]:
     """Does today have a draft, and how far is it from postable."""
     from datetime import date
     today = date.today().isoformat()
     path = os.path.join(ROOT, 'editions', f'{today}.json')
     if not os.path.exists(path):
-        return [f'{WARN} today\'s edition — none yet. '
-                f'python3 scripts/draft_edition.py']
+        return [f'{WARN} today\'s edition — none yet. Paste the news in: '
+                f'python3 scripts/intake.py source --help']
     try:
         with open(path, encoding='utf-8') as fh:
             data = json.load(fh)
@@ -250,7 +203,7 @@ def check_tests() -> list[str]:
 def main() -> int:
     print(f'\n  ಊರ್ಮನಿ ಸುದ್ದಿ — health   {datetime.now():%Y-%m-%d %H:%M}\n')
     lines: list[str] = []
-    for fn in (check_fetch, check_edition, check_clocks, check_reviews,
+    for fn in (check_edition, check_clocks, check_reviews,
                check_house, check_music, check_backups, check_git, check_tests):
         try:
             lines += fn()

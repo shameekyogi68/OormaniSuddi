@@ -7,10 +7,10 @@ The machine-facing entry point. Anything that can write JSON — a script, a
 newsroom tool, an AI given raw copy — can drive the whole design system through
 this without knowing any Python.
 
-    python3 render.py edition.json                     # the full package
-    python3 render.py edition.json --only carousel reel
-    python3 render.py story.json --template report_card --out card.jpg
-    python3 render.py --describe                       # every template + its rules
+    python3 render.py editions/DATE.json               # every segment in it
+    python3 render.py editions/DATE.json --only saara roundup
+    python3 render.py editions/greetings/X.json        # a festival wish
+    python3 render.py --describe                       # every format + its rules
     python3 render.py --schema story                   # the input contract
     python3 render.py --check edition.json             # preflight only, render nothing
 
@@ -18,8 +18,9 @@ Reproducibility: pass --at (or set OORMANI_NOW) to pin the clock. Identical
 input plus the same --at gives byte-identical output, which is what the golden
 tests in tests/ rely on.
 
-The contract and the reasoning live in docs/AI_BRIEF.md. Read that first if you
-are generating the JSON.
+Three news formats, and a story runs in exactly one of them — its `segment`
+(D92): speed → ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (roundup), saara → ಸುದ್ದಿ ಸಾರ, mukhya → ಮುಖ್ಯ
+ಸುದ್ದಿ. The contract and the reasoning live in docs/AI_BRIEF.md.
 """
 from __future__ import annotations
 
@@ -27,7 +28,6 @@ import argparse
 import json
 import os
 import re
-import shutil
 import sys
 import time
 from dataclasses import asdict, replace
@@ -93,7 +93,8 @@ def load(path: str):
         return 'greeting', Greeting.from_dict(raw)
     if 'stories' in raw:
         return 'edition', Edition.from_dict(raw)
-    return 'story', Story.from_dict(raw), raw.get('template'), raw.get('hook', '')
+    raise ContentError('a single story is not rendered on its own any more — '
+                       'put it in an edition with a segment (D92)')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -154,45 +155,6 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None,
     return txt
 
 
-def _reel_with_voice(story, sub_ed, path: str, vo_path: str,
-                     reel_seconds: float | None,
-                     bgm: str | None = None) -> str | None:
-    """Narrate the story, then cut the reel to that narration.
-
-    The two steps are ordered and they depend on each other, which is the
-    whole point. `reel_min_spans` tells the voice engine how long each card
-    needs to be READABLE, so a beat is never shorter than the Kannada on it
-    takes to read; the returned track then tells the reel engine exactly where
-    every sentence begins, so every cut lands in a gap between sentences.
-
-    If synthesis fails — no network, no TTS engine — the reel is still made,
-    silent, from reading time alone. A missing voiceover must not cost the
-    edition its video.
-    """
-    try:
-        from brand.voice import synthesize_track
-        from brand import motion
-        track = synthesize_track(story, vo_path,
-                                 min_span=motion.reel_min_spans(story))
-        print(f'    · narration: {len(track.segments)} beats, '
-              f'{track.duration:.1f}s')
-        TP.render('reel', sub_ed, path, target_seconds=reel_seconds, voice=track, bgm=bgm)
-        return track.script
-    except Exception as e:
-        # The reel is still made — a missing voiceover must not cost the
-        # edition its video. But a reel that was MEANT to be narrated and came
-        # out silent is not publishable, and the Chief Editor has to know:
-        # without this marker the folder looked complete and was approved with
-        # a silent reel in it.
-        print(f'    ! voiceover synthesis failed ({e}); '
-              f'rendering the reel silent, timed from reading speed')
-        TP.render('reel', sub_ed, path, target_seconds=reel_seconds)
-        with open(os.path.splitext(path)[0] + '.NARRATION_FAILED', 'w',
-                  encoding='utf-8') as f:
-            f.write(f'{type(e).__name__}: {e}\n')
-        return None
-
-
 class _NullLog:
     """So render_edition can be called without a log and not know it."""
     def start(self, *a, **k): pass
@@ -203,11 +165,12 @@ class _NullLog:
 
 
 def render_edition(ed: Edition, outdir: str, only: list[str] | None,
-                   reel_seconds: float | None,
-                   bulletin_seconds: float | None = None,
-                   bgm: str | None = None,
-                   log=None,
-                   ) -> list[tuple[str, str]]:
+                   log=None) -> list[tuple[str, str]]:
+    """Render every format the edition's stories ask for (D92).
+
+    Each story is drawn in its own segment's format and nowhere else, so the
+    same news never runs twice on one day as a carousel AND a reel.
+    """
     made: list[tuple[str, str]] = []
     want = set(only) if only else None
     log = log or _NullLog()
@@ -215,178 +178,63 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
     def run(key):
         return want is None or key in want
 
-    for i, st in enumerate(ed.stories, 1):
-        key = getattr(st, '_template', None) or TP.choose(st)
-        if not run(key) and not run('posts'):
-            continue
-        spec = TP.get(key)
-        # Stable filename, template reported alongside. Putting the template
-        # name IN the filename meant that a story which switched from
-        # text_card to report_card left the old file behind, and the folder
-        # ended up with two versions of post 02 and no way to tell which was
-        # current.
-        p = os.path.join(outdir, f'post_{i:02d}.jpg')
-        spec(st, p)
-        made.append((p, spec.format))
-        write_copy(st, outdir, f'post_{i:02d}_copy')
-        print(f'  ✓ {os.path.basename(p):<22} {key}  + copy')
-
-    if run('carousel'):
+    # ── ಸುದ್ದಿ ಸಾರ ─────────────────────────────────────────────────────────
+    saara = ed.segment('saara')
+    if saara and run('saara'):
         _t = time.time()
-        for p in TP.render('carousel', ed, outdir, prefix='carousel'):
-            made.append((p, 'square'))
+        sub = replace(ed, stories=saara)
+        for p in TP.render('saara', sub, outdir):
+            made.append((p, 'post'))
             print(f'  ✓ {os.path.basename(p)}')
-        write_copy(ed, outdir, 'carousel_copy')
-        print('  ✓ carousel_copy.txt')
-        log.done('carousel', seconds=round(time.time() - _t, 1))
+        write_copy(sub, outdir, 'saara_copy')
+        print('  ✓ saara_copy.txt')
+        log.done('saara', seconds=round(time.time() - _t, 1),
+                 stories=len(saara))
 
-    lead = ed.stories[0]
-    if run('story_card'):
-        _t = time.time()
-        p = os.path.join(outdir, 'story_9x16.jpg')
-        TP.render('story_card', lead, p)
-        made.append((p, 'story'))
-        print(f'  ✓ {os.path.basename(p)}')
-        log.done('story_card', seconds=round(time.time() - _t, 1))
-
-    if run('youtube_thumb'):
-        _t = time.time()
-        p = os.path.join(outdir, 'yt_thumbnail.jpg')
-        TP.render('youtube_thumb', lead, p, hook=getattr(lead, '_hook', ''))
-        made.append((p, 'thumb'))
-        print(f'  ✓ {os.path.basename(p)}')
-        log.done('youtube_thumb', seconds=round(time.time() - _t, 1))
-
-    if run('broadsheet'):
-        _t = time.time()
-        p = os.path.join(outdir, 'broadsheet.jpg')
-        TP.render('broadsheet', ed, p)
-        made.append((p, 'broadsheet'))
-        print(f'  ✓ {os.path.basename(p)}')
-        log.done('broadsheet', seconds=round(time.time() - _t, 1))
-
-    if run('reel'):
-        # Editorial filter: only stories meeting the 10/10 standard (is_reel=True)
-        # get rendered as vertical reels. Routine or low-visual stories stay in
-        # carousel/posts to preserve channel retention and algorithmic health.
-        reel_stories = [(orig_idx, st) for orig_idx, st in enumerate(ed.stories, 1)
-                        if getattr(st, 'is_reel', True)]
-
-        if len(ed.stories) > 1:
-            if not reel_stories:
-                print('  · no stories qualified for reels (is_reel=false on all)')
-            for r, (orig_idx, st) in enumerate(reel_stories, 1):
-                sub_ed = replace(ed, stories=[st])
-                p = os.path.join(outdir, f'reel_{r:02d}.mp4')
-                vo_path = os.path.join(outdir, f'reel_{r:02d}_voiceover.mp3')
-                _t = time.time()
-                vo_script = _reel_with_voice(st, sub_ed, p, vo_path, reel_seconds, bgm=bgm)
-                log.done(f'reel_{r:02d}', seconds=round(time.time() - _t, 1),
-                         narrated=bool(vo_script))
-                write_copy(st, outdir, f'reel_{r:02d}_copy', voice_script=vo_script)
-                cov = os.path.join(outdir, f'reel_{r:02d}_cover.jpg')
-                if os.path.exists(cov):
-                    made.append((cov, 'story'))
-                print(f'  ✓ {os.path.basename(p)}  (story {orig_idx:02d}) + copy')
-                if r == 1:
-                    # Keep canonical reel.mp4, reel_cover.jpg, reel_copy for backwards compatibility
-                    p_canon = os.path.join(outdir, 'reel.mp4')
-                    if os.path.exists(p):
-                        shutil.copy2(p, p_canon)
-                    c_named = os.path.join(outdir, f'reel_{r:02d}_cover.jpg')
-                    c_canon = os.path.join(outdir, 'reel_cover.jpg')
-                    if os.path.exists(c_named):
-                        shutil.copy2(c_named, c_canon)
-                    vo_canon = os.path.join(outdir, 'reel_voiceover.mp3')
-                    if vo_path and os.path.exists(vo_path):
-                        shutil.copy2(vo_path, vo_canon)
-                    write_copy(st, outdir, 'reel_copy', voice_script=vo_script)
-            if reel_stories:
-                print('    · set each reel_*_cover.jpg as the Instagram cover (not YouTube)')
-        else:
-            lead = ed.stories[0]
-            if getattr(lead, 'is_reel', True):
-                p = os.path.join(outdir, 'reel.mp4')
-                vo_path = os.path.join(outdir, 'reel_voiceover.mp3')
-                _t = time.time()
-                vo_script = _reel_with_voice(lead, ed, p, vo_path, reel_seconds, bgm=bgm)
-                log.done('reel', seconds=round(time.time() - _t, 1),
-                         narrated=bool(vo_script))
-                write_copy(lead, outdir, 'reel_copy', voice_script=vo_script)
-                write_copy(lead, outdir, 'reel_01_copy', voice_script=vo_script)
-                cov = os.path.join(outdir, 'reel_cover.jpg')
-                if os.path.exists(cov):
-                    made.append((cov, 'story'))
-                p_r1 = os.path.join(outdir, 'reel_01.mp4')
-                if os.path.exists(p):
-                    shutil.copy2(p, p_r1)
-                cov_r1 = os.path.join(outdir, 'reel_01_cover.jpg')
-                if os.path.exists(cov):
-                    shutil.copy2(cov, cov_r1)
-                if vo_path and os.path.exists(vo_path):
-                    shutil.copy2(vo_path, os.path.join(outdir, 'reel_01_voiceover.mp3'))
-                print(f'  ✓ {os.path.basename(p)}  + copy')
-                print('    · set reel_cover.jpg as the Instagram cover (not YouTube)')
-            else:
-                print('  · lead story is_reel=false; skipping reel.')
-
-    # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the day's stories as one quick-news reel (D81). Through
-    # the engine, so the gate reviews it, the caption file is written, and the
-    # schedule knows it exists; the first version was a side script that did
-    # none of the three.
-    if run('roundup'):
-        if len(ed.stories) < Limits.roundup_min_stories:
-            print(f'  · speed news needs {Limits.roundup_min_stories}+ stories '
-                  f'(this edition has {len(ed.stories)}) — skipped')
-        else:
+    # ── ಮುಖ್ಯ ಸುದ್ದಿ ───────────────────────────────────────────────────────
+    mukhya_done: list[tuple[int, bool, str]] = []
+    if run('mukhya'):
+        for k, st in enumerate(ed.segment('mukhya'), 1):
             _t = time.time()
-            p = os.path.join(outdir, 'roundup.mp4')
-            res = TP.render('roundup', ed, p)
-            used = replace(ed, stories=ed.stories[:res['stories']])
-            write_copy(used, outdir, 'roundup_copy',
-                       voice_script='\n'.join(res['spoken']),
-                       post=copywriter.for_roundup(used, res['seconds']))
-            if os.path.exists(res['cover']):
-                made.append((res['cover'], 'story'))
-            if res['dropped']:
-                print(f'  ⚠ left out of speed news (still on the carousel): '
-                      + ' · '.join(h[:30] for h in res['dropped']))
-            log.done('roundup', seconds=round(time.time() - _t, 1),
-                     stories=res['stories'])
+            paths = TP.get('mukhya')(st, outdir, k=k)
+            for p in paths:
+                made.append((p, 'post'))
+                print(f'  ✓ {os.path.basename(p)}')
+            write_copy(st, outdir, f'mukhya_{k}_copy')
+            mukhya_done.append((k, st.category == 'breaking' and st.is_breaking,
+                                os.path.basename(paths[-1])))
+            log.done(f'mukhya_{k}', seconds=round(time.time() - _t, 1))
 
-    # The 16:9 long-form cut. yt_thumbnail.jpg above is built for THIS video —
-    # without it the channel renders a thumbnail for a video that does not
-    # exist, and a sub-60s vertical reel is a Short, which ignores custom
-    # thumbnails anyway. See templates/bulletin.py and DECISIONS.md D37.
-    if run('bulletin'):
+    # ── ಸ್ಪೀಡ್ ನ್ಯೂಸ್ ──────────────────────────────────────────────────────
+    # Through the engine, so the gate reviews it, the caption file is written
+    # and the schedule knows it exists (D81).
+    speed = ed.segment('speed')
+    if speed and run('roundup'):
         _t = time.time()
-        p = os.path.join(outdir, 'bulletin.mp4')
-        TP.render('bulletin', ed, p, target_seconds=bulletin_seconds)
-        write_copy(ed, outdir, 'bulletin_copy')
-        print(f'  ✓ {os.path.basename(p)}  + copy')
-        log.done('bulletin', seconds=round(time.time() - _t, 1))
+        sub = replace(ed, stories=speed)
+        p = os.path.join(outdir, 'roundup.mp4')
+        res = TP.render('roundup', sub, p)
+        used = replace(ed, stories=speed[:res['stories']])
+        write_copy(used, outdir, 'roundup_copy',
+                   voice_script='\n'.join(res['spoken']),
+                   post=copywriter.for_roundup(used, res['seconds']))
+        if os.path.exists(res['cover']):
+            made.append((res['cover'], 'story'))
+        if res['dropped']:
+            print('  ⚠ left out of ಸ್ಪೀಡ್ ನ್ಯೂಸ್ to stay short — move them to '
+                  'ಸುದ್ದಿ ಸಾರ or shorten their reel_line: '
+                  + ' · '.join(h[:30] for h in res['dropped']))
+        log.done('roundup', seconds=round(time.time() - _t, 1),
+                 stories=res['stories'])
 
-    # The publishing plan. AGENTS.md has asked for a scheduled timetable as a
-    # deliverable since the workflow was written, and it was being retyped by
-    # hand every morning — which is exactly how the times drift and the first
-    # comment gets forgotten. Derived from what was actually rendered, so it
-    # can never list a reel that does not exist.
-    kinds = [k for _f, k in made]
-    n_reels = len([f for f, _k in made
-                   if os.path.basename(f).startswith('reel_')
-                   and f.endswith('_cover.jpg')])
-    # The real name of the last carousel slide, read off the folder rather
-    # than assumed: the count follows the edition, and the schedule is the one
-    # file the publisher actually follows.
+    # The publishing plan, derived from what was actually rendered, so it can
+    # never list a post that does not exist (D43).
     slides = sorted(f for f in os.listdir(outdir)
-                    if f.startswith('carousel_') and f.endswith('.jpg'))
+                    if f.startswith('saara_') and f.endswith('.jpg'))
     plan = copywriter.publishing_plan(
-        n_reels=n_reels,
-        has_bulletin=os.path.exists(os.path.join(outdir, 'bulletin.mp4')),
-        has_carousel=os.path.exists(os.path.join(outdir, 'carousel_01_cover.jpg')),
-        has_story_card=os.path.exists(os.path.join(outdir, 'story_9x16.jpg')),
-        has_broadsheet=os.path.exists(os.path.join(outdir, 'broadsheet.jpg')),
-        carousel_last=slides[-1] if slides else '',
+        has_saara=os.path.exists(os.path.join(outdir, 'saara_01_cover.jpg')),
+        saara_last=slides[-1] if slides else '',
+        mukhya=mukhya_done,
         has_roundup=os.path.exists(os.path.join(outdir, 'roundup.mp4')))
     if plan:
         with open(os.path.join(outdir, 'schedule.txt'), 'w', encoding='utf-8') as f:
@@ -423,11 +271,8 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
         with open(p, encoding='utf-8') as fh:
             return fh.read().rstrip()
 
-    car = os.path.join(outdir, 'carousel_copy.txt')
-    if os.path.exists(car):
-        lines += ['## Carousel', '', '```', _read(car), '```', '']
     for name in sorted(os.listdir(outdir)):
-        if re.fullmatch(r'(reel(_\d+)?|roundup)_copy\.txt', name):
+        if re.fullmatch(r'(saara|mukhya_\d+|roundup)_copy\.txt', name):
             lines += [f'## {name}', '', '```',
                       _read(os.path.join(outdir, name)), '```', '']
     # ── the forwards, one per town ────────────────────────────────────────
@@ -492,23 +337,11 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='Read docs/AI_BRIEF.md before generating the JSON.')
     ap.add_argument('input', nargs='?', help='edition or story JSON file')
-    ap.add_argument('--out', help='output file (story) or directory (edition)')
-    ap.add_argument('--template', help='force a template; see --describe')
-    ap.add_argument('--hook', default='', help='short line for youtube_thumb')
-    ap.add_argument('--only', nargs='+', metavar='T',
-                    help='render only these templates (plus "posts")')
-    ap.add_argument('--minimal', action='store_true',
-                    help='the daily default path only: '
-                         + ', '.join(Limits.daily_templates)
-                         + '. What ships on a four-hour day instead of a '
-                           'ten-hour one. Overridden by --only.')
-    ap.add_argument('--reel-seconds', type=float, default=None,
-                    help='ceiling, not a quota. Omit to let the reel be as long '
-                         'as the copy needs to stay readable.')
-    ap.add_argument('--bulletin-seconds', type=float, default=None,
-                    help='ceiling for the 16:9 YouTube bulletin. Omit to let it '
-                         'run as long as the decks need — typically 60-120s.')
-    ap.add_argument('--bgm', help='custom background music path (e.g. devotional song)')
+    ap.add_argument('--out', help='output directory')
+    ap.add_argument('--only', nargs='+', metavar='FORMAT',
+                    choices=list(Limits.daily_templates),
+                    help='render only these formats: '
+                         + ', '.join(Limits.daily_templates))
     ap.add_argument('--at', metavar='ISO',
                     help='pin the clock, e.g. 2026-08-25T09:40:00+05:30')
     ap.add_argument('--check', action='store_true',
@@ -517,13 +350,6 @@ def main() -> int:
     ap.add_argument('--json', action='store_true', help='machine-readable --describe')
     ap.add_argument('--schema', metavar='NAME', help='print a JSON schema')
     args = ap.parse_args()
-
-    # A minimal day is the four things that actually ship most mornings. The
-    # bulletin, the thumbnail and the standalone post cards are real, and they
-    # are --only on request; making them the default is how a small desk ends
-    # up producing a lot of mediocre content instead of four good things.
-    if args.minimal and not args.only:
-        args.only = list(Limits.daily_templates)
 
     if args.describe:
         return describe(args.json)
@@ -565,31 +391,6 @@ def main() -> int:
         print(f'\n✓ {len(made)} posters + copy → {outdir}\n')
         return 0
 
-    # ── single story ─────────────────────────────────────────────────────
-    if loaded[0] == 'story':
-        _, st, tpl, hook = loaded
-        key = args.template or tpl or TP.choose(st)
-        hook = args.hook or hook
-        try:
-            st.validate()
-        except ContentError as e:
-            print(f'✗ {e}', file=sys.stderr)
-            return 1
-        rep = preflight(st, TP.get(key).format, hook=hook)
-        rep.show(f'preflight · {key}')
-        if rep.fail or args.check:
-            return 1 if rep.fail else 0
-        out = args.out or f'out/{key}.jpg'
-        kw = {'hook': hook} if key == 'youtube_thumb' else {}
-        TP.render(key, st, out, **kw)
-        inspect(out, TP.get(key).format).show(os.path.basename(out))
-        base = os.path.splitext(out)[0]
-        write_copy(st, os.path.dirname(out) or '.',
-                   os.path.basename(base) + '_copy')
-        print(f'\n✓ {out}')
-        print(f'✓ {base}_copy.txt  ·  {base}_copy.json')
-        return 0
-
     # ── edition ──────────────────────────────────────────────────────────
     _, ed = loaded
     try:
@@ -623,15 +424,27 @@ def main() -> int:
         print('\n✗ fix the failures above before publishing.')
         return 1
     print('  ✓ all stories cleared')
+
+    # Which format each story runs in, and whether each format has what it
+    # needs — before anything is drawn (D92).
+    counts = {k: len(ed.segment(k)) for k in ('saara', 'mukhya', 'speed')}
+    print('  formats: ' + ' · '.join(f'{k} {n}' for k, n in counts.items() if n))
+    problems = ed.format_problems()
+    for msg in problems:
+        print(f'  ✗ {msg}')
+    if problems:
+        print('\n✗ fix the formats above before rendering.')
+        return 1
+    try:
+        from brand.intake import published_before
+        for i, st in enumerate(ed.stories, 1):
+            for why in published_before(st, ed.date.date()):
+                print(f'  ! story {i}: {why}' + ('' if st.follows_up else
+                      ' — a repeat needs follows_up and a new fact (DUP-01)'))
+    except Exception as e:                       # never block a render on it
+        print(f'  ! repeat check skipped ({e})')
     if args.check:
         return 0
-
-    if args.bgm:
-        from brand.music import check_path
-        err = check_path(args.bgm)
-        if err:
-            print(f'✗ {err}', file=sys.stderr)
-            return 1
 
     # The folder is named after the EDITION FILE, not its date. Two editions
     # carry the same date whenever the day has more than one (an evening
@@ -670,8 +483,7 @@ def main() -> int:
     print(f'\nRENDER → {outdir}')
     t0 = time.time()
     try:
-        made = render_edition(ed, outdir, args.only, args.reel_seconds,
-                              args.bulletin_seconds, bgm=args.bgm, log=log)
+        made = render_edition(ed, outdir, args.only, log=log)
         log.done('render', seconds=round(time.time() - t0, 1),
                  files=len(made))
 

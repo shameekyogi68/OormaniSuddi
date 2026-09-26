@@ -158,6 +158,14 @@ def missing_glyphs(s: str, f) -> tuple:
 #  FONT BOOK
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Weight a family is set at when the caller names none. fonts/NotoSansKannada-
+# Bold.ttf is a VARIABLE font whose default instance is Regular (400): for as
+# long as the engine has existed, every "bold" Kannada headline was drawn at
+# 400 because no weight was ever asked for. Found 2026-09-27 (D92). The file
+# name says Bold; this makes the rendering agree with it.
+DEFAULT_WEIGHT = {'kn': 700}
+
+
 @lru_cache(maxsize=512)
 def font(family: str = 'kn', size: int = 40, weight: int | None = None,
          width: int | None = None) -> ImageFont.FreeTypeFont:
@@ -166,6 +174,8 @@ def font(family: str = 'kn', size: int = 40, weight: int | None = None,
     weight: 100..800 (Thin..ExtraBold)   width: 75..125 (condensed..extended)
     """
     path = FONTS.get(family, FONTS['kn'])
+    if weight is None:
+        weight = DEFAULT_WEIGHT.get(family)
     if not os.path.isabs(path):
         path = os.path.join(BASE_DIR, path)
     f = ImageFont.truetype(path, int(size))

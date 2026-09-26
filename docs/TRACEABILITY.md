@@ -7,15 +7,16 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **65/90** decisions are named by at least one test
+- **62/93** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
-- **0 are enforced by nothing**
+- **6 are enforced by nothing**: D71, D75, D80, D85, D91, D93
 
 
 ## D1 · Leading comes from the em, not the font's metrics
 
 - **Regression-guarded by the golden fingerprints** (leading from the em). A change here moves pixels and `tests/test_golden.py` fails. Note this catches a regression; it does not assert the rule.
+- Enforced in: `brand/tokens.py`
 
 ## D2 · Text is drawn on baselines, never at box positions
 
@@ -129,12 +130,11 @@ those carry a reason rather than a test.
 ## D29 · Legal guards are validation rules, not guidance
 
 - **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_house.py`, `tests/test_legal_corpus.py`
-- Enforced in: `brand/content.py`, `brand/house.py`, `scripts/house_rule.py`, `templates/youtube_thumb.py`
+- Enforced in: `brand/content.py`, `brand/house.py`, `scripts/house_rule.py`
 
 ## D30 · A credit is not a licence
 
 - **Tested by:** `tests/test_contract.py`
-- Enforced in: `templates/youtube_thumb.py`
 
 ## D31 · The system emits copy, not just artwork
 
@@ -164,17 +164,17 @@ those carry a reason rather than a test.
 ## D37 · The bulletin carries the deck, and its length is derived
 
 - **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/motion.py`, `templates/bulletin.py`
+- Enforced in: `brand/motion.py`
 
 ## D38 · Landscape spends width on the type, not height
 
 - **Regression-guarded by the golden fingerprints** (landscape spends width on the type). A change here moves pixels and `tests/test_golden.py` fails. Note this catches a regression; it does not assert the rule.
-- Enforced in: `brand/motion.py`, `brand/tokens.py`, `templates/youtube_thumb.py`
+- Enforced in: `brand/motion.py`, `brand/tokens.py`
 
 ## D39 · A reel is the lead story, and it opens on the news
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_speednews.py`
-- Enforced in: `brand/motion.py`, `brand/speednews.py`, `brand/tokens.py`, `templates/reel.py`
+- Enforced in: `brand/motion.py`, `brand/speednews.py`, `brand/tokens.py`
 
 ## D40 · The 4K bulletin is the same design at twice the size, not a bigger canvas
 
@@ -232,25 +232,30 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_contract.py`
 
+## D53 · A dot that is not a sentence end is heard, never seen
+
+- **Tested by:** `tests/test_contract.py`, `tests/test_speednews.py`
+- Enforced in: `brand/speednews.py`
+
 ## D54 · A festival greeting is its own genre, not a news card with a festive photo
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_greeting.py`
-- Enforced in: `brand/ornament.py`, `brand/review.py`, `scripts/render_wishes_poster.py`, `templates/__init__.py`, `templates/greeting.py`, `templates/registry.json`
+- Enforced in: `brand/ornament.py`, `brand/review.py`, `templates/__init__.py`, `templates/greeting.py`, `templates/registry.json`
 
 ## D55 · No source, no claim. No approval, no upload
 
-- **Tested by:** `tests/test_contract.py`, `tests/test_intake.py`
-- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/review.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`
+- **Tested by:** `tests/test_contract.py`
+- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/review.py`
 
 ## D56 · Numeric policy lives in `tokens.Limits`
 
-- **Tested by:** `tests/test_contract.py`, `tests/test_intake.py`
+- **Tested by:** `tests/test_contract.py`
 - Enforced in: `brand/codes.py`, `brand/house.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/house_rule.py`
 
 ## D57 · Generated images, including stock, are `nature: 'ai'`
 
-- **Tested by:** `tests/test_contract.py`, `tests/test_stock.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/speednews.py`
+- **Tested by:** `tests/test_contract.py`
+- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/paper.py`, `brand/speednews.py`
 
 ## D58 · A reel opens on the news
 
@@ -259,8 +264,8 @@ those carry a reason rather than a test.
 
 ## D59 · No human verification, no publication
 
-- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_draft_edition.py`, `tests/test_intake.py`, `tests/test_verify.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/factcheck.py`, `brand/review.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`, `scripts/verify.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_verify.py`
+- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/factcheck.py`, `brand/review.py`, `scripts/verify.py`
 
 ## D60 · Legibility is arithmetic, and arithmetic is testable
 
@@ -278,8 +283,8 @@ those carry a reason rather than a test.
 
 ## D63 · The intake retrieves; it never supplies what the source lacks
 
-- **Tested by:** `tests/test_intake.py`
-- Enforced in: `brand/factcheck.py`, `scripts/draft_edition.py`
+- **Tested by:** `tests/test_grounding.py`
+- Enforced in: `brand/factcheck.py`, `brand/grounding.py`
 
 ## D64 · Brand rules are gilded, not stamped
 
@@ -306,7 +311,6 @@ those carry a reason rather than a test.
 ## D69 · A bad Tuesday has a defined minimum, decided in advance
 
 - **Tested by:** `tests/test_calendar.py`
-- Enforced in: `scripts/draft_edition.py`
 
 ## D70 · The year is on a calendar, not in somebody's head
 
@@ -314,12 +318,12 @@ those carry a reason rather than a test.
 
 ## D71 · The scheduler is not ours to own; the heartbeat is
 
-- **Tested by:** `tests/test_intake.py`
+- ⚠️ **No test names this decision.** Either write one, or add it to `GOLDEN_GUARDED` / `UNTESTABLE` with a reason.
 
 ## D72 · Reach is local penetration, and it is measured that way
 
 - **Tested by:** `tests/test_pick_formats.py`, `tests/test_reach.py`
-- Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`, `scripts/draft_edition.py`, `scripts/pick_formats.py`
+- Enforced in: `brand/content.py`, `brand/review.py`, `brand/tokens.py`, `scripts/intake.py`, `scripts/pick_formats.py`
 
 ## D73 · The newsroom answers in one shape, argues with itself, and remembers
 
@@ -332,12 +336,12 @@ those carry a reason rather than a test.
 
 ## D75 · A URL two tips share is a listing page, not an article
 
-- **Tested by:** `tests/test_draft_edition.py`, `tests/test_intake.py`
-- Enforced in: `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`
+- ⚠️ **No test names this decision.** Either write one, or add it to `GOLDEN_GUARDED` / `UNTESTABLE` with a reason.
+- Enforced in: `brand/grounding.py`
 
 ## D76 · "Ready by 8am" needs a number attached to how sure that is
 
-- **Tested by:** `tests/test_draft_edition.py`, `tests/test_verify.py`
+- **Tested by:** `tests/test_verify.py`
 
 ## D77 · Carousel is the day; a reel is earned, not defaulted
 
@@ -345,8 +349,8 @@ those carry a reason rather than a test.
 
 ## D78 · A tip is only worth having if its link opens and its flags mean something
 
-- **Tested by:** `tests/test_intake.py`
-- Enforced in: `scripts/fetch_daily_news.py`
+- **Tested by:** `tests/test_grounding.py`
+- Enforced in: `brand/grounding.py`
 
 ## D79 · The 90-day law review, 2026-09-17 — and what it found
 
@@ -354,17 +358,17 @@ those carry a reason rather than a test.
 
 ## D80 · Two rules that were each right and together stopped every morning
 
-- **Tested by:** `tests/test_stock.py`
+- ⚠️ **No test names this decision.** Either write one, or add it to `GOLDEN_GUARDED` / `UNTESTABLE` with a reason.
 
 ## D81 · ಸ್ಪೀಡ್ ನ್ಯೂಸ್: the day as one quick-news reel, built into the engine
 
 - **Tested by:** `tests/test_pick_formats.py`, `tests/test_speednews.py`
-- Enforced in: `brand/copy.py`, `brand/review.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/pick_formats.py`, `scripts/render_roundup_reel.py`, `templates/roundup.py`
+- Enforced in: `brand/copy.py`, `brand/review.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/pick_formats.py`, `templates/roundup.py`
 
 ## D82 · Sound effects are made here, registered, and tied to the cut
 
 - **Tested by:** `tests/test_speednews.py`
-- Enforced in: `brand/motion.py`, `brand/speednews.py`, `scripts/build_promo.py`
+- Enforced in: `brand/motion.py`, `brand/speednews.py`
 
 ## D83 · Speed news shows the whole picture, and uses the whole frame
 
@@ -373,18 +377,17 @@ those carry a reason rather than a test.
 
 ## D84 · The fact desk checks every published line, before and after writing
 
-- **Tested by:** `tests/test_reach_copy.py`
-- Enforced in: `brand/codes.py`, `brand/factcheck.py`, `brand/review.py`, `scripts/fact_check.py`
+- **Tested by:** `tests/test_grounding.py`, `tests/test_reach_copy.py`
+- Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/review.py`, `scripts/fact_check.py`
 
 ## D85 · A stock frame is earned by the story's words, scored — never by category
 
-- **Tested by:** `tests/test_stock.py`
-- Enforced in: `brand/stock.py`, `brand/tokens.py`
+- ⚠️ **No test names this decision.** Either write one, or add it to `GOLDEN_GUARDED` / `UNTESTABLE` with a reason.
 
 ## D86 · Five hashtags, and a trend only when the story is about it
 
 - **Tested by:** `tests/test_reach_copy.py`
-- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/review.py`, `brand/tokens.py`, `brand/trends.py`, `scripts/trending_tags.py`
+- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/review.py`, `brand/tokens.py`, `brand/trends.py`
 
 ## D87 · The newsroom runs as a team of agents, in parallel, fact desk first
 
@@ -393,12 +396,12 @@ those carry a reason rather than a test.
 ## D88 · Fresh, ours, a real article, and credited to the outlet it came from
 
 - **Tested by:** `tests/test_sourcing.py`
-- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/review.py`, `brand/sourcing.py`, `brand/tokens.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`
+- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/intake.py`, `brand/review.py`, `brand/sourcing.py`, `brand/tokens.py`
 
 ## D89 · The team is dispatched by the state of the newsroom, not by memory
 
 - **Tested by:** `tests/test_dispatch.py`
-- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/dispatch.py`, `templates/carousel.py`
+- Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/dispatch.py`
 
 ## D90 · A render folder belongs to one edition, and says which
 
@@ -407,6 +410,14 @@ those carry a reason rather than a test.
 
 ## D91 · A stock frame with text in it is never attached automatically
 
-- **Tested by:** `tests/test_stock.py`
-- Enforced in: `brand/stock.py`
+- ⚠️ **No test names this decision.** Either write one, or add it to `GOLDEN_GUARDED` / `UNTESTABLE` with a reason.
+
+## D92 · Three formats, one story in one of them, pasted news, real pictures first
+
+- **Tested by:** `tests/test_discard_edition.py`, `tests/test_dispatch.py`, `tests/test_grounding.py`, `tests/test_intake.py`, `tests/test_reach_copy.py`
+- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/paper.py`, `brand/provenance.py`, `brand/sourcing.py`, `brand/tokens.py`, `brand/trends.py`, `scripts/archive_edition.py`, `scripts/dispatch.py`, `scripts/fact_check.py`, `scripts/health.py`, `scripts/intake.py`, `templates/__init__.py`, `templates/mukhya.py`, `templates/saara.py`
+
+## D93 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
+
+- ⚠️ **No test names this decision.** Either write one, or add it to `GOLDEN_GUARDED` / `UNTESTABLE` with a reason.
 

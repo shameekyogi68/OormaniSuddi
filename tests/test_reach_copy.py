@@ -106,8 +106,7 @@ class EveryFigureIsInTheSource(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         for name, val in (('SOURCES_DIR', os.path.join(self.tmp.name, 's')),
-                          ('LEDGER_DIR', os.path.join(self.tmp.name, 'l')),
-                          ('TIP_SHEET', os.path.join(self.tmp.name, 'x.json'))):
+                          ('LEDGER_DIR', os.path.join(self.tmp.name, 'l'))):
             p = mock.patch.object(F, name, val)
             p.start()
             self.addCleanup(p.stop)
@@ -148,6 +147,29 @@ class EveryFigureIsInTheSource(unittest.TestCase):
                    'ಅಂಗನವಾಡಿಗೆ ಬೇಕಿದೆ ತುರ್ತು ಕಾಯಕಲ್ಪ ಪ್ರವಾಸೋದ್ಯಮ ನೀತಿ')
         self.assertFalse(F.carries(s, sidebar))
 
+    def test_a_decimal_the_source_prints_is_not_blocked(self):
+        """2026-09-26: the fact desk BLOCKed "82.9" on the rain story although
+        the source said "Byndoor recorded the highest rainfall at 82.9 mm".
+        The haystack's punctuation-to-space pass had turned it into "82 9"."""
+        url = 'https://example.org/byndoor-rain'
+        F.save_source(url, 'Over the last 24 hours, Byndoor recorded the '
+                           'highest rainfall at 82.9 mm, closely followed by '
+                           'Kundapur with 73.9 mm.')
+        s = story(sources=['Daijiworld'], source_urls=[url],
+                  deck='ಉಡುಪಿ ಜಿಲ್ಲೆಯ ಬೈಂದೂರಿನಲ್ಲಿ ಗರಿಷ್ಠ 82.9 ಮಿ.ಮೀ ಮಳೆ '
+                       'ದಾಖಲಾಗಿದೆ.')
+        r = F.check(s)
+        self.assertEqual(r.figures, [])
+        self.assertFalse(r.blocking)
+
+    def test_a_figure_inside_a_longer_number_is_not_support(self):
+        """The old check passed "5" because the source said "45"."""
+        url = 'https://example.org/hebri'
+        F.save_source(url, 'Hebri received moderate rainfall of 45.1 mm.')
+        r = F.check(story(sources=['Daijiworld'], source_urls=[url],
+                          deck='ಹೆಬ್ರಿಯಲ್ಲಿ 5 ಮಂದಿ ಆಸ್ಪತ್ರೆಗೆ ದಾಖಲು'))
+        self.assertIn(('deck', '5'), r.figures)
+
     def test_own_reporting_is_the_reporters_word(self):
         self.assertEqual(F.check(story()).state, 'own')
 
@@ -160,8 +182,10 @@ class TheTeamKnowsItsLimits(unittest.TestCase):
         os.path.abspath(__file__))), '.claude', 'agents')
 
     def test_the_four_desks_exist_and_are_jailed(self):
+        # trend-scout went with the scraper (D92); intake-editor takes pasted
+        # copy in its place.
         for name in ('fact-checker', 'picture-editor', 'social-writer',
-                     'trend-scout'):
+                     'intake-editor'):
             with open(os.path.join(self.AGENTS, f'{name}.md'),
                       encoding='utf-8') as fh:
                 body = fh.read()

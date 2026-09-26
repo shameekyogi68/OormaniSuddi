@@ -12,8 +12,8 @@ This module asks the question a machine can answer: does every FIGURE, and
 every name, in every line we publish appear in the source we are citing?
 
   * The source text is kept, per URL, in `inbox/sources/<digest>.txt` — the
-    article as it was when we read it. `scripts/fact_check.py` fills it; the
-    fact-checker agent fills it when the site will not serve a scraper.
+    article as the editor pasted it (`scripts/intake.py source`, D92). Nothing
+    here fetches: the check is offline, against the text we were given.
   * A figure the source writes differently ("twenty-five", "3 districts"
     listed by name) is not waved through: the fact-checker records the exact
     sentence of the source that carries it in `inbox/factcheck/<stem>.json`,
@@ -34,11 +34,11 @@ import re
 from dataclasses import dataclass, field
 
 from .content import Story, Edition, OWN_REPORTING
+from .grounding import unsupported_tokens, UNCHECKABLE, _TOKEN
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCES_DIR = os.path.join(ROOT, 'inbox', 'sources')
 LEDGER_DIR = os.path.join(ROOT, 'inbox', 'factcheck')
-TIP_SHEET = os.path.join(ROOT, 'inbox', 'today.json')
 
 # Every line that reaches a reader, a listener or a search box.
 FIELDS = ('headline', 'reel_line', 'hook', 'deck', 'points', 'takeaway',
@@ -65,26 +65,13 @@ def save_source(url: str, text: str) -> str:
     return path
 
 
-def _tip_bodies() -> dict[str, str]:
-    try:
-        with open(TIP_SHEET, encoding='utf-8') as fh:
-            tips = json.load(fh).get('tips', [])
-    except (OSError, ValueError):
-        return {}
-    out = {}
-    for t in tips:
-        url = (t.get('source_url') or '').strip()
-        text = ' '.join(filter(None, [t.get('headline', ''),
-                                      t.get('body', '') or t.get('snippet', '')]))
-        if url and text.strip():
-            out[url] = text
-    return out
-
-
 def source_text(story: Story, tips: dict[str, str] | None = None
                 ) -> tuple[str, list[str]]:
-    """(the text of every source we hold for this story, URLs we hold none for)."""
-    tips = _tip_bodies() if tips is None else tips
+    """(the text of every source we hold for this story, URLs we hold none for).
+
+    `tips` is an optional {url: text} a caller already holds (a test, or a
+    paste not yet saved); the kept file in inbox/sources/ wins over it."""
+    tips = tips or {}
     parts, missing = [], []
     for url in (u.strip() for u in story.source_urls if (u or '').strip()):
         path = cache_path(url)
@@ -167,7 +154,6 @@ def _unsupported(line: str, text: str) -> list[str]:
     """`unsupported_tokens`, without its cap of eight: that cap is right for
     a tip sheet a person skims and wrong for a count, where the ninth missing
     word is exactly what says the page is not this story."""
-    from scripts.fetch_daily_news import unsupported_tokens, UNCHECKABLE
     import unicodedata
     line = unicodedata.normalize('NFC', line)
     text = unicodedata.normalize('NFC', text)
@@ -184,7 +170,6 @@ def _unsupported(line: str, text: str) -> list[str]:
 
 def carries(story: Story, text: str) -> bool:
     """Does `text` look like an article about this story at all?"""
-    from scripts.fetch_daily_news import _TOKEN, UNCHECKABLE
     line = ' '.join(filter(None, [story.headline, story.deck]))
     toks = set(_TOKEN.findall(line))
     if len(toks) < 3:
@@ -199,8 +184,6 @@ def check(story: Story, claims: list[dict] | None = None,
           tips: dict[str, str] | None = None, index: int | None = None
           ) -> FactResult:
     """Every figure and name in every published line, against the source."""
-    from scripts.fetch_daily_news import UNCHECKABLE
-
     res = FactResult(story.headline, 'grounded')
     if not [u for u in story.source_urls if (u or '').strip()]:
         res.state = 'own' if OWN_REPORTING in story.sources else 'uncheckable'
@@ -233,7 +216,6 @@ def check(story: Story, claims: list[dict] | None = None,
             bucket = res.figures if _FIGURE.search(tok) else res.names
             if (fld, tok) not in bucket:
                 bucket.append((fld, tok))
-    from scripts.fetch_daily_news import _TOKEN
     checked = sum(len(_TOKEN.findall(line)) for _, line in _lines(story))
     wrong = len(res.figures) + len(res.names)
     if (not res.cross_script and wrong >= MISMATCH_MIN_TOKENS
@@ -247,8 +229,7 @@ def check(story: Story, claims: list[dict] | None = None,
 def check_edition(edition: Edition, edition_path: str | None = None
                   ) -> list[FactResult]:
     claims = load_ledger(edition_path)
-    tips = _tip_bodies()
-    return [check(st, claims, tips, i)
+    return [check(st, claims, None, i)
             for i, st in enumerate(edition.stories, 1)]
 
 

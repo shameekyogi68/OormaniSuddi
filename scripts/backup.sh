@@ -5,8 +5,8 @@
 #   bash scripts/backup.sh --status     when did each copy last happen
 #   bash scripts/backup.sh --install    run it nightly at 22:30 via launchd
 #
-# Git covers everything it can: the code, the fonts, the stock library, the
-# licensed beds, the editions. Pushing is the offsite copy of all of that.
+# Git covers everything it can: the code, the fonts, the licensed beds, the
+# editions. Pushing is the offsite copy of all of that.
 #
 # This script covers the ONE thing git deliberately does not:
 #
@@ -96,8 +96,8 @@ case "${1:-run}" in
     [ -n "$FULLX" ] && echo "  full image  $(basename "$FULLX")" \
                     || echo "  full image  ⚠️  never run — 'bash scripts/backup.sh --full'"
     echo
-    echo "  git holds the code, fonts, stock and beds. This holds archive/ —"
-    echo "  the published record, which git deliberately does not carry."
+    echo "  git holds the code, fonts and beds. This holds archive/ and the"
+    echo "  pasted sources — the published record, which git does not carry."
     echo
     exit 0
     ;;
@@ -144,7 +144,7 @@ if [ "$FULL" = "1" ]; then
   KIND="full"
   # Everything needed to rebuild on a machine that has never seen this repo,
   # for the case where GitHub is also unreachable.
-  CANDIDATES=(archive editions assets/stock assets/bgm_options
+  CANDIDATES=(archive editions inbox/sources assets/bgm_options
               assets/LICENCES.json assets/pronunciation.json fonts
               brand templates scripts docs tests render.py requirements.txt
               AGENTS.md CLAUDE.md STANDARDS.md)
@@ -152,7 +152,7 @@ else
   ARCHIVE="$LOCAL/oormani-$STAMP.tar.gz"
   KIND="daily"
   # Only what git does not have. Everything else is one `git clone` away.
-  CANDIDATES=(archive editions/greetings/calendar.json)
+  CANDIDATES=(archive inbox/sources editions/greetings/calendar.json)
 fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S')  backup ($KIND)"
@@ -171,7 +171,7 @@ tar -czf "$ARCHIVE" "${TARGETS[@]}" 2>/dev/null
 SIZE="$(du -h "$ARCHIVE" | cut -f1)"
 echo "  local     $ARCHIVE  ($SIZE)"
 if [ "$FULL" = "0" ]; then
-  echo "            (archive/ only — the code, fonts, stock and beds are in git)"
+  echo "            (archive/ and inbox/sources/ — the code, fonts and beds are in git)"
 fi
 
 # Prune each kind separately — a full image should outlive a fortnight of

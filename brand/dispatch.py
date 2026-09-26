@@ -1,32 +1,44 @@
 """
-ಊರ್ಮನಿ ಸುದ್ದಿ — who should be working right now, and why. D89.
-===============================================================
-Twelve specialist agents live in `.claude/agents/`. An agent nobody remembers
-to call is an agent that does not exist, so this module reads the state of
-the newsroom — editions, kept sources, gate reports, the calendar, the
-complaint clocks, the backups — and says which agents are due, for what, in
-which wave. Nothing here calls a model; it is arithmetic over files, so it
-is fast enough to run at the start of every session and after every render.
+ಊರ್ಮನಿ ಸುದ್ದಿ — who should be working right now, and why. D89, D92.
+====================================================================
+Ten specialist agents live in `.claude/agents/` (their shared rules are in
+`.claude/agents/_CONVENTIONS.md`, which is not an agent). An agent nobody
+remembers to call is an agent that does not exist, so this module reads the
+state of the newsroom — editions, kept sources, receipts, gate reports, the
+complaint clocks — and says which agents are due, for what, in which wave.
+Nothing here calls a model; it is arithmetic over files.
 
-Two kinds of trigger:
+The production path, in waves (tasks in one wave run in parallel):
 
-  * **Proactive** — something is coming or missing: no edition yet today, a
-    festival in three days, no trend sheet, backups going stale, the weekly
-    review due.
-  * **Reactive** — something happened: the gate failed with a code, a source
-    does not carry its story, a crime or death story entered the edition, a
-    reader's complaint is running out of clock, a package was rendered and
-    nobody has looked at it.
+  0  intake-editor      an edition has a story with no `segment` (D92)
+     corrections-officer  a complaint clock is running, or a known error is
+                        uncorrected
+  1  fact-checker, legal-standards      one per story (legal: risky ones)
+  2  kannada-editor     one per story
+     picture-editor     one per story that needs a picture checked or briefed
+  3  (after render)     package-inspector, one per format in out/<stem>
+                        (roundup, saara, mukhya_N) · social-writer caption
+                        audit · gate-doctor when the gate HELD. The code
+                        owners are NOT dispatched beside the doctor: it names
+                        them in its receipt.
+
+**Ops** — planning-editor (weekly review, or on request) and systems-steward
+(weekly, or health red) — are listed separately and never mixed into the
+production waves.
+
+**Person** tasks are what no agent may do: verify a story (`verified_by`),
+answer "real photo, or generate?" (`photo_plan`), send the photograph, sign
+off.
 
 **Receipts.** Every agent files its report with
-`python3 scripts/dispatch.py receipt …`, which stamps it with a hash of what
-it looked at (the story, minus who verified it). Change the story and the
-receipt no longer matches, so the agent is due again; leave it alone and the
-work is never repeated. A receipt whose verdict is BLOCK is surfaced to the
-person — no agent can clear another agent's block.
+`python3 scripts/dispatch.py receipt …`, stamped with a hash of what it
+looked at. Each desk hashes only what its work depends on: the fact and legal
+desks hash the fact-bearing fields, so assigning a segment or adding a photo
+does not send a story back to them; a copy edit does. A receipt whose
+verdict is BLOCK is surfaced to the person — no agent clears another's block.
 
-Routing of gate codes to agents lives in `CODE_AGENT`, one line per code
-family, beside `brand/codes.py :: OWNER` which says the same thing for people.
+Routing of gate codes to agents lives in `CODE_AGENT`, beside
+`brand/codes.py :: OWNER` which says the same thing for people.
 """
 from __future__ import annotations
 
@@ -36,110 +48,165 @@ import json
 import os
 import re
 from dataclasses import dataclass, field, asdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTS_DIR = os.path.join(ROOT, '.claude', 'agents')
 RECEIPTS = os.path.join(ROOT, 'inbox', 'receipts')
+CONVENTIONS = '_CONVENTIONS.md'   # shared rules; not an agent
 
 # Every agent, what kind it is, and the stage it serves. The test suite holds
-# this table and `.claude/agents/*.md` to each other.
+# this table and `.claude/agents/*.md` (minus _CONVENTIONS.md) to each other.
 ROSTER: dict[str, dict] = {
-    'news-scout':          {'kind': 'proactive', 'stage': 'intake'},
-    'trend-scout':         {'kind': 'proactive', 'stage': 'intake'},
-    'planning-editor':     {'kind': 'proactive', 'stage': 'planning'},
-    'systems-steward':     {'kind': 'proactive', 'stage': 'operations'},
-    'fact-checker':        {'kind': 'reactive',  'stage': 'desk'},
-    'legal-standards':     {'kind': 'reactive',  'stage': 'desk'},
-    'kannada-editor':      {'kind': 'reactive',  'stage': 'desk'},
-    'picture-editor':      {'kind': 'reactive',  'stage': 'picture'},
-    'social-writer':       {'kind': 'reactive',  'stage': 'package'},
-    'package-inspector':   {'kind': 'reactive',  'stage': 'package'},
-    'gate-doctor':         {'kind': 'reactive',  'stage': 'gate'},
-    'corrections-officer': {'kind': 'reactive',  'stage': 'after'},
+    'intake-editor':       {'kind': 'reactive', 'stage': 'intake'},
+    'fact-checker':        {'kind': 'reactive', 'stage': 'desk'},
+    'legal-standards':     {'kind': 'reactive', 'stage': 'desk'},
+    'kannada-editor':      {'kind': 'reactive', 'stage': 'desk'},
+    'picture-editor':      {'kind': 'reactive', 'stage': 'picture'},
+    'package-inspector':   {'kind': 'reactive', 'stage': 'package'},
+    'social-writer':       {'kind': 'reactive', 'stage': 'package'},
+    'gate-doctor':         {'kind': 'reactive', 'stage': 'gate'},
+    'corrections-officer': {'kind': 'reactive', 'stage': 'after'},
+    'planning-editor':     {'kind': 'ops',      'stage': 'planning'},
+    'systems-steward':     {'kind': 'ops',      'stage': 'operations'},
 }
 
-# A failing gate code, routed to the agent that can do the work. People are
-# routed by brand/codes.py :: OWNER; this is the same map for the team.
+# A failing gate code, routed to the agent that can do the work.
 CODE_AGENT = {
     'FACT': 'fact-checker', 'SRC': 'fact-checker', 'LAW': 'legal-standards',
     'IMG': 'picture-editor', 'TYPE': 'package-inspector',
     'SND': 'kannada-editor', 'VID': 'package-inspector', 'PKG': 'gate-doctor',
-    'PUB': 'social-writer', 'OPS': 'systems-steward',
+    'PUB': 'social-writer', 'OPS': 'systems-steward', 'DUP': 'intake-editor',
 }
+
+# D92: one story, one format.
+SEGMENTS = ('speed', 'saara', 'mukhya')
+PHOTO_PLANS = ('', 'real', 'ai')
+# The file-name prefix each format renders under in out/<stem>/.
+_FORMAT_FILE = re.compile(r'^(roundup|saara|mukhya(?:_\d+)?)(?=[_.\-]|$)')
 
 # Stories a legal eye reads before anyone else polishes them.
 RISK_WORDS = ('ಸಾವು', 'ಮೃತ', 'ಆತ್ಮಹತ್ಯೆ', 'ಕೊಲೆ', 'ಅತ್ಯಾಚಾರ', 'ಬಂಧನ', 'ಆರೋಪ',
               'ಶವ', 'ಬಾಲಕ', 'ಬಾಲಕಿ', 'ಅಪ್ರಾಪ್ತ', 'ನಿಧನ')
 
-# Verification fields change when a person signs; the story itself has not.
+# Days whose published stories carried claims their sources did not contain,
+# with no correction logged (D84, D88). The corrections desk raises them
+# until a case about each day is in the ledger.
+KNOWN_ERRATA = ('2026-09-23', '2026-09-24')
+
+# ── What each desk's work depends on ────────────────────────────────────────
+# The fact and legal desks read the fact-bearing lines and nothing else:
+# segment, photo_plan, photo, hook, template and verification are not facts.
+FACT_FIELDS = ('headline', 'deck', 'points', 'numbers', 'quote', 'sources',
+               'source_urls', 'location', 'dateline', 'category',
+               'involves_minor', 'sexual_offence', 'convicted',
+               'published_at', 'reel_line')
+# The Kannada desk reads every line a reader sees or hears, for its format.
+COPY_FIELDS = FACT_FIELDS + ('hook', 'takeaway', 'reel_points', 'reel_support',
+                             'narration_script', 'segment')
+# The picture desk reads the picture, the plan for it, and what it must show.
+PICTURE_FIELDS = ('photo', 'photo_plan', 'segment', 'headline', 'location',
+                  'category', 'involves_minor', 'sexual_offence')
+# Verification changes when a person signs; the story itself has not.
 _VOLATILE = {'verified_by', 'verified_at'}
 
 
 @dataclass
 class Task:
     agent: str
-    kind: str          # proactive | reactive
+    kind: str          # reactive | ops
     wave: int          # 0 first; tasks in one wave run in parallel
     reason: str
-    target: str = ''   # edition path, "edition#3", out dir, or ''
+    target: str = ''   # edition path, out dir, or ''
     story: int = 0
     urgent: bool = False
+    part: str = ''     # a format in out/<stem>: roundup, saara, mukhya_N
 
 
 @dataclass
 class Plan:
     day: str
     tasks: list[Task] = field(default_factory=list)
+    ops: list[Task] = field(default_factory=list)     # never production waves
     person: list[str] = field(default_factory=list)   # only a human can do these
 
     def add(self, *a, **kw):
         t = Task(*a, **kw)
-        key = (t.agent, t.target, t.story)
-        if key not in {(x.agent, x.target, x.story) for x in self.tasks}:
-            self.tasks.append(t)
+        into = self.ops if ROSTER.get(t.agent, {}).get('kind') == 'ops' \
+            else self.tasks
+        key = (t.agent, t.target, t.story, t.part)
+        if key not in {(x.agent, x.target, x.story, x.part) for x in into}:
+            into.append(t)
 
     def waves(self) -> dict[int, list[Task]]:
         out: dict[int, list[Task]] = {}
-        for t in sorted(self.tasks, key=lambda t: (t.wave, not t.urgent, t.agent)):
+        for t in sorted(self.tasks, key=lambda t: (t.wave, not t.urgent, t.agent,
+                                                   t.story, t.part)):
             out.setdefault(t.wave, []).append(t)
         return out
 
     def to_dict(self) -> dict:
         return {'day': self.day, 'tasks': [asdict(t) for t in self.tasks],
-                'person': self.person}
+                'ops': [asdict(t) for t in self.ops], 'person': self.person}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  RECEIPTS
 # ─────────────────────────────────────────────────────────────────────────────
 
-def story_hash(story: dict) -> str:
-    body = {k: v for k, v in story.items() if k not in _VOLATILE}
-    raw = json.dumps(body, ensure_ascii=False, sort_keys=True)
+def _digest(body) -> str:
+    raw = json.dumps(body, ensure_ascii=False, sort_keys=True, default=str)
     return hashlib.sha1(raw.encode('utf-8')).hexdigest()[:12]
 
 
-def edition_hash(edition: dict) -> str:
-    return hashlib.sha1(''.join(story_hash(s) for s in edition.get('stories', []))
+def story_hash(story: dict) -> str:
+    """Everything but who verified it."""
+    return _digest({k: v for k, v in story.items() if k not in _VOLATILE})
+
+
+def fact_hash(story: dict) -> str:
+    """Only the fact-bearing fields: a segment or a photo is not a fact."""
+    return _digest({k: story.get(k) for k in FACT_FIELDS if k in story})
+
+
+def copy_hash(story: dict) -> str:
+    return _digest({k: story.get(k) for k in COPY_FIELDS if k in story})
+
+
+def picture_hash(story: dict) -> str:
+    return _digest({k: story.get(k) for k in PICTURE_FIELDS if k in story})
+
+
+# Which hash stamps which desk's receipt.
+HASH_OF = {'fact-checker': fact_hash, 'legal-standards': fact_hash,
+           'kannada-editor': copy_hash, 'picture-editor': picture_hash}
+
+
+def hash_for(agent: str, story: dict) -> str:
+    return HASH_OF.get(agent, story_hash)(story)
+
+
+def edition_hash(edition: dict, fn=story_hash) -> str:
+    return hashlib.sha1(''.join(fn(s) for s in edition.get('stories', []))
                         .encode()).hexdigest()[:12]
 
 
 def _stem(path: str) -> str:
-    return os.path.splitext(os.path.basename(path))[0]
+    return os.path.splitext(os.path.basename(path.rstrip('/')))[0]
 
 
-def receipt_path(agent: str, stem: str, story: int = 0) -> str:
-    name = f'{agent}-{story}.md' if story else f'{agent}.md'
+def receipt_path(agent: str, stem: str, story: int = 0, part: str = '') -> str:
+    name = (f'{agent}-{story}.md' if story else
+            f'{agent}@{part}.md' if part else f'{agent}.md')
     return os.path.join(RECEIPTS, stem, name)
 
 
 _HEAD = re.compile(r'<!-- receipt (.*?) -->')
 
 
-def read_receipt(agent: str, stem: str, story: int = 0) -> dict:
+def read_receipt(agent: str, stem: str, story: int = 0, part: str = '') -> dict:
     try:
-        with open(receipt_path(agent, stem, story), encoding='utf-8') as fh:
+        with open(receipt_path(agent, stem, story, part), encoding='utf-8') as fh:
             m = _HEAD.search(fh.readline())
     except OSError:
         return {}
@@ -149,13 +216,15 @@ def read_receipt(agent: str, stem: str, story: int = 0) -> dict:
 
 
 def write_receipt(agent: str, edition_path: str, verdict: str, body: str,
-                  story: int = 0) -> str:
+                  story: int = 0, part: str = '') -> str:
     """File an agent's report, stamped with a hash of what it looked at."""
     if agent not in ROSTER:
         raise ValueError(f'unknown agent {agent!r}; roster: {sorted(ROSTER)}')
     verdict = verdict.upper()
     if verdict not in ('PASS', 'FIX', 'BLOCK', 'HELD', 'DONE'):
         raise ValueError('verdict is PASS, FIX, BLOCK, HELD or DONE')
+    if part and not _FORMAT_FILE.match(part):
+        raise ValueError(f'format is roundup, saara or mukhya_N, not {part!r}')
     stem, h = _stem(edition_path), ''
     if edition_path.endswith('.json') and os.path.exists(edition_path):
         with open(edition_path, encoding='utf-8') as fh:
@@ -164,12 +233,13 @@ def write_receipt(agent: str, edition_path: str, verdict: str, body: str,
         if story:
             if not 1 <= story <= len(stories):
                 raise ValueError(f'story {story} is not in {edition_path}')
-            h = story_hash(stories[story - 1])
+            h = hash_for(agent, stories[story - 1])
         else:
-            h = edition_hash(ed)
-    path = receipt_path(agent, stem, story)
+            h = edition_hash(ed, HASH_OF.get(agent, story_hash))
+    path = receipt_path(agent, stem, story, part)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    head = (f'<!-- receipt agent={agent} story={story} hash={h or "-"} '
+    head = (f'<!-- receipt agent={agent} story={story} '
+            f'{"format=" + part + " " if part else ""}hash={h or "-"} '
             f'verdict={verdict} at={datetime.now().isoformat(timespec="seconds")} -->')
     with open(path, 'w', encoding='utf-8') as fh:
         fh.write(head + '\n\n' + body.strip() + '\n')
@@ -185,8 +255,20 @@ def _receipt_current(agent: str, stem: str, h: str, story: int = 0) -> dict:
 #  THE PLAN
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Folders under editions/ that never hold a day's news.
+NOT_DAILY = ('greetings',)
+
+
 def _editions_for(day: str) -> list[str]:
-    return sorted(p for p in glob.glob(os.path.join(ROOT, 'editions', f'{day}*.json')))
+    """The day's editions: editions/<day>*.json, and editions/<sub>/<day>*.json
+    for a subfolder that holds daily editions — never editions/greetings/."""
+    base = os.path.join(ROOT, 'editions')
+    found = glob.glob(os.path.join(base, f'{day}*.json'))
+    for sub in sorted(glob.glob(os.path.join(base, '*', ''))):
+        if os.path.basename(os.path.dirname(sub)) in NOT_DAILY:
+            continue
+        found += glob.glob(os.path.join(sub, f'{day}*.json'))
+    return sorted(found)
 
 
 def _risky(st: dict) -> bool:
@@ -194,73 +276,177 @@ def _risky(st: dict) -> bool:
             or st.get('sexual_offence'):
         return True
     text = ' '.join(filter(None, [st.get('headline', ''), st.get('deck', ''),
-                                  *st.get('points', [])]))
+                                  st.get('reel_line', ''), *st.get('points', [])]))
     return any(w in text for w in RISK_WORDS)
 
 
+def _photo(sd: dict) -> dict:
+    p = sd.get('photo')
+    if isinstance(p, str):
+        return {'path': p} if p else {}
+    return p or {}
+
+
+def _picture_tasks(plan: Plan, rel: str, stem: str, i: int, sd: dict) -> None:
+    """D92 point 3: real photographs first, AI only when the editor said so."""
+    seg = sd.get('segment', '')
+    photo, pplan = _photo(sd), sd.get('photo_plan', '') or ''
+    if seg == 'saara':
+        if photo:
+            plan.person.append(f'{rel} story {i} is ಸುದ್ದಿ ಸಾರ but carries a '
+                               f'photo — saara never shows one: drop it, or '
+                               f'make the story mukhya')
+        return
+    if seg not in ('mukhya', 'speed'):
+        return
+    need = 'ಮುಖ್ಯ ಸುದ್ದಿ cannot render without one (IMG-04)' if seg == 'mukhya' \
+        else 'optional — ಸ್ಪೀಡ್ ನ್ಯೂಸ್ can run a type-only frame'
+    h = picture_hash(sd)
+    r = _receipt_current('picture-editor', stem, h, i)
+    if r.get('verdict') == 'BLOCK':
+        plan.person.append(f'{rel} story {i}: picture desk BLOCKED it — read '
+                           f'{os.path.relpath(receipt_path("picture-editor", stem, i), ROOT)}')
+        return
+    if photo:
+        if not r:
+            what = ('the generated picture: blind description, no text, no '
+                    'face standing in for a named person'
+                    if photo.get('nature') == 'ai' else
+                    'the editor\'s photograph: crops 4:5 / 9:16, faces of '
+                    'minors or victims, blind description')
+            plan.add('picture-editor', 'reactive', 2, f'check {what}', rel, story=i)
+        return
+    if pplan == 'ai':
+        if not r:
+            plan.add('picture-editor', 'reactive', 2,
+                     'the editor said generate — write the single-frame brief, '
+                     'then check the result blind', rel, story=i)
+    elif pplan == 'real':
+        plan.person.append(f'{rel} story {i}: waiting for the editor\'s '
+                           f'photograph ({need})')
+    else:
+        plan.person.append(f'{rel} story {i}: ask the editor — real photo, or '
+                           f'generate? Record the answer as photo_plan '
+                           f'"real" / "ai" ({need})')
+
+
+def _load_stories(path: str, stories: list[dict]):
+    """Story objects for the mechanical fact pass, one per raw story, or None
+    where a story does not validate. Returns (stories, first error)."""
+    from .content import Edition, Story
+    try:
+        return list(Edition.load(path).stories), ''
+    except Exception as e:
+        err = str(e)[:120] or type(e).__name__
+    out = []
+    for sd in stories:
+        # A story the intake desk has not given a segment yet is still worth
+        # a fact pass; the segment is not a fact, so any value will do here.
+        probe = sd if sd.get('segment') in SEGMENTS else {**sd, 'segment': 'saara'}
+        try:
+            out.append(Story.from_dict(probe))
+        except Exception:
+            out.append(None)
+    return out, err
+
+
 def _edition_tasks(plan: Plan, path: str) -> None:
-    from .content import Edition
     from . import factcheck, sourcing
     stem = _stem(path)
     rel = os.path.relpath(path, ROOT)
     with open(path, encoding='utf-8') as fh:
         raw = json.load(fh)
     stories = raw.get('stories', [])
+    objs, err = _load_stories(path, stories)
     try:
-        ed = Edition.load(path)
-    except Exception as e:
-        plan.add('gate-doctor', 'reactive', 0,
-                 f'{rel} does not validate: {str(e)[:120]}', rel, urgent=True)
-        return
-    claims = factcheck.load_ledger()
-    rendered = os.path.isdir(os.path.join(ROOT, 'out', stem))
+        claims = factcheck.load_ledger(path)
+    except Exception:
+        claims = []
 
-    all_pass = True
-    for i, (st, sd) in enumerate(zip(ed.stories, stories), 1):
-        h = story_hash(sd)
-        fr = factcheck.check(st, claims, index=i)
-        probs = sourcing.source_problems(st)
-        receipt = _receipt_current('fact-checker', stem, h, i)
-        if probs or fr.blocking or fr.state == 'uncheckable' or not receipt:
-            all_pass = False
+    no_segment = [i for i, sd in enumerate(stories, 1)
+                  if sd.get('segment', '') not in SEGMENTS]
+    if err and not no_segment:
+        # A missing segment is the intake desk's work, not a fault to
+        # diagnose; anything else that stops the edition loading is.
+        plan.add('gate-doctor', 'reactive', 0,
+                 f'{rel} does not validate: {err}', rel, urgent=True)
+    if no_segment:
+        plan.add('intake-editor', 'reactive', 0,
+                 f'{len(no_segment)} of {len(stories)} stories have no segment '
+                 f'({", ".join(map(str, no_segment[:8]))}) — split the paste, keep '
+                 f'each source, propose mukhya / speed / saara', rel)
+
+    for i, (st, sd) in enumerate(zip(objs, stories), 1):
+        fh_ = fact_hash(sd)
+        receipt = _receipt_current('fact-checker', stem, fh_, i)
+        probs, fr = [], None
+        if st is not None:
+            try:
+                fr = factcheck.check(st, claims, index=i)
+                probs = sourcing.source_problems(st)
+            except Exception:
+                fr = None
+        mech_bad = bool(probs) or (fr is not None and (
+            fr.blocking or fr.state == 'uncheckable'))
+        if mech_bad or not receipt:
             why = (probs[0][1][:90] if probs else
-                   'a figure is not in the source' if fr.figures else
-                   'the source does not carry the story' if fr.state == 'mismatch' else
-                   'no source text held' if fr.state == 'uncheckable' else
+                   'no kept source text for it' if fr is not None and fr.state == 'uncheckable' else
+                   'the kept source does not carry the story' if fr is not None and fr.state == 'mismatch' else
+                   'a figure is not in the kept source' if fr is not None and fr.figures else
                    'not yet checked in this form')
             plan.add('fact-checker', 'reactive', 1, why, rel, story=i)
         elif receipt.get('verdict') == 'BLOCK':
-            all_pass = False
-            plan.person.append(f'{rel} story {i}: fact desk BLOCKED it — '
-                               f'read {os.path.relpath(receipt_path("fact-checker", stem, i), ROOT)}')
+            plan.person.append(f'{rel} story {i}: fact desk BLOCKED it — read '
+                               f'{os.path.relpath(receipt_path("fact-checker", stem, i), ROOT)}')
         if _risky(sd):
-            r = _receipt_current('legal-standards', stem, h, i)
+            r = _receipt_current('legal-standards', stem, fh_, i)
             if not r:
                 plan.add('legal-standards', 'reactive', 1,
                          'crime / death / minor / obituary — read as the '
                          'lawyer for the person named', rel, story=i)
             elif r.get('verdict') == 'BLOCK':
                 plan.person.append(f'{rel} story {i}: legal-standards BLOCKED it')
-        if not sd.get('photo'):
-            plan.add('picture-editor', 'reactive', 2,
-                     'no photograph; every carousel slide needs one (IMG-04)',
-                     rel, story=i)
+        if sd.get('segment', '') in SEGMENTS:
+            if not _receipt_current('kannada-editor', stem, copy_hash(sd), i):
+                plan.add('kannada-editor', 'reactive', 2,
+                         f'{sd["segment"]} copy not read in this form', rel, story=i)
+            _picture_tasks(plan, rel, stem, i, sd)
         if not sd.get('verified_by'):
             plan.person.append(f'{rel} story {i}: open the source, then '
                                f'scripts/verify.py {rel} --story {i} --by "<name>"')
 
-    eh = edition_hash(raw)
-    if not rendered:
-        if not _receipt_current('kannada-editor', stem, eh):
-            plan.add('kannada-editor', 'reactive', 2,
-                     'copy has changed since its last Kannada read', rel)
-        if all_pass and not _receipt_current('social-writer', stem, eh):
-            plan.add('social-writer', 'reactive', 2,
-                     'facts passed — hooks, reel lines, titles', rel)
+
+def formats_in(outdir: str) -> dict[str, float]:
+    """Each rendered format in a render folder (roundup, saara, mukhya_N) and
+    the time of its newest file, _review/ frames included."""
+    out: dict[str, float] = {}
+    for d in (outdir, os.path.join(outdir, '_review')):
+        try:
+            names = os.listdir(d)
+        except OSError:
+            continue
+        for n in names:
+            m = _FORMAT_FILE.match(n)
+            if not m:
+                continue
+            t = os.path.getmtime(os.path.join(d, n))
+            out[m.group(1)] = max(out.get(m.group(1), 0.0), t)
+    return out
+
+
+def _since(agent: str, stem: str, when: float, part: str = '') -> dict:
+    r = read_receipt(agent, stem, 0, part)
+    try:
+        # receipts are stamped to the second; a file written in that same
+        # second is not newer than the look that followed it
+        ok = datetime.fromisoformat(r['at']).timestamp() >= int(when)
+    except (KeyError, ValueError):
+        ok = False
+    return r if ok else {}
 
 
 def _package_tasks(plan: Plan, outdir: str) -> None:
-    stem = os.path.basename(outdir)
+    stem = _stem(outdir)
     rel = os.path.relpath(outdir, ROOT)
     rep_path = os.path.join(outdir, 'review_report.json')
     try:
@@ -268,96 +454,102 @@ def _package_tasks(plan: Plan, outdir: str) -> None:
             rep = json.load(fh)
     except (OSError, ValueError):
         return
-    fails = [f for f in rep.get('findings', []) if f.get('severity') == 'fail']
-    if fails:
-        codes = sorted({f['code'] for f in fails})
-        plan.add('gate-doctor', 'reactive', 3,
-                 f'gate HELD on {", ".join(codes)}', rel, urgent=True)
-        for c in codes:
-            agent = CODE_AGENT.get(c.split('-')[0])
-            if agent and agent != 'gate-doctor':
-                plan.add(agent, 'reactive', 3, f'owns {c} on the held gate', rel)
     rendered_at = os.path.getmtime(rep_path)
+    fails = [f for f in rep.get('findings', []) if f.get('severity') == 'fail']
+    if fails and not _since('gate-doctor', stem, rendered_at):
+        codes = sorted({f['code'] for f in fails})
+        owners = sorted({CODE_AGENT.get(c.split('-')[0], '?') for c in codes}
+                        - {'gate-doctor'})
+        # The owners are not launched beside the doctor: it finds the root
+        # cause and names them in its receipt; they go in the next wave.
+        plan.add('gate-doctor', 'reactive', 3,
+                 f'gate HELD on {", ".join(codes)} — names the owners '
+                 f'({", ".join(owners) or "none"}) in its receipt', rel, urgent=True)
 
-    def since_render(agent: str) -> bool:
-        r = read_receipt(agent, stem)
-        return bool(r.get('at')) and \
-            datetime.fromisoformat(r['at']).timestamp() >= rendered_at
-
-    if not since_render('package-inspector'):
-        plan.add('package-inspector', 'reactive', 3,
-                 'rendered and not yet looked at, frame by frame', rel)
-    elif read_receipt('package-inspector', stem).get('verdict') == 'BLOCK':
-        plan.person.append(f'{rel}: package-inspector BLOCKED a frame — read '
-                           f'{os.path.relpath(receipt_path("package-inspector", stem), ROOT)}')
-    if not since_render('social-writer'):
-        plan.add('social-writer', 'reactive', 3,
-                 'post-render caption audit', rel)
+    for fmt, t in sorted(formats_in(outdir).items()):
+        r = _since('package-inspector', stem, t, fmt)
+        if not r:
+            plan.add('package-inspector', 'reactive', 3,
+                     'rendered and not yet looked at, frame by frame', rel,
+                     part=fmt)
+        elif r.get('verdict') == 'BLOCK':
+            plan.person.append(f'{rel} {fmt}: package-inspector BLOCKED a frame — '
+                               f'read {os.path.relpath(receipt_path("package-inspector", stem, 0, fmt), ROOT)}')
+    captions = glob.glob(os.path.join(outdir, '*_caption.txt'))
+    if captions:
+        newest = max(os.path.getmtime(c) for c in captions)
+        if not _since('social-writer', stem, newest):
+            plan.add('social-writer', 'reactive', 3,
+                     f'caption audit — {len(captions)} caption file(s)', rel)
     if not os.path.exists(os.path.join(outdir, 'SIGNOFF.json')) and not fails:
-        plan.person.append(f'{rel}: look at _review/, listen to one reel, then '
-                           f'scripts/sign_off.py {rel} --by "<name>"')
+        plan.person.append(f'{rel}: look at _review/, listen to the ಸ್ಪೀಡ್ '
+                           f'ನ್ಯೂಸ್ once, then scripts/sign_off.py {rel} --by "<name>"')
 
 
-def _calendar_tasks(plan: Plan, today: date) -> None:
-    try:
-        import importlib
-        wo = importlib.import_module('scripts.whats_on')
-        dated, lunar, seasons = wo.upcoming(7)
-    except Exception:
-        return
-    soon = [o for _, d, o in dated if d <= 3] + [o for _, d, o in lunar if d <= 7]
-    starting = [s for _, d, s, st in seasons if st == 'starts' and d <= 3]
-    plan_file = os.path.join(ROOT, 'inbox', f'plan_{today.isoformat()}.md')
-    if (soon or starting) and not os.path.exists(plan_file):
-        names = [o.get('name_en') or o.get('name') or o.get('id', '?')
-                 for o in soon + starting]
-        plan.add('planning-editor', 'proactive', 0,
-                 'coming up: ' + ', '.join(str(n) for n in names[:4]),
-                 os.path.relpath(plan_file, ROOT))
-    report = os.path.join(ROOT, 'archive', 'metrics_report.md')
-    stale = (not os.path.exists(report) or
-             datetime.now().timestamp() - os.path.getmtime(report) > 7 * 86400)
-    week_file = os.path.join(ROOT, 'inbox', f'week_{today.isocalendar()[1]:02d}.md')
-    if stale and not os.path.exists(week_file):
-        plan.add('planning-editor', 'proactive', 0,
-                 'weekly review due: metrics, what worked, next week',
-                 os.path.relpath(week_file, ROOT))
-
-
-def _ops_tasks(plan: Plan, today: date) -> None:
+def _corrections_tasks(plan: Plan) -> None:
     from . import corrections
     try:
         late = corrections.overdue()
     except Exception:
         late = {}
+    try:
+        rows = corrections.current()
+    except Exception:
+        rows = {}
     if late.get('unacknowledged') or late.get('unresolved'):
         n = len(late.get('unacknowledged', [])) + len(late.get('unresolved', []))
         plan.add('corrections-officer', 'reactive', 0,
                  f'{n} complaint(s) past a statutory clock', urgent=True)
-    else:
-        try:
-            open_rows = [r for r in corrections.current().values()
-                         if r.get('state') not in ('closed', 'published', 'rejected')]
-        except Exception:
-            open_rows = []
-        if open_rows:
-            plan.add('corrections-officer', 'reactive', 0,
-                     f'{len(open_rows)} open complaint(s) — the clocks are running')
+        return
+    open_rows = [r for r in rows.values()
+                 if r.get('state') not in ('closed', 'published', 'rejected')]
+    if open_rows:
+        plan.add('corrections-officer', 'reactive', 0,
+                 f'{len(open_rows)} open complaint(s) — the clocks are running')
+        return
+    logged = {str(r.get('about', ''))[:10] for r in rows.values()}
+    missing = [d for d in KNOWN_ERRATA if d not in logged]
+    if missing:
+        plan.add('corrections-officer', 'reactive', 0,
+                 f'unsupported claims published {", ".join(missing)} (D84, D88) '
+                 f'— no correction logged')
+
+
+def _ops_tasks(plan: Plan, today: date) -> None:
+    """Planning and the machine: weekly, or when something is red. Never in
+    the production waves."""
+    report = os.path.join(ROOT, 'archive', 'metrics_report.md')
+    stale = (not os.path.exists(report) or
+             datetime.now().timestamp() - os.path.getmtime(report) > 7 * 86400)
+    week_file = os.path.join(ROOT, 'inbox', f'week_{today.isocalendar()[1]:02d}.md')
+    if stale and not os.path.exists(week_file):
+        plan.add('planning-editor', 'ops', 0,
+                 'weekly review due: metrics, what worked, next week',
+                 os.path.relpath(week_file, ROOT))
+
     steward_file = os.path.join(ROOT, 'logs', f'steward_{today.isoformat()}.md')
     if os.path.exists(steward_file):
         return
-    reasons = []
+    recent = False
+    for f in glob.glob(os.path.join(ROOT, 'logs', 'steward_*.md')):
+        try:
+            d = date.fromisoformat(os.path.basename(f)[8:18])
+        except ValueError:
+            continue
+        recent = recent or 0 <= (today - d).days < 7
+    reasons = [] if recent else ['weekly check due']
     try:
         import importlib
         h = importlib.import_module('scripts.health')
-        for fn in (h.check_fetch, h.check_backups, h.check_music, h.check_git):
-            for line in fn():
-                if line.lstrip().startswith(('✗', '!')):
-                    reasons.append(line.strip().lstrip('✗! ').split(' — ')[0])
+        for name in ('check_backups', 'check_music', 'check_git'):
+            fn = getattr(h, name, None)
+            for line in (fn() if fn else []):
+                if line.lstrip().startswith('✗'):
+                    reasons.append(line.strip().lstrip('✗ ').split('. ')[0][:70])
     except Exception as e:
         reasons.append(f'health check raised {type(e).__name__}')
     if reasons:
-        plan.add('systems-steward', 'proactive', 0,
+        plan.add('systems-steward', 'ops', 0,
                  '; '.join(dict.fromkeys(reasons))[:140],
                  os.path.relpath(steward_file, ROOT))
 
@@ -377,14 +569,9 @@ def plan(day: str | None = None, include_ops: bool = True) -> Plan:
     p = Plan(today.isoformat())
     eds = _editions_for(p.day)
     if not eds:
-        p.add('news-scout', 'proactive', 0,
-              f'no edition for {p.day} yet — find today\'s coastal news',
-              f'editions/{p.day}.json')
-    from . import trends
-    if not os.path.exists(trends.path_for(p.day)) or not \
-            _receipt_current('trend-scout', p.day, '-'):
-        p.add('trend-scout', 'proactive', 0 if not eds else 1,
-              'today\'s trend sheet has not been scouted', f'inbox/trends_{p.day}.json')
+        p.person.append(f'no edition for {p.day} yet — paste the day\'s news and '
+                        f'say what to make; the intake-editor turns it into '
+                        f'editions/{p.day}.json')
     for path in eds:
         _edition_tasks(p, path)
         out = os.path.join(ROOT, 'out', _stem(path))
@@ -393,26 +580,32 @@ def plan(day: str | None = None, include_ops: bool = True) -> Plan:
         owner = owner_of(out)
         rel = os.path.relpath(path, ROOT)
         if owner and owner != rel:
-            # D90: the folder is another edition's package. Inspecting it
-            # "for" this edition is how an explainer got checked as the news.
+            # D90: the folder is another edition's package.
             p.person.append(f'{os.path.relpath(out, ROOT)} holds {owner}, not '
                             f'{rel}. Move that package, then render {rel}.')
             continue
         _package_tasks(p, out)
-    _calendar_tasks(p, today)
     if include_ops:
+        _corrections_tasks(p)
         _ops_tasks(p, today)
     return p
 
 
+def _line(t: Task) -> str:
+    tgt = t.target + (f' story {t.story}' if t.story else '') + \
+        (f' [{t.part}]' if t.part else '')
+    flag = '‼ ' if t.urgent else ''
+    return f'    {flag}{t.agent:<20} {tgt} — {t.reason}'
+
+
 def brief(p: Plan, limit: int = 30) -> str:
     """The plan as the team lead reads it: waves, parallel within a wave."""
-    if not p.tasks and not p.person:
+    if not p.tasks and not p.person and not p.ops:
         return f'Team plan {p.day}: nothing due. Every receipt is current.'
-    lines = [f'Team plan {p.day} — {len(p.tasks)} agent task(s). Launch each '
+    lines = [f'Team plan {p.day} — {len(p.tasks)} production task(s). Launch each '
              f'wave as ONE message of Agent calls so it runs in parallel; one '
-             f'agent per story. Each agent files its report with '
-             f'`python3 scripts/dispatch.py receipt`.']
+             f'agent per story (per format after render). Each agent files its '
+             f'report with `python3 scripts/dispatch.py receipt`.']
     n = 0
     for wave, tasks in p.waves().items():
         lines.append(f'  wave {wave}:')
@@ -420,12 +613,13 @@ def brief(p: Plan, limit: int = 30) -> str:
             n += 1
             if n > limit:
                 break
-            tgt = f'{t.target} story {t.story}' if t.story else t.target
-            flag = '‼ ' if t.urgent else ''
-            lines.append(f'    {flag}{t.agent:<20} [{t.kind}] {tgt} — {t.reason}')
+            lines.append(_line(t))
     if n > limit:
         lines.append(f'    … and {n - limit} more (python3 scripts/dispatch.py)')
+    if p.ops:
+        lines.append('  ops (not on the production path — run when convenient):')
+        lines += [_line(t) for t in p.ops]
     if p.person:
         lines.append('  needs a person (no agent may do these):')
-        lines += [f'    · {x}' for x in dict.fromkeys(p.person)][:12]
+        lines += [f'    · {x}' for x in dict.fromkeys(p.person)][:16]
     return '\n'.join(lines)

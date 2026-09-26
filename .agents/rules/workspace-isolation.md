@@ -7,7 +7,7 @@ This project (`Oormani Suddi`) is an **isolated workspace perimeter**. Any AI mo
 ---
 
 ## 1. Absolute Boundary Containment (Directory Jail)
-- **Local Confinement Only**: All AI operations—including file reads, file writes, directory listings, code analysis, searches, and image generations—must strictly remain confined within the root directory of this project (`/Users/shameekyogi/Oormani Suddi`).
+- **Local Confinement Only**: All AI operations—including file reads, file writes, directory listings, code analysis, searches, and image generations—must strictly remain confined within the root directory of this project (`/Users/shameekyogi/My Apps/Oormani Suddi`).
 - **No External Path Access**: Under NO circumstances shall any AI access, view, read, modify, or create files in any location outside this project directory. Specifically prohibited locations include:
   - Parent directories (`../` or higher)
   - User home directory (`~`, `/Users/shameekyogi/`) and sibling directories (Desktop, Documents, Downloads, other projects)

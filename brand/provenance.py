@@ -101,7 +101,7 @@ def engines() -> dict[str, str]:
         'tts_voice': DEFAULT_VOICE if tts == 'edge' else 'kn-IN (Google Cloud)',
         'tts_tempo': '1.15',
         'text_model': _os.environ.get('OORMANI_TEXT_MODEL', 'gemini-2.5-flash'),
-        'image_source': 'stock library + chat-generated AI frames',
+        'image_source': "editor's photographs first; AI frames only when the editor said generate (D92)",
     }
 
 

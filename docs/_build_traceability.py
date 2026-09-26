@@ -39,6 +39,31 @@ UNTESTABLE = {
            'number while looking wrong',
 }
 
+# Decisions a later decision replaced. Their text stays in DECISIONS.md as the
+# record of why the system is the way it is; what they governed no longer
+# exists, so there is nothing left for a test to hold. Each says what retired it.
+RETIRED = {
+    'D9':  'D92 — the category rail went with the dark cards',
+    'D13': 'D92 — the full-bleed lead reel is gone; speed news frames a picture',
+    'D25': 'D92 — ಸುದ್ದಿ ಸಾರ is text only, by design',
+    'D32': 'D92 — no YouTube thumbnail is made',
+    'D34': 'D92 — no landscape format is made',
+    'D36': 'D92 — the lower-third belonged to the lead reel',
+    'D37': 'D92 — the 16:9 bulletin is gone',
+    'D38': 'D92 — no landscape format is made',
+    'D39': 'D92 — the lead-story reel is gone; the reel is speed news',
+    'D40': 'D92 — the 4K bulletin is gone',
+    'D44': 'D92 — the 16:9 bulletin is gone',
+    'D71': 'D92 — there is no scheduled fetch left to watch',
+    'D75': 'D92 — nothing scrapes listing pages any more; news is pasted',
+    'D76': 'D92 — there is no morning draft; the editor pastes the news',
+    'D80': 'D92 — the stock library and the morning draft are gone',
+    'D85': 'D92 — the stock library is gone',
+    'D91': 'D92 — the stock library is gone',
+    'D93': 'D92 — the dark carousel it governed is gone; ಸುದ್ದಿ ಸಾರ shows '
+           'the points, or the deck when there are none',
+}
+
 # Decisions the golden fingerprints guard without asserting.
 #
 # This is a WEAKER guarantee than a test and is recorded as its own category
@@ -52,17 +77,12 @@ GOLDEN_GUARDED = {
     'D3': 'no tracking on Kannada', 'D4': 'Latin falls back to Kannada',
     'D5': 'photographs fade their own alpha', 'D6': 'smoothstep scrim ramp',
     'D7': 'focal default (0.5, 0.42)', 'D8': 'grain is mandatory',
-    'D9': 'category colour only on the rail',
     'D10': 'hairlines, square corners, no border',
     'D11': 'layouts flow content', 'D12': 'item gaps exceed line gaps',
-    'D13': 'reels are full-bleed', 'D14': 'headline plus one supporting line',
+'D14': 'headline plus one supporting line',
     'D16': 'nothing cuts on a hard frame',
     'D24': 'translucent text on its own layer',
-    'D34': 'landscape is a different typographic problem',
     'D35': 'progress bar flush to the top edge',
-    'D36': 'a lower-third is a panel',
-    'D38': 'landscape spends width on the type',
-    'D40': 'the 4K bulletin is the same design at twice the size',
     'D64': 'brand rules are gilded, not stamped',
     'D65': 'the filmic highlight shoulder',
 }
@@ -131,6 +151,12 @@ def build() -> tuple[str, list[str]]:
         files = sorted(hits.get(num, set()))
         in_tests = [f for f in files if f.startswith('tests/')]
         in_code = [f for f in files if not f.startswith('tests/')]
+        if num in RETIRED:
+            lines.append(f'## {num} · {title}')
+            lines.append('')
+            lines.append(f'- **Retired by {RETIRED[num]}**')
+            lines.append('')
+            continue
         if in_tests:
             tested.append(num)
         elif num in GOLDEN_GUARDED:
@@ -168,6 +194,8 @@ def build() -> tuple[str, list[str]]:
         f'catches a regression without asserting the rule',
         f'- **{len(UNTESTABLE)}** are recorded as not mechanically testable, '
         f'each with a reason',
+        f'- **{len(RETIRED)}** were retired by a later decision; their text '
+        f'stays as the record',
         f'- **{len(untested)} are enforced by nothing**'
         + (': ' + ', '.join(untested) if untested else ''),
         '',
@@ -184,10 +212,11 @@ def main() -> int:
             fh.write(body)
         print(f'✓ {os.path.relpath(OUT, ROOT)}')
     n = len(decisions())
-    tested = n - len(untested) - len(UNTESTABLE) - len(GOLDEN_GUARDED)
+    tested = (n - len(untested) - len(UNTESTABLE) - len(GOLDEN_GUARDED)
+              - len(RETIRED))
     print(f'  {n} decisions · {tested} tested · {len(GOLDEN_GUARDED)} '
           f'golden-guarded · {len(UNTESTABLE)} untestable by design · '
-          f'{len(untested)} unenforced')
+          f'{len(RETIRED)} retired · {len(untested)} unenforced')
     if untested:
         print(f'  unenforced: {", ".join(untested)}')
         if check:

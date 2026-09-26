@@ -6,9 +6,9 @@ The mirror of archive_edition.py: that one keeps the edition JSON and the
 published record, and deletes only throwaway media. This one is for a day
 that was drafted, maybe rendered, and then abandoned before anyone signed it
 off — "Stop" in the Start / approve / Stop chat workflow (see AGENTS.md).
-Everything about the day is undone: the edition JSON, the render, the
-checklist. A day that was actually signed off is never touched by this
-script; it refuses and points at archive_edition.py instead.
+Everything about the day is undone: the edition JSON and the render.
+A day that was actually signed off is never touched by this script; it
+refuses and points at archive_edition.py instead.
 
     python3 scripts/discard_edition.py 2026-09-17
     python3 scripts/discard_edition.py 2026-09-17 --force-assets
@@ -32,15 +32,14 @@ def main() -> int:
     ap.add_argument('date', help='YYYY-MM-DD')
     ap.add_argument('--force-assets', action='store_true',
                     help='also delete assets/daily/{date} — only after '
-                         'copying anything worth keeping into assets/stock/ '
-                         'by hand; nothing there is deleted without this flag')
+                         'keeping any real photograph the editor sent; '
+                         'nothing there is deleted without this flag')
     args = ap.parse_args()
     date = args.date
 
     edition = os.path.join(ROOT, 'editions', f'{date}.json')
     out = os.path.join(ROOT, 'out', date)
     daily = os.path.join(ROOT, 'assets', 'daily', date)
-    checklist = os.path.join(ROOT, 'inbox', f'checklist_{date}.md')
 
     if os.path.isdir(out) and is_signed(out):
         print(f'✗ out/{date} is signed off — this day was published. '
@@ -53,9 +52,6 @@ def main() -> int:
     if os.path.exists(edition):
         os.remove(edition)
         removed.append(f'editions/{date}.json')
-    if os.path.exists(checklist):
-        os.remove(checklist)
-        removed.append(f'inbox/checklist_{date}.md')
     if os.path.isdir(out):
         shutil.rmtree(out)
         removed.append(f'out/{date}/')
@@ -68,8 +64,8 @@ def main() -> int:
             names = sorted(os.listdir(daily))
             print(f'  assets/daily/{date}/ still has {len(names)} file(s): '
                  f'{", ".join(names[:6])}{"…" if len(names) > 6 else ""}')
-            print(f'  A generic scene in there is worth keeping — copy it to '
-                 f'assets/stock/ first. Once you have, or if none of it is '
+            print(f'  A real photograph in there is our own record — keep it '
+                 f'somewhere safe first. Once you have, or if none of it is '
                  f'worth keeping:')
             print(f'    python3 scripts/discard_edition.py {date} --force-assets')
 
@@ -78,7 +74,7 @@ def main() -> int:
         return 0
 
     print(f'✓ discarded: {", ".join(removed)}')
-    print('  assets/stock/ was not touched — nothing evergreen was removed.')
+    print('  inbox/sources/ was not touched — the pasted sources are kept.')
     return 0
 
 

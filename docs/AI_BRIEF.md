@@ -1,373 +1,290 @@
 # Brief for an AI tool
 
-**You are being given news copy and asked to produce ಊರ್ಮನಿ ಸುದ್ದಿ designs.
-Read this file completely before you do anything else.**
+**You are being handed news the editor pasted, and asked to turn it into
+ಊರ್ಮನಿ ಸುದ್ದಿ posts. Read this file completely before you do anything else.**
 
-You do **not** design anything. The design already exists and is finished. Your
-job is to turn raw copy into correct JSON and hand it to the renderer. If you
-write drawing code, choose colours, or pick font sizes, you have gone wrong —
-the output will not match the channel and the work will have to be redone.
+You do **not** design anything. The three formats exist and are finished
+(DECISIONS D92). Your job is to turn pasted copy into correct JSON and hand it
+to the renderer. If you write drawing code, choose colours or pick font sizes,
+you have gone wrong.
 
 ---
 
 ## 1 · The only workflow
 
 ```
-raw news copy  →  edition JSON  →  python3 render.py <file>  →  finished files
+pasted news  →  kept source  →  edition JSON  →  checks  →  editor confirms  →  render
 ```
-
-That is the whole thing. Three commands you will need:
 
 ```bash
-python3 render.py --describe          # every template, and the rule for choosing it
-python3 render.py --schema story      # the exact input contract
-python3 render.py --check my.json     # validate without rendering
-python3 render.py my.json             # render the full package
+python3 scripts/intake.py source --url URL --outlet NAME < paste.txt   # keep an article's text
+python3 scripts/intake.py source < paste.txt       # own reporting / press release, no link
+python3 scripts/intake.py seen editions/DATE.json  # anything already published?
+python3 scripts/fact_check.py editions/DATE.json   # every figure vs the kept source, offline
+python3 render.py --describe                       # the formats and their rules
+python3 render.py --schema story                   # the exact input contract
+python3 render.py --check editions/DATE.json       # validate, render nothing
+python3 render.py editions/DATE.json               # render every segment present
 ```
 
-`--describe --json` gives the same information machine-readable, and
-`templates/registry.json` is the same table on disk. Prefer reading those over
-guessing.
+The pasted text **is** the source. Nothing is fetched or scraped. What the
+paste does not say, the story does not say — if you need more, ask the editor.
 
-**Before writing `editions/{date}.json`, check whether it already exists.**
-Most mornings it does — `scripts/draft_edition.py` runs automatically after
-the fetch and builds it straight from the tip sheet, with `verified_by` left
-empty on every story (D76). If it exists, you are extending or completing that
-file, not starting over: read it first, keep any story that already has a
-`verified_by` exactly as it is (a person checked that one — do not touch its
-copy), and add to it rather than overwrite it. Only replace it wholesale if
-the person working with you says to.
+In a chat, the order of work, what to show the editor and when to wait is
+[`RUNBOOK.md`](RUNBOOK.md) "Chat workflow". Follow it.
 
 ---
 
 ## 2 · What you write
 
-One JSON file per day's bulletin, in `editions/`. Lead story first — the
-thumbnail and the 9:16 story card are both made from it.
+One JSON file per day, `editions/<date>.json`, `schema_version` 4. If it
+already exists, extend it: never touch a story that already has `verified_by`.
+
+A minimal valid edition — one ಮುಖ್ಯ ಸುದ್ದಿ with our reporter's photograph, two
+stories for the ಸುದ್ದಿ ಸಾರ (content is illustrative):
 
 ```json
 {
-  "date": "2026-08-25T09:40:00+05:30",
-  "edition_no": 112,
-  "strapline": "ಕರಾವಳಿ ಬುಲೆಟಿನ್",
+  "schema_version": 4,
+  "date": "2026-09-28T09:00:00+05:30",
+  "edition_no": 140,
   "stories": [
     {
-      "headline": "ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್: ಇಂದು ಮತ್ತು ನಾಳೆ ಭಾರಿ ಮಳೆ, ಬಿರುಗಾಳಿ ಸಾಧ್ಯತೆ",
-      "category": "weather",
-      "deck": "ಉಡುಪಿ ಮತ್ತು ದಕ್ಷಿಣ ಕನ್ನಡ ಜಿಲ್ಲೆಗಳಿಗೆ ಹವಾಮಾನ ಇಲಾಖೆಯಿಂದ ಎಚ್ಚರಿಕೆ ಪ್ರಕಟ.",
+      "segment": "mukhya",
+      "photo_plan": "real",
+      "headline": "ಕುಂದಾಪುರ: ಪಂಚಗಂಗಾವಳಿ ಸೇತುವೆ ಸಂಚಾರ ಇಂದಿನಿಂದ ಬಂದ್",
+      "category": "civic",
+      "deck": "ದುರಸ್ತಿ ಕಾಮಗಾರಿಗಾಗಿ ಸೇತುವೆಯಲ್ಲಿ ವಾಹನ ಸಂಚಾರ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ.",
       "points": [
-        "ಗಂಟೆಗೆ 40-50 ಕಿ.ಮೀ ವೇಗದ ಗಾಳಿ ಬೀಸುವ ಸಾಧ್ಯತೆ ಇದೆ ಎಂದು ಇಲಾಖೆ ತಿಳಿಸಿದೆ.",
-        "ಮೀನುಗಾರರು ಆಗಸ್ಟ್ 27ರವರೆಗೆ ಸಮುದ್ರಕ್ಕೆ ಇಳಿಯದಂತೆ ಸೂಚನೆ ನೀಡಲಾಗಿದೆ."
+        "ಸಂಚಾರ ನಿರ್ಬಂಧ 10 ದಿನ ಜಾರಿಯಲ್ಲಿರಲಿದೆ.",
+        "ವಾಹನಗಳು ಬದಲಿ ಮಾರ್ಗದಲ್ಲಿ ಸಂಚರಿಸಬೇಕು."
       ],
-      "takeaway": "ತುರ್ತು ಸಹಾಯಕ್ಕೆ ಜಿಲ್ಲಾ ವಿಪತ್ತು ನಿರ್ವಹಣಾ ಕೊಠಡಿ 1077 ಸಂಪರ್ಕಿಸಿ.",
+      "takeaway": "ಬದಲಿ ಮಾರ್ಗದ ವಿವರಕ್ಕೆ ಸ್ಥಳೀಯ ಪೊಲೀಸ್ ಠಾಣೆ ಸಂಪರ್ಕಿಸಿ.",
       "photo": {
-        "path": "assets/stock/coastal_storm_sea_warning.jpg",
-        "nature": "representative",
-        "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ಸಂಗ್ರಹ",
+        "path": "assets/daily/2026-09-28/kundapura_bridge.jpg",
+        "nature": "actual",
+        "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ವರದಿಗಾರರಿಂದ",
         "licence": "own",
-        "focal": [0.5, 0.5]
+        "caption": "ದುರಸ್ತಿ ಕಾಮಗಾರಿ ಆರಂಭವಾದ ಸೇತುವೆ, ಭಾನುವಾರ ಬೆಳಿಗ್ಗೆ"
       },
-      "location": "ಉಡುಪಿ ಜಿಲ್ಲೆ",
-      "dateline": "ಜಿಲ್ಲಾ ವರದಿ",
-      "sources": ["ಭಾರತೀಯ ಹವಾಮಾನ ಇಲಾಖೆ", "ಉಡುಪಿ ಜಿಲ್ಲಾಡಳಿತ"],
-      "source_urls": ["https://mausam.imd.gov.in/", "https://udupi.nic.in/"],
-      "verified_by": "Gautam Paduvari",
-      "verified_at": "2026-08-25T07:50:00+05:30",
+      "location": "ಕುಂದಾಪುರ",
+      "sources": ["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"],
+      "source_urls": [],
+      "status": "confirmed",
+      "published_at": "2026-09-28T08:45:00+05:30"
+    },
+    {
+      "segment": "saara",
+      "photo_plan": "",
+      "headline": "ಉಡುಪಿ: ನಾಳೆ ಜಿಲ್ಲೆಯ ಶಾಲೆಗಳಿಗೆ ರಜೆ ಘೋಷಣೆ",
+      "category": "education",
+      "deck": "ಭಾರಿ ಮಳೆಯ ಮುನ್ಸೂಚನೆ ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಜಿಲ್ಲಾಧಿಕಾರಿ ಆದೇಶ.",
+      "location": "ಉಡುಪಿ",
+      "sources": ["ಉಡುಪಿ ಜಿಲ್ಲಾಡಳಿತ"],
+      "source_urls": ["https://udupi.nic.in/en/notice/holiday-order/"],
       "status": "official",
-      "published_at": "2026-08-25T08:40:00+05:30"
+      "published_at": "2026-09-28T08:30:00+05:30"
+    },
+    {
+      "segment": "saara",
+      "photo_plan": "",
+      "headline": "ಬೈಂದೂರು: ಮೀನುಗಾರರಿಗೆ ಸಮುದ್ರಕ್ಕೆ ಇಳಿಯದಂತೆ ಸೂಚನೆ",
+      "category": "weather",
+      "deck": "ಗಾಳಿಯ ವೇಗ ಹೆಚ್ಚುವ ಸಾಧ್ಯತೆ ಇರುವುದರಿಂದ ಎಚ್ಚರಿಕೆ.",
+      "location": "ಬೈಂದೂರು",
+      "sources": ["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"],
+      "source_urls": [],
+      "status": "developing",
+      "published_at": "2026-09-28T08:40:00+05:30"
     }
   ]
 }
 ```
 
-A complete, valid, four-story example is in `editions/2026-08-25.json`. Copy its
-shape. The authoritative field list is `schemas/story.schema.json` — every
-property there carries a description explaining what it is for.
+The authoritative field list is `schemas/story.schema.json`; every property
+there says what it is for. `verified_by` is absent on purpose — see §6.
+
+**Sources.** Each story keeps its own:
+
+- an outlet's article pasted with its link → `sources: ["<outlet>"]`,
+  `source_urls: ["<that article's URL>"]`, and its text kept with
+  `intake.py source --url … --outlet …`. Credit the outlet the link belongs to
+  (`FACT-06`); a section page or a chatbot link is not an article (`FACT-05`).
+- a press release or notice → `sources: ["<the body that issued it>"]`, with
+  its link if it has one; its text kept with `intake.py source`.
+- what the editor saw or was told → `sources: ["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"]`.
+
+Never invent a URL, and never fold one story's source under another's.
+
+**Give every speed story a `reel_line`** — a short video headline (the budget
+is in `render.py --describe`). A print headline needs far more screen time
+than a ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frame has.
+
+**Set `location` on every story.** It drives the hashtags, the per-town
+forward, and whether a reader can tell the story is theirs (`PUB-08`). Put the
+town early: the caption is cut at about 125 characters (`PUB-05`).
+
+**Write the `takeaway`** where there is one — a helpline, a last date, a road
+closed. Copy that tells a reader what to do is what gets forwarded.
+
+**`follows_up`** takes the date of an earlier edition when a story genuinely
+continues it, with a new fact. Without it, a source already published on an
+earlier day is refused (`DUP-01`).
+
+### Festival wishes are not stories
+
+A greeting has no source, status or headline. Write
+`editions/greetings/<date>_<festival>.json` with `"kind": "greeting"` and
+render that file; `python3 render.py --schema greeting` gives the fields. A
+photograph needs `keep_clear` — the band holding the deity or subject, which
+no type enters. No photograph is a valid choice.
 
 ---
 
-## 3 · Choosing a template
+## 3 · Choosing the segment
 
-You usually do **not** need to choose. Omit `template` and the renderer picks:
+Every story carries exactly one `segment`. One story, one format.
 
-| Condition | Template |
-|---|---|
-| the story has a `quote` | `quote_card` |
-| it has `numbers` and no photo | `stat_card` |
-| it has a `photo` that exists on disk | `report_card` |
-| otherwise | `text_card` |
+| `segment` | Format | Use it for |
+|---|---|---|
+| `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ — 4:5 carousel for ONE story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | the breaking or top story of the day. **Always has a picture.** At most `Limits.mukhya_max_per_day`. |
+| `speed` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — 9:16 reel, one frame per story | quick hits that read in one line. Only when there are at least `Limits.roundup_min_stories` of them. |
+| `saara` | ಸುದ್ದಿ ಸಾರ — 4:5 text carousel: index cover → one slide per story → sources | everything else. **Never has pictures.** Between `Limits.saara_min_stories` and `Limits.saara_max_stories`. |
 
-Set `"template": "..."` only when you have a reason the rule above cannot know.
+The editor's instruction wins. When they gave none, propose segments and have
+the editor confirm them **before anything renders**.
 
-**Give every story a `reel_line`.** It is a short video headline, about 45
-characters. Your print headline is probably 70–80, and at Kannada reading speed
-on video that needs ~11 seconds of screen time by itself. Without a `reel_line`
-the reel still renders — it just runs long, and may drop your last story.
+---
 
-```json
-"headline":  "ಬೈಂದೂರು ಮೂಕಾಂಬಿಕಾ ಏರ್‌ಪೋರ್ಟ್ ಯೋಜನೆ: ಪ್ರಸ್ತಾವನೆ ಹಂತದಲ್ಲೇ ಬಾಕಿ, ಆರಂಭವಾಗದ ಕಾಮಗಾರಿ",
-"reel_line": "ಮೂಕಾಂಬಿಕಾ ಏರ್‌ಪೋರ್ಟ್: ಕಾಮಗಾರಿ ಆರಂಭವಾಗಿಲ್ಲ"
-```
+## 4 · Pictures
 
-**And give every fact a `reel_points` short form.** Same reason, one level
-down. A reel's fact card is glanced at while the anchor is already speaking
-that fact — measured, the voice delivers Kannada at roughly twice the speed a
-viewer reads unfamiliar text on a moving frame. A 110-character point on a
-card is therefore copy nobody finishes. `reel_points` is index-matched to
-`points`; the voice still reads the FULL point either way, so nothing is lost
-from the reel, only from the frame.
+Real photographs first. AI only when there is none, and only after asking.
 
-```json
-"points": [
-  "ವಾರಾಹಿ ನೀರೆತ್ತುವ ಜಲವಿದ್ಯುತ್ ಶೇಖರಣಾ ಯೋಜನೆಯ ಸಮಗ್ರ ಯೋಜನಾ ವರದಿ (DPR) ಸಿದ್ಧತೆಯ ಅಂತಿಮ ಹಂತದಲ್ಲಿದೆ."
-],
-"reel_points": [
-  "ವಾರಾಹಿ ಯೋಜನೆಯ DPR ಅಂತಿಮ ಹಂತದಲ್ಲಿ"
-]
-```
+- **`saara` stories carry no picture.** Leave `photo` out.
+- **A `mukhya` story needs a picture** (`IMG-04` without one). A `speed` story
+  may have one.
+- **When the story has no picture, ask the editor: "Real photo or
+  generate?"** Record the answer in `photo_plan`:
+  - `"real"` — wait for the editor's photograph. It needs `credit`,
+    `licence` (`own` only if our reporter shot it; anything else also needs a
+    `source_url`), `nature` (`actual`, `handout` or `file`) and a `caption`
+    saying what it shows. `actual` without a caption is refused.
+  - `"ai"` — only now may a picture be generated. `nature: "ai"`,
+    `credit: "ಊರ್ಮನಿ ಸುದ್ದಿ"`, `licence: "own"`, a caption describing only
+    the scene (the ಎಐ ರಚಿತ ಚಿತ್ರ label is added for you — house rule
+    2026-09-17-05), and **`approved_by`: the editor's name**. `Photo.validate()`
+    refuses an AI picture without it (`IMG-05`).
+  - `""` — not asked yet. Never decide on the editor's behalf.
+- **An AI picture:** one single frame; no text, signs, banners, posters or
+  number plates; the story's real action, place and material culture; never
+  an identifiable face standing in for a real, named person; no minors'
+  faces, victims, blood or gore.
+- There is no stock library. Never attach a picture from the web.
 
-Leave an entry blank, or omit the list, to fall back to the full point.
+---
 
-**Every image is disclosed on the card that shows it**, not just the first
-one. A reel's fact cards come from `gallery` and its end card from `photo`, so
-every one of them carries its own `nature` label and `credit`. An
-AI-generated picture must be `"nature": "ai"` — it will be labelled
-<span>ಎಐ ರಚಿತ ಚಿತ್ರ</span> on every frame it appears in, and in the caption.
+## 5 · The law
 
-**Every photograph needs a `licence`.** One of `own`, `licensed`, `cc`,
-`public-domain`, `handout`, `fair-dealing`. Anything other than `own` also needs
-a `source_url`. Do not write `credit: "ಊರ್ಮನಿ ಸುದ್ದಿ ಸಂಗ್ರಹ"` on a picture the
-channel did not take — that asserts ownership.
-
-**Crime stories may not assert guilt.** Write the allegation, not the verdict:
-<span>ಆರೋಪ</span> / <span>ಆರೋಪಿ</span> / <span>ಶಂಕಿತ</span> / <span>ಪ್ರಕರಣ ದಾಖಲು</span>.
-Plain past tense ("the son who killed…") is refused unless you set
-`"convicted": true`, which means a court actually convicted. Set
+**Crime stories state allegations, never verdicts.** Write
+<span>ಆರೋಪ</span> / <span>ಆರೋಪಿ</span> / <span>ಶಂಕಿತ</span> /
+<span>ಪ್ರಕರಣ ದಾಖಲು</span>. Plain past tense ("the son who killed…") is refused
+unless `"convicted": true`, meaning a court actually convicted. Set
 `"involves_minor": true` or `"sexual_offence": true` where they apply and the
-system blocks identifying detail for you.
+system blocks identifying detail.
 
 > **The `headline` and the `reel_line` must each carry their own marker.**
-> They are checked on their own, not as part of the whole story, because that
-> is how they are read — a thumbnail, a WhatsApp forward, a screenshot, a reel
-> scene, with none of the rest of the copy attached. Putting <span>ಆರೋಪಿ</span>
-> in the `deck` does **not** make a guilt-asserting headline acceptable.
+> They are checked on their own, because that is how they are read — a
+> ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frame, a WhatsApp forward, a screenshot. A marker in the
+> `deck` does **not** make a guilt-asserting headline acceptable.
 >
 > ```
 > ✗ "headline": "ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ"      ← refused, even with ಆರೋಪಿ in the deck
 > ✓ "headline": "ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ"
 > ```
 
-**A story with no photograph**: While individual cards may draw an editorial plate,
-the **daily carousel requires 100% photo coverage (house rule 2026-09-17-03)**.
-No carousel slide may appear without an image. Check `assets/stock/` first;
-if no matching evergreen visual exists, generate a fresh AI image directly in chat.
-Never leave a carousel slide unillustrated.
+An obituary needs two sources, or own reporting. Crime and death headlines are
+set in ink, never red — that is the renderer's job, not yours.
 
-**`hook` goes on the FIRST story.** The YouTube thumbnail and the 9:16 story
-card are both made from the lead, so a `hook` on any other story is ignored and
-the thumbnail falls back to the full headline — which is too long to read at
-feed size.
+**Numerals: Latin (25, 1077), never Kannada (೨೫).** Mixing the two is a
+preflight failure.
 
-**The one judgement you must make: is there an honest photograph?**
-
-- If a real picture of the actual scene exists → `nature: "actual"`, and you
-  **must** also write a `caption` saying what it shows.
-- If the picture is a real photograph of a similar scene → `nature:
-  "representative"` or `"file"`. It will be labelled ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ / ಸಂಗ್ರಹ
-  ಚಿತ್ರ. If the picture was generated — including reused stock — `nature`
-  is `"ai"`. A credit that says AI cannot wear `representative`.
-- **If no honest picture exists, omit `photo` entirely.** The story then gets
-  `text_card`, which is a good-looking card built from the brand's own sunset
-  horizon. Never attach a decorative stock photo to fill the space. Illustrating
-  a Brahmāvara story with a highway bridge signposted HONNAVAR is the specific
-  failure this system was built to prevent.
-
-### Festival wishes are not stories
-
-A greeting — Gauri-Ganesha, Deepavali, Ugadi, Rajyotsava, Eid, Christmas — is
-**not** a story. Never send it through `report_card` or an edition: it has no
-source, no status and no headline, and news design makes it read as a report
-about the festival. Write a separate file in `editions/greetings/` with
-`"kind": "greeting"`:
-
-```json
-{
-  "kind": "greeting",
-  "slug": "2026-09-13_gauri_ganesha",
-  "occasion": "ಗೌರಿ ಗಣೇಶ ಹಬ್ಬದ",
-  "blessing": "ವಿಘ್ನ ನಿವಾರಕ ಗಣಪತಿ ಹಾಗೂ ತಾಯಿ ಗೌರಿಯ ಕೃಪೆ ಸದಾ ನಿಮ್ಮ ಮೇಲಿರಲಿ",
-  "theme": "sacred",
-  "photo": {"path": "...", "nature": "ai", "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ", "licence": "own"},
-  "keep_clear": [0.32, 0.66]
-}
-```
-
-`python3 render.py editions/greetings/<file>.json` writes `wish_9x16.jpg`,
-`wish_4x5.jpg`, `wish_1x1.jpg` and the caption to `out/greetings/<slug>/`.
-
-- **`keep_clear` is required with a photo.** It is the band of the image, as
-  `[top, bottom]` fractions of its height, holding the deity or subject. No type
-  will ever be set inside it. Look at the picture and measure it; do not guess.
-- **Themes:** `sacred` (Ganesha, Navaratri, Dasara), `lights` (Deepavali),
-  `harvest` (Ugadi, Sankranti, Bisu), `rajyotsava`, `national`, `serene` (Eid,
-  Christmas, Buddha Purnima).
-- **Keep it short.** occasion ≤ 30, wish ≤ 26, blessing ≤ 96 characters; about 60
-  reads best.
-- No photograph is a valid choice — the poster draws a gold mandala instead.
-  Never use a stock image just to fill the frame.
+Write Kannada a person actually says out loud.
 
 ---
 
-## 3b · Writing so it travels
+## 6 · What will be rejected, and why
 
-A coastal story is forwarded by somebody who recognises their own town in it.
-Three rules follow from that, and the gate checks all three.
-
-**The town name goes in the first 125 characters.** Instagram truncates the
-caption behind "… more" at roughly there. `hook()` will prefix the place for
-you when it fits — but if your headline buries the town behind a clause, it
-lands past the fold and the taluk it was written for never sees it.
-
-**Set `location` on every story.** It drives the hashtags, the first comment,
-the per-town WhatsApp forward, and whether the story can be placed at all. A
-story with no location is a story nobody can tell is theirs.
-
-**Write the takeaway.** A helpline, a last date, a road closed, who to call.
-Copy that tells a reader what to DO is the strongest forward predictor there
-is, and it is the difference between a story people read and a story people
-send to their family.
-
-`follows_up` takes the date of an earlier edition when this genuinely continues
-it — a road that was closed and has reopened. The caption then says so, which
-tells a reader this channel follows things up. Use it only when there is new
-information: a follow-up with no new fact is padding, and padding teaches an
-audience to stop reading.
-
----
-
-## 4 · Hard limits
-
-Exceed these and preflight warns; exceed them badly and it fails.
-
-| Field | Budget | What happens past it |
-|---|---|---|
-| `headline` | ~78 chars (4:5), ~34 (thumbnail) | set smaller; past 1.45× it fails |
-| `deck` | ~190 chars | warns; stops reading as a standfirst |
-| `points` | 3 items, ~150 chars each | extras are dropped from the bottom |
-| `numbers` | 3 pairs | 4 crowds |
-| `hook` | ~7 words | warns — the thumbnail is read at 210 px wide |
-| `stories` | 3–4 per edition | carousel carries all stories; reel engine produces individual short reels (reel_01, reel_02...) ONLY for 10/10 reel-worthy stories (`is_reel: true`) |
-
-**`is_reel`: set `false` on routine, dry, or non-visual news.** Carousel and Posts cover every story in the edition so the audience has full news coverage. But vertical video algorithms severely punish low completion rates: only stories that score 10/10 in visual drama, public urgency, high stakes, or viral regional talkability should become reels (`is_reel: true`). Routine administrative circulars, holiday notices, tenders, or date extensions should set `"is_reel": false` to protect channel watch time and distribution.
-
-**Numerals: Latin (25, 1077, 40-50), never Kannada (೨೫).** This matches Kannada
-print and broadcast practice. Mixing the two systems inside one card is a
-**preflight failure**, not a warning.
-
-Write Kannada that a person actually says out loud. The templates set it large;
-padded officialese looks worse at 78 px than it does in a paragraph.
-
----
-
-## 5 · What will be rejected, and why
-
-`Story.validate()` refuses to render rather than produce a dishonest card.
+`Story.validate()` refuses to render rather than produce a dishonest post.
 There is no flag to switch any of this off, and you must not add one.
 
 | Rejection | Fix |
 |---|---|
-| photo with no `credit` | name the photographer, the agency, or `"ಊರ್ಮನಿ ಸುದ್ದಿ ವರದಿಗಾರರಿಂದ"` |
+| no `segment`, or not one of `speed` / `saara` / `mukhya` | pick one — one story, one format |
+| `photo_plan` not `""` / `real` / `ai` | the editor's answer, as given |
+| AI photo with no `approved_by` | ask the editor; their name goes there — or use a real photo |
+| photo with no `credit` or `licence` | name the photographer / agency; `own` only for our reporter's picture |
 | `nature: "actual"` with no `caption` | say what the picture shows, or change nature |
-| empty `sources` | name who told you; own reporting counts — `["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"]` |
-| sourced story with no `source_urls` | add an http URL the editor can reopen, or mark own reporting |
-| no `verified_by` (blocks APPROVAL.md, not the render) | a PERSON opens the source, checks the facts, and puts their name here. You cannot fill this in on their behalf — see §6 |
-| no `location` (warns) | set it. Nobody forwards a story they cannot tell is about their town, and the reach layer cannot place it |
-| a notice marked `is_reel` (warns) | civic, health and education read better as cards. A notice gets screenshotted; a video about one gets scrolled |
-| more than 2 stories marked `is_reel` (warns) | on an account this size, four reels split the same audience four ways and all four look average |
-| unknown `category` | pick from the registry; `governance` is not silent explainer |
-| AI credit with `nature: "representative"` | generated frames, including stock, use `nature: "ai"` |
+| empty `sources` | name who told you; own reporting counts |
+| sourced story with no `source_urls` | the article's URL, or mark own reporting |
+| unknown `category` | pick from `render.py --describe` |
 | obituary with one source | two sources, or own reporting |
-| `live_url` that is not a URL | only a real stream earns ನೇರ ಪ್ರಸಾರ |
 | unknown field name | you typo'd; the error lists the valid fields |
+
+At the gate (blocks `APPROVAL.md`, not the render): no `verified_by`
+(`SRC-02`), a figure not in the kept source (`FACT-01`), a repeat (`DUP-01`), a
+ಮುಖ್ಯ ಸುದ್ದಿ without a picture (`IMG-04`). The full table is in
+[`RUNBOOK.md`](RUNBOOK.md).
 
 Two things are computed and cannot be asserted:
 
-- **`category: "breaking"` decays.** It is checked against `published_at` and
-  silently demoted after 12 hours. Do not try to force it.
+- **ಬ್ರೇಕಿಂಗ್ decays.** It is checked against `published_at` and demoted after
+  12 hours.
 - **`status` is printed as it stands** — ದೃಢಪಟ್ಟ ವರದಿ / ಅಧಿಕೃತ ಪ್ರಕಟಣೆ /
-  ಬೆಳವಣಿಗೆಯಲ್ಲಿದೆ / ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ. If a story is not confirmed, say
-  `"developing"` or `"unconfirmed"`. A card that admits it is still being
-  checked is worth more than one that pretends otherwise.
+  ಬೆಳವಣಿಗೆಯಲ್ಲಿದೆ / ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ. If it is not confirmed, say
+  `"developing"` or `"unconfirmed"`.
 
 ---
 
-## 6 · Things you must not do
+## 7 · Things you must not do
 
-1. **Do not write rendering code.** No Pillow, no canvas, no HTML-to-image.
-   Eleven templates already exist (`python3 render.py --describe`). If none
-   fits, say so and stop — do not improvise one.
-2. **Do not hard-code a colour, a font size, or a margin.** Every such value
-   lives in `brand/tokens.py`. If you think one needs to change, that is a
-   design decision for a human, and `docs/DECISIONS.md` explains why it is what
-   it is.
-3. **Do not edit files in `brand/` or `templates/`** to make a particular story
-   fit. Shorten the copy instead — that is what a sub-editor would do.
-4. **Do not invent facts, sources, quotes, or credits** to satisfy a required
-   field. If you do not know the source, the correct output is a question to the
-   human, not a plausible-looking string.
-5. **Do not suppress a provenance label.** ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ appearing on a card
-   is the system working, not a bug.
-6. **Do not fill in `verified_by` yourself, ever.** It is the name of the
-   person who opened the sources and checked the facts. Putting a name there —
-   yours, the channel's, or the editor's — because the gate is asking for one
-   converts the single check a machine cannot perform into a string a machine
-   wrote. If it is missing, the correct output is to say so and stop. D59.
-7. **Do not write a sign-off.** `SIGNOFF.json` and the judgement block in
-   `APPROVAL.md` record a human verdict on taste, cultural dignity and news
-   judgement. You may prepare the evidence — the frames, the numbers, the
-   options — and you may recommend. You may not sign. D62.
-8. **Do not upload anything.** A person posts every item. That is the product,
-   not an inefficiency.
+1. **Do not write rendering code**, and do not edit `brand/` or `templates/`
+   to make a story fit. Shorten the copy — that is what a sub-editor does.
+2. **Do not hard-code a colour, size or margin.** They live in `brand/tokens.py`.
+3. **Do not invent facts, sources, URLs, quotes or credits.** If the paste
+   does not say it, ask.
+4. **Do not generate a picture the editor has not asked for** (`photo_plan`
+   must be `"ai"`, with their name in `approved_by`).
+5. **Do not suppress a provenance label.** ಎಐ ರಚಿತ ಚಿತ್ರ on a frame is the
+   system working.
+6. **Do not choose a name for `verified_by`.** It is the person who checked
+   the source. Run `scripts/verify.py` only with the name the editor gives in
+   chat when they approve; otherwise say it is missing and stop. D59.
+7. **Do not sign.** `sign_off.py` records a human verdict on taste, culture
+   and news. You may prepare the evidence and recommend. D62.
+8. **Do not upload anything.** A person posts every item.
 
 ---
 
-## 7 · Checking your work
+## 8 · Checking your work
 
 ```bash
-python3 render.py --check edition.json     # preflight, renders nothing
-python3 render.py edition.json             # render; audits output automatically
-python3 -m unittest tests.test_contract     # the honesty rules (instant)
-python3 -m unittest discover tests          # + the design itself (~2 min)
+python3 render.py --check editions/DATE.json   # preflight, renders nothing
+python3 render.py editions/DATE.json           # render; audits output automatically
+python3 -m unittest tests.test_contract        # the honesty rules (instant)
 ```
 
 `--check` reports three levels: `✗` failures block the render, `!` warnings are
-a sub-editor's call, silence means clean.
-
-After rendering, every file is inspected for wrong dimensions, oversize,
-crushed blacks, blown highlights, and a missing focal point. Read that audit —
-a clean preflight with a dirty audit usually means a bad `focal` point.
-
-**Reproducibility.** Identical JSON plus the same `--at` produces byte-identical
-files. If you need that (regression testing, comparing two versions of copy),
-pin the clock:
-
-```bash
-python3 render.py edition.json --at 2026-08-25T09:40:00+05:30
-```
-
-Without `--at`, output still varies only in the ways it should: the dateline and
-whether a story still counts as breaking.
+a sub-editor's call, silence means clean. Pin the clock with
+`--at 2026-09-28T09:00:00+05:30` for byte-identical output.
 
 ---
 
-## 8 · Where to look next
+## 9 · Where to look next
 
 | You want | Read |
 |---|---|
-| the full design standard | [`../STANDARDS.md`](../STANDARDS.md) |
-| what each template does, field by field | [`TEMPLATES.md`](TEMPLATES.md) |
-| **why** a rule exists, before changing it | [`DECISIONS.md`](DECISIONS.md) |
-| the machine-readable template table | `templates/registry.json` |
+| the day, step by step | [`RUNBOOK.md`](RUNBOOK.md) |
+| the design standard | [`../STANDARDS.md`](../STANDARDS.md) |
+| each format, field by field | [`TEMPLATES.md`](TEMPLATES.md) |
+| **why** a rule exists | [`DECISIONS.md`](DECISIONS.md) — D92 for the formats |
 | the machine-readable input contract | `schemas/story.schema.json` |
-| a complete valid edition | `editions/2026-08-25.json` |
-| the Python API instead of JSON | `examples/make_examples.py` |

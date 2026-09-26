@@ -1786,7 +1786,7 @@ def render_reel(edition: Edition, path: str, format_key: str = 'reel',
 def _sfx_set(sfx_dir: str | None = None) -> dict:
     """The broadcast hits — only ones the licence register allows.
 
-    This used to reach first for sfx/pro_*.wav, which have no licence record
+    This used to reach first for sfx/pro_*.wav, which had no licence record
     anywhere and sit beside a deleted folder of numbered third-party files.
     A hit nobody can account for is a Content ID claim nobody can answer, so
     the set is now the house one from brand/sfx.py, registered as `own`, and
@@ -1803,10 +1803,8 @@ def _sfx_set(sfx_dir: str | None = None) -> dict:
             if p and os.path.exists(p):
                 return p
         return None
-    return {'impact': pick('news_impact.wav', 'pro_impact.wav', 'open.wav'),
-            'whoosh': pick('pro_whoosh.wav', 'whoosh.wav'),
-            'ping': pick('tick.wav', 'tech_ping.wav'),
-            'outro': pick('pro_outro_hit.wav', 'pro_news_ident.wav', 'outro.wav')}
+    return {'impact': pick('open.wav'), 'whoosh': pick('whoosh.wav'),
+            'ping': pick('tick.wav'), 'outro': pick('outro.wav')}
 
 
 def _master_narrated_audio(total: float, plan: list, lead_in: float,
@@ -1830,7 +1828,6 @@ def _master_narrated_audio(total: float, plan: list, lead_in: float,
     roughly corresponded to one.
     """
     bgm = bgm or os.path.join(BASE, 'assets', 'news_bgm.mp3')
-    sfx_dir = sfx_dir or os.path.join(BASE, 'sfx')
     out = os.path.join(BASE, 'build', '_reel_audio.wav')
     S = _sfx_set(sfx_dir)
     XF = Motion.scene_cross
@@ -1922,24 +1919,11 @@ def _master_audio(total: float, starts: list[float], holds: list[float],
                   voiceover: str | None = None) -> str:
     """Score + hits + optional voiceover, ducked under speech, normalised for platforms."""
     bgm = bgm or os.path.join(BASE, 'assets', 'news_bgm.mp3')
-    sfx_dir = sfx_dir or os.path.join(BASE, 'sfx')
     out = os.path.join(BASE, 'build', '_reel_audio.wav')
-
-    sfx_impact = os.path.join(sfx_dir, 'pro_impact.wav')
-    if not os.path.exists(sfx_impact):
-        sfx_impact = os.path.join(sfx_dir, 'news_impact.wav')
-
-    sfx_whoosh = os.path.join(sfx_dir, 'pro_whoosh.wav')
-    if not os.path.exists(sfx_whoosh):
-        sfx_whoosh = os.path.join(sfx_dir, 'whoosh.wav')
-
-    sfx_ping = os.path.join(sfx_dir, 'tech_ping.wav')
-
-    sfx_outro = os.path.join(sfx_dir, 'pro_outro_hit.wav')
-    if not os.path.exists(sfx_outro):
-        sfx_outro = os.path.join(sfx_dir, 'pro_news_ident.wav')
-    if not os.path.exists(sfx_outro):
-        sfx_outro = sfx_impact
+    # The house set only (D82, D92) — never a file without a licence record.
+    S = _sfx_set(sfx_dir)
+    sfx_impact, sfx_whoosh = S['impact'], S['whoosh']
+    sfx_ping, sfx_outro = S['ping'], S['outro'] or S['impact']
 
     sfx_candidates = [sfx_impact, sfx_whoosh, sfx_ping, sfx_outro]
     sfx_files = []

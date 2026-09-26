@@ -35,7 +35,23 @@ FILE_PHOTO_LABEL_DAYS = 2       # older imagery must be labelled as archive
 #   1  pre-lock
 #   2  source_urls required on sourced stories (D55)
 #   3  verified_by / verified_at (D59)
-SCHEMA_VERSION = 3
+#   4  segment, photo_plan, photo.approved_by (D92)
+SCHEMA_VERSION = 4
+# Editions written before D92 carry no schema_version key at all; they are
+# read as 3, so the archive still loads and nothing old is held to rules it
+# was not written under.
+LEGACY_SCHEMA = 3
+
+# The three news formats, by the name a story carries (D92). One story, one
+# format: the field holds one value, so a story cannot be on the ಸುದ್ದಿ ಸಾರ
+# and in the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ on the same day.
+SEGMENTS = {
+    'speed':  ('ಸ್ಪೀಡ್ ನ್ಯೂಸ್', 'roundup'),
+    'saara':  ('ಸುದ್ದಿ ಸಾರ', 'saara'),
+    'mukhya': ('ಮುಖ್ಯ ಸುದ್ದಿ', 'mukhya'),
+}
+# What the editor said when asked about a picture (D92). '' = not asked yet.
+PHOTO_PLANS = ('', 'real', 'ai')
 
 # How each image provenance is disclosed on the card.
 IMAGE_NATURE = {
@@ -192,8 +208,15 @@ OWN_REPORTING = 'ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ
 STATUTORY_SOURCES = ('ಊರ್ಮನಿ ಸುದ್ದಿ', 'ಭಾರತೀಯ ನ್ಯಾಯ ಸಂಹಿತೆ', 'ಮಾಹಿತಿ ತಂತ್ರಜ್ಞಾನ ಕಾಯ್ದೆ', 'ಸೈಬರ್ ಅಪರಾಧ', 'POCSO', 'ಗೃಹ ಸಚಿವಾಲಯ')
 
 
+# A press release the editor pasted: the issuer is named as the source and the
+# pasted text is kept (scripts/intake.py source), so there may be no link to
+# reopen — the kept text is what the fact desk checks against (D92).
+PRESS_RELEASE = 'ಪತ್ರಿಕಾ ಪ್ರಕಟಣೆ'
+
+
 def is_own_reporting(sources: list[str]) -> bool:
-    return any(any(m in (s or '') for m in (OWN_REPORTING, *STATUTORY_SOURCES)) for s in sources)
+    marks = (OWN_REPORTING, PRESS_RELEASE, *STATUTORY_SOURCES)
+    return any(any(m in (s or '') for m in marks) for s in sources)
 
 
 # What you are allowed to do with a picture. 'own' means the channel shot it.
@@ -217,6 +240,9 @@ class Photo:
     caption: str = ''                   # what the picture actually shows
     focal: tuple[float, float] = (0.5, 0.42)
     taken_at: datetime | None = None
+    # The person who said yes to a generated picture, by name (D92). A real
+    # photograph needs no approval; an AI one is made only after asking.
+    approved_by: str = ''
 
     @classmethod
     def from_dict(cls, d: dict) -> 'Photo':
@@ -230,7 +256,9 @@ class Photo:
             d['taken_at'] = parse_dt(d['taken_at'])
         return cls(**d)
 
-    def validate(self):
+    def validate(self, schema: int | None = None):
+        """`schema` is the edition's schema_version; the D92 rules apply to an
+        edition that declares 4. A bare Photo or Story checks the rest."""
         if self.nature not in IMAGE_NATURE:
             raise ContentError(f'unknown image nature {self.nature!r}; '
                                f'choose from {sorted(IMAGE_NATURE)}')
@@ -272,6 +300,13 @@ class Photo:
                 f'{self.path}: this credit names an AI image but nature is '
                 f'{self.nature!r}. Generated pictures, including stock, must '
                 "use nature='ai' so the frame says ಎಐ ರಚಿತ ಚಿತ್ರ.")
+        if ((schema or 0) >= 4 and self.nature == 'ai'
+                and not (self.approved_by or '').strip()):
+            raise ContentError(
+                f'{self.path}: an AI picture needs approved_by — the name of '
+                'the editor who was asked "real photo, or generate?" and said '
+                'generate. Real pictures come first; a generated one is made '
+                'only after asking (D92).')
 
     @property
     def label(self) -> str:
@@ -351,7 +386,11 @@ class Story:
     # same fact faster than anyone can read it. Index-matched to `points`;
     # a blank or missing entry falls back to the full point. See D51.
     reel_points: list[str] = field(default_factory=list)
-    is_reel: bool = True                 # whether to produce an individual reel (10/10 editorial score)
+    is_reel: bool = False                # legacy (pre-D92 lead reel); ignored
+    # Which ONE format this story runs in: 'speed' | 'saara' | 'mukhya' (D92).
+    segment: str = ''
+    # The editor's answer to "real photo, or generate?": '' | 'real' | 'ai'.
+    photo_plan: str = ''
     narration_script: str = ''           # broadcast-grade spoken news anchor script
 
     # ── criminal-reporting flags ──────────────────────────────────────────
@@ -367,9 +406,20 @@ class Story:
     _hook: str = field(default='', repr=False, compare=False)
 
     # ── validation ────────────────────────────────────────────────────────
-    def validate(self) -> 'Story':
+    def validate(self, schema: int | None = None) -> 'Story':
         if not self.headline.strip():
             raise ContentError('headline is required')
+        if (schema or 0) >= 4:
+            if self.segment not in SEGMENTS:
+                raise ContentError(
+                    f'segment {self.segment!r}: every story runs in exactly one '
+                    f'format — one of {sorted(SEGMENTS)} (D92). speed = ಸ್ಪೀಡ್ '
+                    'ನ್ಯೂಸ್ reel, saara = ಸುದ್ದಿ ಸಾರ text carousel, mukhya = '
+                    'ಮುಖ್ಯ ಸುದ್ದಿ photo carousel.')
+            if self.photo_plan not in PHOTO_PLANS:
+                raise ContentError(
+                    f'photo_plan {self.photo_plan!r}: one of "", "real", "ai" — '
+                    'the editor\'s answer to "real photo, or generate?" (D92)')
         if self.status not in STATUS:
             raise ContentError(f'unknown status {self.status!r}')
         from .tokens import CATEGORIES as _CATS
@@ -397,7 +447,7 @@ class Story:
                 'an obituary needs two independent sources, or own reporting. '
                 'False death reports are a recurring local-media failure.')
         if self.photo:
-            self.photo.validate()
+            self.photo.validate(schema)
             if (self.photo.nature == 'actual' and self.photo.taken_at
                     and self.published_at - self.photo.taken_at
                     > timedelta(days=FILE_PHOTO_LABEL_DAYS)):
@@ -405,7 +455,7 @@ class Story:
                     'photo is older than the file-photo window but is marked '
                     "'actual'; change nature to 'file'.")
         for p in self.gallery:
-            p.validate()
+            p.validate(schema)
         if self.live_url and not self.live_url.startswith('http'):
             raise ContentError('live_url must be a real stream URL, or empty')
         # The criminal-reporting guards run BEFORE the breaking demotion below.
@@ -447,8 +497,11 @@ class Story:
             # the only text on its scene. Checking the joined string let
             # "ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ" through because the deck happened to
             # say ಆರೋಪಿ, which is precisely the exposure this guard exists for.
+            # The hook (the caption's first line) travels alone too. D41 —
+            # it used to be guarded by the thumbnail template, which is gone.
             for where, text in (('headline', self.headline),
-                                ('reel_line', self.reel_line)):
+                                ('reel_line', self.reel_line),
+                                ('hook', self._hook)):
                 hits = asserts_guilt(text)
                 if hits:
                     raise ContentError(
@@ -693,8 +746,55 @@ class Edition:
                 f'but this checkout understands {SCHEMA_VERSION}. Update the '
                 'code rather than editing the number down.')
         for s in self.stories:
-            s.validate()
+            s.validate(self.schema_version)
         return self
+
+    def segment(self, key: str) -> list['Story']:
+        """The stories that run in one format, in edition order."""
+        return [s for s in self.stories if s.segment == key]
+
+    def format_problems(self) -> list[str]:
+        """Why this edition cannot be rendered as its segments ask (D92).
+
+        Empty when every format has what it needs. Checked before anything is
+        drawn, so a day with two speed stories is told to move them rather than
+        finding out after a four-minute render.
+        """
+        from .tokens import Limits as L
+        out: list[str] = []
+        if self.schema_version < 4:
+            return ['this edition was written before D92 and has no segments; '
+                    'give every story a segment (speed / saara / mukhya) and '
+                    'set schema_version 4']
+        speed, saara, mukhya = (self.segment(k) for k in ('speed', 'saara', 'mukhya'))
+        if speed and len(speed) < L.roundup_min_stories:
+            out.append(f'ಸ್ಪೀಡ್ ನ್ಯೂಸ್ has {len(speed)} stor(ies); it needs '
+                       f'{L.roundup_min_stories} or more — add some, or move '
+                       'these to ಸುದ್ದಿ ಸಾರ')
+        if len(speed) > L.roundup_max_stories:
+            out.append(f'ಸ್ಪೀಡ್ ನ್ಯೂಸ್ has {len(speed)} stories; past '
+                       f'{L.roundup_max_stories} it is no longer quick — move '
+                       'the rest to ಸುದ್ದಿ ಸಾರ')
+        if saara and len(saara) < L.saara_min_stories:
+            out.append(f'ಸುದ್ದಿ ಸಾರ has {len(saara)} story; it needs '
+                       f'{L.saara_min_stories} or more — add one, or run it '
+                       'as ಮುಖ್ಯ ಸುದ್ದಿ with a picture')
+        if len(saara) > L.saara_max_stories:
+            out.append(f'ಸುದ್ದಿ ಸಾರ has {len(saara)} stories; the index holds '
+                       f'{L.saara_max_stories} — move the rest to ಸ್ಪೀಡ್ ನ್ಯೂಸ್')
+        if len(mukhya) > L.mukhya_max_per_day:
+            out.append(f'{len(mukhya)} ಮುಖ್ಯ ಸುದ್ದಿ in one edition; the day has '
+                       f'{L.mukhya_max_per_day} top stories at most')
+        for i, st in enumerate(self.stories, 1):
+            if st.segment == 'mukhya' and not (st.photo and st.photo.path
+                                                and os.path.exists(st.photo.path)):
+                ask = {'': 'ask the editor: a real photograph, or generate one?',
+                       'real': "waiting for the editor's photograph",
+                       'ai': 'the editor said generate — make the picture and '
+                             'set photo.approved_by'}[st.photo_plan]
+                out.append(f'story {i} is ಮುಖ್ಯ ಸುದ್ದಿ with no picture (IMG-04): '
+                           f'{ask}')
+        return out
 
     @property
     def unverified(self) -> list[Story]:
@@ -719,6 +819,7 @@ class Edition:
             raise ContentError(
                 f'unknown edition field(s) {sorted(extra)}. Valid: '
                 f'{sorted(cls.__dataclass_fields__)}')
+        d.setdefault('schema_version', LEGACY_SCHEMA)
         d['stories'] = [Story.from_dict(s) for s in d.get('stories', [])]
         if not d['stories']:
             raise ContentError('an edition needs at least one story')

@@ -237,22 +237,11 @@ def edition_places(edition: Edition) -> list[tuple[str, str]]:
     return [(k, latin[k]) for k in order]
 
 
-def is_special_series(edition: Edition) -> bool:
-    """True when the edition is a dedicated special segment/series
-    (e.g. Kanoonu Kavacha, cyber safety) rather than the daily
-    coastal news bulletin."""
-    if edition.strapline and any(s in edition.strapline for s in ('ಕಾನೂನು', 'ವಿಶೇಷ', 'ಸರಣಿ', 'ಪ್ರಕರಣ')):
-        return True
-    has_coastal = any(is_coastal(s.headline + ' ' + (s.location or '')) for s in edition.stories)
-    return not has_coastal and all(s.category == 'explainer' for s in edition.stories)
-
-
 def edition_hashtags(edition: Edition, limit: int = Limits.ig_hashtags_max
                      ) -> list[str]:
     """Five tags for a post that carries the whole day.
 
-    For the daily bulletin: the two most-covered towns, one honest trend, the region, the channel.
-    For a special series (D89): the series title, channel, topic tags (no irrelevant coastal tags).
+    The two most-covered towns, one honest trend, the region, the channel.
     """
     from . import trends
     out: list[str] = []
@@ -261,25 +250,6 @@ def edition_hashtags(edition: Edition, limit: int = Limits.ig_hashtags_max
         t = _tagify(tag)
         if t and t.lower() not in {x.lower() for x in out}:
             out.append(t)
-
-    if is_special_series(edition):
-        if edition.strapline:
-            series_name = edition.strapline.split('•')[0].strip()
-            add(series_name)
-        add('oormanisuddi')
-        for st in edition.stories:
-            for t in trends.for_story(st, 'instagram'):
-                add(t)
-            for t in _pool(st):
-                if t not in CORE_TAGS and t != 'ಕರಾವಳಿ' and t != 'ಕರಾವಳಿಸುದ್ದಿ':
-                    add(t)
-        # Add high-intent safety/legal tags if applicable
-        text = ' '.join(s.headline for s in edition.stories)
-        if 'ಪಾಸ್‌ವರ್ಡ್' in text or 'ಸೈಬರ್' in text:
-            add('CyberSafety')
-            add('DigitalRights')
-            add('WomenSafety')
-        return out[:min(limit, IG_HASHTAG_MAX)]
 
     # Towns with a searchable English name: the region itself (ಕರಾವಳಿ) is
     # already ಕರಾವಳಿಸುದ್ದಿ, and must not take a town's slot.
@@ -622,8 +592,6 @@ def taluk_forwards(edition) -> dict[str, str]:
     the reader's town. The places come from PLACE_TAGS, which is the one
     registry of place names in this project; nothing here invents a town.
     """
-    if is_special_series(edition):
-        return {}
     from .reach import places_covered
     out: dict[str, str] = {}
     covered = places_covered(edition)
@@ -685,9 +653,8 @@ def edition_whatsapp(edition: Edition, instagram_url: str | None = None) -> str:
     link_target = instagram_url or '[ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಪೋಸ್ಟ್ ಲಿಂಕ್]'
 
     tagline = Brand.tagline.replace('  •  ', ' • ')
-    special = is_special_series(edition)
-    header_title = f'{edition.strapline} — ಪ್ರಮುಖ ಮುಖ್ಯಾಂಶಗಳು:' if special and edition.strapline else 'ಇಂದಿನ ಪ್ರಮುಖ ಕರಾವಳಿ ಮುಖ್ಯಾಂಶಗಳು:'
-    brand_header = f'🌾 *{Brand.name} · {edition.strapline}*' if special and edition.strapline else f'🌾 *{Brand.name} · {edition.date_kn}*'
+    header_title = 'ಇಂದಿನ ಪ್ರಮುಖ ಕರಾವಳಿ ಮುಖ್ಯಾಂಶಗಳು:'
+    brand_header = f'🌾 *{Brand.name} · {edition.date_kn}*'
     blocks = [
         f'{brand_header}\n{tagline}',
         f'{header_title}\n\n{headlines_block}',
@@ -880,77 +847,42 @@ class Slot:
     why: str
 
 
-def publishing_plan(n_reels: int, has_bulletin: bool = False,
-                    has_carousel: bool = True, has_story_card: bool = True,
-                    has_broadsheet: bool = True,
-                    carousel_last: str = '',
-                    bulletin_is_footage: bool = False,
+def publishing_plan(has_saara: bool = False, saara_last: str = '',
+                    mukhya: list[tuple[int, bool, str]] = (),
                     has_roundup: bool = False) -> list[Slot]:
-    """The day's upload order, derived from what was actually rendered.
+    """The day's upload order, derived from what was actually rendered (D92).
 
-    AI-card reels are Instagram-only. The 16:9 AI bulletin is off by default
-    and is never scheduled to YouTube unless `bulletin_is_footage` is True.
-    D55 / AGENTS Rule 7.
+    `mukhya` is one (k, breaking, last_slide) per ಮುಖ್ಯ ಸುದ್ದಿ set. A breaking
+    one goes up the moment it clears — the whole point of breaking news — and
+    everything else takes its window. Every format here is Instagram's: AI
+    card formats do not go to YouTube (AGENTS rule 9, D55).
     """
     plan: list[Slot] = []
-    if has_bulletin:
-        if bulletin_is_footage:
-            plan.append(Slot(
-                Limits.bulletin_slot, 'bulletin.mp4', 'YouTube',
-                'Long-form bulletin (16:9) — set yt_thumbnail.jpg as the thumbnail',
-                'Real footage only. Posted first so it has the full day to '
-                'gather watch time on the 4,000-hour path.'))
-        else:
-            plan.append(Slot(
-                Limits.bulletin_slot, 'bulletin.mp4',
-                'HOLD — not for YouTube',
-                'AI bulletin rendered internally. Do not upload to YouTube.',
-                'Rule 7: YouTube suppresses AI TTS slideshows (37 vs 397 views). '
-                'Keep this file as a record, or post to Instagram only if asked.'))
-    if has_carousel:
-        last = carousel_last or 'carousel_06_sources.jpg'
+    if has_saara:
+        last = saara_last or 'saara_NN_sources.jpg'
         plan.append(Slot(
-            Limits.carousel_slot, f'carousel_01_cover.jpg … {last}',
+            Limits.carousel_slot, f'saara_01_cover.jpg … {last}',
             'Instagram',
-            'Carousel — the whole edition, swipeable',
-            'The morning scroll. A carousel is the only format that gets a '
-            'second impression when someone does not swipe the first time.'))
-    if has_story_card:
+            'ಸುದ್ದಿ ಸಾರ — the day\'s bulletin, swipeable. Caption: saara_caption.txt',
+            'The morning scroll. A carousel gets a second impression when '
+            'someone does not swipe the first time.'))
+    for k, breaking, last in mukhya:
         plan.append(Slot(
-            Limits.story_slot, 'story_9x16.jpg', 'Instagram Story / WhatsApp',
-            'Story card pointing at the carousel',
-            'Posted just after, so the people who open Stories first are sent '
-            'to a post that already exists.'))
-
+            'NOW' if breaking else Limits.mukhya_slot,
+            f'mukhya_{k}_01_cover.jpg … {last or f"mukhya_{k}_03_source.jpg"}',
+            'Instagram',
+            f'ಮುಖ್ಯ ಸುದ್ದಿ {k}. Caption: mukhya_{k}_caption.txt',
+            'Breaking: post the moment it is signed; being first is the story.'
+            if breaking else
+            'The day\'s top story on its own, with its picture and its source.'))
     if has_roundup:
-        # The day's reel when it is speed news (D81). It takes the first reel
-        # window; any single-story reels follow it.
         plan.append(Slot(
             _reel_times(1)[0], 'roundup.mp4  (cover: roundup_cover.jpg)',
             'Instagram Reels',
-            'ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the day in one reel. Caption: roundup_caption.txt',
-            'Instagram only (Rule 7). Set roundup_cover.jpg as the cover; it '
-            'is story one with its headline up, not frame 0.'))
-
-    for i, at in enumerate(_reel_times(n_reels + (1 if has_roundup else 0))
-                           [1 if has_roundup else 0:]):
-        n = i + 1
-        plan.append(Slot(
-            at, f'reel_{n:02d}.mp4  (cover: reel_{n:02d}_cover.jpg)',
-            'Instagram Reels',
-            f'Reel {n} — caption and first comment in reel_{n:02d}_copy.txt',
-            'Instagram only. Do not cross-post this AI reel to YouTube Shorts '
-            'unless the editor explicitly overrides for a story with no tape. '
-            'Set the cover frame; paste the first comment immediately.'))
-
-    if has_broadsheet:
-        plan.append(Slot(
-            Limits.broadsheet_slot, 'broadsheet.jpg', 'WhatsApp / Telegram',
-            "The day's front page, as a forward",
-            'Forwards are where a local channel actually grows. Paste the '
-            'WhatsApp text from MASTER_COPY.md. Aim under 300 KB.'))
-
-    return sorted(plan, key=lambda s: s.at)
+            'ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — caption: roundup_caption.txt',
+            'Instagram only (AGENTS rule 9). Set roundup_cover.jpg as the '
+            'cover, not frame 0.'))
+    return sorted(plan, key=lambda s: ('0' if s.at == 'NOW' else '1') + s.at)
 
 
 def plan_text(plan: list[Slot], date_kn: str = '') -> str:
@@ -977,10 +909,10 @@ def plan_text(plan: list[Slot], date_kn: str = '') -> str:
 #  and there is nothing to accidentally paste with it.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Which platform a post belongs to, by its own file stem. The AI-card formats
-# are Instagram's; only the 16:9 bulletin and its thumbnail are YouTube's —
-# AGENTS rule 7, YouTube gets real footage, not card reels.
-YOUTUBE_POSTS = ('bulletin', 'youtube_thumb', 'yt_thumb')
+# Which platform a post belongs to, by its own file stem. Every news format
+# is Instagram's (D92); YouTube gets real footage, made by the footage skills,
+# never card reels (AGENTS rule 9). Kept as a hook for a YouTube format.
+YOUTUBE_POSTS: tuple[str, ...] = ()
 
 
 def platform_of(name: str) -> str:
@@ -1075,7 +1007,7 @@ def for_roundup(edition: Edition, seconds: float = 0.0) -> PostCopy:
 
 
 def for_edition(edition: Edition) -> PostCopy:
-    """Copy for the carousel / bulletin. The reel uses for_story(lead).
+    """Copy for the ಸುದ್ದಿ ಸಾರ carousel. `edition` holds its stories only.
 
     The first line is the lead story's hook, never the date. A caption that
     opens "28 ಆಗಸ್ಟ್ · ಕರಾವಳಿ ಬುಲೆಟಿನ್" is a scroll-past; the news has to
@@ -1092,9 +1024,7 @@ def for_edition(edition: Edition) -> PostCopy:
                 seen.append(src)
 
     n = len(edition.stories)
-    special = is_special_series(edition)
-    unit = 'ವಿವರಣೆಗಳು' if any(s.category == 'explainer' for s in edition.stories) else 'ಸುದ್ದಿ'
-    swipe_line = f'ಸ್ವೈಪ್ ಮಾಡಿ — {edition.strapline}.' if special and edition.strapline else f'ಸ್ವೈಪ್ ಮಾಡಿ — ಇಂದಿನ {n} {unit}.'
+    swipe_line = f'ಸುದ್ದಿ ಸಾರ — ಸ್ವೈಪ್ ಮಾಡಿ, ಇಂದಿನ {n} ಸುದ್ದಿ.'
     blocks = [
         hook_line,
         swipe_line,
@@ -1105,15 +1035,12 @@ def for_edition(edition: Edition) -> PostCopy:
     blocks.append(f'{M_SOURCE} ಮೂಲ: ' + ' · '.join(seen))
     if g:
         blocks.append(g)
-    if not special:
-        pl = place_line(edition)
-        if pl:
-            blocks.append(pl)
+    pl = place_line(edition)
+    if pl:
+        blocks.append(pl)
     blocks.append(' '.join(f'#{t}' for t in tags))
 
-    alt_text_desc = (f'{Brand.name} — {edition.strapline} — {edition.date_kn}. '
-                     f'{n} ವಿವರಣೆಗಳ ಸಂಗ್ರಹ. {lead.headline}') if special else (
-                     f'{Brand.name} {Brand.bulletin} — {edition.date_kn}. '
+    alt_text_desc = (f'{Brand.name} ಸುದ್ದಿ ಸಾರ — {edition.date_kn}. '
                      f'{n} ಸುದ್ದಿಗಳ ಸಂಗ್ರಹ. {lead.headline}')
 
     return PostCopy(

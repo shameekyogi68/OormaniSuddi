@@ -131,9 +131,6 @@
      "what": "Walk assets/LICENCES.json against what is actually in assets/bgm_options/. A bed whose licence page has gone dead is a Content ID claim waiting to happen, and the time to find out is not after the strike."},
 
     {"id": "backup_restore_test", "every_days": 90, "weight": "highest",
-     "what": "A backup nobody has restored is a hope. Untar the newest archive from .backups into /tmp and confirm archive/ and assets/stock/ are actually in it and actually open. This is the single cheapest insurance in the whole system."},
-
-    {"id": "stock_review", "every_days": 90, "weight": "low",
-     "what": "assets/stock/ is the cheapest picture desk there is. Prune frames that dated badly, and check CATALOG.md still describes what is there in words somebody would search for."}
+     "what": "A backup nobody has restored is a hope. Untar the newest archive from .backups into /tmp and confirm archive/ and inbox/sources/ are actually in it and actually open. This is the single cheapest insurance in the whole system."}
   ]
 }

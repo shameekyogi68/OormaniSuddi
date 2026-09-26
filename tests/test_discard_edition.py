@@ -5,8 +5,8 @@
 keeping the editorial record and deleting throwaway media, it deletes
 everything about a day that was drafted and then abandoned before anyone
 signed it off. The one thing it must never do is quietly delete a day that
-was actually published — this suite pins that refusal, and that the
-evergreen stock library is never in its blast radius regardless.
+was actually published — this suite pins that refusal, and that the pasted
+sources in inbox/sources/ are never in its blast radius regardless.
 
 Runs against a fake date under the real project paths (never a real
 calendar day) so the deletion logic exercises the actual ROOT-relative
@@ -50,7 +50,6 @@ class WithAFakeDay(unittest.TestCase):
 
     def setUp(self):
         self.edition = os.path.join(ROOT, 'editions', f'{FAKE_DATE}.json')
-        self.checklist = os.path.join(ROOT, 'inbox', f'checklist_{FAKE_DATE}.md')
         self.out = os.path.join(ROOT, 'out', FAKE_DATE)
         self.daily = os.path.join(ROOT, 'assets', 'daily', FAKE_DATE)
         self._cleanup()
@@ -59,9 +58,8 @@ class WithAFakeDay(unittest.TestCase):
         self._cleanup()
 
     def _cleanup(self):
-        for p in (self.edition, self.checklist):
-            if os.path.exists(p):
-                os.remove(p)
+        if os.path.exists(self.edition):
+            os.remove(self.edition)
         for d in (self.out, self.daily):
             if os.path.isdir(d):
                 shutil.rmtree(d)
@@ -90,18 +88,14 @@ class WithAFakeDay(unittest.TestCase):
 
 class AnAbandonedDayIsFullyUndone(WithAFakeDay):
 
-    def test_edition_checklist_and_out_are_all_removed(self):
+    def test_edition_and_out_are_both_removed(self):
         self.make_edition()
-        os.makedirs(os.path.dirname(self.checklist), exist_ok=True)
-        with open(self.checklist, 'w', encoding='utf-8') as fh:
-            fh.write('# checklist')
         self.make_out(signed=False)
 
         rc = run(FAKE_DATE)
 
         self.assertEqual(rc, 0)
         self.assertFalse(os.path.exists(self.edition))
-        self.assertFalse(os.path.exists(self.checklist))
         self.assertFalse(os.path.isdir(self.out))
 
     def test_nothing_to_discard_is_not_an_error(self):
@@ -142,13 +136,15 @@ class DailyAssetsNeedTheForceFlag(WithAFakeDay):
         self.assertEqual(rc, 0)
         self.assertFalse(os.path.isdir(self.daily))
 
-    def test_the_evergreen_stock_library_is_never_touched(self):
-        stock = os.path.join(ROOT, 'assets', 'stock')
-        before = set(os.listdir(stock)) if os.path.isdir(stock) else set()
+    def test_the_pasted_sources_are_never_touched(self):
+        """inbox/sources/ is the fact desk's evidence (D92) — a discarded day
+        does not take the record of what we were told with it."""
+        src = os.path.join(ROOT, 'inbox', 'sources')
+        before = set(os.listdir(src)) if os.path.isdir(src) else set()
         self.make_edition()
         self.make_daily_assets('scene_1.jpg')
         run(FAKE_DATE, '--force-assets')
-        after = set(os.listdir(stock)) if os.path.isdir(stock) else set()
+        after = set(os.listdir(src)) if os.path.isdir(src) else set()
         self.assertEqual(before, after)
 
 

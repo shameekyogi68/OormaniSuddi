@@ -253,7 +253,7 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
     # Festival wish posters (D54) are deliverables too; without this a
     # greetings folder was rejected as having nothing in it.
     slides = [f for f in files
-              if (f.startswith('carousel_') and f.endswith('.jpg'))
+              if (re.match(r'(saara|mukhya_\d+)_', f) and f.endswith('.jpg'))
               or re.fullmatch(r'wish_\w+\.jpg', f)]
 
     # ── the handle ────────────────────────────────────────────────────────
@@ -382,102 +382,19 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                     r.add_fail('TYPE-01', f'story {i} {label} contains characters no '
                                f'house font can set: {" ".join(gone)}',
                                where=f'story {i}')
-            # Visual novelty: every fact in a reel must cut to a distinct photo (1:1 scene coverage)
-            if getattr(st, 'is_reel', False):
-                n_facts = len([p for p in st.points if p.strip()])
-                n_gallery = len(st.gallery)
-                if n_gallery < n_facts:
-                    r.add_fail('IMG-03',
-                        f'story {i} is a reel with {n_facts} facts but only {n_gallery} gallery photos. '
-                        f'Add gallery photos so the hero photo does not freeze or repeat across facts.',
-                        where=f'story {i}')
-
-        if slides:
-            unillustrated = [i for i, st in enumerate(edition.stories, 1) if not st.photo]
-            if unillustrated:
-                # The editor's standing instruction, and it blocks rather than
-                # warns: a warning is a thing you scroll past at 08:00 with a
-                # bulletin due, which is precisely when the slide ships without
-                # a picture. Recoverable in seconds — assets/stock/ is right
-                # there and CATALOG.md says what is in it. House rule
-                # 2026-09-17-03.
+            # A ಮುಖ್ಯ ಸುದ್ದಿ always has a picture; an AI one only with the
+            # name of the editor who said generate (D92).
+            if st.segment == 'mukhya' and not st.photo:
                 r.add_fail('IMG-04',
-                    f'carousel slides for stories {unillustrated} carry no '
-                    f'photograph. Every slide in the daily carousel must have '
-                    f'one (house rule 2026-09-17-03): pick a matching frame '
-                    f'from assets/stock/ (see assets/stock/CATALOG.md) or '
-                    f'generate one, and set nature="ai" on anything generated.')
-
-        # ── visual capacity and truncation on carousel (PUB-10) ──────────
-        # Every field written in JSON (headline, deck, points) is rendered
-        # on the carousel slide. If the text exceeds the visual capacity,
-        # it is silently cut or runs into the footer. The reader sees
-        # partial news. This gate closes that gap forever (D89).
-        if slides:
-            r.checked.append('carousel slide content fits without truncation (PUB-10)')
-            F = fmt('square')
-            ss = F.ss
-            cw = F.w - 2 * Grid.margin
-            H = F.h
-            foot_top = H - 58 - T.meta[0] * 1.1 - 22
-            src_top = foot_top - 28 - T.micro[0] * 1.26
-            max_y = src_top - 20
-
-            for i, st in enumerate(edition.stories, 1):
-                has_deck = bool(st.deck)
-                has_points = bool(st.points)
-
-                # 1. Deck visual line limit: 2 lines if points follow, 4 if deck only
-                max_dl = 2 if has_points else Limits.carousel_deck_max_lines
-                if has_deck:
-                    size = T.body[0]
-                    b = typo.fit(st.deck, 'kn_var',
-                                 int(ss * size), int(ss * size * 0.78),
-                                 ss * cw, ss * size * T.deck[1] * max_dl,
-                                 T.deck[1], weight=450, max_lines=max_dl)
-                    if b.n > max_dl:
-                        r.add_fail('PUB-10',
-                            f'story {i} deck is {b.n} visual lines on the '
-                            f'carousel slide (limit is {max_dl}). The carousel '
-                            f'renders deck in ≤{max_dl} lines when {"points follow" if has_points else "on card"} — '
-                            f'text past line {max_dl} is silently cut. '
-                            f'Shorten the deck to ≤{max_dl} lines.', where=f'story {i}')
-
-                # 2. Overall card height simulation:
-                has_any_points = any(bool(s.points) for s in edition.stories)
-                ph = H * 0.32 if has_any_points else H * 0.36
-                y_sim = 82 + ph + 16 + 25 + 28 + 34 + 24
-                room = src_top - 36 - y_sim
-                head_share = 0.30 if (has_deck and has_points) else (0.50 if (has_deck or has_points) else 0.72)
-                max_hl = 2 if (has_deck and has_points) else 4
-                hb = typo.fit(st.headline, 'kn', int(ss * T.h2[0]), int(ss * T.h4[0] * 0.84),
-                              ss * cw, ss * (room * head_share), T.h2[1], max_lines=max_hl)
-                y_sim += hb.height / ss
-
-                if has_deck:
-                    y_sim += 20
-                    deck_sz = int(T.body[0] * 0.90) if has_points else T.body[0]
-                    db = typo.fit(st.deck, 'kn_var', int(ss * deck_sz), int(ss * deck_sz * 0.78),
-                                  ss * cw, ss * (deck_sz * T.deck[1] * max_dl),
-                                  T.deck[1], weight=450, max_lines=max_dl)
-                    y_sim += db.height / ss
-
-                if has_points:
-                    y_sim += 16
-                    pts = st.points
-                    pt_size = int(T.body[0] * 0.82)
-                    gap = 12
-                    indent = 52
-                    blocks = [typo.layout(p, typo.font('kn_var', int(ss * pt_size), weight=440),
-                                          ss * (cw - indent), T.body[1]) for p in pts]
-                    pts_h = sum(blk.height / ss for blk in blocks) + gap * (len(pts) - 1)
-                    y_sim += pts_h
-
-                if y_sim > max_y:
-                    r.add_fail('PUB-10',
-                        f'story {i} content overflows the carousel slide by '
-                        f'{y_sim - max_y:.0f}px. Shorten the headline, deck, or '
-                        f'points so the slide fits cleanly without clipping.',
+                    f'story {i} is ಮುಖ್ಯ ಸುದ್ದಿ with no picture. Ask the editor: '
+                    f'a real photograph, or generate one? (photo_plan)',
+                    where=f'story {i}')
+            for ph in st.all_photos:
+                if ph.nature == 'ai' and not (ph.approved_by or '').strip() \
+                        and edition.schema_version >= 4:
+                    r.add_fail('IMG-05',
+                        f'story {i}: an AI picture with no approved_by — it was '
+                        f'made without asking the editor (D92).',
                         where=f'story {i}')
 
         # ── points capacity on carousel (PUB-11) ─────────────────────────

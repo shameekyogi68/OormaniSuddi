@@ -2,8 +2,9 @@
 """Archive a day's published record, then delete throwaway media.
 
 Keeps: editions/{date}.json, APPROVAL.md, SIGNOFF.json, review_report.json,
-PROVENANCE.json, copy, schedule, review frames, and any evergreen stock the
-editor already copied.
+PROVENANCE.json, copy, schedule and review frames. The day's pictures in
+assets/daily/{date}/ are left for the editor: a real photograph is the
+channel's own record and is never deleted by a script.
 
 Deletes: out/{date}/ renders and leftover assets/daily/{date}/ frames.
 
@@ -128,11 +129,11 @@ def main() -> int:
         print(f'  · no {out}')
 
     if os.path.isdir(daily):
-        print(f'  leftover daily frames in {daily} — copy evergreen ones to '
-              f'assets/stock/ first, then this folder can be removed.')
-        # Do not auto-delete daily frames: a generic harbour shot is stock.
-        # The editor / Stop close copies first, then:
-        # shutil.rmtree(daily)
+        print(f'  pictures left in {daily} — keep any real photograph the '
+              f'editor sent (it is our own record), then this folder can be '
+              f'removed by hand.')
+        # Never auto-deleted: a real photograph is not a render. There is no
+        # stock library to promote AI frames into any more (D92).
 
     if args.snapshot:
         print('  snapshotting sources…')

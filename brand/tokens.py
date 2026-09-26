@@ -377,6 +377,14 @@ class Limits:
     reel_target_max = 45.0
     # A speed-news reel of one or two stories is just a reel. D81.
     roundup_min_stories = 3
+    # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ past this many stories stops being quick. D92.
+    roundup_max_stories = 8
+    # ಸುದ್ದಿ ಸಾರ: a digest of one story is a post, and past six the cover's
+    # index no longer reads at feed size. D92.
+    saara_min_stories = 2
+    saara_max_stories = 6
+    # ಮುಖ್ಯ ಸುದ್ದಿ is the day's top story. Three "top" stories is none. D92.
+    mukhya_max_per_day = 2
     reel_warn_seconds = 45.0
     reel_fail_seconds = 60.0
     reel_platform_cap = 90.0
@@ -385,10 +393,8 @@ class Limits:
     true_peak_dbtp = -1.5
     reel_gap_min = 150          # minutes between our own reels
     reel_slots = ('11:30', '14:30', '17:30', '20:30')
-    carousel_slot = '09:00'
-    story_slot = '09:15'
-    broadsheet_slot = '20:00'
-    bulletin_slot = '08:30'
+    carousel_slot = '09:00'     # ಸುದ್ದಿ ಸಾರ
+    mukhya_slot = '12:30'       # ಮುಖ್ಯ ಸುದ್ದಿ — or the moment it breaks
     forward_target_kb = 300     # WhatsApp is the growth route
     # WCAG 2.1 AA. Read by brand/legibility.py, which audits every house
     # colour pair; nothing in this project sets type in a pair that is not in
@@ -399,8 +405,9 @@ class Limits:
     # Kannada stacks conjuncts into the body height, so it loses legibility
     # earlier than Latin at the same nominal size. See legibility.FEED_WIDTH.
     min_effective_px = 7.0
-    # Daily default path. Bulletin and extra templates are --only on request.
-    daily_templates = ('carousel', 'story_card', 'broadsheet', 'reel')
+    # The three news formats (D92). What renders is decided by the stories'
+    # segments, not by this list; it is the full set --only accepts.
+    daily_templates = ('roundup', 'saara', 'mukhya')
     # The reel gate is "drama, public stakes, shareability", and crime wins on
     # all three every single time. Left alone, a metrics loop that rewards
     # what performs will walk this channel into being a crime channel — which
@@ -420,10 +427,6 @@ class Limits:
     # taluks who see something they can use and send it to someone in the same
     # taluk. A post reaching 40,000 statewide and 200 locally is a miss.
     local_reach_floor = 0.55    # share of reach that should be in-district
-    # Points a stock frame must earn from the story's own words before it is
-    # attached: one headline word (3), or deck (2) + a fact (1). Below this
-    # the slide is left for a fresh, story-specific frame. D85.
-    stock_match_min = 3
     # Instagram ignores every hashtag past the fifth on a post or Reel since
     # December 2025, and says fewer, targeted tags perform better. D86.
     ig_hashtags_max = 5
@@ -439,6 +442,33 @@ class Limits:
     # The 06:10 intake reaches back over yesterday; the 24 Sept draft carried
     # two stories from the 22nd. A dated URL counts its whole day. D88.
     news_max_age_hours = 36
+
+
+class Paper:
+    """The Paper & Red news look (D92): measurements for brand/paper.py.
+
+    Colour is not here — it is tokens.C, used by role: red for the news,
+    sunset gold for the brand, ink and paper for everything else.
+    """
+    margin      = 64      # outer margin on every 1080-wide news format
+    bug         = 34      # wordmark size inside the red house bug
+    bug_reel    = 38
+    kicker      = 32      # category / place line
+    head_hi     = 96      # headline, largest (cover)
+    head_lo     = 64      # headline, smallest before the copy must be cut
+    head_lead   = 1.22    # Kannada display leading, from the em (D1)
+    body        = 44      # a point on a slide
+    body_lead   = 1.46
+    meta        = 28      # source line, footer, dates
+    credit      = 26      # the in-photo disclosure; above T.nano (D60)
+    footer_h    = 88      # hairline + handle + page
+    sunline     = 8       # gold line under a photograph (10 on a reel)
+    photo_4x5   = 720     # photograph height on a 4:5 cover
+    reel_photo  = 1000    # photograph height on a 9:16 speed-news frame
+    # Taking the gloss off a GENERATED picture: less colour, less contrast.
+    # A real photograph is left as it was shot, beyond the house grade.
+    ai_saturation = 0.78
+    ai_contrast   = 0.93
 
 
 class Motion:

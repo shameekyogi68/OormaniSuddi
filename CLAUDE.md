@@ -9,19 +9,20 @@ Then, depending on the job:
 
 | You are about to… | Read |
 |---|---|
-| feed the system news copy | [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) then [`.agents/skills/second-brain/SKILL.md`](.agents/skills/second-brain/SKILL.md) — four stops, not thirteen |
+| take news the editor pasted and make the day | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) "Chat workflow", then [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) |
+| pick a format for a story | [`docs/DECISIONS.md`](docs/DECISIONS.md) D92, then `python3 render.py --describe` |
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
-| pick a template | `python3 render.py --describe` |
-| know which agents to run | `python3 scripts/dispatch.py` — twelve agents in `.claude/agents/`, proactive and reactive, in waves (D89) |
-| run a day end to end | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) |
+| know which agents to run | `python3 scripts/dispatch.py` — agents in `.claude/agents/`, in waves (D87, D89) |
 | edit raw clips into a long-format YouTube video | [`.claude/skills/youtube-longform-edit/SKILL.md`](.claude/skills/youtube-longform-edit/SKILL.md) |
 | edit raw clips into an Instagram Reel / YouTube Short | [`.claude/skills/reels-shorts-edit/SKILL.md`](.claude/skills/reels-shorts-edit/SKILL.md) |
+
+The system before D92 is at the git tag `pre-final-upgrade-2026`.
 
 ## Before you touch anything
 
 ```bash
 python3 -m unittest tests.test_contract     # the contract — instant
-python3 -m unittest discover tests          # + the golden design — ~2.5 min
+python3 -m unittest discover tests          # + the golden design
 ```
 
 The golden test pins the *rendered pixels*. If it fails, the design changed.
@@ -30,10 +31,6 @@ That is not automatically a bug — but do not re-bless it without looking at
 
 ## Things that look like bugs and are not
 
-* **The editorial plate's ruled lines and off-centre sun.** A designed graphic,
-  not an artifact — deliberately not photographic. `surface.py :: editorial_plate`,
-  DECISIONS.md D66 (why it is a scene) and D28 (why its variation is seeded
-  from a stable digest and never from `hash()`).
 * **`out/reference/` is tracked while the rest of `out/` is ignored.** It is the
   visual baseline, not a build artifact.
 * **Warnings on a clean render.** `preflight()` warns; it does not block. A
@@ -42,9 +39,10 @@ That is not automatically a bug — but do not re-bless it without looking at
   is correct. The file records what a *machine* established. Taste, cultural
   dignity and news judgement are signed by a person —
   `python3 scripts/sign_off.py out/<date> --by "<name>"`. See D62.
-* **The broadsheet saving at a lower JPEG quality than everything else.** It is
-  fitted to `Limits.forward_target_kb`, because its job is to be forwarded on
-  mobile data, not to be pixel-peeped. See D60.
+* **A ಸುದ್ದಿ ಸಾರ with no pictures.** Deliberate: it is the text bulletin (D92).
+* **A render that stops to ask "real photo or generate?"** Deliberate: an AI
+  picture is made only after the editor says so, and carries their name in
+  `photo.approved_by` (D92).
 
 ## Things that are genuinely load-bearing
 
@@ -61,10 +59,14 @@ That is not automatically a bug — but do not re-bless it without looking at
 * **No source, no claim. No human verification, no publication.** A story needs
   a `source_url` to render (D55) and a `verified_by` to be approved (D59). The
   second one is not inferrable from `status`: "confirmed" is what the card says
-  about the news, and a model can write that.
+  about the news, and a model can write that. Run `scripts/verify.py` only with
+  the name the editor gives in chat when they approve — never invent one.
+* **One story, one format.** Every story carries `segment` (`speed` / `saara` /
+  `mukhya`); a source already published is refused (`DUP-01`) unless it is a
+  real follow-up. D92.
 * **Numbers live in `tokens.Limits`, once.** Durations, character budgets,
-  loudness, slots, contrast floors. Skills and docs quote those names; they do
-  not restate the values. See D56.
+  loudness, slots, contrast floors, stories per format. Skills and docs quote
+  those names; they do not restate the values. See D56.
 
 ## When the user asks for a change
 

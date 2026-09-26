@@ -15,8 +15,8 @@ One place for three questions the intake, the drafter and the gate all ask:
     (`…/22092026`, `/2026/09/22/`) says how old it is. Anything past
     `Limits.news_max_age_hours` is not news for a daily edition.
 
-Pure functions; no network. `scripts/fetch_daily_news.py` records the
-publish date it sees in a feed or on the page in `Tip.published_at`.
+Pure functions; no network. News is pasted in (D92, `scripts/intake.py`);
+these checks run on the URL the editor gives with it.
 """
 from __future__ import annotations
 

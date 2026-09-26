@@ -24,9 +24,9 @@
       "id": "2026-09-17-01",
       "said": "When picking which tips to auto-draft each morning, prefer taluks in this order: ಕುಂದಾಪುರ (Kundapura) and ಬೈಂದೂರು (Byndoor) highest, then ಉಡುಪಿ (Udupi) and ಮಣಿಪಾಲ (Manipal), then ಕಾರ್ಕಳ (Karkala), ಬ್ರಹ್ಮಾವರ (Brahmavara), ಹೆಬ್ರಿ (Hebri), ಕಾಪು (Kaup), ಮಂಗಳೂರು (Mangalore).",
       "scope": "desk",
-      "why": "editor's own priority ranking of the coverage area, 2026-09-17",
+      "why": "editor's own priority ranking of the coverage area, 2026-09-17  · retired: D92: the morning auto-draft is deleted; the editor pastes the day's news. Taluk priority carried over as a new rule.",
       "added": "2026-09-17",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": "Gautam Paduvari"
     },
     {
@@ -42,9 +42,9 @@
       "id": "2026-09-17-03",
       "said": "Every carousel slide must have a photo (100% visual photo coverage). No carousel story slide may be published without an image; always pick a matching evergreen photo from assets/stock/ or generate a fresh AI image in chat.",
       "scope": "picture",
-      "why": "Editor standing instruction (2026-09-17): no carousel slide should ever be without an image.",
+      "why": "Editor standing instruction (2026-09-17): no carousel slide should ever be without an image.  · retired: D92: 100% carousel photos is replaced by the picture rule — ಸುದ್ದಿ ಸಾರ never carries pictures, ಮುಖ್ಯ ಸುದ್ದಿ always does, real first, AI only when the editor says generate",
       "added": "2026-09-17",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": ""
     },
     {
@@ -96,27 +96,27 @@
       "id": "2026-09-18-01",
       "said": "Before asking for approval or 'go' on the morning draft, always ask the editor if they have any additional news, press releases, or info to add to today's edition.",
       "scope": "desk",
-      "why": "Editor preference: ensure any spot news, local tips or press releases from the editor are incorporated before rendering.",
+      "why": "Editor preference: ensure any spot news, local tips or press releases from the editor are incorporated before rendering.  · retired: D92: the morning draft is deleted; asking whether the editor has more to add is now a step of the RUNBOOK chat workflow",
       "added": "2026-09-18",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": ""
     },
     {
       "id": "2026-09-18-02",
       "said": "The daily render is the carousel plus ONE reel. With 3 or more stories that reel is ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (render.py --only roundup): a place and one line per story, spoken by the anchor while it is on screen, under 45 seconds. On a thin day of 1-2 stories, the lead-story reel only if scripts/pick_formats.py says the lead earns it. Never both reels. story_card and broadsheet stay out of the default.",
       "scope": "package",
-      "why": "editor's instruction 2026-09-18: news reels should be quick news; supersedes 2026-09-17-02, which said a reel is never a default",
+      "why": "editor's instruction 2026-09-18: news reels should be quick news; supersedes 2026-09-17-02, which said a reel is never a default  · retired: D92: one story, one format — every story carries segment (speed / saara / mukhya); no daily carousel + reel default",
       "added": "2026-09-18",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": "Gautam Paduvari"
     },
     {
       "id": "2026-09-19-01",
       "said": "All AI editorial images must be generated as single continuous frames matching the 16:9 card aspect ratio (AspectRatio: '16:9'). Prompts must explicitly mandate a single continuous camera angle with generous headroom and forbid collages, multi-panel grids, or split screens. Never crop sub-panels or quadrants from multi-image grids to prevent seams and cut-off subjects.",
       "scope": "picture",
-      "why": "Crop and seam defects occurred when 1:1 grids were generated and manually cropped for carousel_03 on 2026-09-19. Card photo containers are ~16:9, so single native 16:9 frames ensure flawless framing every time.",
+      "why": "Crop and seam defects occurred when 1:1 grids were generated and manually cropped for carousel_03 on 2026-09-19. Card photo containers are ~16:9, so single native 16:9 frames ensure flawless framing every time.  · retired: D92: the 16:9 card photo box belongs to the deleted carousel; the single-frame, no-text AI rule is in AGENTS.md",
       "added": "2026-09-19",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": ""
     },
     {
@@ -159,18 +159,18 @@
       "id": "2026-09-24-02",
       "said": "Every edition starts with the fact desk: run trend-scout and one fact-checker agent per story in parallel (scripts/fact_check.py), and write or rewrite no sentence of a story until its fact check passes. Then picture-editor per story and social-writer in parallel.",
       "scope": "always",
-      "why": "editor instruction 2026-09-24: a fact checker before any sentence is written, and the work done in parallel (D84, D87)",
+      "why": "editor instruction 2026-09-24: a fact checker before any sentence is written, and the work done in parallel (D84, D87)  · retired: D92: trend-scout is deleted. The fact desk still goes first (D84, D87) — the dispatcher's waves and the RUNBOOK say so",
       "added": "2026-09-24",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": "Shameek Yogi"
     },
     {
       "id": "2026-09-24-03",
       "said": "Check today's trends every day (scripts/trending_tags.py + trend-scout) and use every trending tag a story is genuinely about. Never attach a trend the story is not about — it is misleading metadata on YouTube and cuts reach on Instagram.",
       "scope": "package",
-      "why": "editor instruction 2026-09-24: trending tags daily for reach; D86 on why only relevant ones reach",
+      "why": "editor instruction 2026-09-24: trending tags daily for reach; D86 on why only relevant ones reach  · retired: D92: trend scraping and scripts/trending_tags.py are deleted; hashtags follow D86 from the story's own words",
       "added": "2026-09-24",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": "Shameek Yogi"
     },
     {
@@ -186,28 +186,37 @@
       "id": "2026-09-25-02",
       "said": "ಮಹಿಳೆಯರ ಮತ್ತು ಯುವತಿಯರ ಸೈಬರ್ ಸುರಕ್ಷತೆ, ಡಿಜಿಟಲ್ ಬ್ಲ್ಯಾಕ್‌ಮೇಲ್, ಐಡಿ ದುರ್ಬಳಕೆ ಹಾಗೂ ಕಾನೂನು ರಕ್ಷಣೆಯ ಸಾರ್ವಜನಿಕ ಜಾಗೃತಿ ಸರಣಿ/ವರದಿಗಳನ್ನು 'ಕಾನೂನು ಕವಚ' (Kanoonu Kavacha — ಹೆಣ್ಣುಮಕ್ಕಳ ಡಿಜಿಟಲ್ & ಸೈಬರ್ ರಕ್ಷಣೆ) ಸೆಗ್ಮೆಂಟ್ ಅಡಿಯಲ್ಲಿ ಪ್ರಕಟಿಸಬೇಕು.",
       "scope": "desk",
-      "why": "Editor standing instruction (2026-09-25): Standardize women's cyber safety and legal awareness series under the 'ಕಾನೂನು ಕವಚ' (Kanoonu Kavacha) segment.",
+      "why": "Editor standing instruction (2026-09-25): Standardize women's cyber safety and legal awareness series under the 'ಕಾನೂನು ಕವಚ' (Kanoonu Kavacha) segment.  · retired: D92: ಕಾನೂನು ಕವಚ is deleted; the channel makes three news formats only",
       "added": "2026-09-25",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": "Gautam"
     },
     {
       "id": "2026-09-25-03",
       "said": "ಪ್ರತಿ ಶನಿವಾರ ವಿಶೇಷ ಸೆಗ್ಮೆಂಟ್ ದಿನ ('ಕಾನೂನು ಕವಚ' — Kanoonu Kavacha; ಪ್ರಸ್ತುತ ಹೆಣ್ಣುಮಕ್ಕಳ ಸೈಬರ್ & ಡಿಜಿಟಲ್ ರಕ್ಷಣೆ, ಕಾನೂನು ಅರಿವು). ವಿಶೇಷ ಸರಣಿಯ ಕ್ಯಾರೋಸೆಲ್‌ಗಳಲ್ಲಿ ಕೇವಲ ಸಲಹೆಯಷ್ಟೇ ಅಲ್ಲದೆ, ನೈಜ ಕೇಸ್ ಸನ್ನಿವೇಶ, ಕಿರುಕುಳ ನೀಡುವವರಿಗೆ ಕಠಿಣ ಕ್ರಿಮಿನಲ್ ಪರಿಣಾಮಗಳ ಎಚ್ಚರಿಕೆ ಹಾಗೂ ಸಂತ್ರಸ್ತರಿಗೆ ನಿಖರ ಪರಿಹಾರ ಕ್ರಮಗಳನ್ನು ಒಳಗೊಂಡಿರಬೇಕು.",
       "scope": "always",
-      "why": "Editor standing instruction (2026-09-25): Saturdays are dedicated to the Special Segment (currently female safety under 'ಕಾನೂನು ಕವಚ'). Pitch and produce case-driven deterrent + empowerment carousels.",
+      "why": "Editor standing instruction (2026-09-25): Saturdays are dedicated to the Special Segment (currently female safety under 'ಕಾನೂನು ಕವಚ'). Pitch and produce case-driven deterrent + empowerment carousels.  · retired: D92: ಕಾನೂನು ಕವಚ Saturdays are deleted; the channel makes three news formats only",
       "added": "2026-09-25",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": "Gautam"
     },
     {
       "id": "2026-09-25-04",
       "said": "Universal Carousel Visibility & Special Segment Branding (D89): 1) Every field in Story JSON (headline, deck, points) MUST be rendered visually on carousel slides (zero phantom data). When points are present, deck must be a concise 1-2 line lead-in (max_lines=2) so key facts and consequences ('ವಾಸ್ತವ') render as gold-numbered fact points. PUB-10 strictly fails the build if content overflows the card. Never write copy in JSON that cannot visually fit on the card. 2) Special segments (e.g. Kanoonu Kavacha) must never inherit coastal bulletin boilerplate: masthead wears the segment strapline, cover counter reads '{n} ಅಂಶಗಳು', closing slide shows 'ಹೆಚ್ಚಿನ ಮಾಹಿತಿ & ಜಾಗೃತಿಗಾಗಿ' with segment badge, and hashtags/captions are topic-driven (no #ಕರಾವಳಿಸುದ್ದಿ or #ಕರಾವಳಿ).",
       "scope": "package",
-      "why": "Editor demand for universal lifetime solution (2026-09-25): prevent half-baked carousel slides with missing points/reality and prevent inappropriate coastal boilerplate on special awareness segments (D89).",
+      "why": "Editor demand for universal lifetime solution (2026-09-25): prevent half-baked carousel slides with missing points/reality and prevent inappropriate coastal boilerplate on special awareness segments (D89).  · retired: D92: the old carousel and the ಕಾನೂನು ಕವಚ segment branding are deleted (see D93)",
       "added": "2026-09-25",
-      "retired": "",
+      "retired": "2026-09-27",
       "by": ""
+    },
+    {
+      "id": "2026-09-27-01",
+      "said": "When choosing or ordering the day's stories, prefer places in this order: ಕುಂದಾಪುರ (Kundapura) and ಬೈಂದೂರು (Byndoor) highest, then ಉಡುಪಿ (Udupi) and ಮಣಿಪಾಲ (Manipal), then ಕಾರ್ಕಳ (Karkala), ಬ್ರಹ್ಮಾವರ (Brahmavara), ಹೆಬ್ರಿ (Hebri), ಕಾಪು (Kaup), ಮಂಗಳೂರು (Mangalore).",
+      "scope": "desk",
+      "why": "editor's own priority ranking of the coverage area, 2026-09-17; carried over unchanged from 2026-09-17-01, which was worded for the deleted morning auto-draft (D92)",
+      "added": "2026-09-27",
+      "retired": "",
+      "by": "carried over from 2026-09-17-01"
     }
   ]
 }

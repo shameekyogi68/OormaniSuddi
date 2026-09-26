@@ -1,219 +1,75 @@
 # ಊರ್ಮನಿ ಸುದ್ದಿ — MASTER COPY
-## {DATE} · ಆವೃತ್ತಿ {EDITION_NO} · ಕರಾವಳಿ ಬುಲೆಟಿನ್
+## {DATE} · ಆವೃತ್ತಿ {EDITION_NO}
 
-> Generated from rendered files. All times IST.
-> AI-card reels: Instagram only. YouTube gets real footage.
+> Generated from rendered files. All times IST. Post from the `*_caption.txt`
+> files — they hold the caption and nothing else.
+> ಸ್ಪೀಡ್ ನ್ಯೂಸ್ is Instagram-only. YouTube gets real footage (AGENTS rule 9).
 
 ---
 
-## Publishing Schedule
+## Publishing schedule
 
 Paste from `out/{DATE}/schedule.txt` — it is derived from files that exist.
 
-Default day: carousel 09:00 Instagram · story 09:15 · reels Instagram-only
-at 11:30 / 14:30 / 17:30 / 20:30 · broadsheet 20:00 WhatsApp.
-
-Do not upload `bulletin.mp4` to YouTube unless it is real footage.
-
 ---
 
-## 🎠 Carousel
+## ಮುಖ್ಯ ಸುದ್ದಿ {K} — {MUKHYA_HEADLINE}
 
-### Instagram Caption
+_(One section per mukhya story; delete if none.)_
+
+Files: `mukhya_{K}_01_cover.jpg`, `mukhya_{K}_02_points.jpg`, `mukhya_{K}_03_source.jpg`
+
+### Instagram caption (`mukhya_{K}_caption.txt`)
 ```
-{CAROUSEL_CAPTION}
+{MUKHYA_CAPTION}
 ```
 
-### Instagram First Comment (paste immediately)
+### First comment (paste immediately)
 ```
-{CAROUSEL_FIRST_COMMENT}
-```
-
-### Alt Text
-```
-{CAROUSEL_ALT_TEXT}
+{MUKHYA_FIRST_COMMENT}
 ```
 
 ---
 
-## 🎬 Reel 1 — {STORY_1_HEADLINE}
+## ಸುದ್ದಿ ಸಾರ
 
-### Instagram Caption
-```
-{REEL_01_INSTAGRAM_CAPTION}
-```
+Files: `saara_01_cover.jpg` … `saara_{NN}_sources.jpg`
 
-### Instagram First Comment (paste immediately)
+### Instagram caption (`saara_caption.txt`)
 ```
-{REEL_01_FIRST_COMMENT}
+{SAARA_CAPTION}
 ```
 
-### YouTube Shorts Title
+### First comment (paste immediately)
 ```
-{REEL_01_YT_TITLE}
-```
-
-### YouTube Description
-```
-{REEL_01_YT_DESCRIPTION}
-```
-
-### YouTube Tags
-```
-{REEL_01_YT_TAGS}
-```
-
-### WhatsApp Forward
-```
-{REEL_01_WHATSAPP}
-```
-
-### X Post
-```
-{REEL_01_X_POST}
+{SAARA_FIRST_COMMENT}
 ```
 
 ---
 
-## 🎬 Reel 2 — {STORY_2_HEADLINE}
+## ಸ್ಪೀಡ್ ನ್ಯೂಸ್
 
-### Instagram Caption
-```
-{REEL_02_INSTAGRAM_CAPTION}
-```
+Files: `roundup.mp4`, `roundup_cover.jpg`
 
-### Instagram First Comment (paste immediately)
+### Instagram Reels caption (`roundup_caption.txt`)
 ```
-{REEL_02_FIRST_COMMENT}
+{ROUNDUP_CAPTION}
 ```
 
-### YouTube Shorts Title
+### First comment (paste immediately)
 ```
-{REEL_02_YT_TITLE}
-```
-
-### YouTube Description
-```
-{REEL_02_YT_DESCRIPTION}
-```
-
-### YouTube Tags
-```
-{REEL_02_YT_TAGS}
-```
-
-### WhatsApp Forward
-```
-{REEL_02_WHATSAPP}
-```
-
-### X Post
-```
-{REEL_02_X_POST}
+{ROUNDUP_FIRST_COMMENT}
 ```
 
 ---
 
-## 🎬 Reel 3 — {STORY_3_HEADLINE}
+## WhatsApp forwards
 
-### Instagram Caption
-```
-{REEL_03_INSTAGRAM_CAPTION}
-```
-
-### Instagram First Comment (paste immediately)
-```
-{REEL_03_FIRST_COMMENT}
-```
-
-### YouTube Shorts Title
-```
-{REEL_03_YT_TITLE}
-```
-
-### YouTube Description
-```
-{REEL_03_YT_DESCRIPTION}
-```
-
-### YouTube Tags
-```
-{REEL_03_YT_TAGS}
-```
-
-### WhatsApp Forward
-```
-{REEL_03_WHATSAPP}
-```
-
-### X Post
-```
-{REEL_03_X_POST}
-```
+One per town — `forward_*.txt`. Send each to that town's groups.
 
 ---
 
-## 🎬 Reel 4 — {STORY_4_HEADLINE}
-
-_(If 4th story exists — otherwise delete this section)_
-
-### Instagram Caption
-```
-{REEL_04_INSTAGRAM_CAPTION}
-```
-
-### Instagram First Comment (paste immediately)
-```
-{REEL_04_FIRST_COMMENT}
-```
-
-### YouTube Shorts Title
-```
-{REEL_04_YT_TITLE}
-```
-
-### YouTube Description
-```
-{REEL_04_YT_DESCRIPTION}
-```
-
-### YouTube Tags
-```
-{REEL_04_YT_TAGS}
-```
-
-### WhatsApp Forward
-```
-{REEL_04_WHATSAPP}
-```
-
-### X Post
-```
-{REEL_04_X_POST}
-```
-
----
-
-## 📺 Bulletin (Long-form YouTube)
-
-### YouTube Title
-```
-{BULLETIN_YT_TITLE}
-```
-
-### YouTube Description
-```
-{BULLETIN_YT_DESCRIPTION}
-```
-
-### YouTube Tags
-```
-{BULLETIN_YT_TAGS}
-```
-
----
-
-## 📂 Files in `out/{DATE}/`
+## Files in `out/{DATE}/`
 
 ```
 {FILE_LISTING}

@@ -10,28 +10,25 @@ media/
 Ganapathi Video/
 scratch/
 
-# A day's generated story images. Transient by design: AGENTS rule 9 archives
-# the published record and then deletes these. Anything worth keeping was
-# already promoted into assets/stock/ by the `stop` workflow. Tracking them
-# would put a few megabytes of throwaway JPEGs in history every morning.
+# A day's story pictures. The published record is archived (archive/); a real
+# photograph the editor sent is kept by the editor. There is no stock library
+# any more (D92). Tracking these would put megabytes of JPEGs in history daily.
 assets/daily/
 
 # Published record (kept locally, backed up by scripts/backup.sh, not in git)
 archive/
 
-# The morning tip sheet. Regenerated daily, and it is explicitly NOT copy —
-# committing it would put unverified leads in the permanent record. inbox/README.md
-# is tracked so the folder's purpose survives.
+# Pasted sources (inbox/sources/) and receipts. News is pasted in, never
+# scraped (D92); the pasted text is evidence, kept locally and in
+# scripts/backup.sh, not in a public repo. inbox/README.md is tracked so the
+# folder's purpose survives.
 inbox/*
 !inbox/README.md
 
 # ── Rendered deliverables ────────────────────────────────────────────────────
 # out/ is regenerated from editions/*.json by render.py. The inputs are the
-# source of truth; the artwork is not. out/reference/ is the exception — it is
-# the pinned visual baseline the golden tests compare against, so it is tracked.
+# source of truth; the artwork is not.
 out/*
-!out/reference/
-!out/reference/**
 
 # Reel intermediates. Rebuilt on every render.
 build/
@@ -56,7 +53,7 @@ docs/SYSTEM_BOOK.md
 .gemini_key
 *.secret
 
-# Structured run logs. Regenerated every morning; useful for a day, not a year.
+# Structured run logs. Useful for a day, not a year.
 logs/
 
 # The render lock. Machine state, never shared.
