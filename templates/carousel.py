@@ -51,6 +51,10 @@ def carousel(edition: Edition, outdir: str, prefix: str = 'carousel') -> list[st
     cp.masthead(sf, m, 52, cw, right_top=edition.date_kn,
                 right_bot=edition.strapline, on_photo=True)
 
+    is_special = bool(edition.strapline and any(w in edition.strapline for w in ('ಕಾನೂನು', 'ವಿಶೇಷ', 'ಸರಣಿ', 'ಪ್ರಕರಣ')))
+    if not is_special:
+        is_special = any(s.category == 'explainer' for s in edition.stories) and not any(s.location for s in edition.stories)
+
     fy = H - 62
     fy -= 30
     typo.draw_text(sf.img, 'ಸ್ವೈಪ್ ಮಾಡಿ', sf.s(m), sf.s(fy),
@@ -58,7 +62,8 @@ def carousel(edition: Edition, outdir: str, prefix: str = 'carousel') -> list[st
                    shadow=(0, sf.s(1), sf.s(8), (0, 0, 0, 180)))
     typo.draw_text(sf.img, '→', sf.s(m + 122), sf.s(fy),
                    typo.font('latin', sf.s(T.meta[0] * 1.2), weight=700), C.gold_500)
-    typo.draw_text(sf.img, f'{len(edition.stories)} ಸುದ್ದಿಗಳು', sf.s(m + cw), sf.s(fy),
+    unit = 'ಅಂಶಗಳು' if is_special else 'ಸುದ್ದಿಗಳು'
+    typo.draw_text(sf.img, f'{len(edition.stories)} {unit}', sf.s(m + cw), sf.s(fy),
                    typo.font('kn_var', sf.s(T.meta[0]), weight=500), C.paper_200,
                    anchor_x='r', shadow=(0, sf.s(1), sf.s(8), (0, 0, 0, 180)))
     fy -= 46
@@ -88,8 +93,10 @@ def carousel(edition: Edition, outdir: str, prefix: str = 'carousel') -> list[st
         has_photo = bool(st.photo and os.path.exists(st.photo.path))
         # Same height either way: a carousel where the graphic slides are
         # shorter than the photographed ones has a visibly ragged rhythm as you
-        # swipe through it.
-        ph = H * 0.36
+        # swipe through it. When stories carry points, use 32% height to give
+        # ample vertical breathing room for fact lists (D89).
+        has_any_points = any(bool(s.points) for s in edition.stories)
+        ph = H * 0.32 if has_any_points else H * 0.36
         if has_photo:
             place_photo(sf, st.photo.path, (m, y, m + cw, y + ph),
                         focal=st.photo.focal, radius=Grid.radius_soft)
@@ -107,21 +114,43 @@ def carousel(edition: Edition, outdir: str, prefix: str = 'carousel') -> list[st
             typo.draw_block(sf.img, cb, sf.s(m), sf.s(cy), alpha(C.paper_300, 0.9),
                             box_w=sf.s(cw))
             cy += cb.height / sf.ss
-        y = cy + 34
+        has_deck = bool(st.deck)
+        has_points = bool(st.points)
+
+        y = cy + (28 if has_points else 34)
 
         foot_top = H - 58 - T.meta[0] * 1.1 - 22
         src_top = foot_top - 28 - T.micro[0] * 1.26
         y = cp.eyebrow(sf, m, y, cw, st)
-        y += 28
-        room = src_top - 40 - y
+        y += 24 if has_points else 28
+        room = src_top - (36 if has_points else 40) - y
 
-        y, _ = cp.headline(sf, m, y, cw, st.headline, T.h2[0], T.h4[0] * 0.86,
-                           room * (0.50 if st.deck else 0.72), max_lines=4,
+        # Space budget: if points follow, headline and deck stay tight
+        head_room = room * (0.30 if (has_deck and has_points) else (0.50 if (has_deck or has_points) else 0.72))
+        max_hl = 2 if (has_deck and has_points) else 4
+        min_sz = T.h4[0] * (0.84 if has_points else 0.86)
+        y, _ = cp.headline(sf, m, y, cw, st.headline, T.h2[0], min_sz,
+                           head_room, max_lines=max_hl,
                            leading=T.h2[1])
-        if st.deck:
-            y += 26
-            cp.deck(sf, m, y, cw, st.deck, size=T.body[0],
-                    max_lines=4, color=C.paper_200)
+
+        if has_deck:
+            if has_points:
+                y += 20
+                deck_sz = int(T.body[0] * 0.90)
+                y = cp.deck(sf, m, y, cw, st.deck, size=deck_sz,
+                            max_lines=2, color=C.paper_200)
+            else:
+                y += 26
+                cp.deck(sf, m, y, cw, st.deck, size=T.body[0],
+                        max_lines=4, color=C.paper_200)
+
+        if has_points:
+            y += 16
+            rem = src_top - 18 - y
+            y = cp.factlist(sf, m, y, cw, st.points,
+                            size=int(T.body[0] * 0.82),
+                            gap=12, rules=True, indent=52,
+                            max_h=rem)
 
         cp.sourceline(sf, m, src_top, cw, st)
         cp.footer(sf, m, foot_top, cw,
@@ -166,7 +195,8 @@ def carousel(edition: Edition, outdir: str, prefix: str = 'carousel') -> list[st
 
     foot_top = H - 58 - T.meta[0] * 1.1 - 22
     cy = foot_top - 118
-    typo.draw_text(sf.img, 'ಪ್ರತಿದಿನದ ಕರಾವಳಿ ಸುದ್ದಿಗಾಗಿ', sf.s(W / 2), sf.s(cy),
+    follow_prompt = 'ಹೆಚ್ಚಿನ ಮಾಹಿತಿ & ಜಾಗೃತಿಗಾಗಿ' if is_special else 'ಪ್ರತಿದಿನದ ಕರಾವಳಿ ಸುದ್ದಿಗಾಗಿ'
+    typo.draw_text(sf.img, follow_prompt, sf.s(W / 2), sf.s(cy),
                    typo.font('kn_var', sf.s(T.body_sm[0]), weight=460),
                    C.paper_200, anchor_x='c')
     typo.draw_text(sf.img, Brand.handle, sf.s(W / 2), sf.s(cy + 62),
@@ -180,7 +210,8 @@ def carousel(edition: Edition, outdir: str, prefix: str = 'carousel') -> list[st
         typo.draw_text(sf.img, g, sf.s(W / 2), sf.s(foot_top - 26),
                        typo.font_for(g, 'kn_var', sf.s(T.nano[0]), weight=440),
                        Role.text_faint, anchor_x='c')
-    cp.footer(sf, m, foot_top, cw, left=Brand.coverage,
+    left_badge = edition.strapline.split('•')[0].strip() if is_special and edition.strapline else Brand.coverage
+    cp.footer(sf, m, foot_top, cw, left=left_badge,
               right=edition.date_kn, handle_gold=False)
     grain(sf, Grade.grain, Grade.grain_shadow_bias)
     paths.append(sf.save(os.path.join(outdir, f'{prefix}_{n:02d}_sources.jpg')))

@@ -734,33 +734,67 @@ def _bed_path() -> str:
 def sfx_cues(starts: list[float], n: int) -> list[tuple[str, float, float]]:
     """(effect, when, gain) — every hit tied to a picture edit, not a guess.
 
-    open    frame 0, under the anchor's first word: a low, short hit.
+    open    frame 0, under the anchor's first word: broadcast news ident sting.
     whoosh  centred on every wipe, travelling with it left to right.
-    tick    as each headline lands — quiet, under the first syllable.
-    outro   as the follow card's logo arrives.
+    tick    as each headline lands — dry woody tick under the first syllable.
+    outro   as the follow card arrives: resonant broadcast outro hit.
 
-    Gains are relative to the voice before mastering, and deliberately low:
+    Gains are relative to the voice before mastering, and deliberately balanced:
     in speed news the anchor is the programme and the effects are punctuation.
     """
     XF = Motion.speed_cross
-    cues = [('open', 0.0, 0.42)]
+    cues = [('open', 0.0, 0.52)]
     for i in range(1, n + 1):
         cues.append(('whoosh', starts[i] + XF / 2 - 0.21, 0.34))
         if i < n:
-            cues.append(('tick', starts[i] + XF + 0.10, 0.22))
-    cues.append(('outro', starts[n] + XF + 0.02, 0.46))
+            cues.append(('tick', starts[i] + XF + 0.10, 0.24))
+    cues.append(('outro', starts[n], 0.58))
     return [(k, max(0.0, t), g) for k, t, g in cues]
 
 
 def _sfx_paths() -> dict[str, str]:
-    """Only effects the licence register allows (D82)."""
+    """Only effects the licence register allows (D82).
+
+    Maps speed-news cue roles ('open', 'outro', 'whoosh', 'tick') to the exact
+    house broadcast sound effects:
+      open       -> pro_news_ident.wav
+      outro      -> pro_outro_hit.wav
+      whoosh     -> whoosh.wav (with pro_whoosh.wav layered)
+      pro_whoosh -> pro_whoosh.wav
+      tick       -> tick.wav
+    """
     try:
         from .music import allowed_paths
-        out = {}
+        by_base = {}
         for p in allowed_paths('sfx'):
             full = p if os.path.isabs(p) else os.path.join(BASE, p)
             if os.path.exists(full):
-                out[os.path.splitext(os.path.basename(p))[0]] = full
+                by_base[os.path.basename(p)] = full
+                by_base[os.path.splitext(os.path.basename(p))[0]] = full
+
+        def pick(*names):
+            for name in names:
+                if name in by_base:
+                    return by_base[name]
+            return None
+
+        out = dict(by_base)
+        open_hit = pick('news_impact.wav', 'pro_impact.wav', 'open.wav')
+        if open_hit:
+            out['open'] = open_hit
+        outro_hit = pick('pro_outro_hit.wav', 'outro.wav')
+        if outro_hit:
+            out['outro'] = outro_hit
+        whoosh_hit = pick('whoosh.wav', 'pro_whoosh.wav')
+        if whoosh_hit:
+            out['whoosh'] = whoosh_hit
+        pro_whoosh_hit = pick('pro_whoosh.wav')
+        if pro_whoosh_hit:
+            out['pro_whoosh'] = pro_whoosh_hit
+        tick_hit = pick('tick.wav')
+        if tick_hit:
+            out['tick'] = tick_hit
+
         return out
     except Exception:
         return {}
@@ -795,6 +829,12 @@ def _audio(items: list[Item], starts: list[float], total: float, end_vo: str,
                      f'adelay={ms}|{ms}[f{k}]')
         fx.append(f'[f{k}]')
         k += 1
+        if name == 'whoosh' and 'pro_whoosh' in paths:
+            ins += ['-i', paths['pro_whoosh']]
+            parts.append(f'[{k}:a]aresample=48000,volume={gain * 0.85:.2f},'
+                         f'adelay={ms}|{ms}[f{k}]')
+            fx.append(f'[f{k}]')
+            k += 1
 
     layers = ['[vo]']
     if fx:

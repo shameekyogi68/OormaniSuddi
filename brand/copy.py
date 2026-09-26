@@ -26,7 +26,7 @@ from .tokens import Brand, CATEGORIES, category, Limits
 # to earn the tap on its own.
 FOLD = 125
 IG_CAPTION_MAX = 2200
-IG_HASHTAG_MAX = 30           # platform hard limit
+IG_HASHTAG_MAX = Limits.ig_hashtags_max   # Instagram reads five since Dec 2025 (D86)
 X_MAX = 280
 YT_TITLE_MAX = 100            # hard limit; ~60 is what actually displays
 YT_DESC_MAX = 5000
@@ -76,7 +76,54 @@ PLACE_TAGS = {
     'ಉತ್ತರ ಕನ್ನಡ': 'UttaraKannada', 'ಶಿರಸಿ': 'Sirsi', 'ಭಟ್ಕಳ': 'Bhatkal',
     'ಕುಮಟಾ': 'Kumta', 'ಹೊನ್ನಾವರ': 'Honnavar', 'ಬೆಂಗಳೂರು': 'Bengaluru',
     'ಉಡುಪಿ ಜಿಲ್ಲೆ': 'Udupi', 'ಉಳ್ಳಾಲ': 'Ullal',
+    # Dakshina Kannada taluks and coastal towns the intake meets every week.
+    # Without them a Puttur story read as "not coastal". D88.
+    'ಪುತ್ತೂರು': 'Puttur', 'ಬಂಟ್ವಾಳ': 'Bantwal', 'ಬೆಳ್ತಂಗಡಿ': 'Belthangady',
+    'ಸುಳ್ಯ': 'Sullia', 'ಮೂಡುಬಿದಿರೆ': 'Moodbidri', 'ಸುರತ್ಕಲ್': 'Surathkal',
+    'ಪಡುಬಿದ್ರಿ': 'Padubidri', 'ಶಿರ್ವ': 'Shirva', 'ಕೋಟ': 'Kota',
+    'ಸಾಲಿಗ್ರಾಮ': 'Saligrama', 'ಶಿರೂರು': 'Shiroor', 'ಉಪ್ಪುಂದ': 'Uppunda',
+    'ಕಾರವಾರ': 'Karwar', 'ಉದ್ಯಾವರ': 'Udyavara', 'ಹೆಜಮಾಡಿ': 'Hejamadi',
+    'ಕಟಪಾಡಿ': 'Katapadi', 'ಬೆಳ್ಮಣ್': 'Belman', 'ಹಿರಿಯಡ್ಕ': 'Hiriyadka',
 }
+
+# How the English press spells the same towns. Search reads these too.
+PLACE_ALIASES = ('kundapur', 'brahmavar', 'mangalore', 'mangaluru', 'karkal',
+                 'byndur', 'malpe', 'kapu', 'udyavar', 'moodbidri',
+                 'mudbidri', 'puttur', 'bantwal', 'belthangady', 'sullia',
+                 'surathkal', 'ullal', 'padubidri', 'bhatkal', 'kumta',
+                 'honnavar', 'karwar', 'dakshina kannada', 'uttara kannada',
+                 'd.k.', 'coastal', 'tulunadu')
+
+# Places that are ours. Bengaluru is in PLACE_TAGS for hashtags on state
+# stories; it is not the coast.
+NOT_COASTAL = {'ಬೆಂಗಳೂರು'}
+
+
+def place_in(text: str) -> str:
+    """The first coastal place (Kannada) the text names, Kannada spelling
+    first, then the English one. '' when it names none."""
+    low = (text or '').lower()
+    hits = []
+    for kn, en in PLACE_TAGS.items():
+        if kn in NOT_COASTAL or kn.endswith('ಜಿಲ್ಲೆ'):
+            continue
+        for needle in (kn, en.lower(), en.lower().rstrip('a')):
+            i = (text or '').find(needle) if needle == kn else low.find(needle)
+            if i >= 0 and len(needle) >= 4:
+                hits.append((i, kn))
+                break
+    return min(hits)[1] if hits else ''
+
+
+def is_coastal(text: str) -> bool:
+    """Does this text name a place we cover? One registry, PLACE_TAGS."""
+    low = (text or '').lower()
+    if any(w in low for w in ('ಕರಾವಳಿ', 'ದ.ಕ.', 'ತುಳುನಾಡು')):
+        return True
+    if any(re.search(r'\b' + re.escape(a), low) for a in PLACE_ALIASES):
+        return True
+    return any((kn in text or en.lower() in low)
+               for kn, en in PLACE_TAGS.items() if kn not in NOT_COASTAL)
 
 
 def _leads_with_place(line: str, place: str) -> bool:
@@ -94,15 +141,24 @@ def _tagify(s: str) -> str:
     return s
 
 
-def hashtags(story: Story, limit: int = 8) -> list[str]:
-    """Place + category + brand, de-duplicated and capped.
+def _places(story: Story) -> list[tuple[str, str]]:
+    """(Kannada, Latin) for every place the story names, most specific first."""
+    loc = story.location or ''
+    out: list[tuple[str, str]] = []
+    for part in re.split(r'[\/|,·•]| - ', loc):
+        part = part.strip()
+        if part and part not in [k for k, _ in out]:
+            out.append((part, PLACE_TAGS.get(part, '')))
+    # Substring match so "ಉಡುಪಿ ಜಿಲ್ಲೆ" still produces #Udupi and #UdupiNews.
+    for kn, en in PLACE_TAGS.items():
+        if kn and kn in loc and en not in [e for _, e in out]:
+            out.append((kn, en))
+    return out
 
-    Ordered by specificity: the tags most likely to reach the right people come
-    first, because that is the order a reader skims and the order that survives
-    if you trim the list. Default 8 — Instagram has not ranked a 30-tag block
-    since 2021, and a new account using mega-tags is sorted into a pool it
-    cannot win.
-    """
+
+def _pool(story: Story) -> list[str]:
+    """Every tag this story could honestly wear, most specific first. The
+    platforms decide how many of these are used; this decides the order."""
     out: list[str] = []
 
     def add(tag: str):
@@ -110,41 +166,38 @@ def hashtags(story: Story, limit: int = 8) -> list[str]:
         if t and t.lower() not in {x.lower() for x in out}:
             out.append(t)
 
-    loc = story.location or ''
-    for part in re.split(r'[\/|,·•]| - ', loc):
-        part = part.strip()
-        if not part:
-            continue
-        add(part)
-        if part in PLACE_TAGS:
-            add(PLACE_TAGS[part])
-            add(PLACE_TAGS[part] + 'News')
-
-    # Substring match so "ಉಡುಪಿ ಜಿಲ್ಲೆ" still produces #Udupi and #UdupiNews.
-    for kn, en in PLACE_TAGS.items():
-        if kn and kn in loc:
-            add(kn)
-            add(en)
+    for kn, en in _places(story):
+        add(kn)
+        if en:
             add(en + 'News')
+            add(en)
             add(kn.replace(' ', '') + 'ಸುದ್ದಿ')
-
     for t in CATEGORY_TAGS.get(story.category, []):
         add(t)
     for t in CORE_TAGS:
         add(t)
     for t in WIDE_TAGS:
-        if len(out) >= limit:
-            break
         add(t)
-    return out[:min(limit, IG_HASHTAG_MAX)]
+    return out
 
 
-def edition_hashtags(edition: Edition, limit: int = 28) -> list[str]:
-    """Places and categories from ALL stories in the edition, de-duplicated and capped.
+def hashtags(story: Story, limit: int = Limits.ig_hashtags_max) -> list[str]:
+    """Five tags a post can actually use, in the order that reaches people.
 
-    House rule 2026-09-17-07: a carousel is an edition, not a single story;
-    its hashtags must represent all towns and topics featured in the swipe set.
+    Instagram reads at most five hashtags on a post or Reel since December
+    2025 (D86), so each slot is a decision:
+
+      1. the town in Kannada — the people who live there
+      2. the town's news tag in English — the people searching for it
+      3. a trend TODAY that this story is genuinely about, if there is one
+         (brand/trends.py) — never a trend it is not about
+      4. the subject in Kannada (ಹವಾಮಾನ, ಶಿಕ್ಷಣ …)
+      5. ಕರಾವಳಿಸುದ್ದಿ, then the channel's own tag
+
+    Mega-tags (#Karnataka, #KannadaNews) come last and in practice never
+    make the cut: a small account in a pool of millions is not shown.
     """
+    from . import trends
     out: list[str] = []
 
     def add(tag: str):
@@ -152,40 +205,115 @@ def edition_hashtags(edition: Edition, limit: int = 28) -> list[str]:
         if t and t.lower() not in {x.lower() for x in out}:
             out.append(t)
 
-    # 1. Locations for every story in the edition
-    for st in edition.stories:
-        loc = st.location or ''
-        for part in re.split(r'[\/|,·•]| - ', loc):
-            part = part.strip()
-            if not part:
-                continue
-            add(part)
-            if part in PLACE_TAGS:
-                add(PLACE_TAGS[part])
-                add(PLACE_TAGS[part] + 'News')
-        for kn, en in PLACE_TAGS.items():
-            if kn and kn in loc:
-                add(kn)
-                add(en)
-                add(en + 'News')
-                add(kn.replace(' ', '') + 'ಸುದ್ದಿ')
-
-    # 2. Categories for every story in the edition
-    for st in edition.stories:
-        for t in CATEGORY_TAGS.get(st.category, []):
-            add(t)
-
-    # 3. Channel core tags
-    for t in CORE_TAGS:
+    places = _places(story)
+    if places:
+        kn, en = places[0]
+        add(kn)
+        if en:
+            add(en + 'News')
+    for t in trends.for_story(story, 'instagram'):
         add(t)
-
-    # 4. Regional wide tags
-    for t in WIDE_TAGS:
-        if len(out) >= limit:
-            break
+    cat = CATEGORY_TAGS.get(story.category, [])
+    if cat:
+        add(cat[0])
+    add('ಕರಾವಳಿಸುದ್ದಿ')
+    add('oormanisuddi')
+    for t in _pool(story):
         add(t)
-
     return out[:min(limit, IG_HASHTAG_MAX)]
+
+
+def edition_places(edition: Edition) -> list[tuple[str, str]]:
+    """Every (Kannada, Latin) place in the edition, most-covered first."""
+    count: dict[str, int] = {}
+    first: dict[str, int] = {}
+    latin: dict[str, str] = {}
+    for i, st in enumerate(edition.stories):
+        for kn, en in _places(st)[:1]:
+            count[kn] = count.get(kn, 0) + 1
+            first.setdefault(kn, i)
+            latin.setdefault(kn, en)
+    order = sorted(count, key=lambda k: (-count[k], first[k]))
+    return [(k, latin[k]) for k in order]
+
+
+def is_special_series(edition: Edition) -> bool:
+    """True when the edition is a dedicated special segment/series
+    (e.g. Kanoonu Kavacha, cyber safety) rather than the daily
+    coastal news bulletin."""
+    if edition.strapline and any(s in edition.strapline for s in ('ಕಾನೂನು', 'ವಿಶೇಷ', 'ಸರಣಿ', 'ಪ್ರಕರಣ')):
+        return True
+    has_coastal = any(is_coastal(s.headline + ' ' + (s.location or '')) for s in edition.stories)
+    return not has_coastal and all(s.category == 'explainer' for s in edition.stories)
+
+
+def edition_hashtags(edition: Edition, limit: int = Limits.ig_hashtags_max
+                     ) -> list[str]:
+    """Five tags for a post that carries the whole day.
+
+    For the daily bulletin: the two most-covered towns, one honest trend, the region, the channel.
+    For a special series (D89): the series title, channel, topic tags (no irrelevant coastal tags).
+    """
+    from . import trends
+    out: list[str] = []
+
+    def add(tag: str):
+        t = _tagify(tag)
+        if t and t.lower() not in {x.lower() for x in out}:
+            out.append(t)
+
+    if is_special_series(edition):
+        if edition.strapline:
+            series_name = edition.strapline.split('•')[0].strip()
+            add(series_name)
+        add('oormanisuddi')
+        for st in edition.stories:
+            for t in trends.for_story(st, 'instagram'):
+                add(t)
+            for t in _pool(st):
+                if t not in CORE_TAGS and t != 'ಕರಾವಳಿ' and t != 'ಕರಾವಳಿಸುದ್ದಿ':
+                    add(t)
+        # Add high-intent safety/legal tags if applicable
+        text = ' '.join(s.headline for s in edition.stories)
+        if 'ಪಾಸ್‌ವರ್ಡ್' in text or 'ಸೈಬರ್' in text:
+            add('CyberSafety')
+            add('DigitalRights')
+            add('WomenSafety')
+        return out[:min(limit, IG_HASHTAG_MAX)]
+
+    # Towns with a searchable English name: the region itself (ಕರಾವಳಿ) is
+    # already ಕರಾವಳಿಸುದ್ದಿ, and must not take a town's slot.
+    for kn, en in [p for p in edition_places(edition) if p[1]][:2]:
+        add(en + 'News')
+    for st in edition.stories:
+        for t in trends.for_story(st, 'instagram'):
+            add(t)
+            break
+        if len(out) >= 3:
+            break
+    add('ಕರಾವಳಿಸುದ್ದಿ')
+    add('oormanisuddi')
+    towns = [p for p in edition_places(edition) if p[1]]
+    if towns:
+        add(towns[0][0])              # the most-covered town, in Kannada
+    for st in edition.stories:
+        for t in _pool(st):
+            add(t)
+    return out[:min(limit, IG_HASHTAG_MAX)]
+
+
+def place_line(subject: Story | Edition) -> str:
+    """📍 every town, in Kannada and English, as plain searchable words.
+
+    Instagram search matches caption keywords, not just hashtags, and this
+    is where the towns five hashtags cannot hold are found (D86)."""
+    places = (edition_places(subject) if isinstance(subject, Edition)
+              else _places(subject))
+    if not places:
+        return ''
+    kn = ' · '.join(k for k, _ in places)
+    en = ' · '.join(e for _, e in places if e)
+    return f'{M_PLACE} {kn}' + (f' | {en}' if en else '')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -440,6 +568,9 @@ def instagram_caption(story: Story, tags: list[str] | None = None) -> str:
     if Brand.voice_disclosure_kn:
         blocks.append(Brand.voice_disclosure_kn)
 
+    pl = place_line(story)
+    if pl:
+        blocks.append(pl)
     blocks.append(' '.join(f'#{t}' for t in tags))
 
     cap = _join(blocks)
@@ -491,6 +622,8 @@ def taluk_forwards(edition) -> dict[str, str]:
     the reader's town. The places come from PLACE_TAGS, which is the one
     registry of place names in this project; nothing here invents a town.
     """
+    if is_special_series(edition):
+        return {}
     from .reach import places_covered
     out: dict[str, str] = {}
     covered = places_covered(edition)
@@ -552,9 +685,12 @@ def edition_whatsapp(edition: Edition, instagram_url: str | None = None) -> str:
     link_target = instagram_url or '[ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಪೋಸ್ಟ್ ಲಿಂಕ್]'
 
     tagline = Brand.tagline.replace('  •  ', ' • ')
+    special = is_special_series(edition)
+    header_title = f'{edition.strapline} — ಪ್ರಮುಖ ಮುಖ್ಯಾಂಶಗಳು:' if special and edition.strapline else 'ಇಂದಿನ ಪ್ರಮುಖ ಕರಾವಳಿ ಮುಖ್ಯಾಂಶಗಳು:'
+    brand_header = f'🌾 *{Brand.name} · {edition.strapline}*' if special and edition.strapline else f'🌾 *{Brand.name} · {edition.date_kn}*'
     blocks = [
-        f'🌾 *{Brand.name} · {edition.date_kn}*\n{tagline}',
-        f'ಇಂದಿನ ಪ್ರಮುಖ ಕರಾವಳಿ ಮುಖ್ಯಾಂಶಗಳು:\n\n{headlines_block}',
+        f'{brand_header}\n{tagline}',
+        f'{header_title}\n\n{headlines_block}',
         f'📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*\n👉 {link_target}',
         f'📌 ಮೂಲ: ' + ' · '.join(seen),
         f'— {Brand.handle}',
@@ -645,19 +781,51 @@ def youtube_description(subject: Story | Edition) -> str:
     # YouTube shows the first three hashtags above the title. Place tags
     # already lead the list.
     blocks.append(' '.join(f'#{t}' for t in
-                           hashtags(stories[0], limit=8)))
+                           hashtags(stories[0], limit=Limits.yt_hashtags_max)))
     desc = _join(blocks)
     return desc[:YT_DESC_MAX]
 
 
-def youtube_tags(subject: Story | Edition, limit: int = 20) -> list[str]:
+def youtube_tags(subject: Story | Edition, limit: int = 30) -> list[str]:
+    """Search phrases for the TAGS field — words people type, not hashtags.
+
+    YouTube's tag field holds 500 characters and matters most for misspelt
+    and bilingual searches, which is exactly what Kannada + English place
+    names are. Every phrase is about the video: an unrelated tag is
+    misleading metadata under YouTube's spam policy (D86).
+    """
+    from . import trends
     stories = subject.stories if isinstance(subject, Edition) else [subject]
     out: list[str] = []
+
+    def add(t: str):
+        t = (t or '').strip()
+        if t and t.lower() not in {x.lower() for x in out}:
+            out.append(t)
+
     for st in stories:
-        for t in hashtags(st, limit=10):
-            if t.lower() not in {x.lower() for x in out}:
-                out.append(t)
-    return out[:limit]
+        for kn, en in _places(st)[:1]:
+            add(kn)
+            if en:
+                add(en)
+                add(f'{en} news')
+                add(f'{kn} ಸುದ್ದಿ')
+        for t in trends.keywords_for(st):
+            add(t)
+    for st in stories:
+        for t in CATEGORY_TAGS.get(st.category, []):
+            add(t)
+    for t in ('ಊರ್ಮನಿ ಸುದ್ದಿ', 'oormani suddi', 'ಕರಾವಳಿ ಸುದ್ದಿ',
+              'coastal karnataka news', 'kannada news', 'udupi news'):
+        add(t)
+    kept, used = [], 0
+    for t in out[:limit]:
+        cost = len(t) + (2 if kept else 0)
+        if used + cost > Limits.yt_tags_chars:
+            break
+        kept.append(t)
+        used += cost
+    return kept
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -889,7 +1057,10 @@ def for_roundup(edition: Edition, seconds: float = 0.0) -> PostCopy:
     g = Brand.grievance_line()
     if g:
         blocks.append(g)
-    tags = edition_hashtags(edition, limit=12)
+    tags = edition_hashtags(edition)
+    pl = place_line(edition)
+    if pl:
+        blocks.append(pl)
     blocks.append(' '.join(f'#{t}' for t in tags))
     return PostCopy(
         hook=hook_line,
@@ -911,7 +1082,7 @@ def for_edition(edition: Edition) -> PostCopy:
     earn the tap on its own, the same rule as a single-story caption.
     """
     lead = edition.stories[0]
-    tags = edition_hashtags(edition, limit=28)
+    tags = edition_hashtags(edition)
     hook_line = hook(lead)
     heads = '\n'.join(f'▪ {s.headline.strip()}' for s in edition.stories)
     seen: list[str] = []
@@ -921,9 +1092,12 @@ def for_edition(edition: Edition) -> PostCopy:
                 seen.append(src)
 
     n = len(edition.stories)
+    special = is_special_series(edition)
+    unit = 'ವಿವರಣೆಗಳು' if any(s.category == 'explainer' for s in edition.stories) else 'ಸುದ್ದಿ'
+    swipe_line = f'ಸ್ವೈಪ್ ಮಾಡಿ — {edition.strapline}.' if special and edition.strapline else f'ಸ್ವೈಪ್ ಮಾಡಿ — ಇಂದಿನ {n} {unit}.'
     blocks = [
         hook_line,
-        f'ಸ್ವೈಪ್ ಮಾಡಿ — ಇಂದಿನ {n} ಸುದ್ದಿ.',
+        swipe_line,
         heads,
         cta(lead),
     ]
@@ -931,14 +1105,22 @@ def for_edition(edition: Edition) -> PostCopy:
     blocks.append(f'{M_SOURCE} ಮೂಲ: ' + ' · '.join(seen))
     if g:
         blocks.append(g)
+    if not special:
+        pl = place_line(edition)
+        if pl:
+            blocks.append(pl)
     blocks.append(' '.join(f'#{t}' for t in tags))
+
+    alt_text_desc = (f'{Brand.name} — {edition.strapline} — {edition.date_kn}. '
+                     f'{n} ವಿವರಣೆಗಳ ಸಂಗ್ರಹ. {lead.headline}') if special else (
+                     f'{Brand.name} {Brand.bulletin} — {edition.date_kn}. '
+                     f'{n} ಸುದ್ದಿಗಳ ಸಂಗ್ರಹ. {lead.headline}')
 
     return PostCopy(
         hook=hook_line,
         instagram=_join(blocks),
         hashtags=tags,
-        alt_text=(f'{Brand.name} {Brand.bulletin} — {edition.date_kn}. '
-                  f'{n} ಸುದ್ದಿಗಳ ಸಂಗ್ರಹ. {lead.headline}'),
+        alt_text=alt_text_desc,
         whatsapp=edition_whatsapp(edition),
         x_post=x_post(lead),
         first_comment=first_comment(lead),

@@ -14,6 +14,7 @@ The prefix says who owns the fix:
 
     LAW   legal / statutory        → the sub-editor rewrites copy
     SRC   sourcing & verification  → the desk reopens the source
+    FACT  figures vs the source    → the fact desk corrects the copy
     IMG   pictures & disclosure    → the picture desk
     TYPE  typography & glyphs      → copy, or the type engine
     SND   audio & narration        → the voice pass
@@ -35,6 +36,14 @@ CODES: dict[str, str] = {
     'SRC-01': 'a sourced story carries no source_url',
     'SRC-02': 'no named person has verified this story (D59)',
     'SRC-03': 'an unknown category was used',
+    # ── FACT ──────────────────────────────────────────────────────────────
+    'FACT-01': 'a figure in the copy is not in the cited source (D84)',
+    'FACT-02': 'the cited source does not carry the story — wrong or invented URL',
+    'FACT-03': 'no source text is held, so nothing in the story was fact-checked',
+    'FACT-04': 'a word or name in the copy is not in the source (check it)',
+    'FACT-05': 'a source_url is not an article (section page, chatbot link, placeholder)',
+    'FACT-06': 'a story credits a different outlet from the one its link belongs to',
+    'FACT-07': 'the story is older than the house freshness window (D88)',
     # ── IMG ───────────────────────────────────────────────────────────────
     'IMG-01': 'an image would appear on screen with no disclosure line',
     'IMG-02': 'a generated image is not wearing nature="ai" (D57)',
@@ -72,6 +81,9 @@ CODES: dict[str, str] = {
     'PUB-06': 'a story is marked as a reel that reads better as a card',
     'PUB-07': 'more reels than the day targets, splitting the same audience',
     'PUB-08': 'a story names no place, so nobody can tell it is about their town',
+    'PUB-09': 'a caption carries more hashtags than the platform reads (D86)',
+    'PUB-10': 'carousel slide content overflows or deck is truncated (D89)',
+    'PUB-11': 'carousel points count exceeds capacity limit (D89)',
     # ── OPS ───────────────────────────────────────────────────────────────
     'OPS-01': 'no Grievance Officer is named (IT Rules 2021 Part III)',
     'OPS-02': 'no contact route is published anywhere',
@@ -96,6 +108,7 @@ def prefix(code: str) -> str:
 OWNER = {
     'LAW': 'sub-editor — rewrite the copy',
     'SRC': 'desk — reopen the source and confirm',
+    'FACT': 'fact desk — scripts/fact_check.py, then correct the copy',
     'IMG': 'picture desk — stock, then generate, then plate',
     'TYPE': 'copy, or brand/typo.py if the face is the problem',
     'SND': 'voice pass — re-run narration',

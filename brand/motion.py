@@ -1797,11 +1797,16 @@ def _sfx_set(sfx_dir: str | None = None) -> dict:
     ok = {os.path.basename(p): os.path.join(BASE, p)
           for p in allowed_paths('sfx')}
 
-    def pick(name):
-        p = ok.get(name)
-        return p if p and os.path.exists(p) else None
-    return {'impact': pick('open.wav'), 'whoosh': pick('whoosh.wav'),
-            'ping': pick('tick.wav'), 'outro': pick('outro.wav')}
+    def pick(*names):
+        for name in names:
+            p = ok.get(name)
+            if p and os.path.exists(p):
+                return p
+        return None
+    return {'impact': pick('news_impact.wav', 'pro_impact.wav', 'open.wav'),
+            'whoosh': pick('pro_whoosh.wav', 'whoosh.wav'),
+            'ping': pick('tick.wav', 'tech_ping.wav'),
+            'outro': pick('pro_outro_hit.wav', 'pro_news_ident.wav', 'outro.wav')}
 
 
 def _master_narrated_audio(total: float, plan: list, lead_in: float,

@@ -335,9 +335,9 @@ class Copy(unittest.TestCase):
         """A 15-day-old account cannot win #Karnataka. Place first."""
         s = base(location='ಉಡುಪಿ', category='weather').validate()
         tags = self.C.hashtags(s)
-        self.assertIn('Udupi', tags)
-        self.assertIn('UdupiNews', tags)
-        self.assertLess(tags.index('Udupi'), tags.index('oormanisuddi'))
+        self.assertEqual(tags[:2], ['ಉಡುಪಿ', 'UdupiNews'])
+        self.assertLess(tags.index('UdupiNews'), tags.index('oormanisuddi'))
+        self.assertNotIn('Karnataka', tags)
 
     def test_caption_opens_on_the_news_and_asks_for_a_signal(self):
         s = base(location='ಉಡುಪಿ', category='weather',

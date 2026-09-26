@@ -32,6 +32,9 @@ instruction, not a one-off request to whichever session heard it first.
 
 **You say "Start".** The assistant:
 
+0. Runs `python3 scripts/dispatch.py` and launches the agents it lists, wave
+   by wave, each wave in parallel (D89) — the same list the session briefing
+   already showed. Everything below is what those agents and the scripts do.
 1. Makes sure today has a draft. If `editions/{date}.json` doesn't exist yet,
    it runs `scripts/fetch_daily_news.py` then `scripts/draft_edition.py`
    itself. The draft arrives illustrated — every story carries a frame from
@@ -47,6 +50,14 @@ instruction, not a one-off request to whichever session heard it first.
    which category, and anything flagged (crime, a minor, a sexual offence) or
    any source link that would not load at all. **Always asks you if you have any
    additional news, press releases, or info to add** before proceeding to render.
+   **Every item you add keeps its own source** (D88): a link is credited to
+   the outlet that link belongs to; a press release to whoever issued it; what
+   you saw or were told is `ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ`. Nothing you add is
+   folded under the paper the other stories came from, and no link is cited
+   that has not been opened — a link copied out of a chatbot answer
+   (`utm_source=gemini`) is replaced by the publisher's own. The gate blocks
+   a story credited to the wrong outlet (`FACT-06`) or citing a page that is
+   not an article (`FACT-05`).
    Nothing is rendered, verified, or published at this point — it stops and waits
    for you.
 

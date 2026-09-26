@@ -42,6 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -52,8 +53,14 @@ from brand.content import Story, Edition, ContentError, OWN_REPORTING, now  # no
 from brand.qa import preflight  # noqa: E402
 from brand.reach import BREADTH, ACTIONABLE  # noqa: E402
 from brand.stock import photo_for  # noqa: E402
+from brand.copy import is_coastal, place_in  # noqa: E402
+from brand.sourcing import (url_problem, outlet_names, date_in_url,  # noqa: E402
+                            parse_when, age_hours, is_stale)
+from brand.tokens import Limits  # noqa: E402
 from scripts.fetch_daily_news import (_kannada_share, UNCHECKABLE,  # noqa: E402
-                                      _shared_urls, link_opens)
+                                      _shared_urls, link_opens,
+                                      previously_published_urls,
+                                      is_already_covered)
 
 INBOX_JSON = os.path.join(ROOT, 'inbox', 'today.json')
 
@@ -92,6 +99,11 @@ TALUK_PRIORITY = {
 }
 
 
+# State news the coast lives with (house rule 2026-09-20-02): kept even when
+# it names no coastal town, and framed for the coast by the desk.
+STATEWIDE_OK = {'weather', 'education'}
+
+
 def _category_for(text: str, risk: str) -> str:
     if risk in ('crime', 'minor'):
         return 'crime'
@@ -118,6 +130,15 @@ def _score(tip: dict) -> float:
         score += 0.2
     if tip.get('risk') != 'normal':
         score += 0.1
+    # Fresher first: a story from this morning beats one from last night,
+    # and a story nobody could date sorts behind both. D88.
+    h = age_hours(parse_when(tip.get('published_at', '')))
+    if h is None:
+        score -= 0.1
+    elif h <= 12:
+        score += 0.2
+    elif h <= 24:
+        score += 0.1
     # Clean leads (nothing flagged, or correctly marked uncheckable) sort
     # ahead of flagged ones — a draft should prefer what needs the LEAST
     # second-guessing, not what happens to score highest.
@@ -135,6 +156,8 @@ def _story_dict(tip: dict) -> dict | None:
     url = (tip.get('source_url') or '').strip()
     if not url.startswith('http'):
         return None    # nothing an editor can reopen — the whole point of D55
+    if url_problem(url):
+        return None    # a section page or a chatbot link is not a source (D88)
     if not link_opens(url):
         # An aggregator hop resolves only under JavaScript, so the person who
         # clicks it to confirm this story lands on a home page instead. A
@@ -150,8 +173,12 @@ def _story_dict(tip: dict) -> dict | None:
         'category': cat,
         'deck': ' '.join(facts) if facts else '',
         'points': facts,
-        'location': tip.get('taluk', '') or '',
-        'sources': [tip.get('source_name', 'ಮೂಲ')],
+        'location': tip.get('taluk', '') or place_in(
+            ' '.join([tip.get('headline', ''), lead, *facts])),
+        # The outlet the LINK belongs to, not whatever label the tip carried —
+        # a Google News tip's link is the publisher's, and it is credited as
+        # such. D88.
+        'sources': [(outlet_names(url) or (tip.get('source_name', 'ಮೂಲ'),))[0]],
         'source_urls': [url],
         'status': 'developing',
         'is_reel': False,   # a person picks which stories perform, not a script
@@ -188,10 +215,42 @@ def build(date_s: str, max_stories: int) -> tuple[list[dict], list[str]]:
     notes: list[str] = []
     seen_places: set[str] = set()
     used_frames: set[str] = set()
+    prior_urls = previously_published_urls(date_s)
     for tip in tips:
         if len(stories) >= max_stories:
             break
+        u = (tip.get('source_url') or '').strip()
+        clean_u = re.sub(r'[?&]utm_[^&]+', '', u).strip().rstrip('?&/')
+        if clean_u in prior_urls:
+            notes.append(f'skipped "{tip.get("headline", "")[:50]}" — already published in a recent edition.')
+            continue
+        lead_check = (tip.get('lead_kn') or '').strip() or tip.get('headline', '').strip()
+        covered, match_reason = is_already_covered(lead_check, date_s)
+        if covered:
+            notes.append(f'skipped "{lead_check[:50]}" — already covered in a recent edition ({match_reason}).')
+            continue
         if (tip.get('source_url') or '') in generic:
+            continue
+        # Stale or off-patch never becomes a draft. A tip sheet from before
+        # D88 carries no published_at, so the URL's own date is read too.
+        when = parse_when(tip.get('published_at', '')) or date_in_url(u)
+        dated_only = len(tip.get('published_at', '')) == 10 or (
+            not tip.get('published_at') and when is not None)
+        if is_stale(when, date_only=dated_only):
+            notes.append(f'skipped "{tip.get("headline", "")[:50]}" — '
+                         f'published {when:%d %b}, older than '
+                         f'{Limits.news_max_age_hours}h.')
+            continue
+        text_all = ' '.join(filter(None, [tip.get('headline', ''),
+                                          tip.get('lead_kn', ''),
+                                          tip.get('snippet', ''),
+                                          (tip.get('body') or '')[:600]]))
+        cat_guess = _category_for(text_all, tip.get('risk', 'normal'))
+        if not tip.get('taluk') and not is_coastal(text_all) and not (
+                cat_guess in STATEWIDE_OK or 'ಸರ್ಕಾರ' in text_all):
+            notes.append(f'skipped "{tip.get("headline", "")[:50]}" — names '
+                         f'no coastal place and is not state news that '
+                         f'reaches the coast.')
             continue
         d = _story_dict(tip)
         if d is None:

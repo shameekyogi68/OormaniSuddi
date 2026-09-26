@@ -146,7 +146,7 @@ are exactly as in long-format.
 | `music` | `file`, `license` (required), `offset`, `level` 0.8, `duck` true |
 | `audio` | `real_lufs` −18, `real_max_gain_db` 10, `real_gain` 1.0, `master_lufs` −13, `true_peak` −1.5 |
 | `upscale`, `ai_denoise`, `grade`, `cut` (0.12), `encode {crf, maxrate}` | picture and cut settings |
-| `copy` | `headline`, `question`, `place`, `status`, `credit`, `source`, `hashtags[]`, `first_comment`, `shorts_title` |
+| `copy` | `headline`, `question`, `place`, `status`, `credit`, `source`, `hashtags[]` (max `Limits.ig_hashtags_max` = 5, only tags the reel is about — D86), `first_comment`, `shorts_title` |
 
 ---
 

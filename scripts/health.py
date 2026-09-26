@@ -156,7 +156,10 @@ def check_reviews() -> list[str]:
 def check_backups() -> list[str]:
     out = []
     local = os.path.join(ROOT, '.backups')
-    tars = sorted((f for f in os.listdir(local)), reverse=True) \
+    # Newest by TIME. Sorted by name, `oormani-full-2026-09-16` outranked
+    # every daily `oormani-2026-09-2x` and a fresh backup read as 9 days old.
+    tars = sorted(os.listdir(local), reverse=True,
+                  key=lambda f: os.path.getmtime(os.path.join(local, f))) \
         if os.path.isdir(local) else []
     if not tars:
         out.append(f'{BAD} backups — never run. bash scripts/backup.sh')

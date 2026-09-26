@@ -21,6 +21,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -109,6 +110,10 @@ class Tip:
     # the lead is true, it points the editor's eye at the two or three words
     # that are not in anything we fetched.
     unsupported: list = None
+    # When the publisher says it went out (feed pubDate, the page's own
+    # metadata, or a date in the URL), ISO 8601. '' = nobody told us. D88.
+    published_at: str = ''
+    published_from: str = ''   # 'feed' | 'page' | 'url' | ''
 
     def __post_init__(self):
         if self.unsupported is None:
@@ -160,14 +165,48 @@ def _cdata(raw: str) -> str:
     return re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', raw, flags=re.S).strip()
 
 
-def _rss_items(url: str) -> list[tuple[str, str, str]]:
+# link → publish time, as the feed stated it. Read by `date_tips`. D88.
+_FEED_DATES: dict[str, str] = {}
+
+
+def _rss_items(url: str, max_age_hours: float = 48.0) -> list[tuple[str, str, str]]:
     """Return (title, link, description) from an RSS/Atom document."""
     raw = _http_get(url)
     text = raw.decode('utf-8', errors='replace')
     out: list[tuple[str, str, str]] = []
     try:
+        import email.utils
+        from datetime import timezone
+        now_utc = datetime.now(timezone.utc)
+    except Exception:
+        now_utc = None
+
+    try:
         root = ET.fromstring(raw)
         for item in root.findall('.//item') + root.findall('.//{http://www.w3.org/2005/Atom}entry'):
+            # Skip articles older than max_age_hours if pubDate/published is present
+            if now_utc is not None and max_age_hours > 0:
+                pub_el = item.find('pubDate')
+                if pub_el is None:
+                    pub_el = item.find('{http://www.w3.org/2005/Atom}published')
+                if pub_el is None:
+                    pub_el = item.find('{http://www.w3.org/2005/Atom}updated')
+                pdate = None
+                if pub_el is not None and pub_el.text:
+                    try:
+                        pdate = email.utils.parsedate_to_datetime(pub_el.text.strip())
+                    except Exception:
+                        try:
+                            pdate = datetime.fromisoformat(
+                                pub_el.text.strip().replace('Z', '+00:00'))
+                        except Exception:
+                            pdate = None
+                    if pdate is not None:
+                        if pdate.tzinfo is None:
+                            pdate = pdate.replace(tzinfo=timezone.utc)
+                        if (now_utc - pdate).total_seconds() > max_age_hours * 3600:
+                            continue
+
             title_el = item.find('title')
             if title_el is None:
                 title_el = item.find('{http://www.w3.org/2005/Atom}title')
@@ -186,6 +225,8 @@ def _rss_items(url: str) -> list[tuple[str, str, str]]:
             desc = re.sub(r'\s+', ' ', desc).strip()
             if len(title) > 12:
                 out.append((title, link, desc))
+                if link and pdate is not None:
+                    _FEED_DATES[link] = pdate.isoformat()
         if out:
             return out
     except ET.ParseError:
@@ -239,6 +280,11 @@ def scrape_udayavani_html() -> list[Tip]:
                 continue
             seen.add(slug)
             title = t.group(1).strip()
+            # Stale check: discard old archive articles from past months (e.g. July)
+            if any(stale in slug.lower() or stale in title.lower() for stale in (
+                'july', 'ಜುಲೈ', 'ಜು.', 'august', 'ಆಗಸ್ಟ್', 'ಆಗ.', 'june', 'ಜೂನ್'
+            )):
+                continue
             link = f'https://www.udayavani.com/{category}/{slug}'
             tips.append(Tip(
                 headline=title, source_name='ಉದಯವಾಣಿ', source_url=link,
@@ -384,6 +430,63 @@ def scrape_varthabharati_kn() -> list[Tip]:
         return []
 
 
+def scrape_daijiworld() -> list[Tip]:
+    """Fresh coastal news from Daijiworld's main desk."""
+    page = 'https://www.daijiworld.com'
+    now = datetime.now().isoformat(timespec='seconds')
+    try:
+        html = _http_get(page).decode('utf-8', errors='ignore')
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, 'html.parser')
+        raw_items = []
+        for a in soup.find_all('a', href=re.compile(r'/news/newsDisplay\?newsID=\d+')):
+            href = a['href'].split('&')[0]
+            m = re.search(r'newsID=(\d+)', href)
+            if not m:
+                continue
+            nid = int(m.group(1))
+            title = a.text.strip()
+            if not title or len(title) < 15:
+                continue
+            raw_items.append((nid, title, 'https://www.daijiworld.com' + href if href.startswith('/') else href))
+
+        # Highest newsID first = freshest news
+        raw_items.sort(key=lambda x: x[0], reverse=True)
+        tips = []
+        seen = set()
+        for nid, title, url in raw_items:
+            if url in seen:
+                continue
+            seen.add(url)
+            t_low = title.lower()
+            taluk = _guess_taluk(title)
+            # Coastal filter: Udupi, Kundapur, Byndoor, Mangaluru, etc.
+            if not taluk and not any(p in t_low for p in (
+                'coastal', 'karavali', 'udupi', 'mangaluru', 'mangalore', 'kundapur',
+                'byndoor', 'karkala', 'kaup', 'hebri', 'brahmavar', 'manipal',
+                'puttur', 'bantwal', 'sullia', 'belthangady', 'moodbidri',
+                'surathkal', 'mulki', 'kasargod'
+            )):
+                continue
+            if any(other in t_low for other in ('mumbai', 'delhi', 'chennai', 'kolkata')):
+                continue
+            tips.append(Tip(
+                headline=title,
+                source_name='Daijiworld',
+                source_url=url,
+                taluk=taluk or 'ಕರಾವಳಿ',
+                risk=_risk(title),
+                fetched_at=now,
+            ))
+            if len(tips) >= 12:
+                break
+        log(f'  Daijiworld:     {len(tips)} tips')
+        return tips
+    except Exception as e:
+        log(f'  Daijiworld:     skipped ({type(e).__name__})')
+        return []
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  ARTICLE BODIES
 #  A headline plus an RSS blurb is thin material. Where the publisher actually
@@ -412,10 +515,49 @@ def _extractor():
         return ''
 
 
+_PAGE_DATES: dict[str, str] = {}      # url → date the article page states
+
+
+# Udayavani is a Next.js site: the article page carries only the headline
+# and sidebar, and the story's own text is a separate file named in the page
+# (`news_section`) on its CloudFront store. Read plainly, every Udayavani link
+# looked like a listing page — the fact desk found the real articles behind
+# them on 2026-09-25. This reads what a browser reads.
+UDAYAVANI_STORE = 'https://d3jde0c4xcko0v.cloudfront.net/production'
+
+
+def _udayavani_body(url: str) -> str:
+    from urllib.parse import urlparse
+    raw = _http_get(url).decode('utf-8', errors='replace')
+    flat = raw.replace('\\"', '"')
+    slug = urlparse(url).path.rstrip('/').rsplit('/', 1)[-1]
+    section = ''
+    for m in re.finditer(re.escape(slug), flat):
+        n = re.search(r'"news_section":"([^"]+\.json)"', flat[m.start():m.start() + 6000])
+        if n:
+            section = n.group(1)
+            break
+    d = re.search(r'"datePublished":"([^"]+)"', flat)
+    if d:
+        _PAGE_DATES[url] = d.group(1)
+    if not section:
+        return ''
+    html = _http_get(UDAYAVANI_STORE + section).decode('utf-8', errors='replace')
+    text = re.sub(r'<[^>]+>', ' ', html)
+    import html as _html
+    text = re.sub(r'\s+', ' ', _html.unescape(text)).strip()
+    return text[:BODY_MAX_CHARS] if len(text) >= BODY_MIN_CHARS else ''
+
+
 def fetch_body(url: str) -> str:
     """The article text, or '' when we cannot honestly get it."""
     if not url or not url.startswith('http'):
         return ''
+    if 'udayavani.com' in url:
+        try:
+            return _udayavani_body(url)
+        except Exception:
+            return ''
     if not _extractor():
         return ''
     try:
@@ -424,6 +566,12 @@ def fetch_body(url: str) -> str:
         text = trafilatura.extract(
             raw, include_comments=False, include_tables=False,
             favor_precision=True) or ''
+        try:
+            meta = trafilatura.extract_metadata(raw)
+            if meta is not None and getattr(meta, 'date', None):
+                _PAGE_DATES[url] = str(meta.date)
+        except Exception:
+            pass
         text = re.sub(r'\s+', ' ', text).strip()
         if len(text) < BODY_MIN_CHARS:
             return ''
@@ -550,6 +698,60 @@ def attach_bodies(tips: list[Tip]) -> int:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  FRESH, AND AN ARTICLE (D88)
+#  The 24 Sept draft carried two stories from the 22nd — their own URLs said
+#  so (…/22092026) — and a "source" that was the Vartha Bharati section page.
+#  Both are knowable before anyone reads a word, so both are settled here.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def date_tips(tips: list[Tip]) -> None:
+    """Fill `published_at` from the best evidence there is: the page's own
+    metadata, then the feed, then a date in the URL."""
+    from brand.sourcing import date_in_url
+    for t in tips:
+        if t.source_url in _PAGE_DATES:
+            t.published_at, t.published_from = _PAGE_DATES[t.source_url], 'page'
+        elif t.source_url in _FEED_DATES:
+            t.published_at, t.published_from = _FEED_DATES[t.source_url], 'feed'
+        else:
+            d = date_in_url(t.source_url)
+            if d is not None:
+                t.published_at, t.published_from = d.date().isoformat(), 'url'
+
+
+def drop_stale_and_unciteable(tips: list[Tip]) -> list[Tip]:
+    """Tips a daily edition could honestly carry. Logged, never silent."""
+    from brand.sourcing import url_problem, parse_when, is_stale
+    keep, stale, bad = [], 0, 0
+    for t in tips:
+        if url_problem(t.source_url):
+            bad += 1
+            continue
+        when = parse_when(t.published_at)
+        if is_stale(when, date_only=(t.published_from == 'url'
+                                     or len(t.published_at) == 10)):
+            stale += 1
+            continue
+        keep.append(t)
+    if stale:
+        log(f'  freshness:      {stale} tip(s) older than the '
+            f'{_limits().news_max_age_hours}h window — dropped')
+    if bad:
+        log(f'  citeable:       {bad} tip(s) whose link is a section page or '
+            f'not an article — dropped')
+    undated = sum(1 for t in keep if not t.published_at)
+    if undated:
+        log(f'  freshness:      {undated} tip(s) carry no date anywhere — kept, '
+            f'marked for the editor to check')
+    return keep
+
+
+def _limits():
+    from brand.tokens import Limits
+    return Limits
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  GROUNDEDNESS
 #  The second cheap pass. It does not judge whether a lead is TRUE — nothing
 #  here can. It asks a narrower question a machine can actually answer: does
@@ -589,10 +791,15 @@ _CASE_TAILS = (
 )
 _MIN_CASE_STEM = 3
 
-_TOKEN = re.compile(r'[ಀ-೿]{3,}|[A-Z][A-Za-z]{2,}|\d[\d.,]*')
+_TOKEN = re.compile(r'[ಀ-೿]{3,}|[A-Z][A-Za-z]{2,}|\d(?:[\d.,]*\d)?')
 
 
 def _normalise(text: str) -> str:
+    # NFC first: Udayavani writes ೊ as ೆ + ೂ (two code points), which looks
+    # identical and never matched the one-code-point ೊ in our copy — ಕೊರತೆ and
+    # ಕೊಲ್ಲೂರು read as "not in the source" when they were. Found by the fact
+    # desk, 2026-09-25.
+    text = unicodedata.normalize('NFC', text)
     return re.sub(r'[^\wಀ-೿]+', ' ', text.lower())
 
 
@@ -840,6 +1047,66 @@ def deduplicate(tips: list[Tip]) -> list[Tip]:
     return unique
 
 
+def previously_published_urls(before_date: str | None = None) -> set[str]:
+    """Source URLs already published in recent editions (archive/ or editions/)."""
+    import glob
+    urls = set()
+    cutoff = before_date or datetime.now().strftime('%Y-%m-%d')
+    for path in glob.glob(os.path.join(ROOT, 'archive', '*', '*.json')) + \
+                glob.glob(os.path.join(ROOT, 'editions', '*.json')):
+        base = os.path.basename(path)
+        m = re.match(r'^(\d{4}-\d{2}-\d{2})\.json$', base)
+        if not m or m.group(1) >= cutoff:
+            continue
+        try:
+            with open(path, encoding='utf-8') as fh:
+                data = json.load(fh)
+            for s in data.get('stories', []):
+                for u in s.get('source_urls', []):
+                    clean = re.sub(r'[?&]utm_[^&]+', '', u).strip().rstrip('?&/')
+                    urls.add(clean)
+        except Exception:
+            pass
+    return urls
+
+
+PAST_TOPIC_STOP_WORDS = {
+    'ಉಡುಪಿ', 'ಮಂಗಳೂರು', 'ಜಿಲ್ಲೆ', 'ಕರಾವಳಿ', 'ಕರ್ನಾಟಕ', 'ರಾಜ್ಯ', 'ನಗರ',
+    'ತಾಲೂಕು', 'ತಾಲೂಕಿನ', 'ಗ್ರಾಮ', 'ಗ್ರಾಮದ', 'ಬಳಿ', 'ಬಗ್ಗೆ', 'ಕುರಿತು',
+    'ಸಭೆ', 'ಸಮಾರಂಭ', 'ಕಾರ್ಯಕ್ರಮ', 'ಯೋಜನೆ', 'ವರದಿ', 'ಕಾರಣ', 'ವೇಳೆ',
+    'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು', 'ಕಾರ್ಕಳ', 'ಕಾಪು', 'ಹೆಬ್ರಿ', 'ಮಣಿಪಾಲ', 'ಬ್ರಹ್ಮಾವರ',
+    'ಪೊಲೀಸ್', 'ಪೊಲೀಸರು', 'ಸರ್ಕಾರ', 'ಸರಕಾರ', 'ಇಲಾಖೆ', 'ಅಧಿಕಾರಿ', 'ಅಧಿಕಾರಿಗಳು',
+    'ಮಾಹಿತಿ', 'ಪ್ರಕರಣ', 'ವಿಚಾರ', 'ಮುಖಂಡ', 'ನಾಯಕ', 'ಸದಸ್ಯ',
+}
+
+
+def is_already_covered(text: str, before_date: str | None = None) -> tuple[bool, str]:
+    """True if text shares 2+ specific content tokens with a story from previous days."""
+    import glob
+    cutoff = before_date or datetime.now().strftime('%Y-%m-%d')
+    new_toks = {w for w in re.findall(r'[\u0C80-\u0CFF]{4,}', text) if w not in PAST_TOPIC_STOP_WORDS}
+    if len(new_toks) < 2:
+        return False, ''
+    for path in glob.glob(os.path.join(ROOT, 'archive', '*', '*.json')) + \
+                glob.glob(os.path.join(ROOT, 'editions', '*.json')):
+        base = os.path.basename(path)
+        m = re.match(r'^(\d{4}-\d{2}-\d{2})\.json$', base)
+        if not m or m.group(1) >= cutoff:
+            continue
+        try:
+            with open(path, encoding='utf-8') as fh:
+                data = json.load(fh)
+            for s in data.get('stories', []):
+                h = s.get('headline', '')
+                toks = {w for w in re.findall(r'[\u0C80-\u0CFF]{4,}', h) if w not in PAST_TOPIC_STOP_WORDS}
+                common = toks & new_toks
+                if len(common) >= 2:
+                    return True, f'matches "{h[:50]}" ({m.group(1)}) on {common}'
+        except Exception:
+            pass
+    return False, ''
+
+
 EXTRACT_PROMPT = """You are a coastal Karnataka news desk assistant for ಊರ್ಮನಿ ಸುದ್ದಿ.
 You receive TIP RECORDS. Each has a source name, a source URL, a headline, and
 a `text` field holding whatever we could actually fetch — the full article when
@@ -851,6 +1118,7 @@ that same record.
 
 Rules:
 - Write a one-line Kannada lead using only what is in that record's headline and text.
+- Keep the lead punchy, concise, and under 75 characters (strict limit for broadcast news headlines). Move all supporting details and context into the fact bullets.
 - Add at most three fact bullets, each one restating something the text says.
 - If a detail is not in the text, OMIT it. Do not supply officials, ranks, hospital
   names, vehicle models, road numbers, casualty figures, causes, procedures, or quotes
@@ -990,6 +1258,8 @@ def render_markdown(tips: list[Tip], date_s: str) -> str:
             f'## {i}. {lead}',
             f'- Source: {t.source_name} — {t.source_url}',
             f'- Taluk: {t.taluk or "—"}',
+            f'- Published: {t.published_at or "⚠️ no date found — check it is today\'s news"}'
+            + (f' ({t.published_from})' if t.published_from else ''),
             f'- Risk: {t.risk}',
             f'- We have: {depth.get(t.body_source, t.body_source)}',
             f'- Needs editor: yes',
@@ -1090,6 +1360,7 @@ def main() -> int:
     for name, scraper in (
         # District feeds first: their links open and their bodies extract,
         # so they are the tips most likely to survive to a checked story.
+        ('Daijiworld', scrape_daijiworld),
         ('News Karnataka KN', scrape_newskarnataka_kn),
         ('Vartha Bharati KN', scrape_varthabharati_kn),
         ('Udayavani HTML', scrape_udayavani_html),
@@ -1104,6 +1375,15 @@ def main() -> int:
     log(f'Sources alive: {alive}/4 | Raw tips: {len(all_tips)}')
     unique = deduplicate(all_tips)
     log(f'After dedup: {len(unique)} unique tips')
+
+    date_s = datetime.now().strftime('%Y-%m-%d')
+    prior_urls = previously_published_urls(date_s)
+    if prior_urls:
+        before_count = len(unique)
+        unique = [t for t in unique if re.sub(r'[?&]utm_[^&]+', '', t.source_url).strip().rstrip('?&/') not in prior_urls]
+        dropped = before_count - len(unique)
+        if dropped:
+            log(f'  dedup:          {dropped} tip(s) already published in recent editions — excluded')
     if len(unique) < MIN_SOURCES:
         msg = f'Only {len(unique)} tips (need {MIN_SOURCES}+). Sources may be down.'
         log_err(msg)
@@ -1111,6 +1391,8 @@ def main() -> int:
         return 1
 
     attach_bodies(unique)
+    date_tips(unique)
+    unique = drop_stale_and_unciteable(unique)
     _optional_extract(unique)
     audit_groundedness(unique)
     date_s = datetime.now().strftime('%Y-%m-%d')

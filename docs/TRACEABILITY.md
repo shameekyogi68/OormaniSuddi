@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **57/82** decisions are named by at least one test
+- **65/90** decisions are named by at least one test
 - **23** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **0 are enforced by nothing**
@@ -260,7 +260,7 @@ those carry a reason rather than a test.
 ## D59 · No human verification, no publication
 
 - **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_draft_edition.py`, `tests/test_intake.py`, `tests/test_verify.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/review.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`, `scripts/verify.py`
+- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/factcheck.py`, `brand/review.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`, `scripts/verify.py`
 
 ## D60 · Legibility is arithmetic, and arithmetic is testable
 
@@ -279,7 +279,7 @@ those carry a reason rather than a test.
 ## D63 · The intake retrieves; it never supplies what the source lacks
 
 - **Tested by:** `tests/test_intake.py`
-- Enforced in: `scripts/draft_edition.py`
+- Enforced in: `brand/factcheck.py`, `scripts/draft_edition.py`
 
 ## D64 · Brand rules are gilded, not stamped
 
@@ -364,10 +364,49 @@ those carry a reason rather than a test.
 ## D82 · Sound effects are made here, registered, and tied to the cut
 
 - **Tested by:** `tests/test_speednews.py`
-- Enforced in: `brand/motion.py`, `brand/speednews.py`
+- Enforced in: `brand/motion.py`, `brand/speednews.py`, `scripts/build_promo.py`
 
 ## D83 · Speed news shows the whole picture, and uses the whole frame
 
 - **Tested by:** `tests/test_speednews.py`
 - Enforced in: `brand/motion.py`, `brand/speednews.py`, `brand/tokens.py`
+
+## D84 · The fact desk checks every published line, before and after writing
+
+- **Tested by:** `tests/test_reach_copy.py`
+- Enforced in: `brand/codes.py`, `brand/factcheck.py`, `brand/review.py`, `scripts/fact_check.py`
+
+## D85 · A stock frame is earned by the story's words, scored — never by category
+
+- **Tested by:** `tests/test_stock.py`
+- Enforced in: `brand/stock.py`, `brand/tokens.py`
+
+## D86 · Five hashtags, and a trend only when the story is about it
+
+- **Tested by:** `tests/test_reach_copy.py`
+- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/review.py`, `brand/tokens.py`, `brand/trends.py`, `scripts/trending_tags.py`
+
+## D87 · The newsroom runs as a team of agents, in parallel, fact desk first
+
+- **Tested by:** `tests/test_reach_copy.py`
+
+## D88 · Fresh, ours, a real article, and credited to the outlet it came from
+
+- **Tested by:** `tests/test_sourcing.py`
+- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/review.py`, `brand/sourcing.py`, `brand/tokens.py`, `scripts/draft_edition.py`, `scripts/fetch_daily_news.py`
+
+## D89 · The team is dispatched by the state of the newsroom, not by memory
+
+- **Tested by:** `tests/test_dispatch.py`
+- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/dispatch.py`, `templates/carousel.py`
+
+## D90 · A render folder belongs to one edition, and says which
+
+- **Tested by:** `tests/test_dispatch.py`
+- Enforced in: `brand/dispatch.py`
+
+## D91 · A stock frame with text in it is never attached automatically
+
+- **Tested by:** `tests/test_stock.py`
+- Enforced in: `brand/stock.py`
 

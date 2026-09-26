@@ -111,6 +111,60 @@
       "licence": "own",
       "source_url": "",
       "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
+    },
+    {
+      "path": "assets/sfx/news_impact.wav",
+      "kind": "sfx",
+      "title": "Broadcast SFX — frame-0 news impact",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Broadcast news impact stinger with instant 0ms transient for frame-0 story cut."
+    },
+    {
+      "path": "assets/sfx/pro_impact.wav",
+      "kind": "sfx",
+      "title": "Broadcast SFX — cinematic news boom",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Broadcast cinematic news impact with sub-bass drop."
+    },
+    {
+      "path": "assets/sfx/pro_outro_hit.wav",
+      "kind": "sfx",
+      "title": "Broadcast SFX — outro hit",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Broadcast outro stinger with swell and resonant resolution for follow card."
+    },
+    {
+      "path": "assets/sfx/pro_news_ident.wav",
+      "kind": "sfx",
+      "title": "Broadcast SFX — news ident sting",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Broadcast news musical ident sting."
+    },
+    {
+      "path": "assets/sfx/pro_whoosh.wav",
+      "kind": "sfx",
+      "title": "Broadcast SFX — wipe transition whoosh",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Stereo 48kHz broadcast whoosh for wipe transitions."
+    },
+    {
+      "path": "assets/sfx/tech_ping.wav",
+      "kind": "sfx",
+      "title": "Broadcast SFX — headline landing ping",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Clean high-frequency acoustic accent for headline arrival."
     }
   ]
 }

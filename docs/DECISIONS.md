@@ -2304,6 +2304,306 @@ KenBurns.frame` · `brand/tokens.py :: Motion.speed_top, speed_bottom` ·
 
 ---
 
+## D84 · The fact desk checks every published line, before and after writing
+
+**Decided.** Every figure and name in every line that reaches a reader or a
+listener — headline, reel_line, hook, deck, points, takeaway, narration — is
+checked against the text of the source it cites. The text is kept per URL in
+`inbox/sources/`. A figure not in the source fails the gate (`FACT-01`); a
+source page that does not carry the story fails it (`FACT-02`); a story whose
+source text we do not hold fails too, because nothing in it was checked and
+an invented URL ends up exactly there (`FACT-03`); an unsupported word or
+name is a warning to read (`FACT-04`).
+`scripts/fact_check.py` runs it before render and in the 06:10 job.
+
+**Why.** D63 checked the one-line lead the intake wrote. Nothing checked what
+the desk wrote after it, and every later line is one a model can write. The
+editor asked, on 2026-09-24, for a fact checker "before writing any news, any
+sentence". The first run found all six of that day's `source_url`s were
+model-written (`utm_source=gemini`, one slug beginning `english-heading-`)
+and served a sidebar of other headlines — 85–100% of each story's words were
+absent. The copy had been "sourced" to pages that did not carry it.
+
+**A figure the source spells another way is proved, not waved.** The fact
+desk records the exact sentence of the source in `inbox/factcheck/*.json`;
+the check only accepts it if that sentence is in the kept source. That is
+evidence a person can reread, and it cannot be used to pass an invented
+number, because an invented number has no sentence. No override flag (D29).
+
+**What it cannot do.** Decide the source is right; read Kannada copy against
+an English article word for word (figures and Latin names are still
+checked, and the report says the rest needs a person). `verified_by` stays a
+human name (D59).
+
+`brand/factcheck.py` · `scripts/fact_check.py` · `brand/review.py` (FACT-01..04)
+· `brand/codes.py` · `tests/test_reach_copy.py :: EveryFigureIsInTheSource`
+
+---
+
+## D85 · A stock frame is earned by the story's words, scored — never by category
+
+**Decided.** `brand/stock.py` scores every catalogued frame against the
+story's own words, weighted by where they sit (headline / reel_line / hook
+3, deck 2, points / takeaway 1), and attaches the best one only when it earns
+`Limits.stock_match_min`. The category fallback is gone: a story nothing
+matches is left for a fresh, story-specific frame. `python3 -m brand.stock
+editions/X.json` prints every candidate, its score and the words behind it.
+
+**Why.** The editor, 2026-09-24: images "not even nearest to the topic". The
+old matcher took the FIRST table entry with any keyword anywhere in the
+story, so one incidental word in the third fact beat three in the headline;
+it fell back to one frame per category, which is precisely the lazy match
+house rule 2026-09-20-01 forbids; it sent ಪರೀಕ್ಷೆ / ಫಲಿತಾಂಶ to the
+certificate ceremony the editor had rebuked; it mapped ಸಾವು (death) to a
+hospital; and it split keys on spaces, so no two-word key (ರೆಡ್ ಅಲರ್ಟ್,
+ಕುಡಿಯುವ ನೀರು) could ever match. The eleven frames added since D80 were
+never in its table. Keys are now actions and objects, not topics; a word
+that described three different scenes was removed.
+
+**Also.** Stock frames were credited `AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ` with a
+caption repeating `(ಎಐ ರಚಿತ ಚಿತ್ರ)`, the stutter house rule 2026-09-17-05
+forbids. Credit is the channel; the caption says ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ.
+
+**The picture-editor agent** does what scoring cannot: names the action,
+reads the CATALOG "Visual" line, writes a structured 16:9 brief, and
+describes every image blind before comparing it with the story.
+
+`brand/stock.py` · `brand/tokens.py :: Limits.stock_match_min` ·
+`.claude/agents/picture-editor.md` · `tests/test_stock.py`
+
+---
+
+## D86 · Five hashtags, and a trend only when the story is about it
+
+**Decided.** An Instagram caption carries at most `Limits.ig_hashtags_max`
+(5) tags: the town in Kannada, TownNews, one trend today that the story is
+genuinely about, the subject, then ಕರಾವಳಿಸುದ್ದಿ / the channel. Every town the
+tags cannot hold is written in a 📍 line in Kannada and English, which
+Instagram's keyword search reads. YouTube descriptions carry 3 hashtags (the
+ones shown above the title); the TAGS field is search phrases, fitted to 500
+characters. `scripts/trending_tags.py` writes `inbox/trends_<date>.json` each
+morning from Google Trends (Karnataka, then India); the trend-scout agent
+adds what it can evidence from Instagram and YouTube. `brand/trends.py`
+attaches a trend only when the story says its words — the whole phrase, or
+two distinctive words of it. The gate fails a caption over five (`PUB-09`).
+
+**Why five.** Instagram has read five hashtags per post or Reel since
+December 2025 and ignores the rest; our carousel caption was carrying 28.
+
+**Why not irrelevant trends, though the editor asked for them.** The goal is
+reach, and an unrelated trend costs reach. YouTube's spam policy treats tags
+and hashtags unrelated to the video as misleading metadata — the video is
+removed and the channel gets a strike. Instagram shows a post to a small
+slice first and widens it only if they stop and watch; a trend-seeker who
+gets a Kundapura flood swipes past, and that is the signal that ends the
+post's distribution. A trend the story is about is the opposite: the right
+people, searching right now.
+
+**House rule 2026-09-17-07** asked for every town and category in the
+hashtags. That cannot survive a five-tag platform, so its intent — every
+town discoverable — moved to the 📍 line, and the rule was superseded.
+
+`brand/copy.py :: hashtags, edition_hashtags, place_line, youtube_tags` ·
+`brand/trends.py` · `scripts/trending_tags.py` · `brand/review.py` (PUB-09) ·
+`tests/test_reach_copy.py`
+
+---
+
+## D87 · The newsroom runs as a team of agents, in parallel, fact desk first
+
+**Decided.** Four specialist agents in `.claude/agents/` — fact-checker,
+picture-editor, social-writer, trend-scout — run in waves: trend-scout and one
+fact-checker per story together; then one picture-editor per story and the
+social-writer together; then render, the gate, and a post-render caption
+audit. One agent, one story. `.agents/skills/second-brain/SKILL.md` carries
+the order.
+
+**Why.** Asked for by the editor on 2026-09-24. One generalist doing six
+stories in sequence checks the first three carefully and the rest by
+assumption; six fact-checkers each own one story. The waves exist because
+the fact desk has to pass a story before anyone polishes its copy or picks
+its picture — speed that runs ahead of the facts is how a wrong figure gets a
+good font.
+
+**What the agents cannot do** is anything a person is responsible for:
+`verified_by`, the three sign-off seats, posting.
+
+`.claude/agents/*.md` · `.agents/skills/second-brain/SKILL.md`
+
+---
+
+## D88 · Fresh, ours, a real article, and credited to the outlet it came from
+
+**Decided.** `brand/sourcing.py` answers three questions for the intake, the
+drafter and the gate alike. *Whose is it:* every `source_url` belongs to an
+outlet (`OUTLETS`), and the story must credit that outlet — `FACT-06` fails
+it otherwise. *Is it an article:* a section page, a link carrying a chatbot's
+tracking tag (`utm_source=gemini`) or a placeholder slug is not a source —
+`FACT-05`. *Is it today's:* the intake records when each tip was published
+(the page's own metadata, the feed, or the date in the URL) in
+`Tip.published_at`, shows it on the tip sheet, and drops anything older
+than `Limits.news_max_age_hours`; a date with no time counts in calendar
+days. The drafter also skips tips that name no coastal place
+(`copy.is_coastal`, one registry: `PLACE_TAGS` plus the English press's
+spellings) unless they are state news the coast lives with (house rule
+2026-09-20-02), and fills `location` from the same registry. A new
+`news-scout` agent runs the same four tests on anything the feeds miss and
+on news the editor adds. The gate warns (`FACT-07`) when every source a
+story cites predates its edition.
+
+**Why.** The editor, 2026-09-25: news they added by hand ended up credited
+to one paper, and the intake brought stale and unrelated stories. Measured on
+the 24 Sept package: all six stories credited ಉದಯವಾಣಿ with chatbot-made links
+(D84 found them), and the morning draft had carried four stories dated the
+22nd, a Vartha Bharati section page as a "source", and a Kasaragod story —
+while Puttur, Shirva and "Kundapur" stories read as not ours because the
+place table held only Udupi taluks in Kannada spelling.
+
+**News the editor adds keeps its own provenance** — a link is that outlet's,
+a press release is its issuer's, what the editor saw is own reporting
+(house rule 2026-09-25-01). Folding it under the paper the rest came from is
+a false attribution, and it is what the sources slide then prints.
+
+**Corrected the next morning by the fact desk itself.** Twelve fact-checker
+agents, one per story, re-checked the 23 and 24 Sept editions and found two
+things this decision first got wrong. Udayavani links are real articles: the
+site loads the story text from a separate file (`news_section`, on its
+CloudFront store), so a plain fetch saw only the sidebar and every Udayavani
+link looked like a listing page — `fetch_daily_news._udayavani_body` now
+reads what a browser reads, publish date included. And `english-heading-…`
+is Udayavani's own slug, not a placeholder. Only the chatbot tag was bogus.
+They also found Udayavani writes ೊ as two code points; matching is now NFC.
+What the agents found in the COPY stands: of 12 stories, 10 carried claims
+their source did not make — a denied death (Sharjah), an invented cause of
+death, invented investigations — and 2 were dropped (a festival story after
+the festival; a minor's death, 15 days old, with nothing new).
+
+`brand/sourcing.py` · `brand/copy.py :: is_coastal, place_in, PLACE_TAGS` ·
+`scripts/fetch_daily_news.py :: date_tips, drop_stale_and_unciteable` ·
+`scripts/draft_edition.py` · `brand/review.py` (FACT-05..07) ·
+`.claude/agents/news-scout.md` · `tests/test_sourcing.py`
+
+---
+
+### D89 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
+
+**Context (2026-09-25):**
+Two critical failures broke editorial trust on carousel posts:
+1. **The "Half-Baked Carousel"**: `Story` JSON held key facts in `points` (e.g. 3 harsh reality consequences of a cyber crime FIR: job disqualification, passport denial, court trials). But `carousel.py` only rendered `headline` + `deck`, discarding `points` entirely. Decks ended with promises like "ಕಟು ವಾಸ್ತವ ಇಲ್ಲಿದೆ:" followed by empty black void. Readers saw half-baked news while the JSON looked complete.
+2. **Hardcoded Regional Boilerplate on Special Segments**: Special awareness/rights series like `ಕಾನೂನು ಕವಚ` (digital cyber safety) were given hardcoded coastal branding: `ಕರಾವಳಿ ಬುಲೆಟಿನ್` on mastheads, `#ಕರಾವಳಿಸುದ್ದಿ` hashtags, `ಇಂದಿನ ಪ್ರಮುಖ ಕರಾವಳಿ ಮುಖ್ಯಾಂಶಗಳು:` on WhatsApp, and `forward_ಕರಾವಳಿ.txt`.
+
+**Decisions:**
+1. **100% JSON Visibility**: If `st.points` exists, `carousel.py` MUST render it using `cp.factlist` (gold numerals 01, 02, 03, subtle hairlines, and Kannada type). Zero phantom data in JSON.
+2. **Visual Slide Budget & PUB-10 Gate**: When points follow, the deck functions as a concise 1–2 line lead-in (`max_lines=2`). If `headline + deck + points` overflows the card capacity (`src_top - 20`), the build FAILS with `PUB-10`. No slide may clip text.
+3. **Points Capacity & PUB-11 Gate**: A carousel slide holds up to `Limits.points_max` (3) points. More than 3 points fails `PUB-11`.
+4. **Special Segment Branding**: `brand/copy.py::is_special_series` detects non-bulletin series (`ಕಾನೂನು ಕವಚ`, explainers without coastal locations). For special segments:
+   - Masthead displays segment strapline (e.g. `ಕಾನೂನು ಕವಚ • ಪ್ರಕರಣ 1`), never `ಕರಾವಳಿ ಬುಲೆಟಿನ್`.
+   - Cover counter displays `{n} ಅಂಶಗಳು`, never `{n} ಸುದ್ದಿಗಳು`.
+   - Closing slide footer displays segment title, never `ಕರಾವಳಿ`.
+   - Instagram hashtags are topic-driven (`#ಕಾನೂನುಕವಚ #oormanisuddi #CyberSafety`), never `#ಕರಾವಳಿಸುದ್ದಿ`.
+   - WhatsApp digest uses `{strapline} — ಪ್ರಮುಖ ಮುಖ್ಯಾಂಶಗಳು:`, never `ಕರಾವಳಿ ಮುಖ್ಯಾಂಶಗಳು`.
+   - No regional `forward_*.txt` files are produced.
+
+`templates/carousel.py` · `brand/review.py` (PUB-10, PUB-11) · `brand/copy.py :: is_special_series, edition_hashtags, edition_whatsapp, for_edition, taluk_forwards` · `brand/tokens.py` · `brand/codes.py`
+
+---
+## D89 · The team is dispatched by the state of the newsroom, not by memory
+
+**Decided.** Twelve agents in `.claude/agents/`, each with one job, a jail
+to this repository, a list of what it may not do, and a report formula.
+Four are **proactive** — news-scout, trend-scout, planning-editor,
+systems-steward — and are due when something is coming or missing. Eight are
+**reactive** — fact-checker, legal-standards, kannada-editor, picture-editor,
+social-writer, package-inspector, gate-doctor, corrections-officer — and are
+due when something happened. `brand/dispatch.py` reads the state (editions,
+kept sources, gate reports, calendar, complaint clocks, health) and returns
+who is due, why, and in which wave; tasks in one wave run in parallel. Two
+hooks make it automatic: at session start it prints the plan, and after any
+command that RUNS render, fact_check, verify, draft, fetch or correction it
+puts the newly due reactive work in front of the assistant.
+
+Every agent files its report as a **receipt** stamped with a hash of what it
+looked at, minus who verified it. Edit the story and the receipt stops
+matching, so the agent is due again; sign it and nothing is re-done. A BLOCK
+in a receipt goes to the person. Failing gate codes route to agents through
+`CODE_AGENT`, one line per code family, beside `codes.OWNER` for people; a
+test fails if a new family has no agent.
+
+**Why.** The editor, 2026-09-25: reactive and proactive agents, a swarm, the
+best output possible. The first five agents (D87) existed and nobody was
+told when to run them, so they ran when someone remembered. Seven stages had
+no specialist at all: the legal read (the Sharjah headline that denied a
+death), Kannada copy, looking at rendered frames (the fake nameplate), gate
+repair, corrections under the IT Rules clocks, planning ahead of festivals,
+and the machine itself (backups nine days stale that morning).
+
+**What stays human** is unchanged and enforced by test: no agent file may
+carry a sign-off or verify command; `verified_by`, the sign-off, uploading,
+legal flags and answering a complaint are listed under "needs a person".
+
+**The hook's first live day** it fired on a heredoc that only mentioned
+`verify.py`. It now reacts only to a command that runs a pipeline script on
+its first line; a test holds eight such cases.
+
+`brand/dispatch.py` · `scripts/dispatch.py` · `.claude/agents/*.md` ·
+`.claude/settings.json` (SessionStart, PostToolUse:Bash) ·
+`tests/test_dispatch.py`
+
+---
+## D90 · A render folder belongs to one edition, and says which
+
+**Decided.** `render.py` names an edition's output folder after the edition
+FILE (`out/<stem>`), not its date, and stamps the folder with
+`.edition` — the edition it was made from. It refuses to render into a
+folder stamped for a different edition. The daily file is
+`editions/<date>.json`, so the daily folder is still `out/<date>`. The
+dispatcher reads the stamp and will not inspect or gate a folder "for" an
+edition it does not hold; it tells the person instead.
+
+**Why.** Found by the package-inspector agent on its first run, 2026-09-25:
+the ಕಾನೂನು ಕವಚ explainer, dated the same day as the news, rendered into
+`out/2026-09-25` and replaced that day's news carousel; one stale news frame
+was left behind among the explainer's. Nothing in the pipeline noticed,
+because every check looked at a folder that was internally consistent — it
+was just the wrong edition's.
+
+**Also from that run.** Two more stock frames carried AI-made text — a court
+sign naming ಕುಂದಾಪುರ and a "Burglary Case: 142/2023" label — and are no
+longer offered by `brand/stock.py`, as with the fake nameplate (D85).
+
+`render.py` · `brand/dispatch.py :: owner_of` · `brand/stock.py` ·
+`tests/test_dispatch.py :: ARenderNeverOverwritesAnotherEdition`
+
+---
+## D91 · A stock frame with text in it is never attached automatically
+
+**Decided.** `brand/stock.py :: WITHDRAWN` lists every catalogued frame that
+carries AI-made text a reader would take as fact — a town, a name, an
+institution, a number plate, a case number — or shows something that may
+not have happened; `candidates()` never offers one, whatever the story says.
+Each entry says why. A frame leaves the list only by being regenerated with
+no text at all. 14 frames remain auto-attachable; everything else gets a
+fresh, story-specific frame from the picture desk.
+
+**Why.** The systems-steward agent opened all 39 frames on 2026-09-26: 21
+carried text — "UDUPI TRAFFIC" on a jeep used for any town, a court sign
+naming ಕುಂದಾಪುರ, an officer's nameplate for a man who does not exist, a
+banner for a university, a leopard already inside the trap. 17 were still
+in the matcher, including the four that match every crime and accident
+story. Three had been pulled one at a time as they were caught (D85, D90);
+a register is how the next one is not caught in a published carousel.
+
+**Found in the same run, and fixed:** every scheduled 06:10 / 07:00 intake
+since 2026-09-18 had died on `import numpy`, because launchd's bare PATH
+finds macOS's own Python 3.9 (`scripts/morning.sh` now picks the first
+Python that can import the engine); and `scripts/health.py` read a fresh
+backup as nine days old, sorting by name instead of time.
+
+`brand/stock.py :: WITHDRAWN` · `scripts/morning.sh` ·
+`scripts/health.py :: check_backups` · `tests/test_stock.py ::
+AFrameWithTextInItIsNeverAttached`
+
+---
 
 ## Changing something here
 

@@ -363,6 +363,12 @@ class Limits:
     reel_line_chars = 46
     hook_words = 7
     deck_chars = 190
+    # The carousel slide shows headline + deck, nothing else. The deck gets
+    # this many lines at T.body[0] before typo.fit starts shrinking. Any text
+    # that exceeds this is silently truncated — the reader never sees it. The
+    # PUB-10 gate fails the build when a deck would be visually truncated, and
+    # PUB-11 warns when `points` contain information the deck does not.
+    carousel_deck_max_lines = 4
     point_chars = 150
     points_max = 3
     narration_beat_chars = 135
@@ -414,6 +420,25 @@ class Limits:
     # taluks who see something they can use and send it to someone in the same
     # taluk. A post reaching 40,000 statewide and 200 locally is a miss.
     local_reach_floor = 0.55    # share of reach that should be in-district
+    # Points a stock frame must earn from the story's own words before it is
+    # attached: one headline word (3), or deck (2) + a fact (1). Below this
+    # the slide is left for a fresh, story-specific frame. D85.
+    stock_match_min = 3
+    # Instagram ignores every hashtag past the fifth on a post or Reel since
+    # December 2025, and says fewer, targeted tags perform better. D86.
+    ig_hashtags_max = 5
+    # YouTube shows the first three description hashtags above the title.
+    yt_hashtags_max = 3
+    # The YouTube tags field holds 500 characters in total.
+    yt_tags_chars = 500
+    # Trending tags per post. A trend is only ever used when the story is
+    # about it — an unrelated trend is misleading metadata on YouTube
+    # (removal + strike) and sends the post to people who scroll past. D86.
+    trend_tags_max = 2
+    # How old a story may be when it is drafted, in hours from publication.
+    # The 06:10 intake reaches back over yesterday; the 24 Sept draft carried
+    # two stories from the 22nd. A dated URL counts its whole day. D88.
+    news_max_age_hours = 36
 
 
 class Motion:

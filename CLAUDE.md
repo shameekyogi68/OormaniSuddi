@@ -12,6 +12,7 @@ Then, depending on the job:
 | feed the system news copy | [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) then [`.agents/skills/second-brain/SKILL.md`](.agents/skills/second-brain/SKILL.md) — four stops, not thirteen |
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
 | pick a template | `python3 render.py --describe` |
+| know which agents to run | `python3 scripts/dispatch.py` — twelve agents in `.claude/agents/`, proactive and reactive, in waves (D89) |
 | run a day end to end | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) |
 | edit raw clips into a long-format YouTube video | [`.claude/skills/youtube-longform-edit/SKILL.md`](.claude/skills/youtube-longform-edit/SKILL.md) |
 | edit raw clips into an Instagram Reel / YouTube Short | [`.claude/skills/reels-shorts-edit/SKILL.md`](.claude/skills/reels-shorts-edit/SKILL.md) |

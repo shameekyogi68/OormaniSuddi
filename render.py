@@ -313,9 +313,18 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
                 log.done('reel', seconds=round(time.time() - _t, 1),
                          narrated=bool(vo_script))
                 write_copy(lead, outdir, 'reel_copy', voice_script=vo_script)
+                write_copy(lead, outdir, 'reel_01_copy', voice_script=vo_script)
                 cov = os.path.join(outdir, 'reel_cover.jpg')
                 if os.path.exists(cov):
                     made.append((cov, 'story'))
+                p_r1 = os.path.join(outdir, 'reel_01.mp4')
+                if os.path.exists(p):
+                    shutil.copy2(p, p_r1)
+                cov_r1 = os.path.join(outdir, 'reel_01_cover.jpg')
+                if os.path.exists(cov):
+                    shutil.copy2(cov, cov_r1)
+                if vo_path and os.path.exists(vo_path):
+                    shutil.copy2(vo_path, os.path.join(outdir, 'reel_01_voiceover.mp3'))
                 print(f'  ✓ {os.path.basename(p)}  + copy')
                 print('    · set reel_cover.jpg as the Instagram cover (not YouTube)')
             else:
@@ -624,8 +633,27 @@ def main() -> int:
             print(f'✗ {err}', file=sys.stderr)
             return 1
 
-    outdir = args.out or f'out/{ed.date:%Y-%m-%d}'
+    # The folder is named after the EDITION FILE, not its date. Two editions
+    # carry the same date whenever the day has more than one (an evening
+    # edition, a special report, an explainer series), and a date-named folder
+    # let the second silently overwrite the first: on 2026-09-25 the ಕಾನೂನು
+    # ಕವಚ explainer replaced that day's news carousel. The daily edition file
+    # is `editions/<date>.json`, so its folder is still `out/<date>`. D90.
+    stem = os.path.splitext(os.path.basename(args.input))[0]
+    outdir = args.out or f'out/{stem}'
+    stamp = os.path.join(outdir, '.edition')
+    here = os.path.relpath(os.path.abspath(args.input))
+    if os.path.exists(stamp):
+        with open(stamp, encoding='utf-8') as fh:
+            there = fh.read().strip()
+        if there and there != here:
+            print(f'✗ {outdir} holds the package for {there}, not {here}. '
+                  f'Rendering here would overwrite it. Pick another --out, '
+                  f'or archive/remove that folder first.', file=sys.stderr)
+            return 1
     os.makedirs(outdir, exist_ok=True)
+    with open(stamp, 'w', encoding='utf-8') as fh:
+        fh.write(here + '\n')
 
     # One heavy job at a time. Two renders on 8 GB of unified memory is how
     # macOS starts swapping and a three-minute master becomes indefinite.

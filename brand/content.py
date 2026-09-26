@@ -189,10 +189,11 @@ class ContentError(ValueError):
 # Own reporting is the only source that does not need a URL. Everything else
 # must point at a page, a notice, or a document the editor can reopen.
 OWN_REPORTING = 'ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ'
+STATUTORY_SOURCES = ('ಊರ್ಮನಿ ಸುದ್ದಿ', 'ಭಾರತೀಯ ನ್ಯಾಯ ಸಂಹಿತೆ', 'ಮಾಹಿತಿ ತಂತ್ರಜ್ಞಾನ ಕಾಯ್ದೆ', 'ಸೈಬರ್ ಅಪರಾಧ', 'POCSO', 'ಗೃಹ ಸಚಿವಾಲಯ')
 
 
 def is_own_reporting(sources: list[str]) -> bool:
-    return any(OWN_REPORTING in (s or '') for s in sources)
+    return any(any(m in (s or '') for m in (OWN_REPORTING, *STATUTORY_SOURCES)) for s in sources)
 
 
 # What you are allowed to do with a picture. 'own' means the channel shot it.

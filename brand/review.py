@@ -35,7 +35,7 @@ import subprocess
 from dataclasses import dataclass, field
 
 from .content import Edition, Story
-from .tokens import Brand, fmt, Limits
+from .tokens import Brand, fmt, Limits, Grid, T, C
 from . import typo
 
 
@@ -408,6 +408,148 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                     f'from assets/stock/ (see assets/stock/CATALOG.md) or '
                     f'generate one, and set nature="ai" on anything generated.')
 
+        # ── visual capacity and truncation on carousel (PUB-10) ──────────
+        # Every field written in JSON (headline, deck, points) is rendered
+        # on the carousel slide. If the text exceeds the visual capacity,
+        # it is silently cut or runs into the footer. The reader sees
+        # partial news. This gate closes that gap forever (D89).
+        if slides:
+            r.checked.append('carousel slide content fits without truncation (PUB-10)')
+            F = fmt('square')
+            ss = F.ss
+            cw = F.w - 2 * Grid.margin
+            H = F.h
+            foot_top = H - 58 - T.meta[0] * 1.1 - 22
+            src_top = foot_top - 28 - T.micro[0] * 1.26
+            max_y = src_top - 20
+
+            for i, st in enumerate(edition.stories, 1):
+                has_deck = bool(st.deck)
+                has_points = bool(st.points)
+
+                # 1. Deck visual line limit: 2 lines if points follow, 4 if deck only
+                max_dl = 2 if has_points else Limits.carousel_deck_max_lines
+                if has_deck:
+                    size = T.body[0]
+                    b = typo.fit(st.deck, 'kn_var',
+                                 int(ss * size), int(ss * size * 0.78),
+                                 ss * cw, ss * size * T.deck[1] * max_dl,
+                                 T.deck[1], weight=450, max_lines=max_dl)
+                    if b.n > max_dl:
+                        r.add_fail('PUB-10',
+                            f'story {i} deck is {b.n} visual lines on the '
+                            f'carousel slide (limit is {max_dl}). The carousel '
+                            f'renders deck in ≤{max_dl} lines when {"points follow" if has_points else "on card"} — '
+                            f'text past line {max_dl} is silently cut. '
+                            f'Shorten the deck to ≤{max_dl} lines.', where=f'story {i}')
+
+                # 2. Overall card height simulation:
+                has_any_points = any(bool(s.points) for s in edition.stories)
+                ph = H * 0.32 if has_any_points else H * 0.36
+                y_sim = 82 + ph + 16 + 25 + 28 + 34 + 24
+                room = src_top - 36 - y_sim
+                head_share = 0.30 if (has_deck and has_points) else (0.50 if (has_deck or has_points) else 0.72)
+                max_hl = 2 if (has_deck and has_points) else 4
+                hb = typo.fit(st.headline, 'kn', int(ss * T.h2[0]), int(ss * T.h4[0] * 0.84),
+                              ss * cw, ss * (room * head_share), T.h2[1], max_lines=max_hl)
+                y_sim += hb.height / ss
+
+                if has_deck:
+                    y_sim += 20
+                    deck_sz = int(T.body[0] * 0.90) if has_points else T.body[0]
+                    db = typo.fit(st.deck, 'kn_var', int(ss * deck_sz), int(ss * deck_sz * 0.78),
+                                  ss * cw, ss * (deck_sz * T.deck[1] * max_dl),
+                                  T.deck[1], weight=450, max_lines=max_dl)
+                    y_sim += db.height / ss
+
+                if has_points:
+                    y_sim += 16
+                    pts = st.points
+                    pt_size = int(T.body[0] * 0.82)
+                    gap = 12
+                    indent = 52
+                    blocks = [typo.layout(p, typo.font('kn_var', int(ss * pt_size), weight=440),
+                                          ss * (cw - indent), T.body[1]) for p in pts]
+                    pts_h = sum(blk.height / ss for blk in blocks) + gap * (len(pts) - 1)
+                    y_sim += pts_h
+
+                if y_sim > max_y:
+                    r.add_fail('PUB-10',
+                        f'story {i} content overflows the carousel slide by '
+                        f'{y_sim - max_y:.0f}px. Shorten the headline, deck, or '
+                        f'points so the slide fits cleanly without clipping.',
+                        where=f'story {i}')
+
+        # ── points capacity on carousel (PUB-11) ─────────────────────────
+        if slides:
+            r.checked.append('carousel points count within capacity (PUB-11)')
+            for i, st in enumerate(edition.stories, 1):
+                if st.points and len(st.points) > Limits.points_max:
+                    r.add_fail('PUB-11',
+                        f'story {i} carries {len(st.points)} points (limit is '
+                        f'{Limits.points_max}). A carousel slide cannot hold '
+                        f'more than {Limits.points_max} points without crowding. '
+                        f'Trim to ≤{Limits.points_max}.', where=f'story {i}')
+
+        # ── the fact desk (D84) ──────────────────────────────────────────
+        # Every figure in every published line — headline to narration — is
+        # in the source we cite, and the source we cite carries the story.
+        # A figure a model added is the most dangerous word in the package:
+        # a casualty count, a rupee amount, a helpline that rings nobody.
+        from . import factcheck
+        r.checked.append('every figure is in the cited source (fact desk)')
+        claims = factcheck.load_ledger()
+        from . import sourcing
+        r.checked.append('every source is a real article, credited to its outlet')
+        for i, st in enumerate(edition.stories, 1):
+            # D88: the right outlet, a real article page. On 2026-09-24 six
+            # stories went out credited to one paper they did not come from.
+            for code, msg in sourcing.source_problems(st):
+                r.add_fail(code, f'story {i}: {msg}', where=st.headline[:40])
+            # Every cited URL dated before the window: nothing new is cited.
+            # A warning — a follow-up may rightly cite older background, but
+            # then something current has to be cited beside it.
+            dates = [sourcing.date_in_url(u) for u in st.source_urls]
+            if dates and all(d is not None and sourcing.is_stale(
+                    d, edition.date, date_only=True) for d in dates):
+                r.add_warn('FACT-07',
+                    f'story {i}: every source is dated '
+                    f'{max(dates):%d %b}, before this edition\'s window. Is '
+                    f'this still news? If it is a follow-up, cite today\'s '
+                    f'report too.', where=st.headline[:40])
+        for i, st in enumerate(edition.stories, 1):
+            fr = factcheck.check(st, claims, index=i)
+            if fr.state == 'mismatch':
+                r.add_fail('FACT-02',
+                    f'story {i}: the text held for its source_url does not '
+                    f'carry this story — a listing page or a URL nobody '
+                    f'published. Replace it with the article and re-run '
+                    f'scripts/fact_check.py.', where=st.headline[:40])
+            elif fr.figures:
+                r.add_fail('FACT-01',
+                    f'story {i}: figure(s) '
+                    + ', '.join(f'"{t}" ({f})' for f, t in fr.figures)
+                    + ' are not in the cited source. Correct the copy, or '
+                    'prove each with the source sentence in '
+                    'inbox/factcheck/ (scripts/fact_check.py explains how).',
+                    where=st.headline[:40])
+            elif fr.state == 'uncheckable' and st.source_urls:
+                # Blocks, not warns: a source we could not read is exactly the
+                # case of a URL nobody published — fact_check.py refuses to
+                # keep a page that does not carry the story, so it lands here.
+                r.add_fail('FACT-03',
+                    f'story {i}: no source text held, so nothing in it was '
+                    f'fact-checked — run scripts/fact_check.py; if the site '
+                    f'blocks it, paste the article into inbox/sources/ '
+                    f'(the fact-checker agent does this).',
+                    where=st.headline[:40])
+            if fr.names and fr.state != 'mismatch':
+                r.add_warn('FACT-04',
+                    f'story {i}: not in the source — '
+                    + ', '.join(t for _, t in fr.names[:8])
+                    + '. Usually wording; a NAME here is a person to check.',
+                    where=st.headline[:40])
+
         # ── the second half of D55 ────────────────────────────────────────
         # "No source, no claim" was enforced at the contract. "No human
         # verification, no publication" was written in the decision and
@@ -499,6 +641,21 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                     f'average. Run the best two.')
         except Exception as e:
             r.add_warn('PUB-05', f'reach could not be checked ({e})')
+
+        # ── what the platform will actually read (D86) ────────────────────
+        r.checked.append(f'no caption over {Limits.ig_hashtags_max} hashtags')
+        from .copy import platform_of
+        for f in files:
+            if not f.endswith('_caption.txt') or platform_of(f) != 'instagram':
+                continue
+            with open(os.path.join(outdir, f), encoding='utf-8') as fh:
+                n = len(re.findall(r'(?:^|\s)#\w', fh.read()))
+            if n > Limits.ig_hashtags_max:
+                r.add_fail('PUB-09',
+                    f'{f} carries {n} hashtags. Instagram reads '
+                    f'{Limits.ig_hashtags_max} since December 2025 and '
+                    f'ignores the rest — re-render so brand/copy.py picks '
+                    f'the five that reach people.', where=f)
 
         r.checked.append('grievance officer named')
         if not Brand.grievance_named():

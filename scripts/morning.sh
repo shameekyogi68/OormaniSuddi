@@ -17,6 +17,20 @@ cd "$ROOT" || exit 1
 
 mkdir -p logs
 DATE="$(date +%Y-%m-%d)"
+
+# launchd starts with a bare PATH, where `python3` is macOS's own 3.9 with
+# none of this project's libraries: every scheduled run from 2026-09-18 to
+# 09-25 died on `import numpy` and the mornings were rescued by hand. Found by
+# the systems-steward agent. Use the first Python that can import the engine.
+PY=""
+for cand in /opt/homebrew/bin/python3 /usr/local/bin/python3 "$(command -v python3)"; do
+  if [ -x "$cand" ] && "$cand" -c "import numpy, PIL" 2>/dev/null; then PY="$cand"; break; fi
+done
+if [ -z "$PY" ]; then
+  echo "$(date '+%H:%M:%S')  FAILED — no python3 with numpy+Pillow found" >> "logs/fetch-$DATE.log"
+  /usr/bin/osascript -e 'display notification "No usable python3 (numpy missing)" with title "ಊರ್ಮನಿ ಸುದ್ದಿ" subtitle "Morning fetch FAILED"' 2>/dev/null || true
+  exit 1
+fi
 LOG="logs/fetch-$DATE.log"
 
 notify() {
@@ -29,8 +43,8 @@ notify() {
   echo "$(date '+%Y-%m-%d %H:%M:%S')  morning intake"
 } >> "$LOG"
 
-if /usr/bin/env python3 scripts/fetch_daily_news.py >> "$LOG" 2>&1; then
-  TIPS=$(/usr/bin/env python3 -c "
+if "$PY" scripts/fetch_daily_news.py >> "$LOG" 2>&1; then
+  TIPS=$("$PY" -c "
 import json,sys
 try:
     d=json.load(open('inbox/today.json',encoding='utf-8'))
@@ -45,8 +59,8 @@ except Exception:
   # a festival three days out is still a shoot you can arrange, and one that
   # is tomorrow is a card you rush.
   {
-    /usr/bin/env python3 scripts/whats_on.py --days 21
-    /usr/bin/env python3 scripts/whats_on.py --reviews
+    "$PY" scripts/whats_on.py --days 21
+    "$PY" scripts/whats_on.py --reviews
   } >> "$LOG" 2>&1
 
   # Turn the tip sheet into a real, renderable edition — every field copied
@@ -56,8 +70,8 @@ except Exception:
   # edition that already exists — a human may already be mid-edit.
   DRAFT_MSG="tip sheet ready"
   if [ ! -f "editions/$DATE.json" ]; then
-    if /usr/bin/env python3 scripts/draft_edition.py --date "$DATE" >> "$LOG" 2>&1; then
-      DRAFT_MSG="$(/usr/bin/env python3 -c "
+    if "$PY" scripts/draft_edition.py --date "$DATE" >> "$LOG" 2>&1; then
+      DRAFT_MSG="$("$PY" -c "
 import json
 d=json.load(open('editions/$DATE.json',encoding='utf-8'))
 print(f\"{len(d['stories'])} stories drafted — open inbox/checklist_$DATE.md\")
@@ -69,7 +83,18 @@ print(f\"{len(d['stories'])} stories drafted — open inbox/checklist_$DATE.md\"
     echo "$(date '+%H:%M:%S')  editions/$DATE.json already exists — not touching it" >> "$LOG"
   fi
 
-  DUE=$(/usr/bin/env python3 scripts/whats_on.py --reviews 2>/dev/null | grep -c '⚠️' || true)
+  # What Karnataka is searching today (D86), and every figure in the draft
+  # against its source (D84). Neither can stop the morning; both are read at
+  # the Desk stop. A fact-check failure is the note that matters most, so it
+  # goes on the notification.
+  "$PY" scripts/trending_tags.py >> "$LOG" 2>&1 || true
+  if [ -f "editions/$DATE.json" ]; then
+    if ! "$PY" scripts/fact_check.py "editions/$DATE.json" >> "$LOG" 2>&1; then
+      DRAFT_MSG="$DRAFT_MSG · FACT CHECK: fix before render"
+    fi
+  fi
+
+  DUE=$("$PY" scripts/whats_on.py --reviews 2>/dev/null | grep -c '⚠️' || true)
   if [ "${DUE:-0}" -gt 0 ]; then
     notify "$DRAFT_MSG · $DUE review(s) due" "$TIPS"
   else

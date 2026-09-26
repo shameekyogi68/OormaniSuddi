@@ -78,9 +78,9 @@
       "id": "2026-09-17-07",
       "said": "For daily carousel and bulletin editions, hashtags must include all locations (taluks/places) and categories from all stories featured in the edition, not just the lead story.",
       "scope": "desk",
-      "why": "Editor standing instruction (2026-09-17): carousel hashtags must represent all news places and categories covered in the edition.",
+      "why": "Editor standing instruction (2026-09-17): carousel hashtags must represent all news places and categories covered in the edition.  · retired: Instagram reads only 5 hashtags per post since Dec 2025; the intent (every town discoverable) now lives in the caption's 📍 place line. Superseded by D86 and the rule added 2026-09-24.",
       "added": "2026-09-17",
-      "retired": "",
+      "retired": "2026-09-24",
       "by": ""
     },
     {
@@ -109,6 +109,105 @@
       "added": "2026-09-18",
       "retired": "",
       "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-09-19-01",
+      "said": "All AI editorial images must be generated as single continuous frames matching the 16:9 card aspect ratio (AspectRatio: '16:9'). Prompts must explicitly mandate a single continuous camera angle with generous headroom and forbid collages, multi-panel grids, or split screens. Never crop sub-panels or quadrants from multi-image grids to prevent seams and cut-off subjects.",
+      "scope": "picture",
+      "why": "Crop and seam defects occurred when 1:1 grids were generated and manually cropped for carousel_03 on 2026-09-19. Card photo containers are ~16:9, so single native 16:9 frames ensure flawless framing every time.",
+      "added": "2026-09-19",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-09-19-02",
+      "said": "Before generating any AI editorial image for cultural, language, historical, or government news: 1) Research the real news reporting, actual artifacts, or cultural context first (e.g. search real manuscripts, scripts, official settings). 2) Always strictly prohibit text in prompts: mandate 'Strictly NO text, NO signs, NO banners, NO posters, NO writing, NO typography, NO logos anywhere in the image' to prevent corrupted AI lettering. 3) Depict authentic coastal Karnataka material culture (props like palm-leaf manuscripts/lamps, coastal attire, real meeting settings) instead of generic fantasy tropes.",
+      "scope": "picture",
+      "why": "Editor standing instruction (2026-09-19): Tulu language and cultural images require real-world research first and zero fake AI text to produce broadcast-grade, culturally accurate photography every time without manual back-and-forth",
+      "added": "2026-09-19",
+      "retired": "",
+      "by": "Editor"
+    },
+    {
+      "id": "2026-09-20-01",
+      "said": "Every image must contextually match the exact real-world action of the story, not just its broad category. For online tests, counselling, seat allotments, or digital portals, show students with laptops/computers checking results with application sheets — NEVER show certificates/award ceremonies on a stage. For protests, show memorandum/delegation; for tenders/bills, show engineering/official files. Research the exact action before matching or generating any image.",
+      "scope": "picture",
+      "why": "Editor rebuke on 2026-09-20: PGCET mock seat allotment was paired with a generic certificate ceremony photo instead of students checking results on a laptop. Lazy category-level matching damages editorial credibility.",
+      "added": "2026-09-20",
+      "retired": "",
+      "by": "Gautam"
+    },
+    {
+      "id": "2026-09-20-02",
+      "said": "State-level education, government policy, and administrative news (e.g. PGCET, CET, state budget, welfare schemes, weather alerts) directly impact Coastal Karnataka students, institutions, and citizens. Always frame such news with an explicit Coastal Karnataka connection in headlines, decks, and visual representation rather than dismissing it as non-local.",
+      "scope": "desk",
+      "why": "Editor standing instruction (2026-09-20): Major state-level educational and civic decisions affect coastal citizens and must be reported with an active Karavali focus.",
+      "added": "2026-09-20",
+      "retired": "",
+      "by": "Gautam"
+    },
+    {
+      "id": "2026-09-24-01",
+      "said": "Every town and topic in a carousel or speed-news post must be discoverable: the five hashtags carry the two most-covered towns, one trend the edition is genuinely about, ಕರಾವಳಿಸುದ್ದಿ and the channel; every other town appears in the caption's 📍 line in Kannada and English (brand/copy.py does this).",
+      "scope": "package",
+      "why": "supersedes 2026-09-17-07: Instagram reads 5 hashtags since Dec 2025 (D86); caption keywords are searchable",
+      "added": "2026-09-24",
+      "retired": "",
+      "by": "Shameek Yogi"
+    },
+    {
+      "id": "2026-09-24-02",
+      "said": "Every edition starts with the fact desk: run trend-scout and one fact-checker agent per story in parallel (scripts/fact_check.py), and write or rewrite no sentence of a story until its fact check passes. Then picture-editor per story and social-writer in parallel.",
+      "scope": "always",
+      "why": "editor instruction 2026-09-24: a fact checker before any sentence is written, and the work done in parallel (D84, D87)",
+      "added": "2026-09-24",
+      "retired": "",
+      "by": "Shameek Yogi"
+    },
+    {
+      "id": "2026-09-24-03",
+      "said": "Check today's trends every day (scripts/trending_tags.py + trend-scout) and use every trending tag a story is genuinely about. Never attach a trend the story is not about — it is misleading metadata on YouTube and cuts reach on Instagram.",
+      "scope": "package",
+      "why": "editor instruction 2026-09-24: trending tags daily for reach; D86 on why only relevant ones reach",
+      "added": "2026-09-24",
+      "retired": "",
+      "by": "Shameek Yogi"
+    },
+    {
+      "id": "2026-09-25-01",
+      "said": "Every story credits the outlet its own link belongs to, and every news item the editor adds keeps its own source: a link → that outlet; a press release → who issued it; seen or told → ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ. Never fold added news under another paper's name, never cite a link copied from a chatbot answer, and only draft news published within Limits.news_max_age_hours that is about the coast.",
+      "scope": "desk",
+      "why": "editor 2026-09-25: added news ended up credited to one paper; stale and unrelated news reached the draft (D88)",
+      "added": "2026-09-25",
+      "retired": "",
+      "by": "Shameek Yogi"
+    },
+    {
+      "id": "2026-09-25-02",
+      "said": "ಮಹಿಳೆಯರ ಮತ್ತು ಯುವತಿಯರ ಸೈಬರ್ ಸುರಕ್ಷತೆ, ಡಿಜಿಟಲ್ ಬ್ಲ್ಯಾಕ್‌ಮೇಲ್, ಐಡಿ ದುರ್ಬಳಕೆ ಹಾಗೂ ಕಾನೂನು ರಕ್ಷಣೆಯ ಸಾರ್ವಜನಿಕ ಜಾಗೃತಿ ಸರಣಿ/ವರದಿಗಳನ್ನು 'ಕಾನೂನು ಕವಚ' (Kanoonu Kavacha — ಹೆಣ್ಣುಮಕ್ಕಳ ಡಿಜಿಟಲ್ & ಸೈಬರ್ ರಕ್ಷಣೆ) ಸೆಗ್ಮೆಂಟ್ ಅಡಿಯಲ್ಲಿ ಪ್ರಕಟಿಸಬೇಕು.",
+      "scope": "desk",
+      "why": "Editor standing instruction (2026-09-25): Standardize women's cyber safety and legal awareness series under the 'ಕಾನೂನು ಕವಚ' (Kanoonu Kavacha) segment.",
+      "added": "2026-09-25",
+      "retired": "",
+      "by": "Gautam"
+    },
+    {
+      "id": "2026-09-25-03",
+      "said": "ಪ್ರತಿ ಶನಿವಾರ ವಿಶೇಷ ಸೆಗ್ಮೆಂಟ್ ದಿನ ('ಕಾನೂನು ಕವಚ' — Kanoonu Kavacha; ಪ್ರಸ್ತುತ ಹೆಣ್ಣುಮಕ್ಕಳ ಸೈಬರ್ & ಡಿಜಿಟಲ್ ರಕ್ಷಣೆ, ಕಾನೂನು ಅರಿವು). ವಿಶೇಷ ಸರಣಿಯ ಕ್ಯಾರೋಸೆಲ್‌ಗಳಲ್ಲಿ ಕೇವಲ ಸಲಹೆಯಷ್ಟೇ ಅಲ್ಲದೆ, ನೈಜ ಕೇಸ್ ಸನ್ನಿವೇಶ, ಕಿರುಕುಳ ನೀಡುವವರಿಗೆ ಕಠಿಣ ಕ್ರಿಮಿನಲ್ ಪರಿಣಾಮಗಳ ಎಚ್ಚರಿಕೆ ಹಾಗೂ ಸಂತ್ರಸ್ತರಿಗೆ ನಿಖರ ಪರಿಹಾರ ಕ್ರಮಗಳನ್ನು ಒಳಗೊಂಡಿರಬೇಕು.",
+      "scope": "always",
+      "why": "Editor standing instruction (2026-09-25): Saturdays are dedicated to the Special Segment (currently female safety under 'ಕಾನೂನು ಕವಚ'). Pitch and produce case-driven deterrent + empowerment carousels.",
+      "added": "2026-09-25",
+      "retired": "",
+      "by": "Gautam"
+    },
+    {
+      "id": "2026-09-25-04",
+      "said": "Universal Carousel Visibility & Special Segment Branding (D89): 1) Every field in Story JSON (headline, deck, points) MUST be rendered visually on carousel slides (zero phantom data). When points are present, deck must be a concise 1-2 line lead-in (max_lines=2) so key facts and consequences ('ವಾಸ್ತವ') render as gold-numbered fact points. PUB-10 strictly fails the build if content overflows the card. Never write copy in JSON that cannot visually fit on the card. 2) Special segments (e.g. Kanoonu Kavacha) must never inherit coastal bulletin boilerplate: masthead wears the segment strapline, cover counter reads '{n} ಅಂಶಗಳು', closing slide shows 'ಹೆಚ್ಚಿನ ಮಾಹಿತಿ & ಜಾಗೃತಿಗಾಗಿ' with segment badge, and hashtags/captions are topic-driven (no #ಕರಾವಳಿಸುದ್ದಿ or #ಕರಾವಳಿ).",
+      "scope": "package",
+      "why": "Editor demand for universal lifetime solution (2026-09-25): prevent half-baked carousel slides with missing points/reality and prevent inappropriate coastal boilerplate on special awareness segments (D89).",
+      "added": "2026-09-25",
+      "retired": "",
+      "by": ""
     }
   ]
 }

@@ -117,7 +117,9 @@ def main() -> int:
         if os.path.isdir(review):
             shutil.copytree(review, os.path.join(dest, '_review'), dirs_exist_ok=True)
         for name in os.listdir(out):
-            if name in KEEP_NAMES or name.endswith('_copy.txt') or name.endswith('_copy.json'):
+            if (name in KEEP_NAMES or
+                    name.endswith('_copy.txt') or name.endswith('_copy.json') or
+                    name.endswith('_caption.txt') or name.endswith('_whatsapp.txt')):
                 shutil.copy2(os.path.join(out, name), os.path.join(dest, name))
         shutil.rmtree(out, ignore_errors=True)
         print(f'  archived copy/approval/review → {dest}')

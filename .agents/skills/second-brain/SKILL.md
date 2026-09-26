@@ -173,6 +173,81 @@ tip sheet by hand.
 
 ---
 
+## The team: twelve agents, proactive and reactive (D87, D89)
+
+The agents live in `.claude/agents/`. **Do not decide from memory which to
+call — ask the dispatcher**, which reads the actual state (editions, kept
+sources, receipts, gate reports, calendar, complaint clocks, health):
+
+```bash
+python3 scripts/dispatch.py          # who is due, why, in which wave
+```
+
+It also runs by itself: at session start (the proactive briefing) and after
+any `render.py`, `fact_check.py`, `verify.py`, `draft_edition.py`,
+`fetch_daily_news.py` or `correction.py` run (the reactive list), through
+the hooks in `.claude/settings.json`.
+
+| agent | kind | called when |
+|---|---|---|
+| news-scout | proactive | no edition yet today — fresh, coastal, real, credited |
+| trend-scout | proactive | today's trend sheet not scouted |
+| planning-editor | proactive | a festival/season within days; weekly review due |
+| systems-steward | proactive | health, backups, fetch or git need attention |
+| fact-checker | reactive | a story not yet checked in its current form; FACT/SRC codes |
+| legal-standards | reactive | crime, death, suicide, minor, obituary; LAW codes |
+| kannada-editor | reactive | copy changed since its last Kannada read; SND codes |
+| picture-editor | reactive | a story with no picture; IMG codes |
+| social-writer | reactive | facts passed (hooks, titles); after render (caption audit); PUB codes |
+| package-inspector | reactive | a render nobody has looked at frame by frame; TYPE/VID codes |
+| gate-doctor | reactive | the gate is HELD, or a render / validation fails |
+| corrections-officer | reactive | a complaint is open or past a statutory clock |
+
+**How to run a wave.** Every task in one wave goes out as ONE message of
+Agent calls, so they run in parallel — one agent per story. Wait for the
+wave, check each agent's evidence against the kept source before applying
+anything (agents are fast, not infallible: on 2026-09-25 two of them caught
+the dispatcher's own checker wrong), apply, then run the dispatcher again.
+
+**Receipts.** Every agent files its report with
+`python3 scripts/dispatch.py receipt`, stamped with a hash of what it
+checked. Edit the story → due again. A receipt that says BLOCK goes to the
+person; no agent clears another's block.
+
+**Never an agent's job:** `verified_by`, the sign-off, uploading, answering
+a complaint, a legal flag. The dispatcher lists these under "needs a person".
+
+Rules for the swarm:
+
+- One agent, one story. An agent given the whole edition checks the first
+  three stories carefully and the rest by assumption.
+- Agents report in the formula below. Evidence, never adjectives.
+- Two passes per stop still applies. A story failing twice is HELD.
+- The fact desk passes a story before anyone polishes its copy or picks its
+  picture.
+
+---
+
+## Fact desk — before a word is written
+
+```bash
+python3 scripts/fact_check.py editions/{DATE}.json    # fetch, keep, check
+```
+
+It keeps every source's text in `inbox/sources/`, then checks every figure and
+name in every published line — headline, reel_line, hook, deck, points,
+takeaway, narration — against it. A figure not in the source is `FACT-01`; a
+source page that does not carry the story (a listing page, a model-invented
+URL) is `FACT-02`. Both block at the gate. A figure the source spells another
+way is proved in `inbox/factcheck/{DATE}.json` with the exact source sentence
+— checked by machine, so it is evidence and not a waiver.
+
+The fact-checker agent does what the script cannot: finds the real article
+when the URL is wrong, reads sources that block scrapers, and checks causes,
+quotes and legal framing sentence by sentence.
+
+---
+
 ## Before Stop A — what is coming
 
 ```bash
@@ -218,6 +293,8 @@ SERIOUS per story.
 - Headline ≤ 78, `reel_line` ≤ 46, hook ≤ 7 words (lead only), deck ≤ 190
 - **Deck is MANDATORY on every story (House rule 2026-09-17-04)**: Explains the news details (who, what, where, why) below the headline. A carousel is not a headline ticker; never leave `deck` empty.
 - Points: max 3, each ≤ 150. Latin numerals only.
+- **Universal Carousel Visibility & No Phantom Fields (D89, House rule 2026-09-25-04)**: If `points` exist in JSON, they MUST be rendered visibly on the card via `factlist` with gold numerals (`01`, `02`, `03`). When points exist, `deck` is strictly a 1–2 line lead-in (`max_lines=2`). Total card text (`headline + deck + points`) must fit within the card without exceeding `src_top - 20` (enforced by gate `PUB-10`). Never write copy in JSON that cannot visually fit on the card!
+- **Special Segment Brand Isolation (D89)**: Special series/awareness editions (e.g. `ಕಾನೂನು ಕವಚ`) must never receive coastal boilerplate (`ಕರಾವಳಿ ಬುಲೆಟಿನ್`, `#ಕರಾವಳಿಸುದ್ದಿ`, coastal WhatsApp text or forwards).
 - Crime: `headline` AND `reel_line` each carry ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ / ಪ್ರಕರಣ ದಾಖಲು
 - Every story: `sources` plus `source_urls` (http), **or**
   `sources: ["ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ"]`
@@ -228,6 +305,7 @@ SERIOUS per story.
 - Obituary: two sources or own reporting
 - `involves_minor` / `sexual_offence` / `convicted` set honestly
 - Case markers are bound: ಉಡುಪಿಯಲ್ಲಿ, never ಉಡುಪಿ ನಲ್ಲಿ
+- **Saturday Special Segment: 'ಕಾನೂನು ಕವಚ' (House rules 2026-09-25-02 & 2026-09-25-03)**: Every Saturday is dedicated to the Special Segment ('ಕಾನೂನು ಕವಚ' — currently women's digital safety, relationship coercion & cyber law). Each carousel focuses on one distinct case, highlighting strict legal deterrence/penalties to abusers alongside victim empowerment, with statutory sources (BNS 2023, IT Act 2000, 1930) and helplines (112, 1930, 1091, StopNCII.org).
 - Do not invent officials, hospitals, vehicle models, quotes, or causes
 - `is_reel: true` only for visual / urgent / shareable stories. Routine civic
   notices stay carousel-only.
@@ -278,6 +356,18 @@ or synthetic-passing-as-real. Name the frame.
 
 **Person decides:** every new frame, in chat. Culture veto is yes/no on the
 image. Do not redesign the masthead.
+
+**Name the action first** — WHO is doing WHAT, WHERE, with WHAT. Then:
+
+```bash
+python3 -m brand.stock editions/{DATE}.json   # every frame's score and why
+```
+
+A stock frame is attached automatically only when the story's own words earn
+it (`Limits.stock_match_min`, D85) — never by category. Even then, accept it
+only if the CATALOG "Visual" line shows the named action. Every image is
+described **blind** (what does it show, before re-reading the story) and then
+compared: a mismatch on who, action or place is a regenerate.
 
 **Order of preference:**
 
@@ -368,6 +458,14 @@ for them.
 Point the editor at those files rather than pasting captions into chat.
 
 WhatsApp forward text is also in `*_copy.txt` under `WHATSAPP FORWARD` and in `MASTER_COPY.md`. That is the growth product. Broadsheet at 20:00.
+
+**Hashtags: five.** Instagram reads five per post since December 2025 (D86).
+`brand/copy.py` picks them — town, TownNews, one trend the story is actually
+about (`inbox/trends_{DATE}.json`), subject, region/channel — and puts every
+other town in the 📍 line as searchable words. The gate fails a caption with
+more (`PUB-09`). Never add a trending tag a story is not about: YouTube
+removes videos for misleading metadata, and on Instagram it sends the post to
+people who swipe away.
 
 **And one forward per town**, in `out/{DATE}/forward_<town>.txt`, listed in
 MASTER_COPY. Send each to that town's groups — not all of them to everyone.

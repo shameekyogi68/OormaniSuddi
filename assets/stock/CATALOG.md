@@ -389,7 +389,7 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
   "nature": "ai",
   "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಶ್ರೀ ಗಣೇಶ ಚತುರ್ಥಿ ಪೂಜಾ ಮಂಟಪ ಹಾಗೂ ನೈವೇದ್ಯ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಶ್ರೀ ಗಣೇಶ ಚತುರ್ಥಿ ಪೂಜಾ ಮಂಟಪ ಹಾಗೂ ನೈವೇದ್ಯ"
 }
 ```
 
@@ -405,7 +405,7 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
   "nature": "ai",
   "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಆಸ್ಪತ್ರೆ ಆವರಣ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಆಸ್ಪತ್ರೆ ಆವರಣ"
 }
 ```
 
@@ -421,7 +421,7 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
   "nature": "ai",
   "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಕರಾವಳಿಯಲ್ಲಿ ಚಂಡಮಾರುತ ಸಹಿತ ಮಳೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಕರಾವಳಿಯಲ್ಲಿ ಚಂಡಮಾರುತ ಸಹಿತ ಮಳೆ"
 }
 ```
 
@@ -435,8 +435,206 @@ This library contains **only truly generic, evergreen newsroom stock visuals** t
 "photo": {
   "path": "assets/stock/crime_scene_police_cordon.jpg",
   "nature": "ai",
-  "credit": "AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
   "licence": "own",
-  "caption": "ಘಟನಾ ಸ್ಥಳದಲ್ಲಿ ಪೊಲೀಸ್ ಪರಿಶೀಲನೆ (ಎಐ ರಚಿತ ಚಿತ್ರ)"
+  "caption": "ಘಟನಾ ಸ್ಥಳದಲ್ಲಿ ಪೊಲೀಸ್ ಪರಿಶೀಲನೆ"
 }
 ```
+
+---
+
+### 28. `sports_high_school_girls_wrestling.jpg`
+- **Use in Any**: School/college wrestling tournaments, girls sports championships, kushti meets, or youth sports achievements across coastal Karnataka.
+- **Visual**: Two high school girls wrestling on a mat in an indoor stadium with referee, coaches, and school audience watching.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/sports_high_school_girls_wrestling.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಪ್ರೌಢಶಾಲಾ ಬಾಲಕಿಯರ ಕುಸ್ತಿ ಪಂದ್ಯಾವಳಿ"
+}
+```
+
+---
+
+### 29. `sports_karate_championship_gold.jpg`
+- **Use in Any**: Karate championships, martial arts tournaments, university sports medals, state-level kata/kumite events, or sports felicitation.
+- **Visual**: A young male martial artist on the winner's podium wearing a white karate gi and black belt, holding a gold medal, with tournament banners and dojo hall background.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/sports_karate_championship_gold.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ವಿಶ್ವವಿದ್ಯಾಲಯ ಮಟ್ಟದ ಕರಾಟೆ ಚಾಂಪಿಯನ್ಶಿಪ್"
+}
+```
+
+---
+
+### 30. `political_party_meeting_convention.jpg`
+- **Use in Any**: Political party meetings, district committee conferences, party office-bearer felicitations, conventions, press briefings, or worker sammelana news.
+- **Visual**: A political leader in traditional white kurta-pyjama speaking at a wooden floral podium before a large auditorium hall of delegates.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/political_party_meeting_convention.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಜಿಲ್ಲಾ ಸಮ್ಮೇಳನ ಹಾಗೂ ಪದಗ್ರಹಣ ಸಮಾರಂಭ"
+}
+```
+
+---
+
+### 31. `kannada_sahitya_sambhrama_stage.jpg`
+- **Use in Any**: Kannada Sahitya Parishat events, book release functions, literary conventions, poet meets (kavigoshti), or cultural stage symposiums.
+- **Visual**: Dignitaries and authors seated on stage with microphones, holding and releasing new Kannada books with floral arrangements in an auditorium.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/kannada_sahitya_sambhrama_stage.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಸಾಹಿತ್ಯ ಸಂಭ್ರಮ ಹಾಗೂ ಕೃತಿ ಲೋಕಾರ್ಪಣೆ ಸಮಾರಂಭ"
+}
+```
+
+---
+
+### 32. `coastal_traditional_kambala_race.jpg`
+- **Use in Any**: Coastal Karnataka Kambala events, buffalo race announcements, rural folk sports celebrations, or heritage race schedules.
+- **Visual**: Traditional Kambala buffalo pair racing through water-filled slush track with jockey holding reins under coastal sunshine.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_traditional_kambala_race.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಕರಾವಳಿಯ ಜಾನಪದ ಕ್ರೀಡೆ ಕಂಬಳದ ರೋಮಾಂಚಕ ಓಟ"
+}
+```
+
+---
+
+### 33. `coastal_beach_tourism_island_boat.jpg`
+- **Use in Any**: Beach tourism, tourist boat services, island excursions, coastal water safety, sea passenger ferry stories.
+- **Visual**: Coastal tourist boat cruising near coastal islands with safety jackets and visitors on board under clear skies.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_beach_tourism_island_boat.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಕರಾವಳಿಯ ದ್ವೀಪ ಹಾಗೂ ಪ್ರವಾಸಿ ಬೋಟಿಂಗ್ ವಿಹಾರ"
+}
+```
+
+---
+
+### 34. `student_exam_results_counselling_portal.jpg`
+- **Use in Any**: Entrance exams, CET / PGCET / NEET mock allotment, counselling schedules, college seat verification, or student online portal results.
+- **Visual**: Coastal college students focused on laptops and screens, checking online application portals and seat allotment results.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/student_exam_results_counselling_portal.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಆನ್‌ಲೈನ್ ಪೋರ್ಟಲ್‌ನಲ್ಲಿ ಫಲಿತಾಂಶ ಹಾಗೂ ಸೀಟು ಹಂಚಿಕೆ ಪರಿಶೀಲನೆ"
+}
+```
+
+---
+
+### 35. `lpg_biometric_ekyc_counter.jpg`
+- **Use in Any**: Cooking gas subsidy, LPG biometric eKYC, Aadhaar verification, ration / welfare scheme digital authentication.
+- **Visual**: Citizen giving fingerprint biometric authentication on digital scanner at customer service counter.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/lpg_biometric_ekyc_counter.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಗ್ಯಾಸ್ ಸಬ್ಸಿಡಿ ಹಾಗೂ ಬೆರಳಚ್ಚು ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣ"
+}
+```
+
+---
+
+### 36. `composite_lpg_gas_cylinder.jpg`
+- **Use in Any**: Cooking gas, composite lightweight LPG cylinders, kitchen fuel supply, gas price or distribution updates.
+- **Visual**: Modern rust-free lightweight composite LPG gas cylinder in clean coastal home kitchen setup.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/composite_lpg_gas_cylinder.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಹಗುರವಾದ ಹಾಗೂ ಸುರಕ್ಷಿತ ಕಾಂಪೋಸಿಟ್ ಅಡುಗೆ ಅನಿಲ ಸಿಲಿಂಡರ್"
+}
+```
+
+---
+
+### 37. `coastal_shipyard_boatbuilding_dock.jpg`
+- **Use in Any**: Coastal shipyard, boatbuilding, port infrastructure, maritime engineering, harbor surveys.
+- **Visual**: Coastal boatyard and shipyard harbor with vessel hulls under construction, survey engineers, and maritime slipways.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_shipyard_boatbuilding_dock.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಕರಾವಳಿಯ ಹಡಗು ನಿರ್ಮಾಣ ಹಾಗೂ ಬಂದರು ಕಾಮಗಾರಿ ಸ್ಥಳ"
+}
+```
+
+---
+
+### 38. `coastal_airport_runway_flight.jpg`
+- **Use in Any**: Mangaluru international airport, flight operations, airline routes, runway maintenance, air passenger traffic, or aviation updates.
+- **Visual**: Coastal international airport tarmac and runway with commercial airliner, ground support equipment, and airfield under coastal skies.
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_airport_runway_flight.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಕರಾವಳಿಯ ವಿಮಾನ ನಿಲ್ದಾಣ ರನ್‌ವೇ ಹಾಗೂ ವಿಮಾನ ಕಾರ್ಯಾಚರಣೆ"
+}
+```
+
+
+
+---
+
+### 38. `coastal_shore_net_fishing.jpg`
+- **Use in Any**: Traditional shore (rampani / beach-seine) fishing, fishermen hauling nets on the beach, catch and livelihood stories.
+- **Visual**: Fishermen pulling a net ashore on a coastal beach. No text anywhere in the frame (audited 2026-09-26).
+- **Reference**:
+```json
+"photo": {
+  "path": "assets/stock/coastal_shore_net_fishing.jpg",
+  "nature": "ai",
+  "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+  "licence": "own",
+  "caption": "ಕಡಲತೀರದಲ್ಲಿ ಬಲೆ ಎಳೆಯುತ್ತಿರುವ ಸಾಂಪ್ರದಾಯಿಕ ಮೀನುಗಾರರು"
+}
+```
+
+---
+
+> **Withdrawn from automatic use (D91).** Frames listed in `brand/stock.py :: WITHDRAWN` carry AI-made text (towns, names, institutions, registrations, case numbers) or show something that may not have happened. They stay in the folder for reference; they are never attached automatically, and should be regenerated with no text before any reuse.
