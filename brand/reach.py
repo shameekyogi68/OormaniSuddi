@@ -87,6 +87,7 @@ BREADTH = {
     'fisheries': 0.8,    # the coast's own trade; every harbour town
     'environment': 0.6,
     'accident': 0.6,
+    'nri': 0.7,          # a family on the coast and a son in Dubai
     'culture': 0.7,      # identity travels further than its audience size
     'sport': 0.4,
     'obituary': 0.5,     # narrow, but intensely relevant to those it reaches
@@ -177,6 +178,7 @@ SEGMENT_BY_CATEGORY = {
     'fisheries': 'saara',
     'environment': 'speed',
     'accident':  'saara',       # a death is read, not glanced at
+    'nri':       'mukhya',      # saved and sent abroad; wants its picture
     'obituary':  'saara',       # dignity: no reel, no hook, no CTA
     'explainer': 'saara',
 }

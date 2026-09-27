@@ -111,7 +111,10 @@ AGENTS.md rule 7: the rule restricts AI-card reels on YouTube, and these are rea
 **Copy file** (`copy` block → `<title_slug>_copy.txt`), in the same shape as the house captions from
 `brand/copy.py`: Instagram caption (headline, engagement question, 📍 place 🕐 date · time, status,
 credit, source, the correction-contact line from `brand/tokens.py`, hashtags), the first comment,
-a YouTube Shorts title under 60 characters, and a Shorts description that ends with
+a YouTube Shorts title under 60 characters — **bilingual**: the Kannada line, then `|`, then the
+place and topic in English so people searching in either script find it
+(`ಕುಂದಾಪುರ ಶಾಸ್ತ್ರಿ ಸರ್ಕಲ್ ಕಾಮಗಾರಿ | Kundapura Traffic`, D94) — and a Shorts description whose
+first three lines carry what happened and the towns, and that ends with
 `ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಮೆಂಟ್ ಮಾಡಿ.` (AGENTS.md rule 7) plus `#Shorts`.
 
 ---

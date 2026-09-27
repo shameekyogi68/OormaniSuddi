@@ -201,6 +201,9 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
                 made.append((p, 'post'))
                 print(f'  ✓ {os.path.basename(p)}')
             write_copy(st, outdir, f'mukhya_{k}_copy')
+            with open(os.path.join(outdir, f'facebook_group_{k}.txt'), 'w',
+                      encoding='utf-8') as fh:
+                fh.write(copywriter.facebook_group_post(st) + '\n')
             mukhya_done.append((k, st.category == 'breaking' and st.is_breaking,
                                 os.path.basename(paths[-1])))
             log.done(f'mukhya_{k}', seconds=round(time.time() - _t, 1))
@@ -275,6 +278,28 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
         if re.fullmatch(r'(saara|mukhya_\d+|roundup)_copy\.txt', name):
             lines += [f'## {name}', '', '```',
                       _read(os.path.join(outdir, name)), '```', '']
+    # ── WhatsApp community: one admin post per area group (D94) ──────────
+    try:
+        digests = copywriter.community_digests(ed)
+    except Exception as e:
+        digests = {}
+        print(f'  ! community digests could not be built ({e})')
+    if digests:
+        lines += ['## WhatsApp community — one post per area group', '',
+                  f'Admin-only announcement groups. At most '
+                  f'{Limits.whatsapp_items_max} stories each; more is how '
+                  'members mute.', '']
+        for slug, (name, text) in digests.items():
+            lines += [f'### {name}', '', '```', text, '```', '']
+    fb = sorted(f for f in os.listdir(outdir) if f.startswith('facebook_group_'))
+    if fb:
+        lines += ['## Facebook groups', '',
+                  'Question first, no outside link. One post per group per '
+                  'week at most — see docs/CHANNELS.md.', '']
+        for name in fb:
+            lines += [f'### {name}', '', '```', _read(os.path.join(outdir, name)),
+                      '```', '']
+
     # ── the forwards, one per town ────────────────────────────────────────
     # The single highest-leverage distribution change available to this desk.
     # A seven-taluk digest is nobody's in particular and belongs in no group;
@@ -292,6 +317,11 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
                   'list, not to everyone. People forward what is theirs.', '']
         for place, text in forwards.items():
             lines += [f'### {place}', '', '```', text, '```', '']
+
+    for slug, (_name, text) in digests.items():
+        with open(os.path.join(outdir, f'whatsapp_{slug}.txt'), 'w',
+                  encoding='utf-8') as fh:
+            fh.write(text + '\n')
 
     path = os.path.join(outdir, 'MASTER_COPY.md')
     with open(path, 'w', encoding='utf-8') as f:

@@ -159,7 +159,10 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
                          box_w=sf.s(cw)) / sf.ss
     pp.meta(sf, W / 2, yb + 56, 'ಉಪಯುಕ್ತ ಅನಿಸಿದರೆ ಸೇವ್ ಮಾಡಿ, ಊರಿನವರಿಗೆ ಕಳುಹಿಸಿ',
             size=34, anchor='c')
-    y = yb + 110
+    if pp.join_line():
+        pp.meta(sf, W / 2, yb + 104, pp.join_line(), pp.GOLD_TYPE, size=28,
+                weight=640, anchor='c', max_w=cw)
+    y = yb + 140
     pp._rect(sf, (m, y, W - m, y + 3), pp.INK)
     pp.meta(sf, m, y + 56, Brand.sources_kn, pp.GOLD_TYPE, size=30, weight=720)
     y += 110

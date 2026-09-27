@@ -2702,6 +2702,51 @@ and the daily-default half of D81. Their text stays above as the record.
 `scripts/intake.py` · `tests/test_formats.py`
 
 ---
+## D94 · The distribution plan: where each format goes, and when
+
+**Decided (2026-09-27)**, from the owner's coastal distribution strategy,
+checked against what this channel's own data and decisions already say.
+
+**Adopted**
+- **Times** (`Limits.carousel_slot`, `mukhya_slot`, `roundup_slot`): ಸುದ್ದಿ
+  ಸಾರ 08:00, ಮುಖ್ಯ ಸುದ್ದಿ 13:30 (or the moment a breaking one clears),
+  ಸ್ಪೀಡ್ ನ್ಯೂಸ್ 18:30 as the evening round-up. Starting positions;
+  `scripts/metrics.py` moves them.
+- **Facebook** gets the same carousels and reels as Instagram. For town
+  groups, `facebook_group_<k>.txt` per ಮುಖ್ಯ ಸುದ್ದಿ: the news, then a
+  question to the town, and no outside link. One post per group per week at
+  most, so admins do not block the page.
+- **WhatsApp community** in three area groups — ಕುಂದಾಪುರ–ಬೈಂದೂರು,
+  ಉಡುಪಿ–ಬ್ರಹ್ಮಾವರ–ಕಾರ್ಕಳ, ಮಂಗಳೂರು — admin-only, at most
+  `Limits.whatsapp_items_max` stories a day each, written as
+  `whatsapp_<group>.txt` (`brand/copy.py :: community_digests`). The
+  per-town forwards (D72) stay.
+- **The join link** is on every closing slide, so a card forwarded into a
+  family group leads its new reader back.
+- **Gulf & NRI** gets its own category (`nri`, ಅನಿವಾಸಿ).
+- **Bilingual Shorts titles** (Kannada | English place + topic) for the
+  real-footage Shorts made by the reels-shorts-edit skill.
+- **Shares and saves over likes** — already how this channel measures reach
+  (D72, `Limits.local_reach_floor`); the closing slide asks for both.
+
+**Not adopted, and why**
+- **Posting ಸ್ಪೀಡ್ ನ್ಯೂಸ್ to YouTube Shorts.** AGENTS rule 9: on this
+  channel, AI-voiced card reels averaged 37 views on YouTube against 397 for
+  real footage, the latest at 1–4. YouTube gets real footage only.
+- **A dark navy / slate background with white and yellow type** for ಸುದ್ದಿ
+  ಸಾರ. The owner chose the light Paper & Red look in the logo's colours (D92).
+- **Broad tags** (#KannadaNews, #BreakingNewsKannada) and more than five
+  hashtags. D86: Instagram reads five, and place tags reach the people a
+  local story is for.
+- **"A real photograph, always" for ಮುಖ್ಯ ಸುದ್ದಿ.** Kept as the first
+  choice; the owner's rule is to ASK before any AI picture (D92), not to
+  forbid one.
+
+`brand/tokens.py :: Limits` · `brand/copy.py :: publishing_plan,
+community_digests, facebook_group_post` · `templates/saara.py` ·
+`templates/mukhya.py` · `docs/CHANNELS.md` · `tests/test_formats.py`
+
+---
 
 ## Changing something here
 

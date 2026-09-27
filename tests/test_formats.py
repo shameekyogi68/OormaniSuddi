@@ -177,3 +177,42 @@ class TheFirstSaaraFaults(unittest.TestCase):
         from brand.tokens import CATEGORIES
         for k in ('fisheries', 'environment', 'accident'):
             self.assertIn(k, CATEGORIES)
+
+
+class TheDistributionPlan(unittest.TestCase):
+    """D94: where each format goes, and what goes with it."""
+
+    def test_the_day_runs_morning_lunch_evening(self):
+        from brand import copy as C
+        plan = C.publishing_plan(has_saara=True, has_roundup=True,
+                                 mukhya=[(1, False, '')])
+        self.assertEqual([s.at for s in plan], ['08:00', '13:30', '18:30'])
+        for s in plan:
+            self.assertIn('Facebook', s.platform)
+            self.assertNotIn('YouTube', s.platform)
+
+    def test_a_whatsapp_group_never_gets_more_than_the_limit(self):
+        from brand import copy as C
+        from brand.tokens import Limits
+        from brand.content import OWN_REPORTING, Story
+        ed = Edition(stories=[Story(headline=f'ಕುಂದಾಪುರ: ಸುದ್ದಿ {i}',
+                                    location='ಕುಂದಾಪುರ', segment='saara',
+                                    sources=[OWN_REPORTING]) for i in range(6)],
+                     edition_no=1, schema_version=4)
+        digests = C.community_digests(ed)
+        self.assertIn('kundapura_byndoor', digests)
+        self.assertNotIn('mangaluru', digests)       # nothing of theirs today
+        body = digests['kundapura_byndoor'][1]
+        items = sum(1 for e in ('1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣') if e in body)
+        self.assertEqual(items, Limits.whatsapp_items_max)
+
+    def test_a_facebook_group_post_asks_and_carries_no_link(self):
+        from brand import copy as C
+        top = Edition.load(FIXTURE).segment('mukhya')[0]
+        post = C.facebook_group_post(top)
+        self.assertNotIn('http', post)
+        self.assertIn('?', post)
+
+    def test_gulf_news_has_a_category(self):
+        from brand.tokens import CATEGORIES
+        self.assertEqual(CATEGORIES['nri']['kn'], 'ಅನಿವಾಸಿ')

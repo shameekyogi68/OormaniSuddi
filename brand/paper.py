@@ -291,6 +291,12 @@ def grievance(sf: Surface, y: float):
                     box_w=sf.s(sf.w - 2 * P.margin))
 
 
+def join_line() -> str:
+    """Where a forwarded card sends a new reader (D94)."""
+    url = (Brand.whatsapp_url or '').replace('https://', '')
+    return f'ವಾಟ್ಸ್‌ಆ್ಯಪ್ ಗುಂಪಿಗೆ ಸೇರಿ: {url}' if url else ''
+
+
 def ink_only(story: Story) -> bool:
     """No red on this headline: crime, accidents, obituaries — and any
     headline about a death, whatever it was filed under."""

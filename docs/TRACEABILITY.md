@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **56/93** decisions are named by at least one test
+- **57/94** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -417,4 +417,9 @@ those carry a reason rather than a test.
 ## D93 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
 
 - **Retired by D92 — the dark carousel it governed is gone; ಸುದ್ದಿ ಸಾರ shows the points, or the deck when there are none**
+
+## D94 · The distribution plan: where each format goes, and when
+
+- **Tested by:** `tests/test_formats.py`
+- Enforced in: `brand/copy.py`, `brand/paper.py`, `brand/tokens.py`
 

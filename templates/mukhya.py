@@ -104,6 +104,8 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
             ('ಲಿಂಕ್', url.split('/')[2] if url.startswith('http') else 'ಸ್ವಂತ ವರದಿ'),
             ('ಚಿತ್ರ', story.photo.disclosure),
             ('ತಿದ್ದುಪಡಿ', 'ತಪ್ಪು ಕಂಡರೆ ತಿಳಿಸಿ — ಪರಿಶೀಲಿಸಿ ಸರಿಪಡಿಸುತ್ತೇವೆ')]
+    if Brand.whatsapp_url:
+        rows.append(('ವಾಟ್ಸ್‌ಆ್ಯಪ್', Brand.whatsapp_url.replace('https://', '')))
     for key, val in rows:
         pp.meta(sf, m, y, key, pp.GOLD_TYPE, size=30, weight=720)
         pp.meta(sf, m + 200, y, val, pp.INK, size=30, max_w=cw - 200)

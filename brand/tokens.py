@@ -196,6 +196,9 @@ CATEGORIES: dict[str, dict] = {
     'fisheries': {'kn': 'ಮೀನುಗಾರಿಕೆ',       'en': 'FISHERIES',   'rail': C.sea_500},
     'environment': {'kn': 'ಪರಿಸರ',          'en': 'ENVIRONMENT', 'rail': C.moss_500},
     'accident':  {'kn': 'ದುರ್ಘಟನೆ',          'en': 'ACCIDENT',    'rail': C.red_600},
+    # Coastal families in the Gulf read home news daily: visas, flights,
+    # news of their own people abroad. D94.
+    'nri':       {'kn': 'ಅನಿವಾಸಿ',            'en': 'GULF & NRI',  'rail': C.sea_400},
     'obituary':  {'kn': 'ನಿಧನ ವಾರ್ತೆ',      'en': 'OBITUARY',    'rail': C.plum_500},
     'explainer': {'kn': 'ವಿಶ್ಲೇಷಣೆ',         'en': 'EXPLAINER',   'rail': C.sea_400},
 }
@@ -399,8 +402,15 @@ class Limits:
     true_peak_dbtp = -1.5
     reel_gap_min = 150          # minutes between our own reels
     reel_slots = ('11:30', '14:30', '17:30', '20:30')
-    carousel_slot = '09:00'     # ಸುದ್ದಿ ಸಾರ
-    mukhya_slot = '12:30'       # ಮುಖ್ಯ ಸುದ್ದಿ — or the moment it breaks
+    # The distribution plan of 2026-09-27 (D94): the digest with the morning
+    # scroll, the top story at lunch, speed news as the evening round-up.
+    # Starting positions — metrics.py is how they get moved.
+    carousel_slot = '08:00'     # ಸುದ್ದಿ ಸಾರ — Instagram + Facebook
+    mukhya_slot = '13:30'       # ಮುಖ್ಯ ಸುದ್ದಿ — or the moment it breaks
+    roundup_slot = '18:30'      # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — Instagram + Facebook Reels
+    # A WhatsApp community post carries this many stories at most; more is how
+    # members mute the group. D94.
+    whatsapp_items_max = 3
     forward_target_kb = 300     # WhatsApp is the growth route
     # WCAG 2.1 AA. Read by brand/legibility.py, which audits every house
     # colour pair; nothing in this project sets type in a pair that is not in

@@ -57,6 +57,7 @@ CATEGORY_TAGS = {
     'fisheries': ['ಮೀನುಗಾರಿಕೆ', 'Fisheries'],
     'environment': ['ಪರಿಸರ', 'Environment'],
     'accident':  ['ದುರ್ಘಟನೆ', 'Accident'],
+    'nri':       ['ಅನಿವಾಸಿಕನ್ನಡಿಗ', 'GulfKannadiga'],
     'obituary':  ['ನಿಧನ', 'Obituary'],
     'explainer': ['ವಿಶ್ಲೇಷಣೆ', 'Explainer'],
 }
@@ -629,6 +630,91 @@ def taluk_forwards(edition) -> dict[str, str]:
     return out
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+#  WHATSAPP COMMUNITIES (D94)
+#  One community, three area groups, admin-only announcements. A reader in
+#  Byndoor gets Byndoor's news, not Mangaluru's, and never more than
+#  Limits.whatsapp_items_max stories a day — past that, members mute.
+# ─────────────────────────────────────────────────────────────────────────────
+
+COMMUNITIES: list[tuple[str, str, tuple[str, ...]]] = [
+    ('kundapura_byndoor', 'ಕುಂದಾಪುರ–ಬೈಂದೂರು',
+     ('ಕುಂದಾಪುರ', 'ಬೈಂದೂರು', 'ಗಂಗೊಳ್ಳಿ', 'ಕೋಟ', 'ಶಿರೂರು', 'ಮರವಂತೆ',
+      'ಕೋಡಿ', 'ತ್ರಾಸಿ', 'ಹೆಮ್ಮಾಡಿ', 'ಉಪ್ಪುಂದ')),
+    ('udupi_brahmavara_karkala', 'ಉಡುಪಿ–ಬ್ರಹ್ಮಾವರ–ಕಾರ್ಕಳ',
+     ('ಉಡುಪಿ', 'ಮಣಿಪಾಲ', 'ಬ್ರಹ್ಮಾವರ', 'ಕಾರ್ಕಳ', 'ಹೆಬ್ರಿ', 'ಕಾಪು', 'ಮಲ್ಪೆ',
+      'ಬಾರ್ಕೂರು', 'ಸಾಲಿಗ್ರಾಮ')),
+    ('mangaluru', 'ಮಂಗಳೂರು',
+     ('ಮಂಗಳೂರು', 'ಮೂಡುಬಿದಿರೆ', 'ಸುರತ್ಕಲ್', 'ಬಂಟ್ವಾಳ', 'ಪುತ್ತೂರು', 'ಉಳ್ಳಾಲ')),
+]
+
+
+def community_digests(edition) -> dict[str, tuple[str, str]]:
+    """{slug: (group name, message)} — one admin post per area group.
+
+    A story joins a group when its place or headline names one of the
+    group's towns; a coast-wide story (ಕರಾವಳಿ) joins every group. The top
+    story of the day comes first, then edition order, cut to
+    Limits.whatsapp_items_max. House rule 2026-09-17-08 gives the shape.
+    """
+    ranked = ([s for s in edition.stories if s.segment == 'mukhya']
+              + [s for s in edition.stories if s.segment != 'mukhya'])
+    emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
+    out: dict[str, tuple[str, str]] = {}
+    for slug, name, towns in COMMUNITIES:
+        mine = []
+        for st in ranked:
+            where = (st.location or '') + ' ' + st.headline
+            if any(t in where for t in towns) or (st.location or '').strip() in (
+                    '', Brand.coverage):
+                mine.append(st)
+        mine = mine[:Limits.whatsapp_items_max]
+        if not mine:
+            continue
+        items = []
+        for i, st in enumerate(mine):
+            from .paper import leads_with_place
+            loc = (st.location or '').strip()
+            head = st.headline.strip()
+            # The headline already opens on its place: don't say it twice.
+            if not loc or leads_with_place(st):
+                items.append(f'{emojis[i]} {head}')
+            else:
+                items.append(f'{emojis[i]} *{loc}*: {head}')
+        seen: list[str] = []
+        for st in mine:
+            for src in st.sources:
+                if src not in seen:
+                    seen.append(src)
+        blocks = [f'🌾 *{Brand.name} · {edition.date_kn}*\n'
+                  f'{Brand.tagline.replace("  •  ", " • ")} · {name}',
+                  '\n'.join(items),
+                  '📲 *ಪೂರ್ಣ ವರದಿ ಹಾಗೂ ವಿವರಣೆಗಾಗಿ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ಲಿಂಕ್ ನೋಡಿ:*\n'
+                  f'👉 {Brand.instagram_url}',
+                  '📌 ಮೂಲ: ' + ' · '.join(seen)]
+        if Brand.whatsapp_url:
+            blocks.append(f'ಊರಿನವರನ್ನು ಸೇರಿಸಿ: {Brand.whatsapp_url}')
+        blocks.append(f'— {Brand.handle}')
+        out[slug] = (name, '\n\n'.join(blocks))
+    return out
+
+
+def facebook_group_post(story: Story) -> str:
+    """For the town's Facebook groups (D94): the news, then a question that
+    asks the town what it thinks — a group rewards conversation — and no
+    outside link, which Facebook reads as spam and buries. One group gets at
+    most one post a week from us; the schedule is the editor's."""
+    lines = [f'*{story.headline.strip()}*']
+    if story.deck:
+        lines.append(story.deck.strip())
+    for pt in story.points[:2]:
+        lines.append(f'• {pt.strip()}')
+    lines.append(cta(story))
+    lines.append('📌 ಮೂಲ: ' + ' · '.join(story.sources))
+    lines.append(f'— {Brand.name} · {Brand.handle}')
+    return '\n\n'.join(lines)
+
+
 def edition_whatsapp(edition: Edition, instagram_url: str | None = None) -> str:
     """Tailored WhatsApp group / broadcast digest for the daily edition.
 
@@ -640,10 +726,9 @@ def edition_whatsapp(edition: Edition, instagram_url: str | None = None) -> str:
     items = []
     for i, s in enumerate(edition.stories):
         num = emojis[i] if i < len(emojis) else f'{i+1}️⃣'
-        loc = f'*{s.location}*: ' if s.location else ''
+        from .paper import leads_with_place
         head = s.headline.strip()
-        if s.location and head.startswith(f'{s.location}:'):
-            head = head[len(f'{s.location}:'):].strip()
+        loc = '' if (not s.location or leads_with_place(s)) else f'*{s.location}*: '
         items.append(f'{num} {loc}{head}')
     headlines_block = '\n'.join(items)
 
@@ -865,7 +950,7 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
         last = saara_last or 'saara_NN_sources.jpg'
         plan.append(Slot(
             Limits.carousel_slot, f'saara_01_cover.jpg … {last}',
-            'Instagram',
+            'Instagram + Facebook',
             'ಸುದ್ದಿ ಸಾರ — the day\'s bulletin, swipeable. Caption: saara_caption.txt',
             'The morning scroll. A carousel gets a second impression when '
             'someone does not swipe the first time.'))
@@ -873,17 +958,18 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
         plan.append(Slot(
             'NOW' if breaking else Limits.mukhya_slot,
             f'mukhya_{k}_01_cover.jpg … {last or f"mukhya_{k}_03_source.jpg"}',
-            'Instagram',
+            'Instagram + Facebook',
             f'ಮುಖ್ಯ ಸುದ್ದಿ {k}. Caption: mukhya_{k}_caption.txt',
             'Breaking: post the moment it is signed; being first is the story.'
             if breaking else
             'The day\'s top story on its own, with its picture and its source.'))
     if has_roundup:
         plan.append(Slot(
-            _reel_times(1)[0], 'roundup.mp4  (cover: roundup_cover.jpg)',
-            'Instagram Reels',
+            Limits.roundup_slot, 'roundup.mp4  (cover: roundup_cover.jpg)',
+            'Instagram Reels + Facebook Reels',
             'ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — caption: roundup_caption.txt',
-            'Instagram only (AGENTS rule 9). Set roundup_cover.jpg as the '
+            'The evening round-up. Not YouTube Shorts: AI card reels are '
+            'suppressed there (AGENTS rule 9). Set roundup_cover.jpg as the '
             'cover, not frame 0.'))
     return sorted(plan, key=lambda s: ('0' if s.at == 'NOW' else '1') + s.at)
 
