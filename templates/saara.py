@@ -10,8 +10,8 @@ import os
 
 from brand import paper as pp
 from brand import typo
-from brand.content import Edition
-from brand.tokens import Brand, Paper as P, fmt
+from brand.content import ContentError, Edition
+from brand.tokens import Brand, Paper as P, category, fmt
 
 TITLE = 'ಸುದ್ದಿ ಸಾರ'
 
@@ -52,39 +52,76 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     paths: list[str] = []
 
     # ── cover: the index ────────────────────────────────────────────────────
+    # Measured, never estimated: the first real ಸುದ್ದಿ ಸಾರ (2026-09-27) ran
+    # its sixth entry into the footer because the budget under-counted each
+    # entry and the loop drew anyway when nothing fitted. Now the index is
+    # laid out, measured whole, and the title block gives way before the
+    # stories do.
+    indent = 84
+    bottom = H - P.footer_h - 28
+
+    def label_of(st) -> str:
+        # The headline already opens with its place — say the category.
+        if pp.leads_with_place(st):
+            return category(st.category)['kn']
+        return (st.location or '').strip() or Brand.coverage
+
+    def plan(size, labels):
+        f = typo.font('kn', weight=pp.HEAD_WEIGHT, size=2 * size)
+        blocks = [typo.layout(s_.headline, f, 2 * (cw - indent), 1.26)
+                  for s_ in stories]
+        lab, gap, rule = (36, 18, 16) if labels else (0, 12, 12)
+        need = sum(lab + b.height / 2 + gap for b in blocks) + rule * (len(blocks) - 1)
+        return blocks, need
+
+    # Most generous first. The last level drops the small label row — each
+    # story's own slide still carries its category and place.
+    fitted = None
+    for title_px, sub_gap, labels in ((120, 0, True), (96, -40, True),
+                                      (80, -64, True), (80, -64, False)):
+        top = 440 + sub_gap
+        for size in range(44, 27, -2):
+            blocks, need = plan(size, labels)
+            if need <= bottom - top:
+                fitted = blocks
+                break
+        if fitted:
+            break
+    if not fitted:
+        raise ContentError(
+            'the ಸುದ್ದಿ ಸಾರ index cannot hold these headlines on one cover — '
+            'shorten the longest, or move a story to ಸ್ಪೀಡ್ ನ್ಯೂಸ್')
+    blocks = fitted
+
     sf = pp.page(W, H)
     pp.bug(sf, m, 52)
     pp.meta(sf, W - m, 92, edition.date_kn, anchor='r')
-    title = typo.layout(TITLE, typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(120)), sf.s(cw), 1.1)
+    title = typo.layout(TITLE, typo.font('kn', weight=pp.HEAD_WEIGHT,
+                                         size=sf.s(title_px)), sf.s(cw), 1.1)
     typo.draw_block(sf.img, title, sf.s(m), sf.s(150), pp.INK)
-    pp.meta(sf, m, 352, f'ಇಂದಿನ {len(stories)} ಮುಖ್ಯ ಸುದ್ದಿಗಳು, ಒಂದೇ ನೋಟದಲ್ಲಿ',
-            size=34, weight=520)
-    y = 396
+    pp.meta(sf, m, 352 + sub_gap, f'ಇಂದಿನ {len(stories)} ಮುಖ್ಯ ಸುದ್ದಿಗಳು, '
+            f'ಒಂದೇ ನೋಟದಲ್ಲಿ', size=34, weight=520)
+    y = 396 + sub_gap
     pp._rect(sf, (m, y, W - m, y + 3), pp.INK)
     pp.accent(sf, m, y + 7, 160, 6)
-    top, bottom = y + 44, H - P.footer_h - 28
-    indent = 84
-    for size in range(44, 29, -2):          # one size for every entry
-        f = typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(size))
-        blocks = [typo.layout(s.headline, f, sf.s(cw - indent), 1.26)
-                  for s in stories]
-        need = sum(b.height / sf.ss + 36 + 34 for b in blocks) - 34
-        if need <= bottom - top:
-            break
     y = top
+    lab, gap, rule = (36, 18, 16) if labels else (0, 12, 12)
     for i, (st, b) in enumerate(zip(stories, blocks), 1):
-        pp.chip(sf, m, y + 2, i, 26)
-        place = (st.location or '').strip() or Brand.coverage
-        pp.meta(sf, m + indent, y + 22, place, pp.RED, size=24, weight=700)
-        yb = typo.draw_block(sf.img, b, sf.s(m + indent), sf.s(y + 36), pp.INK,
-                             box_w=sf.s(cw - indent)) / sf.ss
-        y = yb + 18
+        pp.chip(sf, m, y + 2 if labels else y - 2, i, 26)
+        if labels:
+            pp.meta(sf, m + indent, y + 22, label_of(st), pp.RED, size=24,
+                    weight=700)
+        yb = typo.draw_block(sf.img, b, sf.s(m + indent), sf.s(y + lab),
+                             pp.INK, box_w=sf.s(cw - indent)) / sf.ss
+        y = yb + gap
         if i < len(stories):
             pp._rect(sf, (m + indent, y, W - m, y + 2), pp.RULE)
-            y += 16
+            y += rule
+    assert y <= bottom + 1, f'index overran the footer by {y - bottom:.0f}px'
     pp.footer(sf, f'1/{n}')
-    paths.append(sf.save(os.path.join(outdir, f'{prefix}_01_cover.jpg')) or
-                 os.path.join(outdir, f'{prefix}_01_cover.jpg'))
+    p = os.path.join(outdir, f'{prefix}_01_cover.jpg')
+    sf.save(p)
+    paths.append(p)
 
     # ── one slide per story ─────────────────────────────────────────────────
     for i, st in enumerate(stories, 1):

@@ -303,6 +303,8 @@ class StorySlate:
             x += 28
             typo.draw_text(sf.img, cat['kn'], sf.s(x), sf.s(base), f, C.red_500)
             x += typo.text_width(cat['kn'], f) / sf.ss + 14
+            if pp.leads_with_place(st):
+                return                      # the headline already says where
             typo.draw_text(sf.img, '/', sf.s(x), sf.s(base), f, C.paper_200)
             x += typo.text_width('/', f) / sf.ss + 14
             typo.draw_text(sf.img, self.it.place, sf.s(x), sf.s(base),

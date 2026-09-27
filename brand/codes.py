@@ -84,6 +84,7 @@ CODES: dict[str, str] = {
     'PUB-08': 'a story names no place, so nobody can tell it is about their town',
     'PUB-09': 'a caption carries more hashtags than the platform reads (D86)',
     'PUB-11': 'a story carries more points than a slide holds (D93)',
+    'PUB-12': 'most of the edition is filed under one category — check each is true',
     # ── OPS ───────────────────────────────────────────────────────────────
     'OPS-01': 'no Grievance Officer is named (IT Rules 2021 Part III)',
     'OPS-02': 'no contact route is published anywhere',

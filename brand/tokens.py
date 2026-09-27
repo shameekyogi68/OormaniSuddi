@@ -190,6 +190,12 @@ CATEGORIES: dict[str, dict] = {
     'culture':   {'kn': 'ಸಂಸ್ಕೃತಿ',          'en': 'CULTURE',     'rail': C.gold_600},
     'sport':     {'kn': 'ಕ್ರೀಡೆ',            'en': 'SPORT',       'rail': C.moss_500},
     'farm':      {'kn': 'ಕೃಷಿ',              'en': 'AGRICULTURE', 'rail': C.moss_500},
+    # Added 2026-09-27 after the first ಸುದ್ದಿ ಸಾರ filed a fish shoal, a
+    # dolphin carcass and a worker's death under ಆಡಳಿತ (administration):
+    # there was nowhere true to put them. A coastal desk needs all three.
+    'fisheries': {'kn': 'ಮೀನುಗಾರಿಕೆ',       'en': 'FISHERIES',   'rail': C.sea_500},
+    'environment': {'kn': 'ಪರಿಸರ',          'en': 'ENVIRONMENT', 'rail': C.moss_500},
+    'accident':  {'kn': 'ದುರ್ಘಟನೆ',          'en': 'ACCIDENT',    'rail': C.red_600},
     'obituary':  {'kn': 'ನಿಧನ ವಾರ್ತೆ',      'en': 'OBITUARY',    'rail': C.plum_500},
     'explainer': {'kn': 'ವಿಶ್ಲೇಷಣೆ',         'en': 'EXPLAINER',   'rail': C.sea_400},
 }

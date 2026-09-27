@@ -18,13 +18,16 @@
     },
     "category": {
       "enum": [
+        "accident",
         "breaking",
         "civic",
         "crime",
         "culture",
         "education",
+        "environment",
         "explainer",
         "farm",
+        "fisheries",
         "health",
         "obituary",
         "sport",

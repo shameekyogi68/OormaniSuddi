@@ -29,6 +29,9 @@ the things that are genuinely house style rather than contract.
 - **2026-09-27-01** — When choosing or ordering the day's stories, prefer places in this order: ಕುಂದಾಪುರ (Kundapura) and ಬೈಂದೂರು (Byndoor) highest, then ಉಡುಪಿ (Udupi) and ಮಣಿಪಾಲ (Manipal), then ಕಾರ್ಕಳ (Karkala), ಬ್ರಹ್ಮಾವರ (Brahmavara), ಹೆಬ್ರಿ (Hebri), ಕಾಪು (Kaup), ಮಂಗಳೂರು (Mangalore).
   - _why:_ editor's own priority ranking of the coverage area, 2026-09-17; carried over unchanged from 2026-09-17-01, which was worded for the deleted morning auto-draft (D92)
   - _asked by:_ carried over from 2026-09-17-01
+- **2026-09-27-02** — Keep the source's own Kannada word: never swap it for an English loan (ದೀಪಸ್ತಂಭ, not ಲೈಟ್‌ಹೌಸ್) or for a word that shifts the meaning (a sudden change in the weather is ವಾತಾವರಣದ ಹಠಾತ್ ಬದಲಾವಣೆ; ಹವಾಮಾನ ಬದಲಾವಣೆ reads as climate change). File every story under the category of what happened — never civic by default: a fatal fall is accident, a fish shoal or a dolphin is environment, a fishermen's scheme is fisheries.
+  - _why:_ the first ಸುದ್ದಿ ಸಾರ, 2026-09-27, carried both wording slips and filed three of six stories under ಆಡಳಿತ wrongly; the kicker says the category on every slide
+  - _asked by:_ Chief Editor review (from the editor's instruction to stop repeats)
 
 ## picture
 

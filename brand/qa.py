@@ -187,6 +187,16 @@ def preflight(story: Story, format_key: str = 'post', hook: str = '') -> Report:
             f'In ಸ್ಪೀಡ್ ನ್ಯೂಸ್ that needs about {len(story.headline) / 7.0:.0f}s '
             f'on screen to be readable. Add a reel_line of ~'
             f'{Limits.reel_line_chars} characters.')
+    # A death filed as administration: the first ಸುದ್ದಿ ಸಾರ put a worker's
+    # fatal fall under ಆಡಳಿತ, because nothing asked. 2026-09-27.
+    from .paper import DEATH_WORDS
+    if (any(w in story.headline for w in DEATH_WORDS)
+            and story.category not in ('accident', 'obituary', 'crime',
+                                       'breaking', 'health')):
+        r.warn.append(f'the headline reports a death but the story is filed '
+                      f'under {story.category!r}. Use accident (ದುರ್ಘಟನೆ), '
+                      f'obituary (ನಿಧನ ವಾರ್ತೆ) or crime — the kicker says it '
+                      f'aloud on every slide.')
     if story.segment == 'saara' and story.photo:
         r.warn.append('a ಸುದ್ದಿ ಸಾರ story carries a photo; the text bulletin '
                       'never shows one (D92). Remove it, or run the story as '

@@ -482,8 +482,10 @@ def _package_tasks(plan: Plan, outdir: str) -> None:
             plan.add('social-writer', 'reactive', 3,
                      f'caption audit — {len(captions)} caption file(s)', rel)
     if not os.path.exists(os.path.join(outdir, 'SIGNOFF.json')) and not fails:
-        plan.person.append(f'{rel}: look at _review/, listen to the ಸ್ಪೀಡ್ '
-                           f'ನ್ಯೂಸ್ once, then scripts/sign_off.py {rel} --by "<name>"')
+        listen = (', listen to the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ once'
+                  if os.path.exists(os.path.join(outdir, 'roundup.mp4')) else '')
+        plan.person.append(f'{rel}: look at _review/{listen}, then '
+                           f'scripts/sign_off.py {rel} --by "<name>"')
 
 
 def _corrections_tasks(plan: Plan) -> None:

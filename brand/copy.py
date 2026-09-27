@@ -54,6 +54,9 @@ CATEGORY_TAGS = {
     'culture':   ['ಸಂಸ್ಕೃತಿ', 'Culture'],
     'sport':     ['ಕ್ರೀಡೆ', 'Sports'],
     'farm':      ['ಕೃಷಿ', 'Agriculture'],
+    'fisheries': ['ಮೀನುಗಾರಿಕೆ', 'Fisheries'],
+    'environment': ['ಪರಿಸರ', 'Environment'],
+    'accident':  ['ದುರ್ಘಟನೆ', 'Accident'],
     'obituary':  ['ನಿಧನ', 'Obituary'],
     'explainer': ['ವಿಶ್ಲೇಷಣೆ', 'Explainer'],
 }

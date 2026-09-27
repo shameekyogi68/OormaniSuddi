@@ -39,7 +39,11 @@ editor — never look it up.
 4. **Write the Kannada copy only from the paste.** headline, deck, points,
    reel_line, location, category, status — every figure, name, place, date and
    cause must be in the pasted text. What the paste does not say, the story
-   does not say. Crime copy carries ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in the headline AND
+   does not say. **category is what happened, never civic by default**
+   (house rule 2026-09-27-02): a fatal fall or crash → `accident`; sea life,
+   a shoal, pollution, a tree fall → `environment`; boats, catch, harbours,
+   fishermen's schemes → `fisheries`; offices, roads, notices → `civic`. The
+   slide prints the category above every headline — it has to be true. Crime copy carries ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in the headline AND
    the reel_line; set `involves_minor` / `sexual_offence` honestly.
 5. **Propose a segment per story**, one value each:
    - breaking or the day's top story → `mukhya` (it will need a photograph)

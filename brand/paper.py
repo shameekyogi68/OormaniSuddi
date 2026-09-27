@@ -37,7 +37,11 @@ GOLD_TYPE = C.gold_800       # gold words on paper
 WHITE = C.paper_0
 
 # Categories whose headline never carries red. D92 point 5.
-INK_ONLY = ('crime', 'obituary')
+INK_ONLY = ('crime', 'obituary', 'accident')
+# A person's death is ink whatever the category: "ಕಾರ್ಮಿಕ ಸಾವು" in red reads
+# as a shout over a family's loss. Found on the first ಸುದ್ದಿ ಸಾರ, 2026-09-27.
+DEATH_WORDS = ('ಸಾವು', 'ಸಾವನ್ನಪ್ಪ', 'ಮೃತ', 'ನಿಧನ', 'ಆತ್ಮಹತ್ಯೆ', 'ಕೊಲೆ',
+               'ಕೊನೆಯುಸಿರೆಳೆ', 'ಬಲಿ')
 
 # Headlines are Noto Sans Kannada at ExtraBold: the approved Paper & Red look.
 HEAD_WEIGHT = 800
@@ -186,6 +190,8 @@ def kicker(sf: Surface, x: float, y: float, story: Story,
         typo.draw_text(sf.img, t, sf.s(x), sf.s(base), f, RED)
         x += typo.text_width(t, f) / sf.ss + 16
     place = (story.location or '').strip() or Brand.coverage
+    if leads_with_place(story):
+        return y + size * 1.3            # the headline already says where
     typo.draw_text(sf.img, '/', sf.s(x), sf.s(base), f, RULE)
     x += typo.text_width('/', f) / sf.ss + 16
     typo.draw_text(sf.img, place, sf.s(x), sf.s(base),
@@ -286,7 +292,18 @@ def grievance(sf: Surface, y: float):
 
 
 def ink_only(story: Story) -> bool:
-    return story.category in INK_ONLY
+    """No red on this headline: crime, accidents, obituaries — and any
+    headline about a death, whatever it was filed under."""
+    head = (story.headline or '') + ' ' + (story.reel_line or '')
+    return story.category in INK_ONLY or any(w in head for w in DEATH_WORDS)
+
+
+def leads_with_place(story: Story) -> bool:
+    """The headline opens on the story's place — "ಕುಂದಾಪುರ: …" — so the
+    kicker need not say it again."""
+    place = (story.location or '').strip()
+    head, _rest = split_headline(story.headline)
+    return bool(place) and bool(_rest) and place in head
 
 
 def disclosure_line(story: Story) -> str:

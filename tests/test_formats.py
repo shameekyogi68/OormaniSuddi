@@ -128,3 +128,52 @@ class TheLookHoldsItsRules(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TheFirstSaaraFaults(unittest.TestCase):
+    """Found on the first real ಸುದ್ದಿ ಸಾರ, 2026-09-27. Each is pinned so it
+    cannot come back."""
+
+    def _stories(self, n, headline, **kw):
+        from brand.content import OWN_REPORTING, Story
+        return [Story(headline=headline, category='civic', location='ಕುಂದಾಪುರ',
+                      sources=[OWN_REPORTING], segment='saara',
+                      points=['ಒಂದು ಅಂಶ.'], **kw) for _ in range(n)]
+
+    def test_six_long_headlines_never_reach_the_footer(self):
+        """The sixth entry ran into the footer rule."""
+        from brand.tokens import Limits
+        long = ('ಕುಂದಾಪುರ-ಬೈಂದೂರು: ರಾಷ್ಟ್ರೀಯ ಹೆದ್ದಾರಿ 66ರಲ್ಲಿ ಗ್ರೇಡ್ '
+                'ಸೆಪರೇಟರ್ ನಿರ್ಮಾಣಕ್ಕೆ ಪ್ರಸ್ತಾವನೆ ಸಲ್ಲಿಕೆ')
+        at_limit = long[:Limits.headline_chars].rsplit(' ', 1)[0]
+        ed = Edition(stories=self._stories(Limits.saara_max_stories, at_limit),
+                     edition_no=1, schema_version=4)
+        with tempfile.TemporaryDirectory() as d, frozen(NOW):
+            TP.render('saara', ed, d)     # asserts the index fits
+        # Past the house limit: set compactly or refused with a reason —
+        # never drawn over the footer.
+        over = Edition(stories=self._stories(Limits.saara_max_stories,
+                                             long + ' ' + long),
+                       edition_no=1, schema_version=4)
+        with tempfile.TemporaryDirectory() as d, frozen(NOW):
+            try:
+                TP.render('saara', over, d)   # fits compactly (checked inside)
+            except ContentError:
+                pass                          # or is refused with a reason
+
+    def test_the_place_is_not_said_twice(self):
+        """Kicker "/ ಕುಂದಾಪುರ" over a headline "ಕುಂದಾಪುರ: …"."""
+        st = self._stories(1, 'ಕುಂದಾಪುರ: ಕಡಲತೀರಕ್ಕೆ ಮೀನುಗಳ ರಾಶಿ')[0]
+        self.assertTrue(paper.leads_with_place(st))
+        st2 = self._stories(1, 'ಕಡಲತೀರಕ್ಕೆ ಮೀನುಗಳ ರಾಶಿ')[0]
+        self.assertFalse(paper.leads_with_place(st2))
+
+    def test_a_death_is_ink_whatever_it_was_filed_under(self):
+        """"ಕಾರ್ಮಿಕ ಸಾವು" was set in red under ಆಡಳಿತ."""
+        st = self._stories(1, 'ಗಂಗೊಳ್ಳಿ: ಬಂದರಿನಲ್ಲಿ ಬಿದ್ದು ಗಾಯಗೊಂಡಿದ್ದ ಕಾರ್ಮಿಕ ಸಾವು')[0]
+        self.assertTrue(paper.ink_only(st))
+
+    def test_a_coastal_desk_has_somewhere_true_to_file_things(self):
+        from brand.tokens import CATEGORIES
+        for k in ('fisheries', 'environment', 'accident'):
+            self.assertIn(k, CATEGORIES)

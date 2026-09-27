@@ -412,6 +412,21 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                         f'more than {Limits.points_max} points without crowding. '
                         f'Trim to ≤{Limits.points_max}.', where=f'story {i}')
 
+        # ── a category is what happened, not a default (PUB-12) ──────────
+        # The month's editions filed nearly everything as civic, and the
+        # first ಸುದ್ದಿ ಸಾರ put a fish shoal, a dolphin and a death under
+        # ಆಡಳಿತ. Every slide says its category aloud; it has to be true.
+        from collections import Counter
+        cats = Counter(st.category for st in edition.stories)
+        if len(edition.stories) >= 4:
+            top, n_top = cats.most_common(1)[0]
+            if n_top / len(edition.stories) > 0.5:
+                r.add_warn('PUB-12',
+                    f'{n_top} of {len(edition.stories)} stories are filed '
+                    f'under {top!r}. Check each one: a shoal of fish is '
+                    f'environment, a fatal fall is accident, a fishermen\'s '
+                    f'scheme is fisheries.')
+
         # ── one story, published once (DUP-01, D92) ──────────────────────
         # The same news on three days in a row was the channel's repetition
         # problem. A repeat is a follow-up only if it says so, with a new fact.
@@ -602,10 +617,18 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
     if edition is not None:
         r.checked.append('narration script for TTS hazards')
         try:
-            from .voice import narration_beats
-            for i, st in enumerate(edition.stories, 1):
-                for msg in check_narration(st, narration_beats(st)):
-                    r.add_fail('SND-03', f'story {i}: {msg}', where=f'story {i}')
+            # Only ಸ್ಪೀಡ್ ನ್ಯೂಸ್ is spoken, and what it speaks is the place and
+            # the one line (D92) — not the old lead reel's deck and facts, which
+            # held a voiceless ಸುದ್ದಿ ಸಾರ on 2026-09-27 over a "narration beat".
+            from .speednews import items_for
+            speed = [st for st in edition.stories if st.segment == 'speed']
+            if speed:
+                sub = Edition(stories=speed, edition_no=edition.edition_no,
+                              schema_version=edition.schema_version)
+                for st, it in zip(speed, items_for(sub)):
+                    i = edition.stories.index(st) + 1
+                    for msg in check_narration(st, [('speed', it.spoken)]):
+                        r.add_fail('SND-03', f'story {i}: {msg}', where=f'story {i}')
         except Exception as e:
             r.add_warn('SND-03', f'narration could not be checked ({e})')
 

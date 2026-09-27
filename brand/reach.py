@@ -84,6 +84,9 @@ BREADTH = {
     'breaking': 0.9,
     'crime': 0.5,        # high attention, narrow usefulness
     'farm': 0.6,
+    'fisheries': 0.8,    # the coast's own trade; every harbour town
+    'environment': 0.6,
+    'accident': 0.6,
     'culture': 0.7,      # identity travels further than its audience size
     'sport': 0.4,
     'obituary': 0.5,     # narrow, but intensely relevant to those it reaches
@@ -171,6 +174,9 @@ SEGMENT_BY_CATEGORY = {
     'health':    'saara',
     'education': 'saara',
     'farm':      'saara',
+    'fisheries': 'saara',
+    'environment': 'speed',
+    'accident':  'saara',       # a death is read, not glanced at
     'obituary':  'saara',       # dignity: no reel, no hook, no CTA
     'explainer': 'saara',
 }

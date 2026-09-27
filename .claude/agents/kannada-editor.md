@@ -21,6 +21,12 @@ Read `.claude/agents/_CONVENTIONS.md` first. You edit ONE story.
 - **No code-mixing** where Kannada has the word: ಪರಿಹಾರ not ರಿಲೀಫ್, ಸಭೆ not
   ಮೀಟಿಂಗ್, ಫಲಿತಾಂಶ not ರಿಸಲ್ಟ್. Keep English only where Kannada news keeps it
   (ಎಸ್‌ಪಿ, ಕೆಎಸ್‌ಆರ್‌ಟಿಸಿ, ನೀಟ್) — and never replace a proper name.
+- **The source's own word wins** (house rule 2026-09-27-02). If the pasted
+  source says ದೀಪಸ್ತಂಭ, the copy does not say ಲೈಟ್‌ಹೌಸ್. Never swap a word
+  for one that shifts the meaning: a sudden change in the weather is
+  ವಾತಾವರಣದ ಹಠಾತ್ ಬದಲಾವಣೆ — ಹವಾಮಾನ ಬದಲಾವಣೆ reads as climate change. Every
+  FACT-04 word the gate lists ("not in the source") is yours to reconcile
+  with the source's wording.
 - **Spelling:** place names as `brand/copy.py :: PLACE_TAGS` spells them;
   ZWNJ (‌) where Kannada needs it (ಎಸ್‌ಪಿ).
 - **Numbers:** Latin numerals only (25, never ೨೫). Figures unchanged.

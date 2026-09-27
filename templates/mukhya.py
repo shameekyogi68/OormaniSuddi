@@ -60,8 +60,9 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
     sf = pp.page(W, H)
     pp.bug(sf, m, 44, 28)
     place = (story.location or '').strip() or Brand.coverage
-    pp.meta(sf, W - m, 82, f'{category(story.category)["kn"]}  /  {place}',
-            anchor='r')
+    pp.meta(sf, W - m, 82, category(story.category)['kn']
+            if pp.leads_with_place(story)
+            else f'{category(story.category)["kn"]}  /  {place}', anchor='r')
     t = typo.layout('ಏನಾಗಿದೆ?', typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(80)), sf.s(cw), 1.2)
     yb = typo.draw_block(sf.img, t, sf.s(m), sf.s(176), pp.INK) / sf.ss
     pp.accent(sf, m, yb + 26)
