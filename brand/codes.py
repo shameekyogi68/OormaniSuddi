@@ -15,6 +15,7 @@ The prefix says who owns the fix:
     LAW   legal / statutory        → the sub-editor rewrites copy
     SRC   sourcing & verification  → the desk reopens the source
     FACT  figures vs the source    → the fact desk corrects the copy
+    DUP   already published        → the intake desk
     IMG   pictures & disclosure    → the picture desk
     TYPE  typography & glyphs      → copy, or the type engine
     SND   audio & narration        → the voice pass
@@ -44,11 +45,13 @@ CODES: dict[str, str] = {
     'FACT-05': 'a source_url is not an article (section page, chatbot link, placeholder)',
     'FACT-06': 'a story credits a different outlet from the one its link belongs to',
     'FACT-07': 'the story is older than the house freshness window (D88)',
+    # ── DUP ───────────────────────────────────────────────────────────────
+    'DUP-01': 'a source already published on an earlier day, with no follows_up (D92)',
     # ── IMG ───────────────────────────────────────────────────────────────
     'IMG-01': 'an image would appear on screen with no disclosure line',
     'IMG-02': 'a generated image is not wearing nature="ai" (D57)',
-    'IMG-03': 'a reel has fewer gallery frames than facts, so a picture repeats',
-    'IMG-04': 'a carousel slide carries no photograph (house rule 2026-09-17-03)',
+    'IMG-04': 'a ಮುಖ್ಯ ಸುದ್ದಿ carousel has no picture — ask the editor: real or generate (D92)',
+    'IMG-05': 'an AI picture has no approved_by — it was made without asking the editor (D92)',
     # ── TYPE ──────────────────────────────────────────────────────────────
     'TYPE-01': 'a character no house font can set would render as an empty box',
     'TYPE-02': 'a colour pair falls below the contrast floor',
@@ -78,12 +81,9 @@ CODES: dict[str, str] = {
     'PUB-03': 'two posts are close enough to compete with each other',
     'PUB-04': 'the edition is drifting toward being a crime channel',
     'PUB-05': 'the town name sits past the caption fold, where nobody sees it',
-    'PUB-06': 'a story is marked as a reel that reads better as a card',
-    'PUB-07': 'more reels than the day targets, splitting the same audience',
     'PUB-08': 'a story names no place, so nobody can tell it is about their town',
     'PUB-09': 'a caption carries more hashtags than the platform reads (D86)',
-    'PUB-10': 'carousel slide content overflows or deck is truncated (D89)',
-    'PUB-11': 'carousel points count exceeds capacity limit (D89)',
+    'PUB-11': 'a story carries more points than a slide holds (D93)',
     # ── OPS ───────────────────────────────────────────────────────────────
     'OPS-01': 'no Grievance Officer is named (IT Rules 2021 Part III)',
     'OPS-02': 'no contact route is published anywhere',
@@ -109,7 +109,8 @@ OWNER = {
     'LAW': 'sub-editor — rewrite the copy',
     'SRC': 'desk — reopen the source and confirm',
     'FACT': 'fact desk — scripts/fact_check.py, then correct the copy',
-    'IMG': 'picture desk — stock, then generate, then plate',
+    'DUP': 'intake desk — drop it, or add follows_up with the new fact',
+    'IMG': 'picture desk — the editor\'s real photograph first; AI only with approved_by',
     'TYPE': 'copy, or brand/typo.py if the face is the problem',
     'SND': 'voice pass — re-run narration',
     'VID': 'motion engine — re-cut',

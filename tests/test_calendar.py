@@ -130,11 +130,11 @@ class TheRecurringReviews(unittest.TestCase):
 
 
 class TheMinimumViableDay(unittest.TestCase):
-    """D69: what ships when there are four hours instead of ten."""
+    """D69, D92: three formats, and nothing else is made on a short day."""
 
-    def test_the_daily_path_is_the_four_that_matter(self):
+    def test_the_daily_path_is_the_three_formats(self):
         self.assertEqual(set(Limits.daily_templates),
-                         {'carousel', 'story_card', 'broadsheet', 'reel'})
+                         {'roundup', 'saara', 'mukhya'})
 
     def test_the_bulletin_is_not_in_the_daily_path(self):
         """It is off by default and is not going to YouTube (Rule 7)."""

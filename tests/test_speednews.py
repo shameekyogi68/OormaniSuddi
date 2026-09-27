@@ -79,9 +79,8 @@ class ItLivesInTheReelsSafeZone(unittest.TestCase):
                              'the headline runs under the like/share rail')
         self.assertLessEqual(s.src_y + s.src.height, H - Motion.speed_bottom,
                              'the story text sits under the caption overlay')
-        self.assertGreaterEqual(s.tag_y, Motion.speed_top)
-        self.assertLessEqual(L.x0 + s.place_tag.width + 12 + s.cat_tag.width,
-                             W - fmt('reel').safe[2])
+        self.assertGreaterEqual(s.row_y, Motion.speed_top)
+        self.assertLessEqual(L.x0 + s.row.width, W - fmt('reel').safe[2])
 
     def test_the_frame_is_used_top_to_bottom(self):
         """D83. With the lead reel's 230/480 margins the first redesign sat
@@ -96,8 +95,8 @@ class ItLivesInTheReelsSafeZone(unittest.TestCase):
         """STANDARDS, Rule 3. The first cut used rounded pills."""
         it = sn.items_for(Edition(stories=[story()], edition_no=1))[0]
         s = sn.StorySlate(it, sn.Layout(*_size()), 0, 4.0)
-        for tag in (s.place_tag, s.cat_tag):
-            self.assertGreater(tag.getpixel((0, 0))[3], 200, 'a rounded corner')
+        # The counter chip's top-left corner is solid gold, not rounded off.
+        self.assertGreater(s.row.getpixel((1, 5))[3], 200, 'a rounded corner')
 
     def test_it_is_the_reel_format_not_the_story_format(self):
         """fmt('story') has a 72px right margin — the first cut used it."""
@@ -225,37 +224,26 @@ class TheCaptionFitsAVideo(unittest.TestCase):
             self.assertIn(place, self.cap)
 
 
-class ItIsTheDailyReel(unittest.TestCase):
+class ItIsTheSpeedSegment(unittest.TestCase):
+    """D92: the reel carries the stories whose segment is speed, and only
+    them — never the same stories as the day's carousel."""
 
-    def _formats(self, n):
-        import json
-        from scripts.pick_formats import formats_for_edition
-        data = {'date': '2026-09-18T08:00:00+05:30', 'edition_no': 1,
-                'stories': [{'headline': 'ಉಡುಪಿಯಲ್ಲಿ ಭಾರಿ ಮಳೆ', 'category': 'civic',
-                             'location': 'ಉಡುಪಿ', 'sources': ['ಉದಯವಾಣಿ'],
-                             'source_urls': ['https://example.com/x']}] * n}
-        with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False,
-                                         encoding='utf-8') as fh:
-            json.dump(data, fh, ensure_ascii=False)
-        try:
-            return formats_for_edition(fh.name)[0]
-        finally:
-            os.unlink(fh.name)
+    def _ed(self, *segments):
+        return Edition(stories=[story(segment=s) for s in segments],
+                       edition_no=1, schema_version=4)
 
-    def test_three_or_more_stories_go_out_as_speed_news(self):
-        self.assertEqual(self._formats(3), ['carousel', 'roundup'])
+    def test_three_or_more_speed_stories_make_the_reel(self):
+        self.assertEqual(self._ed('speed', 'speed', 'speed').format_problems(), [])
 
-    def test_a_thin_day_does_not_get_a_one_story_roundup(self):
-        self.assertNotIn('roundup', self._formats(2))
+    def test_a_thin_speed_day_is_refused_not_padded(self):
+        probs = self._ed('speed', 'speed', 'saara', 'saara').format_problems()
+        self.assertTrue(any('ಸ್ಪೀಡ್ ನ್ಯೂಸ್' in p for p in probs), probs)
 
-    def test_the_schedule_carries_it_and_keeps_the_reel_gap(self):
+    def test_the_schedule_carries_it(self):
         from brand import copy as C
-        plan = C.publishing_plan(n_reels=1, has_roundup=True,
-                                 has_story_card=False, has_broadsheet=False)
-        assets = [s.asset for s in plan]
-        self.assertTrue(any('roundup.mp4' in a for a in assets))
-        times = [s.at for s in plan if s.platform == 'Instagram Reels']
-        self.assertEqual(len(times), len(set(times)), 'two reels at one time')
+        plan = C.publishing_plan(has_roundup=True)
+        self.assertTrue(any('roundup.mp4' in s.asset for s in plan))
+        self.assertTrue(all('Instagram' in s.platform for s in plan))
 
 
 if __name__ == '__main__':
@@ -280,7 +268,7 @@ class TheCoverIsATitleCardNotAFrame(unittest.TestCase):
 
     def test_everything_that_matters_survives_the_grid_crop(self):
         top, bot = sn.cover_safe(self.W, self.H)
-        for name in ('brand', 'title', 'places', 'lead'):
+        for name in ('brand', 'title', 'places'):
             x0, y0, x1, y1 = self.boxes[name]
             self.assertGreaterEqual(y0, top, name)
             self.assertLessEqual(y1, bot, name)

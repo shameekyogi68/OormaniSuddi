@@ -39,14 +39,10 @@ def story(**kw) -> Story:
 
 class WhichPlatformAPostBelongsTo(unittest.TestCase):
 
-    def test_the_bulletin_and_its_thumbnail_are_youtube(self):
-        for name in ('bulletin', 'bulletin_copy', 'youtube_thumb', 'yt_thumb'):
-            self.assertEqual(C.platform_of(name), 'youtube', name)
-
-    def test_cards_and_reels_are_instagram(self):
-        """AI-card reels are Instagram's — AGENTS rule 7."""
-        for name in ('carousel', 'reel', 'reel_01', 'post_01', 'story_card',
-                    'broadsheet'):
+    def test_every_news_format_is_instagram(self):
+        """AI-card formats are Instagram's — AGENTS rule 9, D92."""
+        for name in ('saara', 'saara_copy', 'mukhya_1', 'mukhya_2_copy',
+                     'roundup', 'roundup_copy'):
             self.assertEqual(C.platform_of(name), 'instagram', name)
 
 
@@ -54,8 +50,8 @@ class TheCaptionFileHoldsOnlyTheCaption(unittest.TestCase):
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        render.write_copy(story(), self.tmp.name, 'carousel_copy')
-        with open(os.path.join(self.tmp.name, 'carousel_caption.txt'),
+        render.write_copy(story(), self.tmp.name, 'saara_copy')
+        with open(os.path.join(self.tmp.name, 'saara_caption.txt'),
                   encoding='utf-8') as fh:
             self.cap = fh.read()
 
@@ -64,7 +60,7 @@ class TheCaptionFileHoldsOnlyTheCaption(unittest.TestCase):
 
     def test_the_file_is_named_for_the_post_not_for_the_copy_sheet(self):
         self.assertTrue(os.path.exists(
-            os.path.join(self.tmp.name, 'carousel_caption.txt')))
+            os.path.join(self.tmp.name, 'saara_caption.txt')))
 
     def test_it_carries_no_banner_headings(self):
         """A heading in the file is a heading somebody pastes."""
@@ -96,7 +92,7 @@ class TheCaptionFileHoldsOnlyTheCaption(unittest.TestCase):
     def test_the_working_sheet_is_untouched(self):
         """This is additive. `_copy.txt` is read by review.py and by
         MASTER_COPY, and it keeps its shape."""
-        with open(os.path.join(self.tmp.name, 'carousel_copy.txt'),
+        with open(os.path.join(self.tmp.name, 'saara_copy.txt'),
                   encoding='utf-8') as fh:
             sheet = fh.read()
         self.assertIn('INSTAGRAM CAPTION', sheet)
@@ -106,14 +102,10 @@ class TheCaptionFileHoldsOnlyTheCaption(unittest.TestCase):
 class AYouTubePostGetsYouTubeFields(unittest.TestCase):
 
     def test_title_description_and_tags_each_labelled(self):
-        """A title cannot be pasted into a description box, so this one post
-        type needs its three fields named — and only those three."""
-        with tempfile.TemporaryDirectory() as tmp:
-            ed = Edition(stories=[story()], edition_no=1)
-            render.write_copy(ed, tmp, 'bulletin_copy')
-            with open(os.path.join(tmp, 'bulletin_caption.txt'),
-                      encoding='utf-8') as fh:
-                cap = fh.read()
+        """A title cannot be pasted into a description box, so a YouTube post
+        needs its three fields named — and only those three."""
+        c = C.for_story(story())
+        cap = C.caption_text(c, 'youtube')
         self.assertIn('TITLE', cap)
         self.assertIn('DESCRIPTION', cap)
         self.assertIn('TAGS', cap)
@@ -128,18 +120,15 @@ class AYouTubePostGetsYouTubeFields(unittest.TestCase):
 class EveryPostKindGetsOne(unittest.TestCase):
 
     def test_each_render_name_produces_its_own_caption_file(self):
-        names = ('carousel_copy', 'reel_copy', 'reel_01_copy', 'post_01_copy',
-                'bulletin_copy')
+        names = ('saara_copy', 'roundup_copy', 'mukhya_1_copy', 'mukhya_2_copy')
         with tempfile.TemporaryDirectory() as tmp:
             ed = Edition(stories=[story()], edition_no=1)
             for n in names:
-                render.write_copy(ed if 'carousel' in n or 'bulletin' in n
-                                 else story(), tmp, n)
+                render.write_copy(story() if 'mukhya' in n else ed, tmp, n)
             made = sorted(f for f in os.listdir(tmp)
                          if f.endswith('_caption.txt'))
-        self.assertEqual(made, ['bulletin_caption.txt', 'carousel_caption.txt',
-                                'post_01_caption.txt', 'reel_01_caption.txt',
-                                'reel_caption.txt'])
+        self.assertEqual(made, ['mukhya_1_caption.txt', 'mukhya_2_caption.txt',
+                                'roundup_caption.txt', 'saara_caption.txt'])
 
 
 class WhatsAppGroupDigestFormat(unittest.TestCase):
@@ -166,10 +155,10 @@ class WhatsAppGroupDigestFormat(unittest.TestCase):
         w = C.edition_whatsapp(self.ed, instagram_url='https://instagram.com/p/test123')
         self.assertIn('👉 https://instagram.com/p/test123', w)
 
-    def test_carousel_render_writes_whatsapp_file(self):
+    def test_saara_render_writes_whatsapp_file(self):
         with tempfile.TemporaryDirectory() as tmp:
-            render.write_copy(self.ed, tmp, 'carousel_copy')
-            w_path = os.path.join(tmp, 'carousel_whatsapp.txt')
+            render.write_copy(self.ed, tmp, 'saara_copy')
+            w_path = os.path.join(tmp, 'saara_whatsapp.txt')
             self.assertTrue(os.path.exists(w_path))
             with open(w_path, encoding='utf-8') as f:
                 content = f.read()

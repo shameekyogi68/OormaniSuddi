@@ -279,7 +279,7 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
             continue
         with open(p, encoding='utf-8') as fh:
             body = fh.read()
-        # A range is written "carousel_01_cover.jpg … carousel_08_sources.jpg".
+        # A range is written "saara_01_cover.jpg … saara_06_sources.jpg".
         # Both ends are real filenames and both are checked; what must NOT be
         # checked is a fragment left by the ellipsis itself.
         referenced |= set(re.findall(
@@ -346,7 +346,7 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                        f'back to a silent render ({why}). Re-run it.', where=f)
 
     if not reels and not slides:
-        r.add_fail('PKG-02', 'the folder contains no reels and no carousel slides')
+        r.add_fail('PKG-02', 'the folder contains no reel and no ಸುದ್ದಿ ಸಾರ / ಮುಖ್ಯ ಸುದ್ದಿ slides')
 
     # ── the copy ──────────────────────────────────────────────────────────
     if edition is not None:
@@ -363,8 +363,12 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
             # Synthetic imagery must be disclosed in the caption too, not only
             # on the frame.
             if st.has_synthetic_imagery:
-                cap = os.path.join(outdir, f'reel_{i:02d}_copy.txt')
-                if os.path.exists(cap):
+                k = [s_ for s_ in edition.stories
+                     if s_.segment == 'mukhya'].index(st) + 1 \
+                    if st.segment == 'mukhya' else 0
+                cap = os.path.join(outdir, f'mukhya_{k}_copy.txt' if k
+                                   else 'roundup_copy.txt')
+                if st.segment != 'saara' and os.path.exists(cap):
                     with open(cap, encoding='utf-8') as fh:
                         body = fh.read()
                     if 'ಎಐ ರಚಿತ' not in body:
@@ -397,16 +401,33 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                         f'made without asking the editor (D92).',
                         where=f'story {i}')
 
-        # ── points capacity on carousel (PUB-11) ─────────────────────────
+        # ── points capacity on a slide (PUB-11, D93) ─────────────────────
         if slides:
-            r.checked.append('carousel points count within capacity (PUB-11)')
+            r.checked.append('points per slide within capacity (PUB-11)')
             for i, st in enumerate(edition.stories, 1):
                 if st.points and len(st.points) > Limits.points_max:
                     r.add_fail('PUB-11',
                         f'story {i} carries {len(st.points)} points (limit is '
-                        f'{Limits.points_max}). A carousel slide cannot hold '
+                        f'{Limits.points_max}). A slide cannot hold '
                         f'more than {Limits.points_max} points without crowding. '
                         f'Trim to ≤{Limits.points_max}.', where=f'story {i}')
+
+        # ── one story, published once (DUP-01, D92) ──────────────────────
+        # The same news on three days in a row was the channel's repetition
+        # problem. A repeat is a follow-up only if it says so, with a new fact.
+        r.checked.append('no story repeats an earlier day (DUP-01)')
+        try:
+            from .intake import published_before, url_repeat
+            for i, st in enumerate(edition.stories, 1):
+                why = published_before(st, edition.date.date())
+                if why and url_repeat(why) and not (st.follows_up or '').strip():
+                    r.add_fail('DUP-01', f'story {i}: {why[0]}. A repeat runs '
+                               'only as a follow-up: set follows_up and lead on '
+                               'the new fact, or drop it.', where=f'story {i}')
+                elif why:
+                    r.add_warn('DUP-01', f'story {i}: {why[0]}', where=f'story {i}')
+        except Exception as e:
+            r.add_warn('DUP-01', f'the repeat check could not run ({e})')
 
         # ── the fact desk (D84) ──────────────────────────────────────────
         # Every figure in every published line — headline to narration — is
@@ -538,24 +559,6 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                         r.add_warn(
                             'PUB-05',
                             f'story {i}: {why}', where=f'story {i}')
-                if getattr(st, 'is_reel', False):
-                    earns, why = reach.should_be_reel(st)
-                    if not earns:
-                        r.add_warn(
-                            'PUB-06',
-                            f'story {i} is marked is_reel but {why}. A card '
-                            f'that gets screenshotted beats a video nobody '
-                            f'finishes.', where=f'story {i}')
-            marked = sum(1 for st in edition.stories
-                         if getattr(st, 'is_reel', False))
-            if marked > Limits.reels_per_day_target:
-                r.add_warn(
-                    'PUB-07',
-                    f'{marked} reels marked, the day targets '
-                    f'{Limits.reels_per_day_target}. On an account this size '
-                    f'each post goes to a small test slice — splitting the '
-                    f'same audience {marked} ways makes all of them look '
-                    f'average. Run the best two.')
         except Exception as e:
             r.add_warn('PUB-05', f'reach could not be checked ({e})')
 
@@ -686,11 +689,11 @@ def evidence(outdir: str, into: str | None = None) -> list[str]:
 
     for f in sorted(os.listdir(outdir)):
         src = os.path.join(outdir, f)
-        if f.startswith('carousel_') and f.endswith('.jpg'):
+        if re.match(r'(saara|mukhya_\d+)_', f) and f.endswith('.jpg'):
             out.append(src)
         elif f.endswith('_cover.jpg'):
             out.append(src)
-        elif re.fullmatch(r'reel(_\d+)?\.mp4', f):
+        elif re.fullmatch(r'roundup\.mp4', f):
             d = _duration(src)
             if d <= 0:
                 continue
@@ -747,16 +750,12 @@ def feed_size_sheet(outdir: str, into: str) -> str:
     # (file pattern → the format key whose first-sight width applies)
     def key_for(name: str) -> str | None:
         n = name.lower()
-        if n.startswith('carousel_'):
-            return 'square'
-        if n.endswith('_cover.jpg') or n.startswith('story_'):
-            return 'reel' if 'reel' in n else 'story'
-        if n.startswith('yt_thumbnail'):
-            return 'thumb'
-        if n.startswith('broadsheet'):
-            return 'broadsheet'
-        if n.startswith('post_'):
+        if n.startswith(('saara_', 'mukhya_')):
             return 'post'
+        if n == 'roundup_cover.jpg':
+            return 'reel'
+        if n.startswith('wish_'):
+            return 'story'
         return None
 
     tiles: list[tuple[str, Image.Image]] = []

@@ -88,24 +88,26 @@ class LocalRelevance(unittest.TestCase):
 
 
 class FormatFollowsTheStory(unittest.TestCase):
+    """D92: the desk's proposal for a story's one format."""
 
-    def test_a_government_notice_is_a_card_not_a_reel(self):
-        ok, why = reach.should_be_reel(story(category='civic'))
-        self.assertFalse(ok)
-        self.assertIn('card', why)
+    def test_a_government_notice_goes_in_the_text_bulletin(self):
+        seg, why = reach.suggest_segment(story(category='civic'))
+        self.assertEqual(seg, 'saara')
+        self.assertIn('read', why)
 
-    def test_weather_earns_a_reel(self):
-        ok, _why = reach.should_be_reel(story(
+    def test_weather_is_quick_news(self):
+        seg, _why = reach.suggest_segment(story(
             category='weather', takeaway='1077 ಸಂಪರ್ಕಿಸಿ'))
-        self.assertTrue(ok)
+        self.assertEqual(seg, 'speed')
 
-    def test_an_obituary_gets_no_reel_and_no_hook(self):
+    def test_an_obituary_is_never_quick_news(self):
         """Dignity is a format decision too."""
-        self.assertEqual(reach.formats_for(story(category='obituary')), ())
+        self.assertEqual(reach.suggest_segment(story(category='obituary'))[0],
+                         'saara')
 
-    def test_a_story_with_no_place_never_earns_a_reel(self):
-        ok, why = reach.should_be_reel(story(category='weather', location=''))
-        self.assertFalse(ok)
+    def test_a_story_with_no_place_is_not_quick_news(self):
+        seg, why = reach.suggest_segment(story(category='weather', location=''))
+        self.assertEqual(seg, 'saara')
         self.assertIn('place', why)
 
 
@@ -177,19 +179,19 @@ class TheDayIsSized(unittest.TestCase):
         look average."""
         self.assertEqual(Limits.reels_per_day_target, 2)
 
-    def test_the_plan_counts_what_is_earned_against_what_is_marked(self):
+    def test_the_plan_shows_each_story_s_format_and_the_desk_s_proposal(self):
         ed = Edition(stories=[
-            story(category='weather', takeaway='1077 ಸಂಪರ್ಕಿಸಿ', is_reel=True),
-            story(category='civic', is_reel=True),
+            story(category='weather', takeaway='1077 ಸಂಪರ್ಕಿಸಿ', segment='saara'),
+            story(category='civic', segment='saara'),
         ], date=now(), edition_no=1)
         p = reach.plan(ed)
-        self.assertEqual(p['reels_marked'], 2)
-        self.assertEqual(p['reels_earned'], 1)
+        self.assertEqual([r['segment'] for r in p['stories']], ['saara', 'saara'])
+        self.assertEqual(p['stories'][0]['suggested'], 'speed')
 
-    def test_the_report_names_a_story_marked_reel_that_is_not_one(self):
-        ed = Edition(stories=[story(category='civic', is_reel=True)],
+    def test_the_report_lists_where_each_story_runs(self):
+        ed = Edition(stories=[story(category='civic', segment='saara')],
                      date=now(), edition_no=1)
-        self.assertIn('marked `is_reel`', reach.report(ed))
+        self.assertIn('runs in', reach.report(ed))
 
 
 class Continuity(unittest.TestCase):

@@ -20,20 +20,21 @@ HEAD = """# Templates
 Generated from `templates/__init__.py` — do not edit by hand; run
 `python3 docs/_build_templates_md.py` instead.
 
-Nine templates. Each is one file in `templates/`, self-contained: no template
-imports another, so you can read one without reading the rest.
+Three news formats and a greeting (D92). A story runs in exactly one news
+format — the one its `segment` names. The shared Paper & Red drawing kit is
+`brand/paper.py`.
 
 ```python
 import templates as TP
-TP.render('report_card', story, 'out/card.jpg')     # by name
-TP.choose(story)                                     # let it pick
-TP.get('report_card').limits                         # the rules, as data
+TP.choose(story)                                     # its format, from segment
+TP.get('saara').limits                               # the rules, as data
 ```
 
 Or without Python at all — see [`AI_BRIEF.md`](AI_BRIEF.md):
 
 ```bash
-python3 render.py edition.json --only report_card carousel
+python3 render.py editions/DATE.json                  # every segment present
+python3 render.py editions/DATE.json --only saara roundup
 ```
 
 ## At a glance

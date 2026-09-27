@@ -12,7 +12,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from brand.content import (CATEGORIES_KEYS, IMAGE_NATURE, STATUS,
                            BREAKING_WINDOW_H, LICENCES)
-from templates import TEMPLATES
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -47,6 +46,11 @@ PHOTO = {
                   'description': 'Crop focal point [x, y] in 0..1. Default [0.5, 0.42] '
                                  '— above centre, because a centre crop decapitates people.'},
         'taken_at': {'type': 'string', 'format': 'date-time'},
+        'approved_by': {'type': 'string',
+                        'description': 'REQUIRED on an AI picture in a schema 4 '
+                                       'edition: the name of the editor who was '
+                                       'asked "real photo, or generate?" and said '
+                                       'generate (D92).'},
     },
 }
 
@@ -125,10 +129,10 @@ STORY = {
         'numbers': {'type': 'array', 'maxItems': 4,
                     'items': {'type': 'array', 'items': {'type': 'string'},
                               'minItems': 2, 'maxItems': 2},
-                    'description': 'Pairs of [value, Kannada label] for stat_card.'},
+                    'description': 'Pairs of [value, Kannada label]; kept with the story, checked by the fact desk.'},
         'quote': {'type': 'array', 'items': {'type': 'string'},
                   'minItems': 2, 'maxItems': 2,
-                  'description': '[text, attribution] for quote_card.'},
+                  'description': '[text, attribution]; kept with the story, checked by the fact desk.'},
         'involves_minor': {'type': 'boolean', 'default': False,
                            'description': 'Set when a child is involved as accused '
                                           'or victim. Blocks identifying detail — '
@@ -141,8 +145,17 @@ STORY = {
                                      'then the copy must read as an allegation.'},
         'correction': {'type': 'string',
                        'description': 'If this card corrects an earlier one, say what changed.'},
-        'template': {'enum': sorted(TEMPLATES), 
-                     'description': 'Force a template. Omit to let choose() pick.'},
+        'segment': {'enum': ['speed', 'saara', 'mukhya'],
+                    'description': 'REQUIRED (schema 4). The ONE format this '
+                                   'story runs in: speed = ಸ್ಪೀಡ್ ನ್ಯೂಸ್ reel, '
+                                   'saara = ಸುದ್ದಿ ಸಾರ text carousel (no picture), '
+                                   'mukhya = ಮುಖ್ಯ ಸುದ್ದಿ photo carousel (always a '
+                                   'picture). D92.'},
+        'photo_plan': {'enum': ['', 'real', 'ai'],
+                       'description': 'The editor\'s answer to "real photo, or '
+                                      'generate?": "" not asked yet, "real" the '
+                                      'editor is sending one, "ai" the editor said '
+                                      'generate. D92.'},
         'reel_line': {'type': 'string', 'maxLength': 60,
                       'description': 'A SHORT headline for the reel — about 45 '
                                      'characters. A print headline of 75 needs '
@@ -161,14 +174,12 @@ STORY = {
                                        'entry (or leave it blank) to fall back to the '
                                        'full point.'},
         'hook': {'type': 'string', 'maxLength': 40,
-                 'description': 'Short line for the YouTube thumbnail. About seven '
-                                'words maximum — it is read at 210 px wide. Put it on '
-                                'the FIRST story; that is the one thumbnailed.'},
-        'is_reel': {'type': 'boolean', 'default': True,
-                    'description': 'Whether this story qualifies as a 10/10 story for '
-                                   'an individual vertical reel. High-impact, visual, '
-                                   'or breaking stories should set true; routine or '
-                                   'bureaucratic updates set false.'},
+                 'description': 'The caption\'s first line, when the automatic one '
+                                'is not right. Travels alone, so it is guarded '
+                                'for guilt like a headline (D41).'},
+        'is_reel': {'type': 'boolean', 'default': False,
+                    'description': 'Legacy (before D92). Read and ignored — the '
+                                   'format is `segment`.'},
     },
 }
 
@@ -176,16 +187,17 @@ EDITION = {
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     '$id': 'https://oormanisuddi.local/schemas/edition.schema.json',
     'title': 'Edition',
-    'description': "One day's bulletin. Everything — posts, carousel, story, "
-                   'thumbnail, broadsheet and reel — is rendered from this single '
-                   'object, so the outputs cannot drift apart.',
+    'description': "One day's news. Each story runs in the one format its "
+                   '`segment` names — ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ or ಸ್ಪೀಡ್ ನ್ಯೂಸ್ '
+                   '(D92).',
     'type': 'object',
     'required': ['stories'],
     'additionalProperties': False,
     'properties': {
-        'stories': {'type': 'array', 'minItems': 1, 'maxItems': 6,
+        'stories': {'type': 'array', 'minItems': 1, 'maxItems': 16,
                     'items': {'$ref': 'story.schema.json'},
-                    'description': 'Lead story first. Three to four read best in a reel.'},
+                    'description': 'In priority order. Per-format counts are '
+                                   'tokens.Limits (saara_*, roundup_*, mukhya_*).'},
         'date': {'type': 'string', 'format': 'date-time'},
         'edition_no': {'type': 'integer', 'minimum': 1},
         'schema_version': {'type': 'integer', 'minimum': 1,

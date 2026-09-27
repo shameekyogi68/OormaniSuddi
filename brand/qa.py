@@ -178,26 +178,19 @@ def preflight(story: Story, format_key: str = 'post', hook: str = '') -> Report:
             f'Every image carries its provenance on the card that shows it — '
             f'give it a credit, and a nature other than "actual".')
 
-    # A fact card is glanced at while the anchor is already delivering the
-    # same fact at roughly twice reading speed, so a print-length point on a
-    # reel frame is copy the viewer cannot finish. reel_points is the fix.
-    long_facts = [i for i, p in enumerate(story.points)
-                  if len(p) > 80 and not (i < len(story.reel_points)
-                                          and story.reel_points[i].strip())]
-    if long_facts:
-        r.warn.append(
-            f'fact(s) {", ".join(str(i + 1) for i in long_facts)} run past 80 '
-            f'characters with no reel_points short form. On a narrated reel '
-            f'card that is more copy than the viewer can read before the voice '
-            f'has moved on — write a ~60-character reel_points entry for each. '
-            f'The voice still carries the full point.')
-
-    if not story.reel_line and len(story.headline) > Limits.reel_line_chars:
+    # Only ಸ್ಪೀಡ್ ನ್ಯೂಸ್ puts a single line on a moving frame, read while the
+    # anchor is already speaking it (D81, D92).
+    if (story.segment == 'speed' and not story.reel_line
+            and len(story.headline) > Limits.reel_line_chars):
         r.warn.append(
             f'headline is {len(story.headline)} chars and there is no reel_line. '
-            f'In a reel that needs about {len(story.headline) / 7.0:.0f}s on '
-            f'screen to be readable. Add a reel_line of ~'
+            f'In ಸ್ಪೀಡ್ ನ್ಯೂಸ್ that needs about {len(story.headline) / 7.0:.0f}s '
+            f'on screen to be readable. Add a reel_line of ~'
             f'{Limits.reel_line_chars} characters.')
+    if story.segment == 'saara' and story.photo:
+        r.warn.append('a ಸುದ್ದಿ ಸಾರ story carries a photo; the text bulletin '
+                      'never shows one (D92). Remove it, or run the story as '
+                      'ಮುಖ್ಯ ಸುದ್ದಿ.')
 
     # Every string that will be SET, checked against the faces that will set
     # it. A codepoint no face carries renders as .notdef — the empty box — and

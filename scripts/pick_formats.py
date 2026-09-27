@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 """
-ಊರ್ಮನಿ ಸುದ್ದಿ — which formats today actually earns.
-=======================================================
-House rule 2026-09-18-02 (D81): carousel ships every day, plus ONE reel.
-With three or more stories that reel is ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — the whole day as one
-quick-news video. On a thin day it is the lead-story reel, and only if the
-lead clears brand.reach.should_be_reel() (D72). Never both: two reels of one
-morning split the same audience. story_card and broadsheet are never in the
-default; carousel already covers that ground.
+ಊರ್ಮನಿ ಸುದ್ದಿ — which formats this edition renders (D92).
+=========================================================
+Read off the stories' segments, never guessed from how many there are. A
+story runs in exactly one format, so the answer is simply the set of
+segments present — in the order they post:
 
-    python3 scripts/pick_formats.py editions/2026-09-18.json
-    # -> carousel roundup        (3+ stories)
-    # -> carousel reel           (thin day, lead earns it)
-    # -> carousel                (thin day, it does not)
+    saara   ಸುದ್ದಿ ಸಾರ    text carousel
+    mukhya  ಮುಖ್ಯ ಸುದ್ದಿ  one photo carousel per top story
+    roundup ಸ್ಪೀಡ್ ನ್ಯೂಸ್  the reel
 
-Use the result directly:
-    python3 render.py editions/{date}.json \\
-        --only $(python3 scripts/pick_formats.py editions/{date}.json) \\
-        --out out/{date}
+    python3 scripts/pick_formats.py editions/2026-09-27.json
+    # -> saara roundup
+
+`python3 render.py editions/DATE.json` already renders exactly these; this
+exists for anything that wants to know without rendering.
 """
 from __future__ import annotations
 
@@ -28,34 +25,31 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from brand.content import Story  # noqa: E402
-from brand.reach import should_be_reel  # noqa: E402
+from brand.content import SEGMENTS  # noqa: E402
+
+ORDER = ('saara', 'mukhya', 'speed')
 
 
 def formats_for_edition(path: str) -> tuple[list[str], str]:
-    """(formats to render, why) — carousel always, and one reel.
-
-    The daily reel is ಸ್ಪೀಡ್ ನ್ಯೂಸ್ whenever the edition has enough stories
-    to make one (D81, house rule 2026-09-18-02). On a thin day — one or two
-    stories — the lead-story reel is rendered only if the lead earns it, the
-    same mechanical test as before (should_be_reel, D72). Never both: two
-    reels of the same morning split the same audience.
-    """
-    from brand.tokens import Limits
+    """(formats to render, why)."""
     with open(path, encoding='utf-8') as fh:
         data = json.load(fh)
     stories = data.get('stories', [])
-    formats = ['carousel']
     if not stories:
-        return formats, 'no stories in this edition'
-    if len(stories) >= Limits.roundup_min_stories:
-        formats.append('roundup')
-        return formats, (f'{len(stories)} stories — the day goes out as one '
-                         f'speed-news reel')
-    lead = Story.from_dict(stories[0])
-    earns, why = should_be_reel(lead)
-    if earns:
-        formats.append('reel')
+        return [], 'no stories in this edition'
+    count = {k: 0 for k in ORDER}
+    missing = 0
+    for st in stories:
+        seg = st.get('segment', '')
+        if seg in count:
+            count[seg] += 1
+        else:
+            missing += 1
+    formats = [SEGMENTS[k][1] for k in ORDER if count[k]]
+    why = ' · '.join(f'{SEGMENTS[k][0]} {count[k]}' for k in ORDER if count[k])
+    if missing:
+        why += (f'{" · " if why else ""}{missing} story(ies) with no segment — '
+                'give each one speed, saara or mukhya')
     return formats, why
 
 
@@ -69,7 +63,7 @@ def main() -> int:
         return 1
     formats, why = formats_for_edition(path)
     print(' '.join(formats))
-    print(f'# reel: {why}', file=sys.stderr)
+    print(f'# {why}', file=sys.stderr)
     return 0
 
 

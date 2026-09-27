@@ -860,13 +860,13 @@ class TheChiefEditorsGate(unittest.TestCase):
         self.assertTrue(any('reel_99.mp4' in m for m in rep.fail))
 
     def test_a_range_ellipsis_is_not_read_as_a_filename(self):
-        """"carousel_01_cover.jpg … carousel_08_sources.jpg" names two real
+        """"saara_01_cover.jpg … saara_08_sources.jpg" names two real
         files; the ellipsis must not manufacture a third."""
         import os
-        for n in ('carousel_01_cover.jpg', 'carousel_08_sources.jpg'):
+        for n in ('saara_01_cover.jpg', 'saara_08_sources.jpg'):
             open(os.path.join(self.dir, n), 'wb').close()
         self._write('MASTER_COPY.md',
-                    '`carousel_01_cover.jpg` … `carousel_08_sources.jpg`')
+                    '`saara_01_cover.jpg` … `saara_08_sources.jpg`')
         rep = self.R.review(self.dir)
         self.assertFalse([m for m in rep.fail if 'points at' in m], rep.fail)
 
@@ -883,7 +883,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         from brand.tokens import Brand
         good = os.path.join(self.dir, 'reel_copy.txt')
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'carousel_01_cover.jpg'), 'wb').close()
+        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
         rep = self.R.review(self.dir)
         self.assertTrue(rep.clean, rep.fail)
         path = self.R.approve(self.dir, rep)
@@ -959,7 +959,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         import os
         from brand.tokens import Brand
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'carousel_01_cover.jpg'), 'wb').close()
+        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
         rep = self.R.review(self.dir)
         path = self.R.approve(self.dir, rep)
         with open(path, encoding='utf-8') as fh:
@@ -976,7 +976,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         import os
         from brand.tokens import Brand
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'carousel_01_cover.jpg'), 'wb').close()
+        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
         rep = self.R.review(self.dir)
         path = self.R.approve(self.dir, rep)
         self.R.sign(self.dir, 'Gautam Paduvari')
@@ -990,7 +990,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         import os
         from brand.tokens import Brand
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'carousel_01_cover.jpg'), 'wb').close()
+        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
         self.R.approve(self.dir, self.R.review(self.dir))
         self.R.sign(self.dir, 'Shameek', ('culture',))
         self.assertFalse(self.R.is_signed(self.dir))
@@ -1396,15 +1396,12 @@ class AMusicLicenceMustBeProducible(unittest.TestCase):
                             f'{r["path"]} was deleted rather than blocked')
 
 
-class EveryCarouselSlideCarriesAPhotograph(unittest.TestCase):
-    """House rule 2026-09-17-03, enforced as IMG-04.
+class AMukhyaAlwaysHasAPictureAndAnAIOneWasAskedFor(unittest.TestCase):
+    """D92, gate codes IMG-04 and IMG-05.
 
-    It blocks rather than warns, on purpose. A warning is a line you scroll
-    past at 08:00 with a bulletin due, which is exactly the morning a slide
-    ships with a blank plate where a picture should be. The fix costs
-    seconds — assets/stock/ is right there, and CATALOG.md says what is in
-    it — so the block is cheap to clear and the warning was not cheap to
-    ignore.
+    A ಮುಖ್ಯ ಸುದ್ದಿ is the one format that is always a picture; a ಸುದ್ದಿ ಸಾರ
+    never is. And an AI picture is made only after the editor was asked —
+    the record of that is the name in photo.approved_by.
     """
 
     def setUp(self):
@@ -1414,44 +1411,57 @@ class EveryCarouselSlideCarriesAPhotograph(unittest.TestCase):
         self.R, self.dir = R, tempfile.mkdtemp()
         self.Story, self.Edition, self.Photo = Story, Edition, Photo
         self.OWN = OWN_REPORTING
-        import os
-        for n in ('carousel_01_cover.jpg', 'carousel_02.jpg'):
+        for n in ('mukhya_1_01_cover.jpg', 'saara_01_cover.jpg'):
             open(os.path.join(self.dir, n), 'wb').close()
 
     def tearDown(self):
         import shutil
         shutil.rmtree(self.dir, ignore_errors=True)
 
-    def _story(self, photo):
+    def _story(self, segment, photo=None):
         return self.Story(
             headline='ಬೈಂದೂರಿನಲ್ಲಿ ಭಾರಿ ಮಳೆ, ಜಿಲ್ಲಾಡಳಿತ ಎಚ್ಚರಿಕೆ',
-            category='weather', location='ಬೈಂದೂರು',
+            category='weather', location='ಬೈಂದೂರು', segment=segment,
             sources=[self.OWN], verified_by='Gautam Paduvari', photo=photo)
 
-    def _stock(self):
-        return self.Photo('assets/stock/coastal_nh66_highway_traffic.jpg',
-                          nature='ai', credit='AI ಚಿತ್ರ — ಊರ್ಮನಿ ಸುದ್ದಿ',
-                          licence='own', caption='ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ')
+    def _ai(self, approved_by=''):
+        return self.Photo('assets/logo.png', nature='ai',
+                          credit='ಊರ್ಮನಿ ಸುದ್ದಿ', licence='own',
+                          caption='ಸಾಂದರ್ಭಿಕ ಚಿತ್ರ', approved_by=approved_by)
 
-    def _codes(self, ed):
+    def _codes(self, *stories):
+        ed = self.Edition(stories=list(stories), edition_no=1)
         rep = self.R.review(self.dir, ed)
         return {f.code for f in rep.findings if f.severity == 'fail'}
 
-    def test_a_slide_with_no_photograph_blocks_the_package(self):
-        ed = self.Edition(stories=[self._story(self._stock()),
-                                   self._story(None)], edition_no=1)
-        self.assertIn('IMG-04', self._codes(ed))
+    def test_a_mukhya_with_no_picture_blocks_the_package(self):
+        self.assertIn('IMG-04', self._codes(self._story('mukhya')))
 
-    def test_every_slide_illustrated_clears_this_check(self):
-        ed = self.Edition(stories=[self._story(self._stock()),
-                                   self._story(self._stock())], edition_no=1)
-        self.assertNotIn('IMG-04', self._codes(ed))
+    def test_a_saara_story_needs_no_picture(self):
+        self.assertNotIn('IMG-04', self._codes(self._story('saara'),
+                                               self._story('saara')))
 
-    def test_the_code_means_what_the_registry_says_it_means(self):
-        """It had been raised as IMG-01, which the registry defines as a
-        missing disclosure line — a different failure entirely. Two faults
-        sharing one code is a code that cannot be looked up."""
+    def test_an_ai_picture_nobody_approved_blocks_the_package(self):
+        self.assertIn('IMG-05', self._codes(self._story('mukhya', self._ai())))
+        self.assertNotIn('IMG-05', self._codes(
+            self._story('mukhya', self._ai('Gautam Paduvari'))))
+
+    def test_an_edition_refuses_an_unapproved_ai_picture_outright(self):
+        from brand.content import ContentError
+        ed = self.Edition(stories=[self._story('mukhya', self._ai())],
+                          edition_no=1)
+        with self.assertRaisesRegex(ContentError, 'approved_by'):
+            ed.validate()
+
+    def test_every_story_runs_in_exactly_one_format(self):
+        from brand.content import ContentError
+        ed = self.Edition(stories=[self._story('')], edition_no=1)
+        with self.assertRaisesRegex(ContentError, 'segment'):
+            ed.validate()
+
+    def test_the_codes_mean_what_the_registry_says(self):
         from brand.codes import CODES
-        self.assertIn('IMG-04', CODES)
-        self.assertIn('carousel', CODES['IMG-04'])
+        self.assertIn('ಮುಖ್ಯ', CODES['IMG-04'])
+        self.assertIn('approved_by', CODES['IMG-05'])
         self.assertIn('disclosure', CODES['IMG-01'])
+        self.assertIn('follows_up', CODES['DUP-01'])

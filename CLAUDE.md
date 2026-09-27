@@ -31,8 +31,6 @@ That is not automatically a bug — but do not re-bless it without looking at
 
 ## Things that look like bugs and are not
 
-* **`out/reference/` is tracked while the rest of `out/` is ignored.** It is the
-  visual baseline, not a build artifact.
 * **Warnings on a clean render.** `preflight()` warns; it does not block. A
   missing `reel_line` on a long headline is a real note worth acting on.
 * **A green `APPROVAL.md` that still says "not yet cleared to publish".** That

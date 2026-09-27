@@ -62,29 +62,32 @@ def _hash(path: str) -> str:
 
 
 def render_all(outdir: str) -> dict[str, str]:
-    """Render every still template from the pinned edition."""
-    ed = Edition.load(EDITION)
-    weather = next(s for s in ed.stories if s.category == 'weather' and s.photo)
-    crime = next(s for s in ed.stories if s.category == 'crime')
-    order = next(s for s in ed.stories if not s.photo)
+    """Render every news format from the pinned edition (D92).
 
+    ಸುದ್ದಿ ಸಾರ from the saara stories, ಮುಖ್ಯ ಸುದ್ದಿ from the mukhya one, and
+    for ಸ್ಪೀಡ್ ನ್ಯೂಸ್ its cover and two still frames of the timeline — the
+    video's audio is not a design, and it is not pinned here.
+    """
+    from dataclasses import replace
+    from brand import speednews as sn
+    from brand.tokens import Motion, fmt
+    ed = Edition.load(EDITION)
     out: dict[str, str] = {}
     with frozen(PINNED_NOW):
-        out['report_weather'] = _hash(TP.render(
-            'report_card', weather, f'{outdir}/report_weather.jpg'))
-        out['report_crime'] = _hash(TP.render(
-            'report_card', crime, f'{outdir}/report_crime.jpg'))
-        out['text_order'] = _hash(TP.render(
-            'text_card', order, f'{outdir}/text_order.jpg'))
-        out['story_card'] = _hash(TP.render(
-            'story_card', weather, f'{outdir}/story.jpg'))
-        out['youtube_thumb'] = _hash(TP.render(
-            'youtube_thumb', crime, f'{outdir}/thumb.jpg',
-            hook='ಬ್ರಹ್ಮಾವರ ದುರಂತ: ಪುತ್ರ ಬಂಧನ'))
-        out['broadsheet'] = _hash(TP.render(
-            'broadsheet', ed, f'{outdir}/broadsheet.jpg'))
-        for i, p in enumerate(TP.render('carousel', ed, outdir, prefix='car')):
-            out[f'carousel_{i}'] = _hash(p)
+        saara = replace(ed, stories=ed.segment('saara'))
+        for i, p in enumerate(TP.render('saara', saara, outdir)):
+            out[f'saara_{i}'] = _hash(p)
+        for i, p in enumerate(TP.get('mukhya')(ed.segment('mukhya')[0], outdir)):
+            out[f'mukhya_{i}'] = _hash(p)
+        W, H = fmt('reel').w, fmt('reel').h
+        items = sn.items_for(ed)
+        sn.render_cover(items, ed.date_kn, 30.0, f'{outdir}/speed_cover.jpg', W, H)
+        out['speed_cover'] = _hash(f'{outdir}/speed_cover.jpg')
+        tl = sn.Timeline(items, [4.0] * len(items), Motion.speed_end,
+                         ed.date_kn, W, H)
+        for name, t in (('speed_photo', 2.0), ('speed_type', 6.0)):
+            tl.frame(t).convert('RGB').save(f'{outdir}/{name}.png')
+            out[name] = _hash(f'{outdir}/{name}.png')
     return out
 
 
@@ -116,10 +119,10 @@ class Golden(unittest.TestCase):
         b = tempfile.mkdtemp(prefix='oormani-det-b-')
         try:
             ed = Edition.load(EDITION)
-            crime = next(s for s in ed.stories if s.category == 'crime')
+            top = ed.segment('mukhya')[0]
             with frozen(PINNED_NOW):
-                h1 = _hash(TP.render('report_card', crime, f'{a}/x.jpg'))
-                h2 = _hash(TP.render('report_card', crime, f'{b}/x.jpg'))
+                h1 = _hash(TP.get('mukhya')(top, a)[0])
+                h2 = _hash(TP.get('mukhya')(top, b)[0])
             self.assertEqual(h1, h2)
         finally:
             shutil.rmtree(a, ignore_errors=True)

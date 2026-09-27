@@ -543,8 +543,10 @@ class ARenderNeverOverwritesAnotherEdition(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             ed = os.path.join(tmp, 'ed.json')
             with open(ed, 'w', encoding='utf-8') as fh:
-                json.dump({'date': '2026-09-30T07:00:00+05:30', 'edition_no': 1,
-                           'stories': [story(verified_by='Test Editor')]},
+                json.dump({'schema_version': 4,
+                           'date': '2026-09-30T07:00:00+05:30', 'edition_no': 1,
+                           'stories': [dict(story(verified_by='Test Editor'),
+                                            segment='saara')] * 2},
                           fh, ensure_ascii=False)
             out = os.path.join(tmp, 'out')
             os.makedirs(out)

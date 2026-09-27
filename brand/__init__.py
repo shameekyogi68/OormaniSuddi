@@ -5,7 +5,7 @@ The engine. The templates that use it live in `templates/`.
 Read STANDARDS.md before changing anything here.
 
     from brand import Story, Photo, Edition
-    import templates as TP;  TP.render('report_card', story, 'card.jpg')
+    import templates as TP;  TP.render('saara', edition, 'out/day')
 
 Layers, bottom up:
     tokens      colour, type scale, grid, formats, motion constants

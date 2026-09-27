@@ -111,6 +111,10 @@
         "taken_at": {
           "type": "string",
           "format": "date-time"
+        },
+        "approved_by": {
+          "type": "string",
+          "description": "REQUIRED on an AI picture in a schema 4 edition: the name of the editor who was asked \"real photo, or generate?\" and said generate (D92)."
         }
       }
     },
@@ -193,7 +197,7 @@
         "minItems": 2,
         "maxItems": 2
       },
-      "description": "Pairs of [value, Kannada label] for stat_card."
+      "description": "Pairs of [value, Kannada label]; kept with the story, checked by the fact desk."
     },
     "quote": {
       "type": "array",
@@ -202,7 +206,7 @@
       },
       "minItems": 2,
       "maxItems": 2,
-      "description": "[text, attribution] for quote_card."
+      "description": "[text, attribution]; kept with the story, checked by the fact desk."
     },
     "involves_minor": {
       "type": "boolean",
@@ -223,22 +227,21 @@
       "type": "string",
       "description": "If this card corrects an earlier one, say what changed."
     },
-    "template": {
+    "segment": {
       "enum": [
-        "broadsheet",
-        "bulletin",
-        "carousel",
-        "greeting",
-        "quote_card",
-        "reel",
-        "report_card",
-        "roundup",
-        "stat_card",
-        "story_card",
-        "text_card",
-        "youtube_thumb"
+        "speed",
+        "saara",
+        "mukhya"
       ],
-      "description": "Force a template. Omit to let choose() pick."
+      "description": "REQUIRED (schema 4). The ONE format this story runs in: speed = ಸ್ಪೀಡ್ ನ್ಯೂಸ್ reel, saara = ಸುದ್ದಿ ಸಾರ text carousel (no picture), mukhya = ಮುಖ್ಯ ಸುದ್ದಿ photo carousel (always a picture). D92."
+    },
+    "photo_plan": {
+      "enum": [
+        "",
+        "real",
+        "ai"
+      ],
+      "description": "The editor's answer to \"real photo, or generate?\": \"\" not asked yet, \"real\" the editor is sending one, \"ai\" the editor said generate. D92."
     },
     "reel_line": {
       "type": "string",
@@ -256,12 +259,12 @@
     "hook": {
       "type": "string",
       "maxLength": 40,
-      "description": "Short line for the YouTube thumbnail. About seven words maximum — it is read at 210 px wide. Put it on the FIRST story; that is the one thumbnailed."
+      "description": "The caption's first line, when the automatic one is not right. Travels alone, so it is guarded for guilt like a headline (D41)."
     },
     "is_reel": {
       "type": "boolean",
-      "default": true,
-      "description": "Whether this story qualifies as a 10/10 story for an individual vertical reel. High-impact, visual, or breaking stories should set true; routine or bureaucratic updates set false."
+      "default": false,
+      "description": "Legacy (before D92). Read and ignored — the format is `segment`."
     }
   }
 }

@@ -236,7 +236,7 @@ schemas/            JSON Schema for the input, generated from the code
 docs/               AI_BRIEF, RUNBOOK, DECISIONS, TEMPLATES (generated)
 tests/              the contract, and golden hashes pinning the design
 assets/  fonts/  sfx/    logo master + derivatives, the faces, sound
-out/                rendered deliverables (out/reference/ is tracked)
+out/                rendered deliverables (not tracked; out/_blessed/ holds the golden renders)
 ```
 
 `assets/logo.png` is the **master** logo. Do not delete it.

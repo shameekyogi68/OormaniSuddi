@@ -41,6 +41,7 @@ INK_ONLY = ('crime', 'obituary')
 
 # Headlines are Noto Sans Kannada at ExtraBold: the approved Paper & Red look.
 HEAD_WEIGHT = 800
+HEAD_FLOOR = 40      # px; below this a headline is a caption
 
 COLONS = (':', '：')
 
@@ -222,6 +223,12 @@ def headline(sf: Surface, x: float, y: float, w: float, text: str,
         return ba, bb, gap, (ba.height + gap + (bb.height if bb else 0)) / sf.ss
 
     fits = [s_ for s_ in range(hi, lo - 1, -2) if set_at(s_)[3] <= max_h]
+    if not fits:
+        # Copy longer than the room: shrink rather than spill into the footer
+        # or under the Reels caption — down to a floor that still reads on a
+        # phone. Past that the copy is too long, and preflight says so.
+        fits = [s_ for s_ in range(lo - 2, HEAD_FLOOR - 1, -2)
+                if set_at(s_)[3] <= max_h][:1] or [HEAD_FLOOR]
     # The ink half reads best as one line — the reference post's shape — so
     # give up a little size for it, but never below four-fifths of the
     # largest size that fits.

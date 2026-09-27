@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "date": "2026-08-25T09:40:00+05:30",
   "edition_no": 112,
   "strapline": "ಕರಾವಳಿ ಬುಲೆಟಿನ್",
@@ -14,14 +14,15 @@
         "ತಗ್ಗು ಪ್ರದೇಶಗಳಲ್ಲಿ ನೀರು ನಿಲ್ಲುವ ಸಾಧ್ಯತೆ; ಜಿಲ್ಲಾಡಳಿತ ನಿಗಾ ಇರಿಸಿದೆ."
       ],
       "photo": {
-        "path": "assets/stock/coastal_storm_sea_warning.jpg",
-        "nature": "representative",
-        "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ಸಂಗ್ರಹ",
+        "path": "tests/fixtures/coast.jpg",
+        "nature": "graphic",
+        "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+        "licence": "own",
         "focal": [
           0.5,
           0.5
         ],
-        "licence": "own"
+        "caption": "ಪರೀಕ್ಷಾ ಚಿತ್ರ"
       },
       "location": "ಉಡುಪಿ ಜಿಲ್ಲೆ",
       "dateline": "ಜಿಲ್ಲಾ ವರದಿ",
@@ -38,7 +39,9 @@
       "takeaway": "ತುರ್ತು ಸಹಾಯಕ್ಕೆ ಜಿಲ್ಲಾ ವಿಪತ್ತು ನಿರ್ವಹಣಾ ಕೊಠಡಿ 1077 ಸಂಪರ್ಕಿಸಿ.",
       "hook": "ಕರಾವಳಿಗೆ ಆರೆಂಜ್ ಅಲರ್ಟ್",
       "verified_by": "Gautam Paduvari",
-      "verified_at": "2026-08-25T07:50:00+05:30"
+      "verified_at": "2026-08-25T07:50:00+05:30",
+      "segment": "mukhya",
+      "gallery": []
     },
     {
       "headline": "ಬ್ರಹ್ಮಾವರ: ಹೆತ್ತವರ ಕೊಲೆ ಆರೋಪ, ಪುತ್ರ ಬಂಧನ",
@@ -49,16 +52,7 @@
         "ಕೌಟುಂಬಿಕ ವಿವಾದದ ವೇಳೆ ಮಾತಿನ ಚಕಮಕಿ ತೀವ್ರಗೊಂಡು ಹಲ್ಲೆ ನಡೆದಿದೆ ಎಂದು ಪ್ರಾಥಮಿಕ ತನಿಖೆ ತಿಳಿಸಿದೆ.",
         "ಆರೋಪಿ ಪುತ್ರನನ್ನು ಬ್ರಹ್ಮಾವರ ಠಾಣಾ ಪೊಲೀಸರು ಬಂಧಿಸಿದ್ದು, ಕೊಲೆ ಪ್ರಕರಣ ದಾಖಲಾಗಿದೆ."
       ],
-      "photo": {
-        "path": "assets/stock/crime_scene_police_cordon.jpg",
-        "nature": "representative",
-        "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ಸಂಗ್ರಹ",
-        "focal": [
-          0.5,
-          0.46
-        ],
-        "licence": "own"
-      },
+      "photo": null,
       "location": "ಬ್ರಹ್ಮಾವರ",
       "dateline": "ಬ್ರಹ್ಮಾವರ ವರದಿ",
       "sources": [
@@ -71,7 +65,9 @@
       "status": "confirmed",
       "published_at": "2026-08-25T07:40:00+05:30",
       "verified_by": "Gautam Paduvari",
-      "verified_at": "2026-08-25T07:50:00+05:30"
+      "verified_at": "2026-08-25T07:50:00+05:30",
+      "segment": "saara",
+      "gallery": []
     },
     {
       "headline": "ಈದ್ ಮಿಲಾದ್ ರಜೆ ಆಗಸ್ಟ್ 25ಕ್ಕೆ ಮರುನಿಗದಿ",
@@ -93,7 +89,10 @@
       "status": "official",
       "published_at": "2026-08-25T04:40:00+05:30",
       "verified_by": "Gautam Paduvari",
-      "verified_at": "2026-08-25T07:50:00+05:30"
+      "verified_at": "2026-08-25T07:50:00+05:30",
+      "segment": "saara",
+      "photo": null,
+      "gallery": []
     },
     {
       "headline": "ಕಸ್ತೂರ್ಬಾ ಆಸ್ಪತ್ರೆ ಆರೋಗ್ಯ ಕಾರ್ಡ್ ನೋಂದಣಿಗೆ ಆಗಸ್ಟ್ 31 ಕೊನೆ ದಿನ",
@@ -103,16 +102,7 @@
         "ಮಣಿಪಾಲ ಕಸ್ತೂರ್ಬಾ ಆಸ್ಪತ್ರೆಯಲ್ಲಿ ನೇರವಾಗಿ ಅಥವಾ ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ನೋಂದಣಿ ಮಾಡಬಹುದು.",
         "ಆಧಾರ್ ಕಾರ್ಡ್ ಮತ್ತು ವಿಳಾಸ ದೃಢೀಕರಣ ದಾಖಲೆ ಕಡ್ಡಾಯ."
       ],
-      "photo": {
-        "path": "assets/stock/health_hospital_campus_outpatients.jpg",
-        "nature": "representative",
-        "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ ಸಂಗ್ರಹ",
-        "focal": [
-          0.5,
-          0.44
-        ],
-        "licence": "own"
-      },
+      "photo": null,
       "location": "ಮಣಿಪಾಲ",
       "dateline": "ಆರೋಗ್ಯ ವರದಿ",
       "sources": [
@@ -124,7 +114,9 @@
       "status": "official",
       "published_at": "2026-08-25T02:40:00+05:30",
       "verified_by": "Gautam Paduvari",
-      "verified_at": "2026-08-25T07:50:00+05:30"
+      "verified_at": "2026-08-25T07:50:00+05:30",
+      "segment": "saara",
+      "gallery": []
     }
   ]
 }

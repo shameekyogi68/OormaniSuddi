@@ -294,10 +294,6 @@ class StorySlate:
         L, st = self.L, self.it.story
         cat = category(st.category)
         # Counter chip and CATEGORY / place, one row.
-        self.place_tag = _tag(self.it.place, 34, (*C.paper_50, 0),
-                              (*C.ink_500, 255), pad_x=0, h=58, weight=640)
-        self.cat_tag = _tag(cat['kn'], 34, (*C.paper_50, 0), (*C.red_500, 255),
-                            pad_x=0, h=58, weight=720)
         n, i = self.n, self.i
 
         def row(sf):
@@ -313,7 +309,9 @@ class StorySlate:
                            typo.font_for(self.it.place, 'kn_var', sf.s(34),
                                          weight=640), C.ink_500)
         self.row = _paper_tile(L.cw, 64, row)
-        max_h = L.bottom - L.text_top - 96 - 58
+        # Row (96) + headline + gap (18) + source (44), all above the caption
+        # overlay; the tile adds 16 below the ink.
+        max_h = L.bottom - L.text_top - 96 - 18 - 44 - 16
         box = {}
 
         def head(sf):

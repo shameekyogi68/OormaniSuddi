@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://oormanisuddi.local/schemas/edition.schema.json",
   "title": "Edition",
-  "description": "One day's bulletin. Everything — posts, carousel, story, thumbnail, broadsheet and reel — is rendered from this single object, so the outputs cannot drift apart.",
+  "description": "One day's news. Each story runs in the one format its `segment` names — ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ or ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (D92).",
   "type": "object",
   "required": [
     "stories"
@@ -12,11 +12,11 @@
     "stories": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 6,
+      "maxItems": 16,
       "items": {
         "$ref": "story.schema.json"
       },
-      "description": "Lead story first. Three to four read best in a reel."
+      "description": "In priority order. Per-format counts are tokens.Limits (saara_*, roundup_*, mukhya_*)."
     },
     "date": {
       "type": "string",

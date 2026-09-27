@@ -158,50 +158,34 @@ def relevance(story: Story) -> Relevance:
 #  account splits its own test audience six ways and looks mediocre in all six.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# (carousel is assumed — it is the day's record and always runs)
-FORMAT_BY_CATEGORY = {
-    'breaking':  ('reel', 'story_card'),
-    'weather':   ('reel', 'story_card'),
-    'crime':     ('reel',),
-    'civic':     ('story_card',),          # a notice is read, not watched
-    'health':    ('story_card',),
-    'education': ('story_card',),
-    'culture':   ('reel',),
-    'sport':     ('reel',),
-    'farm':      ('story_card',),
-    'obituary':  (),                       # dignity: no reel, no hook, no CTA
-    'explainer': ('story_card',),
+# What each kind of story is best as, when the editor has not said (D92).
+# A notice is read and screenshotted, so it goes in ಸುದ್ದಿ ಸಾರ; a story with
+# weather or a match in it is quick news. Breaking news is decided from the
+# clock, not from this table. The editor's word always wins.
+SEGMENT_BY_CATEGORY = {
+    'weather':   'speed',
+    'culture':   'speed',
+    'sport':     'speed',
+    'crime':     'saara',       # read carefully, not glanced at (D68)
+    'civic':     'saara',       # a notice is read, not watched
+    'health':    'saara',
+    'education': 'saara',
+    'farm':      'saara',
+    'obituary':  'saara',       # dignity: no reel, no hook, no CTA
+    'explainer': 'saara',
 }
 
 
-def formats_for(story: Story) -> tuple[str, ...]:
-    """Which extra formats this story earns, beyond the carousel.
-
-    A government notice is a carousel slide somebody screenshots. Turning it
-    into a narrated video costs four minutes of render and reaches fewer
-    people than the slide did.
-    """
-    base = FORMAT_BY_CATEGORY.get(story.category, ('story_card',))
+def suggest_segment(story: Story) -> tuple[str, str]:
+    """(segment, why) — the desk's proposal, which the editor confirms."""
+    if story.category == 'breaking' and story.is_breaking:
+        return 'mukhya', 'breaking, inside the window — its own post, with a picture'
+    seg = SEGMENT_BY_CATEGORY.get(story.category, 'saara')
     rel = relevance(story)
-    # A low-relevance story does not earn a reel however dramatic it looks.
-    if rel.band == 'low':
-        return tuple(f for f in base if f != 'reel')
-    return base
-
-
-def should_be_reel(story: Story) -> tuple[bool, str]:
-    """Whether this earns one of the day's few reel slots, and why."""
-    rel = relevance(story)
-    if 'reel' not in FORMAT_BY_CATEGORY.get(story.category, ()):
-        return False, (f'{story.category} reads better as a card than as a '
-                       f'video — a notice is screenshotted, not watched')
-    if rel.band == 'low':
-        return False, (f'local relevance {rel.score:.2f} ({rel.band}). '
-                       + '; '.join(rel.why))
-    if not rel.place:
-        return False, ('no place named, so nobody scrolling can tell it is '
-                       'about their town')
-    return True, f'relevance {rel.score:.2f} ({rel.band}), {rel.place}'
+    if seg == 'speed' and (rel.band == 'low' or not rel.place):
+        return 'saara', ('quick news needs a place and local weight; '
+                         + ('; '.join(rel.why) or 'no place named'))
+    return seg, f'{story.category} — {"quick news" if seg == "speed" else "read, not watched"}'
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -235,7 +219,7 @@ def plan(edition) -> dict:
     rows = []
     for i, st in enumerate(edition.stories, 1):
         rel = relevance(st)
-        ok, why = should_be_reel(st)
+        seg, why = suggest_segment(st)
         rows.append({
             'story': i,
             'headline': st.headline[:60],
@@ -243,19 +227,11 @@ def plan(edition) -> dict:
             'category': st.category,
             'relevance': rel.score,
             'band': rel.band,
-            'formats': list(formats_for(st)),
-            'reel': ok,
-            'reel_reason': why,
-            'marked_reel': bool(getattr(st, 'is_reel', False)),
+            'segment': st.segment,
+            'suggested': seg,
+            'why': why,
         })
-    wanted = [r for r in rows if r['reel']]
-    return {
-        'stories': rows,
-        'places': places_covered(edition),
-        'reels_earned': len(wanted),
-        'reels_marked': sum(1 for r in rows if r['marked_reel']),
-        'reel_target': Limits.reels_per_day_target,
-    }
+    return {'stories': rows, 'places': places_covered(edition)}
 
 
 def report(edition) -> str:
@@ -277,20 +253,11 @@ def report(edition) -> str:
                 + ' name no place. Nobody scrolling can tell whether it is '
                   'about their town, and nobody forwards what is not theirs.',
                 '']
-    out += ['| # | place | category | relevance | earns a reel |',
-            '|---|---|---|--:|---|']
+    out += ['| # | place | category | relevance | runs in | desk would say |',
+            '|---|---|---|--:|---|---|']
     for r in p['stories']:
-        mark = '✓' if r['reel'] else '—'
         out.append(f'| {r["story"]} | {r["place"] or "—"} | {r["category"]} | '
-                   f'{r["relevance"]:.2f} {r["band"]} | {mark} |')
+                   f'{r["relevance"]:.2f} {r["band"]} | {r["segment"] or "—"} | '
+                   f'{r["suggested"]} |')
     out.append('')
-    for r in p['stories']:
-        if r['marked_reel'] and not r['reel']:
-            out.append(f'- story {r["story"]} is marked `is_reel` but '
-                       f'{r["reel_reason"]}')
-    if p['reels_earned'] > Limits.reels_per_day_target:
-        out.append(f'- {p["reels_earned"]} stories earn a reel and the day '
-                   f'targets {Limits.reels_per_day_target}. Run the best '
-                   f'ones; an extra average reel costs the good ones their '
-                   f'audience.')
     return '\n'.join(out) + '\n'
