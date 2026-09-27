@@ -216,3 +216,25 @@ class TheDistributionPlan(unittest.TestCase):
     def test_gulf_news_has_a_category(self):
         from brand.tokens import CATEGORIES
         self.assertEqual(CATEGORIES['nri']['kn'], 'ಅನಿವಾಸಿ')
+
+
+class EverySlideLeadsToTheNext(unittest.TestCase):
+    """2026-09-27: the owner found readers stopping at slide one. Every slide
+    but the last now carries a swipe cue, and the cover says why to swipe."""
+
+    def test_the_cover_and_each_story_slide_point_onward(self):
+        from PIL import Image
+        from brand.tokens import C
+        ed = Edition.load(FIXTURE)
+        sub = replace(ed, stories=ed.segment('saara'))
+        with tempfile.TemporaryDirectory() as d, frozen(NOW):
+            paths = TP.render('saara', sub, d)
+            for p in paths[:-1]:                     # not the sources slide
+                im = Image.open(p).convert('RGB')
+                r, g, b = im.getpixel((im.width - 8, im.height // 2 - 40))
+                self.assertGreater(r, 150, f'{os.path.basename(p)}: no edge tab')
+                self.assertLess(g, 90, f'{os.path.basename(p)}: no edge tab')
+            last = Image.open(paths[-1]).convert('RGB')
+            self.assertGreater(sum(last.getpixel((last.width - 12,
+                                                  last.height // 2))), 600,
+                               'the last slide has nowhere to go')

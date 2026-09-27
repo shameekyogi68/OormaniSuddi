@@ -52,7 +52,8 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
                     ink_only=pp.ink_only(story))
     pp.meta(sf, m, min(y + 46, H - P.footer_h - 22), story.source_line,
             max_w=cw)
-    pp.footer(sf, '1/3')
+    pp.edge_tab(sf, P.photo_4x5 / 2)
+    pp.footer(sf, '1/3', 'ಏನಾಗಿದೆ?')
     paths.append(os.path.join(outdir, f'{stem}_01_cover.jpg'))
     sf.save(paths[-1])
 
@@ -83,7 +84,8 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
         pp._rect(sf, (m, y, m + 6, y + 96), pp.GOLD)
         pp.body(sf, m + 28, y, cw - 28, tail, size=36, weight=700,
                 fill=pp.BODY, max_h=110, lo=28)
-    pp.footer(sf, '2/3')
+    pp.edge_tab(sf)
+    pp.footer(sf, '2/3', 'ಮೂಲ')
     paths.append(os.path.join(outdir, f'{stem}_02_points.jpg'))
     sf.save(paths[-1])
 

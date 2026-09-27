@@ -156,16 +156,41 @@ def accent(sf: Surface, x: float, y: float, w: float = 96, h: float = 8):
     _rect(sf, (x, y, x + w, y + h), GOLD)
 
 
-def footer(sf: Surface, page_label: str = ''):
-    """Hairline, a gold mark, the handle; the page number on the right."""
+def chevron(sf: Surface, x: float, cy: float, h: float, fill, stroke: float):
+    """A › drawn, not typed — the house fonts have no arrow glyph."""
+    w = h * 0.55
+    sf.draw.line([(sf.s(x), sf.s(cy - h / 2)), (sf.s(x + w), sf.s(cy)),
+                  (sf.s(x), sf.s(cy + h / 2))], fill=fill,
+                 width=int(sf.s(stroke)), joint='curve')
+
+
+def edge_tab(sf: Surface, cy: float | None = None):
+    """A red tab on the right edge with a chevron: the slide goes on.
+    The first carousels had no cue at all, and readers did not swipe
+    (2026-09-27)."""
+    cy = sf.h * 0.5 if cy is None else cy
+    _rect(sf, (sf.w - 40, cy - 48, sf.w, cy + 48), RED)
+    chevron(sf, sf.w - 26, cy, 34, WHITE, 5)
+
+
+def footer(sf: Surface, page_label: str = '', next_label: str = ''):
+    """Hairline, a gold mark, the handle; on the right, where the swipe
+    goes next — in red, with a chevron — and the page number."""
     W, H, m = sf.w, sf.h, P.margin
     y = H - P.footer_h
     _rect(sf, (m, y, W - m, y + 2), RULE)
     _rect(sf, (m, y + 32, m + 24, y + 56), GOLD)
     f = typo.font('kn_var', sf.s(P.meta), weight=620)
     typo.draw_text(sf.img, Brand.handle, sf.s(m + 40), sf.s(y + 54), f, INK)
+    x = W - m
+    if next_label:
+        chevron(sf, x - 14, y + 44, 22, RED, 4)
+        g = typo.font_for(next_label, 'kn_var', sf.s(P.meta), weight=760)
+        x = typo.draw_text(sf.img, next_label, sf.s(x - 30), sf.s(y + 54), g,
+                           RED, anchor_x='r') / sf.ss
+        x -= typo.text_width(next_label, g) / sf.ss + 22
     if page_label:
-        typo.draw_text(sf.img, page_label, sf.s(W - m), sf.s(y + 54), f, GREY,
+        typo.draw_text(sf.img, page_label, sf.s(x), sf.s(y + 54), f, GREY,
                        anchor_x='r')
 
 

@@ -40,6 +40,21 @@ def _points_fit(sf, items: list[str], x: float, y: float, w: float,
     return 32
 
 
+SWIPE = 'ಪೂರ್ಣ ಸುದ್ದಿಗೆ ಸ್ವೈಪ್ ಮಾಡಿ'
+BAR_H = 76
+
+
+def _swipe_bar(sf, y: float):
+    """The cover's call to swipe: a red bar across the foot of the slide.
+    The first covers had none, and readers stopped at slide one."""
+    m = P.margin
+    pp._rect(sf, (m, y, sf.w - m, y + BAR_H), pp.RED)
+    f = typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(34))
+    typo.draw_text(sf.img, SWIPE, sf.s(m + 28), sf.s(y + BAR_H / 2 + 12), f,
+                   pp.WHITE)
+    pp.chevron(sf, sf.w - m - 44, y + BAR_H / 2, 30, pp.WHITE, 5)
+
+
 def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     """Render the ಸುದ್ದಿ ಸಾರ set. `edition` carries the saara stories only."""
     edition.validate()
@@ -58,7 +73,7 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     # laid out, measured whole, and the title block gives way before the
     # stories do.
     indent = 84
-    bottom = H - P.footer_h - 28
+    bottom = H - P.footer_h - 28 - BAR_H - 20
 
     def label_of(st) -> str:
         # The headline already opens with its place — say the category.
@@ -118,6 +133,8 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
             pp._rect(sf, (m + indent, y, W - m, y + 2), pp.RULE)
             y += rule
     assert y <= bottom + 1, f'index overran the footer by {y - bottom:.0f}px'
+    _swipe_bar(sf, H - P.footer_h - 28 - BAR_H)
+    pp.edge_tab(sf)
     pp.footer(sf, f'1/{n}')
     p = os.path.join(outdir, f'{prefix}_01_cover.jpg')
     sf.save(p)
@@ -143,8 +160,12 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
                          pp.GOLD_MARK)
                 y = pp.body(sf, m + 36, y, cw - 36, t, size=size, weight=520,
                             fill=pp.BODY) + 26
-        pp.meta(sf, m, src_base, st.source_line, max_w=cw)
-        pp.footer(sf, f'{i + 1}/{n}')
+        pp.meta(sf, m, src_base, st.source_line, max_w=cw * 0.55)
+        nxt = stories[i] if i < len(stories) else None
+        nxt_label = ('ಮುಂದೆ: ' + ((nxt.location or '').strip() or Brand.coverage)
+                     if nxt else 'ಮೂಲಗಳು')
+        pp.edge_tab(sf)
+        pp.footer(sf, f'{i + 1}/{n}', nxt_label)
         p = os.path.join(outdir, f'{prefix}_{i + 1:02d}.jpg')
         sf.save(p)
         paths.append(p)
