@@ -1,0 +1,46 @@
+{
+  "schema_version": 4,
+  "date": "2026-09-30T20:30:00+05:30",
+  "edition_no": 2,
+  "strapline": "ಕರಾವಳಿ ವಿಶೇಷ ಸುದ್ದಿ",
+  "stories": [
+    {
+      "segment": "mukhya",
+      "photo_plan": "ai",
+      "headline": "ಬೈಂದೂರು-ಕುಂದಾಪುರ: ವಂದೇ ಭಾರತ್ ರೈಲು ನಿಲುಗಡೆಗೆ ಅಧಿಕೃತ ಒಪ್ಪಿಗೆ",
+      "category": "breaking",
+      "deck": "ಗೋವಾ-ಮಂಗಳೂರು ವಂದೇ ಭಾರತ್ ರೈಲು ಯಶವಂತಪುರದವರೆಗೆ ವಿಸ್ತರಣೆಯಾಗಲಿದ್ದು, ಕುಂದಾಪುರ ಹಾಗೂ ಬೈಂದೂರು ನಿಲ್ದಾಣಗಳಲ್ಲಿ ನಿಲುಗಡೆ ನೀಡಲು ರೈಲ್ವೆ ಸಚಿವ ಅಶ್ವಿನಿ ವೈಷ್ಣವ್ ಒಪ್ಪಿಗೆ ಸೂಚಿಸಿದ್ದಾರೆ; ಅಧಿಕೃತ ವೇಳಾಪಟ್ಟಿ ಶೀಘ್ರ.",
+      "points": [
+        "ವಂದೇ ಭಾರತ್ ರೈಲನ್ನು ಯಶವಂತಪುರದವರೆಗೆ ವಿಸ್ತರಿಸಿ ಕುಂದಾಪುರ, ಬೈಂದೂರಿನಲ್ಲಿ ನಿಲುಗಡೆ ನೀಡುವಂತೆ ಸಂಸದ ಕೋಟ ಶ್ರೀನಿವಾಸ ಪೂಜಾರಿ ಅವರ ಮನವಿಗೆ ಕೇಂದ್ರ ಸಚಿವರ ಲಿಖಿತ ಸ್ಪಂದನೆ.",
+        "ಹಾಲ್ಟ್ ನಿಲ್ದಾಣವಾಗಿರುವ ಬೈಂದೂರು ಮೂಕಾಂಬಿಕಾ ರೋಡ್ ಸ್ಟೇಷನ್ ಅನ್ನು ಕ್ರಾಸಿಂಗ್ ನಿಲ್ದಾಣವಾಗಿ ಮೇಲ್ದರ್ಜೆಗೇರಿಸಲು ರೈಲ್ವೆ ಇಲಾಖೆಗೆ ಸಲ್ಲಿಕೆಯಾಗಿರುವ ಪ್ರಸ್ತಾವನೆ.",
+        "ಕೊಲ್ಲೂರು ಮೂಕಾಂಬಿಕಾ ದೇವಸ್ಥಾನದ ಯಾತ್ರಿಕರಿಗೆ ಹಾಗೂ ರಾಜಧಾನಿ ಬೆಂಗಳೂರಿಗೆ ಸಂಚರಿಸುವ ಕರಾವಳಿ ಜನತೆಗೆ ನೇರ ಸೆಮಿ-ಹೈಸ್ಪೀಡ್ ರೈಲು ಸಂಪರ್ಕದ ನಿರೀಕ್ಷೆ."
+      ],
+      "takeaway": "ರೈಲು ಸಂಖ್ಯೆ 26655/26656 ಯಶವಂತಪುರ–ಮಡಗಾಂವ್ ವಂದೇ ಭಾರತ್ ಎಕ್ಸ್‌ಪ್ರೆಸ್‌ನ ಅಧಿಕೃತ ವಾಣಿಜ್ಯ ವೇಳಾಪಟ್ಟಿ ಹಾಗೂ ಸಂಚಾರ ದಿನಾಂಕ ಇನ್ನಷ್ಟೇ ಪ್ರಕಟವಾಗಬೇಕಿದೆ.",
+      "location": "ಬೈಂದೂರು",
+      "sources": [
+        "Daijiworld",
+        "The Times of India",
+        "OneIndia",
+        "The New Indian Express"
+      ],
+      "source_urls": [
+        "https://daijiworld.com/news/newsDisplay?newsID=1328154",
+        "https://timesofindia.indiatimes.com/city/bengaluru/mangaluru-goa-vande-bharat-to-be-extended-till-bluru-soon/articleshow/134599323.cms",
+        "https://www.oneindia.com/bengaluru/bengaluru-to-goa-via-mangaluru-vande-bharat-extension-gets-closer-timetable-in-focus-8220371.html",
+        "https://www.newindianexpress.com/states/karnataka/2026/Sep/30/madgaon-mangaluru-vande-bharat-express-will-be-extended-to-bengaluru-railway-minister"
+      ],
+      "status": "official",
+      "published_at": "2026-09-30T20:04:00+05:30",
+      "photo": {
+        "path": "assets/daily/2026-09-30/vande_bharat_byndoor.jpg",
+        "nature": "ai",
+        "credit": "ಊರ್ಮನಿ ಸುದ್ದಿ",
+        "licence": "own",
+        "caption": "ಕರಾವಳಿಯ ಹಚ್ಚಹಸಿರಿನ ಮಾರ್ಗದಲ್ಲಿ ಸಂಚರಿಸುತ್ತಿರುವ ಕೇಸರಿ ವಂದೇ ಭಾರತ್ ಎಕ್ಸ್‌ಪ್ರೆಸ್ ರೈಲು",
+        "approved_by": "Gautam Paduvari"
+      },
+      "verified_by": "Gautam Paduvari",
+      "verified_at": "2026-09-30T21:04:49+0530"
+    }
+  ]
+}

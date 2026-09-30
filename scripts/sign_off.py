@@ -59,6 +59,20 @@ def main() -> int:
               f'fix what review_report.json lists.', file=sys.stderr)
         return 1
 
+    # D95: a person signs a package the inspectors have already looked at,
+    # in the form it is now. Signing first and looking later is how a
+    # broken frame ships with a name on it.
+    from brand.dispatch import inspection_gaps
+    gaps = inspection_gaps(args.outdir)
+    if gaps:
+        print('✗ not yet — the package has not been looked at in this form:',
+              file=sys.stderr)
+        for g in gaps:
+            print(f'    · {g}', file=sys.stderr)
+        print('  Run the wave `python3 scripts/dispatch.py` lists, then sign.',
+              file=sys.stderr)
+        return 1
+
     evidence = os.path.join(args.outdir, '_review')
     if not os.path.isdir(evidence) or not os.listdir(evidence):
         print(f'! {evidence} is empty. You are signing for craft without the '

@@ -40,6 +40,14 @@ in the story is in the kept source it cites.
 6. Crime / minors / sexual offences: the headline AND reel_line each carry
    ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ, and nothing identifies a minor or a victim.
    Obituaries need two sources or own reporting.
+7. Budget, cost & infrastructure figures: any rupee amount (e.g. ₹100 ಕೋಟಿ,
+   grants, allocations) MUST be explicitly cited in the verified source. If an
+   amount or infrastructure claim is hearsay or not in the source text, BLOCK/FIX
+   to remove the figure and soften to verified scope.
+8. Transport & policy status (finality guard): distinguish in-principle approval
+   from finalized implementation. If commercial timetables, dates or scheduled
+   halts are pending notification, never assert "ಅಂತಿಮ" or imply immediate
+   operation.
 
 ## You may not
 - write `verified_by` — that is a person saying they opened the source (D59)

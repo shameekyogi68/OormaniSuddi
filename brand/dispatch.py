@@ -475,12 +475,17 @@ def _package_tasks(plan: Plan, outdir: str) -> None:
         elif r.get('verdict') == 'BLOCK':
             plan.person.append(f'{rel} {fmt}: package-inspector BLOCKED a frame — '
                                f'read {os.path.relpath(receipt_path("package-inspector", stem, 0, fmt), ROOT)}')
-    captions = glob.glob(os.path.join(outdir, '*_caption.txt'))
+    # Everything a person will paste somewhere: captions, the WhatsApp
+    # community posts and the Facebook group posts (D94).
+    captions = [f for pat in ('*_caption.txt', 'whatsapp_*.txt',
+                              'facebook_group_*.txt')
+                for f in glob.glob(os.path.join(outdir, pat))]
     if captions:
         newest = max(os.path.getmtime(c) for c in captions)
         if not _since('social-writer', stem, newest):
             plan.add('social-writer', 'reactive', 3,
-                     f'caption audit — {len(captions)} caption file(s)', rel)
+                     f'copy audit — {len(captions)} paste file(s): captions, '
+                     f'WhatsApp, Facebook', rel)
     if not os.path.exists(os.path.join(outdir, 'SIGNOFF.json')) and not fails:
         listen = (', listen to the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ once'
                   if os.path.exists(os.path.join(outdir, 'roundup.mp4')) else '')
@@ -554,6 +559,42 @@ def _ops_tasks(plan: Plan, today: date) -> None:
         plan.add('systems-steward', 'ops', 0,
                  '; '.join(dict.fromkeys(reasons))[:140],
                  os.path.relpath(steward_file, ROOT))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  THE DESKS ARE NOT OPTIONAL (D95)
+#  The first ಸುದ್ದಿ ಸಾರ (2026-09-27) was approved with no desk having read
+#  it — the waves were advice, and advice is skipped on a busy morning. Its
+#  wording slips and wrong categories are exactly what the Kannada desk and
+#  the intake rules exist to catch. These two functions let the gate and the
+#  sign-off ask the same question the plan asks, so they cannot disagree.
+# ─────────────────────────────────────────────────────────────────────────────
+
+PRE_RENDER_DESKS = ('fact-checker', 'legal-standards', 'kannada-editor',
+                    'picture-editor')
+POST_RENDER_DESKS = ('package-inspector', 'social-writer')
+
+
+def desk_gaps(edition_path: str) -> list[str]:
+    """What still has to read this edition, in its CURRENT wording, before it
+    may be approved — and any desk that read it and BLOCKED it."""
+    p = Plan(day='')
+    _edition_tasks(p, edition_path)
+    out = [f'{t.agent}{f" story {t.story}" if t.story else ""}: {t.reason}'
+           for t in p.tasks if t.agent in PRE_RENDER_DESKS]
+    out += [x for x in p.person if 'BLOCKED' in x]
+    return out
+
+
+def inspection_gaps(outdir: str) -> list[str]:
+    """What still has to look at the rendered package before a person signs
+    it — and any inspector that BLOCKED a frame."""
+    p = Plan(day='')
+    _package_tasks(p, outdir)
+    out = [f'{t.agent}{f" [{t.part}]" if t.part else ""}: {t.reason}'
+           for t in p.tasks if t.agent in POST_RENDER_DESKS]
+    out += [x for x in p.person if 'BLOCKED' in x]
+    return out
 
 
 def owner_of(outdir: str) -> str:

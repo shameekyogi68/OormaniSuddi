@@ -89,6 +89,7 @@ CODES: dict[str, str] = {
     'OPS-01': 'no Grievance Officer is named (IT Rules 2021 Part III)',
     'OPS-02': 'no contact route is published anywhere',
     'OPS-03': 'no human has signed off on taste, culture and news judgement',
+    'OPS-04': 'a desk has not read this edition in its current wording, or blocked it (D95)',
 }
 
 

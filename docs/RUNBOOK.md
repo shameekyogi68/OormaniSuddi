@@ -28,6 +28,32 @@ The day runs through a conversation with an AI assistant. The scripts are
 exactly the ones below — this is a front door onto them, not a second set of
 rules. Any AI reading `AGENTS.md` follows this precisely.
 
+### Who does what
+
+One newsroom, three kinds of worker. Nobody does another's job, and the
+machine refuses to move on until each has done theirs (D95).
+
+| Who | Does | Never does |
+|---|---|---|
+| **The editor** (a person) | pastes the news and says what to make; answers "real photo or generate?"; approves with their name; looks at `_review/` and signs; posts | — |
+| **The managing editor** (the AI assistant in chat) | keeps sources (`intake.py`), builds the edition, runs `dispatch.py` and launches each wave, applies the desks' edits, shows the editor every story, runs `verify.py` with the name the editor gave, renders, reports the gate | writes a fact the paste does not say; invents a name; signs; skips a wave |
+| **intake-editor** | turns a large paste into the edition, one segment and a true category per story | — |
+| **fact-checker** · one per story | every figure, name and place against the kept source | edits copy for style |
+| **legal-standards** · each risky story | reads as the lawyer for the person named | — |
+| **kannada-editor** · one per story | natural Kannada, the source's own words, no fact changed | — |
+| **picture-editor** · each story with a picture | checks a real photo; writes the brief and checks an AI one — only after `photo_plan: ai` | generates without being asked |
+| **package-inspector** · one per rendered format | every frame at feed size | — |
+| **social-writer** | every paste file: captions, WhatsApp, Facebook | — |
+| **gate-doctor** | only when the gate is HELD: names each fault's owner | fixes copy itself |
+| **corrections-officer** | complaints and the IT Rules clocks | — |
+| **planning-editor**, **systems-steward** | weekly, off the production path | — |
+
+**What the machine enforces.** The gate refuses `APPROVAL.md` while any
+desk the plan lists has not read the edition's *current* wording, or blocked
+it (`OPS-04`). Change a headline after the Kannada desk read it, and that desk
+is due again. `sign_off.py` refuses while any rendered format has not been
+inspected, or the paste files not audited, since the last render.
+
 ### Start — the editor pastes news
 
 The editor pastes the day's news (articles, press releases, what they saw) and
@@ -61,7 +87,10 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
      against the kept source, offline);
    - wave 2 — `kannada-editor` + `picture-editor`.
 
-   No sentence is polished before its fact check passes (D84, D87).
+   No sentence is polished before its fact check passes (D84, D87). These
+   waves are not optional: the gate holds any edition a due desk has not
+   read (`OPS-04`, D95). The first ಸುದ್ದಿ ಸಾರ skipped them and shipped a death
+   in red, three wrong categories and two wording slips.
 5. **Shows the editor every story and asks — then waits.** In plain language:
    what happened, where, the source, anything flagged (crime, a minor, a
    sexual offence, a death), and the **proposed segment**. Then asks:
@@ -98,8 +127,10 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
    `_copy.txt` and `_caption.txt`.
 3. **Runs one adversary pass, then the gate.** The Chief Editor gate writes
    `APPROVAL.md` only when clean. If it is HELD, `gate-doctor` maps each code
-   to its fix (table below). After render: `package-inspector` looks at every
-   frame and `social-writer` audits the captions.
+   to its fix (table below). Then **wave 3**, as one message: a
+   `package-inspector` per rendered format and the `social-writer` over every
+   paste file. `sign_off.py` will not accept a signature until both have
+   reported on this render (D95).
 4. **Points at the caption files** — `roundup_caption.txt`,
    `saara_caption.txt`, `mukhya_1_caption.txt`: the caption and nothing else,
    so posting is open, select all, paste (house rule 2026-09-17-06).

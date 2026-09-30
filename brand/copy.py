@@ -88,6 +88,9 @@ PLACE_TAGS = {
     'ಸಾಲಿಗ್ರಾಮ': 'Saligrama', 'ಶಿರೂರು': 'Shiroor', 'ಉಪ್ಪುಂದ': 'Uppunda',
     'ಕಾರವಾರ': 'Karwar', 'ಉದ್ಯಾವರ': 'Udyavara', 'ಹೆಜಮಾಡಿ': 'Hejamadi',
     'ಕಟಪಾಡಿ': 'Katapadi', 'ಬೆಳ್ಮಣ್': 'Belman', 'ಹಿರಿಯಡ್ಕ': 'Hiriyadka',
+    'ತಲ್ಲೂರು': 'Tallur', 'ತ್ರಾಸಿ': 'Trasi', 'ಯಡ್ತರೆ': 'Yadthare',
+    'ಅರಾಟೆ': 'Arate', 'ಕೋಟೇಶ್ವರ': 'Koteshwara', 'ಗಂಗೊಳ್ಳಿ': 'Gangolli',
+    'ವಂಡ್ಸೆ': 'Vandse', 'ಹಟ್ಟಿಯಂಗಡಿ': 'Hattiangadi',
 }
 
 # How the English press spells the same towns. Search reads these too.
@@ -96,7 +99,8 @@ PLACE_ALIASES = ('kundapur', 'brahmavar', 'mangalore', 'mangaluru', 'karkal',
                  'mudbidri', 'puttur', 'bantwal', 'belthangady', 'sullia',
                  'surathkal', 'ullal', 'padubidri', 'bhatkal', 'kumta',
                  'honnavar', 'karwar', 'dakshina kannada', 'uttara kannada',
-                 'd.k.', 'coastal', 'tulunadu')
+                 'd.k.', 'coastal', 'tulunadu', 'tallur', 'trasi', 'yadthare',
+                 'arate', 'koteshwara', 'gangolli', 'vandse', 'hattiangadi')
 
 # Places that are ours. Bengaluru is in PLACE_TAGS for hashtags on state
 # stories; it is not the coast.

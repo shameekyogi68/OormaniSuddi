@@ -2747,6 +2747,29 @@ community_digests, facebook_group_post` · `templates/saara.py` ·
 `templates/mukhya.py` · `docs/CHANNELS.md` · `tests/test_formats.py`
 
 ---
+## D95 · The desks are not optional
+
+**Decided (2026-10-01).** The Chief Editor gate refuses `APPROVAL.md` while
+any desk the dispatcher lists for an edition has not read it in its CURRENT
+wording, or has blocked it — `OPS-04`, from `brand/dispatch.py :: desk_gaps`,
+the same function the plan uses, so the gate and the plan cannot disagree.
+`scripts/sign_off.py` refuses while any rendered format has not been
+inspected, or the paste files not audited, since the last render
+(`inspection_gaps`). The social-writer's audit now covers every paste file —
+captions, the WhatsApp community posts and the Facebook group posts (D94).
+
+**Why.** The first ಸುದ್ದಿ ಸಾರ (2026-09-27) was approved with no desk having
+read it. The waves were advice, and on a busy morning advice is skipped: it
+shipped a death headline in red, three stories under the wrong category and
+two wording slips — each the job of a desk that never ran. There is no
+override: a desk that is skipped under deadline is the whole failure.
+
+**Who does what** is one table, in `docs/RUNBOOK.md` → "Who does what".
+
+`brand/dispatch.py :: desk_gaps, inspection_gaps` · `brand/review.py :: OPS-04`
+· `scripts/sign_off.py` · `tests/test_dispatch.py :: TheDesksAreNotOptional`
+
+---
 
 ## Changing something here
 

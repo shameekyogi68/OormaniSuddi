@@ -286,7 +286,7 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
             r'(?<![\w.-])[A-Za-z][\w.-]*\.(?:mp4|jpg|png|mp3|txt|md)', body))
     for name in sorted(referenced):
         base = os.path.basename(name)
-        if base == 'APPROVAL.md':
+        if base in ('APPROVAL.md', 'CHANNELS.md'):
             continue
         if base not in files:
             r.add_fail('PKG-01', f'the copy points at {base}, which was not rendered', where=base)
@@ -611,6 +611,22 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
                         where='schedule.json')
             except OSError:
                 pass
+
+    # ── the desks read it (OPS-04, D95) ───────────────────────────────────
+    # The render folder names its edition (.edition, D90). Every desk the
+    # plan says is due on that edition's CURRENT wording must have read it:
+    # a desk skipped is a mistake nobody was there to catch.
+    stamp = os.path.join(outdir, '.edition')
+    if edition is not None and os.path.exists(stamp):
+        with open(stamp, encoding='utf-8') as fh:
+            ed_rel = fh.read().strip()
+        from .dispatch import ROOT as _ROOT, desk_gaps
+        ed_path = os.path.join(_ROOT, ed_rel)
+        if os.path.exists(ed_path):
+            r.checked.append('every desk read the current wording (OPS-04)')
+            for gap in desk_gaps(ed_path):
+                r.add_fail('OPS-04', f'{gap}. Run the waves '
+                           '`python3 scripts/dispatch.py` lists, then re-render.')
 
     # The script is checked, not the audio alone, because a hazard is visible
     # in the text and only audible after a four-minute render.

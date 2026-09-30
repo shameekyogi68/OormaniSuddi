@@ -226,6 +226,24 @@
       "added": "2026-09-27",
       "retired": "",
       "by": "Chief Editor review (from the editor's instruction to stop repeats)"
+    },
+    {
+      "id": "2026-09-27-03",
+      "said": "Strictly verify and research authentic coastal Kannada place names and spelling: always use ತಲ್ಲೂರು (not ತಾಳೂರು), ಹೆಮ್ಮಾಡಿ (not ಹೇರ್ಮಾಡಿ), ಯಡ್ತರೆ, ತ್ರಾಸಿ, ಅರಾಟೆ, ಕೋಟೇಶ್ವರ, ಗಂಗೊಳ್ಳಿ. Never introduce phonetic or colloquial misspellings.",
+      "scope": "desk",
+      "why": "Editor instruction (2026-09-27): Tallur is ತಲ್ಲೂರು, not ತಾಳೂರು; coastal place names must be rigorously researched and spelled with zero errors.",
+      "added": "2026-09-27",
+      "retired": "",
+      "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-09-30-01",
+      "said": "Fact desk must verify budget figures (e.g. crores) and distinguish in-principle approvals from finalized commercial timetables",
+      "scope": "desk",
+      "why": "Editor instruction 2026-09-30: prevent unsubstantiated project costs and premature finality claims in transport and infrastructure reporting",
+      "added": "2026-09-30",
+      "retired": "",
+      "by": "Gautam Paduvari"
     }
   ]
 }

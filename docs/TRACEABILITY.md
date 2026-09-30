@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **57/94** decisions are named by at least one test
+- **58/95** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -403,7 +403,7 @@ those carry a reason rather than a test.
 ## D90 · A render folder belongs to one edition, and says which
 
 - **Tested by:** `tests/test_dispatch.py`
-- Enforced in: `brand/dispatch.py`
+- Enforced in: `brand/dispatch.py`, `brand/review.py`
 
 ## D91 · A stock frame with text in it is never attached automatically
 
@@ -421,5 +421,10 @@ those carry a reason rather than a test.
 ## D94 · The distribution plan: where each format goes, and when
 
 - **Tested by:** `tests/test_formats.py`
-- Enforced in: `brand/copy.py`, `brand/paper.py`, `brand/tokens.py`
+- Enforced in: `brand/copy.py`, `brand/dispatch.py`, `brand/paper.py`, `brand/tokens.py`
+
+## D95 · The desks are not optional
+
+- **Tested by:** `tests/test_dispatch.py`
+- Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/sign_off.py`
 

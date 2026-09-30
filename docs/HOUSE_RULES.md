@@ -32,6 +32,12 @@ the things that are genuinely house style rather than contract.
 - **2026-09-27-02** — Keep the source's own Kannada word: never swap it for an English loan (ದೀಪಸ್ತಂಭ, not ಲೈಟ್‌ಹೌಸ್) or for a word that shifts the meaning (a sudden change in the weather is ವಾತಾವರಣದ ಹಠಾತ್ ಬದಲಾವಣೆ; ಹವಾಮಾನ ಬದಲಾವಣೆ reads as climate change). File every story under the category of what happened — never civic by default: a fatal fall is accident, a fish shoal or a dolphin is environment, a fishermen's scheme is fisheries.
   - _why:_ the first ಸುದ್ದಿ ಸಾರ, 2026-09-27, carried both wording slips and filed three of six stories under ಆಡಳಿತ wrongly; the kicker says the category on every slide
   - _asked by:_ Chief Editor review (from the editor's instruction to stop repeats)
+- **2026-09-27-03** — Strictly verify and research authentic coastal Kannada place names and spelling: always use ತಲ್ಲೂರು (not ತಾಳೂರು), ಹೆಮ್ಮಾಡಿ (not ಹೇರ್ಮಾಡಿ), ಯಡ್ತರೆ, ತ್ರಾಸಿ, ಅರಾಟೆ, ಕೋಟೇಶ್ವರ, ಗಂಗೊಳ್ಳಿ. Never introduce phonetic or colloquial misspellings.
+  - _why:_ Editor instruction (2026-09-27): Tallur is ತಲ್ಲೂರು, not ತಾಳೂರು; coastal place names must be rigorously researched and spelled with zero errors.
+  - _asked by:_ Gautam Paduvari
+- **2026-09-30-01** — Fact desk must verify budget figures (e.g. crores) and distinguish in-principle approvals from finalized commercial timetables
+  - _why:_ Editor instruction 2026-09-30: prevent unsubstantiated project costs and premature finality claims in transport and infrastructure reporting
+  - _asked by:_ Gautam Paduvari
 
 ## picture
 

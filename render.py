@@ -295,7 +295,7 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
     if fb:
         lines += ['## Facebook groups', '',
                   'Question first, no outside link. One post per group per '
-                  'week at most — see docs/CHANNELS.md.', '']
+                  'week at most — see docs/CHANNELS.', '']
         for name in fb:
             lines += [f'### {name}', '', '```', _read(os.path.join(outdir, name)),
                       '```', '']

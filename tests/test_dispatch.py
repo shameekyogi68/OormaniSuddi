@@ -568,3 +568,60 @@ class ARenderNeverOverwritesAnotherEdition(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TheDesksAreNotOptional(unittest.TestCase):
+    """D95. 2026-09-27: the first ಸುದ್ದಿ ಸಾರ was approved with no desk having
+    read it, and shipped a death in red, three wrong categories and two
+    wording slips. The waves were advice; now the gate and the sign-off ask."""
+
+    def setUp(self):
+        import shutil
+        self.stem = f'zz_d95_{os.getpid()}'
+        self.tmp = tempfile.mkdtemp()
+        self.ed = os.path.join(self.tmp, f'{self.stem}.json')
+        st = dict(story(verified_by='Test Editor'), segment='saara',
+                  category='civic')
+        with open(self.ed, 'w', encoding='utf-8') as fh:
+            json.dump({'schema_version': 4, 'date': '2026-09-30T07:00:00+05:30',
+                       'edition_no': 1, 'stories': [st, dict(st)]}, fh,
+                      ensure_ascii=False)
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.addCleanup(shutil.rmtree, os.path.join(D.RECEIPTS, self.stem),
+                        ignore_errors=True)
+
+    def test_an_unread_edition_has_gaps_and_a_read_one_has_none(self):
+        gaps = D.desk_gaps(self.ed)
+        self.assertTrue(any(g.startswith('kannada-editor') for g in gaps), gaps)
+        with open(self.ed, encoding='utf-8') as fh:
+            stories = json.load(fh)['stories']
+        for i, _ in enumerate(stories, 1):
+            for agent in ('fact-checker', 'kannada-editor'):
+                D.write_receipt(agent, self.ed, 'PASS', 'read', story=i)
+        self.assertEqual(D.desk_gaps(self.ed), [])
+
+    def test_changing_the_wording_reopens_the_kannada_desk(self):
+        with open(self.ed, encoding='utf-8') as fh:
+            data = json.load(fh)
+        for i, _ in enumerate(data['stories'], 1):
+            for agent in ('fact-checker', 'kannada-editor'):
+                D.write_receipt(agent, self.ed, 'PASS', 'read', story=i)
+        data['stories'][0]['headline'] += ' ಇಂದು'
+        with open(self.ed, 'w', encoding='utf-8') as fh:
+            json.dump(data, fh, ensure_ascii=False)
+        self.assertTrue(any('story 1' in g for g in D.desk_gaps(self.ed)))
+
+    def test_nobody_signs_an_uninspected_package(self):
+        import subprocess
+        out = os.path.join(self.tmp, 'out')
+        os.makedirs(out)
+        for n in ('saara_01_cover.jpg', 'APPROVAL.md'):
+            open(os.path.join(out, n), 'w').close()
+        with open(os.path.join(out, 'review_report.json'), 'w') as fh:
+            json.dump({'findings': []}, fh)
+        self.assertTrue(D.inspection_gaps(out))
+        r = subprocess.run([sys.executable, 'scripts/sign_off.py', out,
+                            '--by', 'Test Editor'], cwd=D.ROOT,
+                           capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('not been looked at', r.stderr)
