@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **58/95** decisions are named by at least one test
+- **59/96** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -131,7 +131,7 @@ those carry a reason rather than a test.
 ## D29 · Legal guards are validation rules, not guidance
 
 - **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_house.py`, `tests/test_legal_corpus.py`
-- Enforced in: `brand/content.py`, `brand/house.py`, `scripts/house_rule.py`
+- Enforced in: `brand/content.py`, `brand/house.py`, `brand/reel_news.py`, `scripts/house_rule.py`
 
 ## D30 · A credit is not a licence
 
@@ -243,7 +243,7 @@ those carry a reason rather than a test.
 ## D55 · No source, no claim. No approval, no upload
 
 - **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/review.py`
+- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/reel_news.py`, `brand/review.py`
 
 ## D56 · Numeric policy lives in `tokens.Limits`
 
@@ -412,7 +412,7 @@ those carry a reason rather than a test.
 ## D92 · Three formats, one story in one of them, pasted news, real pictures first
 
 - **Tested by:** `tests/test_calendar.py`, `tests/test_captions.py`, `tests/test_contract.py`, `tests/test_discard_edition.py`, `tests/test_dispatch.py`, `tests/test_formats.py`, `tests/test_golden.py`, `tests/test_grounding.py`, `tests/test_intake.py`, `tests/test_pick_formats.py`, `tests/test_reach.py`, `tests/test_reach_copy.py`, `tests/test_speednews.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/motion.py`, `brand/paper.py`, `brand/provenance.py`, `brand/qa.py`, `brand/reach.py`, `brand/review.py`, `brand/sourcing.py`, `brand/speednews.py`, `brand/tokens.py`, `brand/trends.py`, `brand/typo.py`, `scripts/archive_edition.py`, `scripts/dispatch.py`, `scripts/fact_check.py`, `scripts/health.py`, `scripts/intake.py`, `scripts/pick_formats.py`, `templates/__init__.py`, `templates/mukhya.py`, `templates/registry.json`, `templates/saara.py`
+- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/motion.py`, `brand/paper.py`, `brand/provenance.py`, `brand/qa.py`, `brand/reach.py`, `brand/reel_news.py`, `brand/review.py`, `brand/sourcing.py`, `brand/speednews.py`, `brand/tokens.py`, `brand/trends.py`, `brand/typo.py`, `scripts/archive_edition.py`, `scripts/dispatch.py`, `scripts/fact_check.py`, `scripts/health.py`, `scripts/intake.py`, `scripts/pick_formats.py`, `templates/__init__.py`, `templates/mukhya.py`, `templates/registry.json`, `templates/saara.py`
 
 ## D93 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
 
@@ -427,4 +427,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_dispatch.py`
 - Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/sign_off.py`
+
+## D96 · A footage reel's news layer is laid out around Instagram, not over it
+
+- **Tested by:** `tests/test_reel_news.py`
+- Enforced in: `brand/reel_news.py`, `brand/speednews.py`, `brand/tokens.py`
 

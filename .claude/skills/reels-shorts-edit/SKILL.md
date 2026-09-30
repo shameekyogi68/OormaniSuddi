@@ -29,14 +29,21 @@ AGENTS.md rule 7: the rule restricts AI-card reels on YouTube, and these are rea
 1. **Hook in the first 1.5 s, with sound.** The first shot is the most striking moment, cut hard and never
    faded in from black. Last night's reel opened on a 1.3 s firecracker burst; that is the model.
 2. **15–60 s.** Aim for 30–45 s. The tool warns above 60 s and refuses above 90 s.
-3. **Reel masthead at the top for the content, exactly as the reel engine draws it**
-   (`brand/components.py :: masthead()`): logo + ಊರ್ಮನಿ ಸುದ್ದಿ + tagline at top-left, date + weekday/time at
-   top-right, a gilded hairline under it, and a soft top veil. It is off during the outro card, which is
-   itself the brand moment. That matches the reel that was posted.
-4. **Instagram safe zones** (`brand/tokens.py` `reel` format, 1080×1920): top 230 px, bottom 480 px,
-   right 220 px, left 72 px. Captions and credits sit **inside** them. The shipped reel put the organiser
-   credit at y ≈ 1735–1840, where Instagram's caption and buttons cover it; the tool now places credit
-   lines above the bottom zone.
+3. **A NEWS reel uses the `news` block (D96)** — the house format, drawn by `brand/reel_news.py`:
+   - **0–2 s hook:** red ಬ್ರೇಕಿಂಗ್ tag + the news in huge type (`news.hook`, 2–5 words). No logo sting.
+   - **Top band:** the red ಊರ್ಮನಿ ಸುದ್ದಿ bug, then place · date — *below* Instagram's header.
+   - **Story card:** paper card above the caption, left of the buttons: tag + place, the full
+     headline (ink; the half after the colon in red — a death stays ink), then **one fact at a time**
+     (`news.facts`, each on screen ≥ `ReelsChrome.fact_min_seconds`), and the footage credit.
+   - **End card (last 2 s):** source, footage credit, who verified it, and the follow button.
+   Nothing on any frame is smaller than 28 px. An event reel with no `news` block keeps the masthead
+   and credit lines.
+4. **Instagram's own interface** (`brand/tokens.py :: ReelsChrome`, measured on the owner's phone
+   2026-10-01): the "← Reels" header and camera icon (top 250 px), the username / caption / audio /
+   comment bar (below 1500 px), and the like / comment / share / save column (right of 920 px, from
+   860 px down). No text of ours goes there; `brand/reel_news.check()` refuses a layout that would,
+   and the QC sheet draws these three lines. The MRPL reel (30 Sep) had its masthead under the header,
+   its date under the camera icon and its card under the buttons — the old 230 px top zone was wrong.
 5. **Captions and credits only with confirmed wording.** The shipped reel dropped three pop-in captions
    because the place/temple wording was guessed. Captions help sound-off viewers, so ask for the words
    in the brief rather than skipping them.
@@ -143,7 +150,8 @@ are exactly as in long-format.
 | `title_slug`, `footage_dir`, `work_dir`, `output_dir` | as long-format (work defaults to `<footage>/_work/reel`) |
 | `segments[]` | `clip`, `in`, `out`, optional `hero`, `frame_x`, `frame_y`, `fill: "blur"`, `transition_in: ["fade", 0.3]`, `note` |
 | `masthead` | `date` (YYYY-MM-DD), `time` (HH:MM), `scale` 0.92, `rule` true, `on_outro` false |
-| `credit_lines` | up to 2 confirmed lines (gold, white) above the bottom safe zone |
+| `credit_lines` | up to 2 confirmed lines (gold, white) above the bottom safe zone — event reels only |
+| `news` | **news reels (D96):** `headline`, `place`, `date`, `kicker` ("ಬ್ರೇಕಿಂಗ್"), `hook` (2–5 words), `facts[]` (one on screen at a time), `credit` ("ವೀಡಿಯೊ ಕೃಪೆ: …", required), `source` (required), `verified_by`, `category`, `convicted` — replaces the masthead, credit lines and outro |
 | `captions[]` | `segment` index, `text`, optional `delay` (0.15), `dur` (2.2) |
 | `outro` | `dur` 2.2, `bg: [clip, seconds]`, `title` (brand name), `line` ("Follow @oormanisuddi") |
 | `music` | `file`, `license` (required), `offset`, `level` 0.8, `duck` true |

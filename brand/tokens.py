@@ -460,6 +460,20 @@ class Limits:
     news_max_age_hours = 36
 
 
+class ReelsChrome:
+    """Where Instagram draws its own interface on a 1080x1920 Reel (D96).
+    Measured on the owner's own phone, 2026-10-01: our masthead sat under the
+    "← Reels" header, the date under the camera icon, and the news card
+    under the like/comment/share column. No overlay text is allowed in
+    these regions; brand/reel_news.py checks every box against them."""
+    top = 250           # header and camera icon: y < top
+    bottom = 1500       # username, caption, audio, comment bar: y > bottom
+    rail_x = 920        # the button column: x > rail_x ...
+    rail_top = 860      # ... from here down to `bottom`
+    hook_seconds = 2.0  # the opening hook, before the story card
+    fact_min_seconds = 3.5   # a fact on screen long enough to read
+
+
 class Paper:
     """The Paper & Red news look (D92): measurements for brand/paper.py.
 

@@ -2770,6 +2770,28 @@ override: a desk that is skipped under deadline is the whole failure.
 · `scripts/sign_off.py` · `tests/test_dispatch.py :: TheDesksAreNotOptional`
 
 ---
+## D96 · A footage reel's news layer is laid out around Instagram, not over it
+
+**Decided (2026-10-01).** A news reel made from real footage carries one
+fixed layer (`brand/reel_news.py`, the `news` block of the reels-shorts-edit
+skill): a 2-second hook in huge type; the red bug with place and date below
+Instagram's header; a paper story card above the caption and left of the
+buttons, carrying the headline and one fact at a time; and a paper end card
+with the source, the footage credit and who verified it. Instagram's own
+interface is measured once, in `tokens.ReelsChrome`, and every text box is
+checked against it — a layout that would touch it is refused, not drawn.
+Nothing on any frame is smaller than 28 px. Death headlines stay ink.
+
+**Why.** The MRPL reel of 30 Sept 2026, as seen on the owner's phone: the
+masthead sat under "← Reels", the date under the camera icon, the card under
+the like/share column, and a source line was too small to read. The skill's
+own safe zone started the top at 230 px — Instagram's header reaches 250.
+
+`brand/reel_news.py` · `brand/tokens.py :: ReelsChrome` ·
+`.claude/skills/reels-shorts-edit/tools/reel_build.py` ·
+`tests/test_reel_news.py`
+
+---
 
 ## Changing something here
 

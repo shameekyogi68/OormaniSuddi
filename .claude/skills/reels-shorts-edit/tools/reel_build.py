@@ -23,7 +23,8 @@ from PIL import Image, ImageDraw, ImageFilter  # noqa: E402
 import build as lf  # noqa: E402
 import make_cards as mc  # noqa: E402
 from common import BT709, TAG, TO709, ROOT, C, Brand, FONT_BODY, FONT_TITLE, even, fmt_time, probe, run  # noqa: E402
-from brand.tokens import fmt as brand_format  # noqa: E402
+from brand.tokens import fmt as brand_format, ReelsChrome as RC  # noqa: E402
+from brand import reel_news  # noqa: E402
 
 DEFAULTS = {
     "resolution": [1080, 1920],
@@ -45,6 +46,10 @@ DEFAULTS = {
     "audio": {"real_lufs": -18.0, "real_max_gain_db": 10.0, "real_gain": 1.0, "master_lufs": -13.0, "true_peak": -1.5},
     "music": None,
     "copy": {},
+    # The news layer (D96): hook, top band, story card, end card, laid out
+    # around Instagram's own interface. Required for a news reel; an event
+    # reel without it keeps the masthead + credit lines.
+    "news": None,
 }
 STAGES = ["overlays", "clean", "audio", "segments", "video", "mux", "qc", "copy"]
 ENGAGEMENT_YT = "ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಮೆಂಟ್ ಮಾಡಿ."
@@ -257,6 +262,11 @@ def validate(cfg):
         notes.append(f"Shorts title is {len(title)} characters - keep it under 60")
     if cfg["copy"] and not cfg["copy"].get("headline"):
         problems.append("copy.headline is required when a copy block is given")
+    if cfg.get("news"):
+        try:
+            reel_news.News.from_dict(cfg["news"]).validate()
+        except Exception as e:
+            problems.append(f"news: {e}")
     if problems:
         raise SystemExit("project invalid:\n  - " + "\n  - ".join(problems))
     items, _, _, total = timeline(cfg)
@@ -289,6 +299,28 @@ def text_height(text, font):
     return b - t
 
 
+def news_of(cfg):
+    return reel_news.News.from_dict(cfg["news"]).validate() if cfg.get("news") else None
+
+
+def news_windows(cfg):
+    items, juncs, starts, total = timeline(cfg)
+    return reel_news.schedule(news_of(cfg), RC.hook_seconds, starts[-1])
+
+
+def stage_news_overlays(cfg, cards):
+    """The D96 news layer: every PNG is checked against Instagram's own
+    interface before it is written."""
+    W, H = cfg["resolution"]
+    n = news_of(cfg)
+    reel_news.hook(n, W, H)[0].save(cards / "news_hook.png")
+    reel_news.top_band(n, W, H)[0].save(cards / "news_top.png")
+    for layer, fi, _a, _b in news_windows(cfg):
+        if layer == "story":
+            reel_news.story(n, fi, W, H)[0].save(cards / f"news_story_{fi if fi is not None else 'x'}.png")
+    reel_news.end_card(n, W, H)[0].convert("RGB").save(outro_png(cfg))
+
+
 def stage_overlays(cfg):
     from brand.components import masthead
     from brand.surface import Surface, scrim
@@ -299,6 +331,8 @@ def stage_overlays(cfg):
     sl, st, sr, sb = safe(cfg)
     m = cfg["masthead"]
 
+    # Below Instagram's "← Reels" header, never under it (D96).
+    st = max(st, (RC.top + 118) * fs)
     sf = Surface(W, H, 2, bg=(0, 0, 0, 0))
     scrim(sf, 0, st + 30 * fs, C.ink_950, 0.62, 0.0, curve=1.5)
     if cfg["credit_lines"]:
@@ -315,8 +349,9 @@ def stage_overlays(cfg):
         layer.putalpha(mask.point(lambda v: int((255 - v) * cfg["vignette"])))
     layer.alpha_composite(sf.img.resize((W, H), Image.LANCZOS))
 
-    # Centred on the frame like the posted reel; the width cap keeps the right edge clear of the button column.
-    cx, max_w = W / 2, W - 2 * 112 * fs
+    # Centred, and narrow enough that the right edge stays clear of the button
+    # column (RC.rail_x) — the old 112 px margin let it run under it.
+    cx, max_w = W / 2, 2 * (RC.rail_x * fs - W / 2) - 16 * fs
     lines = cfg["credit_lines"]
     if lines:
         fonts = [mc.fitted(lines[0], FONT_TITLE, 48 * fs, max_w)]
@@ -333,8 +368,18 @@ def stage_overlays(cfg):
         f = mc.fitted(cap["text"], FONT_TITLE, 62 * fs, max_w)
         if f.size < 44 * fs:
             print(f"NOTE: caption {k} shrank to {f.size:.0f}px to fit - shorten it", flush=True)
-        shadow_text(img, cap["text"], f, cx, H * 0.60 - text_height(cap["text"], f) / 2, C.paper_50 + (255,))
+        # With the news layer the story card owns the lower third, so spoken
+        # captions sit in the upper-middle instead.
+        cy = H * (0.42 if cfg.get("news") else 0.60)
+        shadow_text(img, cap["text"], f, cx, cy - text_height(cap["text"], f) / 2, C.paper_50 + (255,))
         img.save(cards / f"caption_{k}.png")
+
+    if cfg.get("news"):
+        stage_news_overlays(cfg, cards)
+        for p in sorted(cards.glob("news_*.png")):
+            print("overlay:", p, flush=True)
+        print("overlay:", outro_png(cfg), flush=True)
+        return
 
     o = cfg["outro"]
     seg = cfg["segments"][-1]
@@ -445,6 +490,19 @@ def video_graph(cfg, dry=False):
                     f"fade=t=out:st={st + dur - 0.18:.3f}:d=0.18:alpha=1,{TO709},format=yuva420p[c{k}]")
         filt.append(f"[{prev}][c{k}]overlay=0:0:eof_action=pass[o{k}]")
         prev, n = f"o{k}", n + 1
+    if cfg.get("news"):
+        for layer, fi, a, b in news_windows(cfg):
+            name = {"hook": "news_hook.png", "top": "news_top.png"}.get(
+                layer, f"news_story_{fi if fi is not None else 'x'}.png")
+            inputs += null_rgba if dry else ["-loop", "1", "-framerate", fps, "-t", f"{total:.3f}",
+                                             "-i", cards / name]
+            fin = 0.0 if a <= 0.01 else 0.2
+            filt.append(f"[{n}:v]format=rgba,fade=t=in:st={a:.3f}:d={max(fin, 0.01)}:alpha=1,"
+                        f"fade=t=out:st={b - 0.2:.3f}:d=0.2:alpha=1,{TO709},format=yuva420p[n{n}]")
+            filt.append(f"[{prev}][n{n}]overlay=0:0:eof_action=pass[p{n}]")
+            prev, n = f"p{n}", n + 1
+        filt.append(f"[{prev}]format=yuv420p,{TAG}[vout]")
+        return inputs, ";".join(filt), total
     inputs += null_rgba if dry else ["-i", cards / "overlay.png"]
     enable = "" if cfg["masthead"]["on_outro"] else f":enable='lt(t,{starts[-1]:.3f})'"
     filt.append(f"[{n}:v]format=rgba,{TO709},format=yuva420p[ov]")
@@ -562,7 +620,8 @@ def stage_qc(cfg):
     for q in range(1, 6):
         times[f"content {q}"] = starts[-1] * q / 6
     tw, th = 270, 480
-    sl, st, sr, sb = [v * tw / W for v in safe(cfg)]
+    k_ = tw / 1080
+    st, sb, sr = RC.top * k_, th - RC.bottom * k_, tw - RC.rail_x * k_
     tiles = sorted(times.items(), key=lambda kv: kv[1])
     cols = 4
     sheet = Image.new("RGB", (cols * tw, ((len(tiles) + cols - 1) // cols) * (th + 24)), (12, 12, 12))
@@ -581,8 +640,9 @@ def stage_qc(cfg):
     sheet.save(qc / "qc_sheet.jpg", quality=90)
     report = [f"# Reel QC: {final.name}", "", "| result | check | detail |", "|---|---|---|"]
     report += [f"| {r} | {n} | {dtl} |" for r, n, dtl in rows]
-    report += ["", f"Frame sheet: {qc / 'qc_sheet.jpg'} (red lines = Instagram safe zones: nothing important above "
-                   "the top line, below the bottom line or right of the side line). Pick the cover frame here."]
+    report += ["", f"Frame sheet: {qc / 'qc_sheet.jpg'} (red lines = Instagram's own header, caption and "
+                   "button column, tokens.ReelsChrome: nothing of ours above the top line, below the bottom "
+                   "line or right of the side line). Pick the cover frame here."]
     (qc / "qc_report.md").write_text("\n".join(report) + "\n")
     print("\n".join(f"{r:4s}  {n}: {dtl}" for r, n, dtl in rows), flush=True)
     if any(r == "FAIL" for r, _, _ in rows):

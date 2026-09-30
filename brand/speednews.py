@@ -56,7 +56,7 @@ from .copy import _leads_with_place
 from . import paper as pp
 from .motion import KenBurns, _transition, _h264_encode_args, _mux
 from .surface import Surface, logo
-from .tokens import C, Brand, Motion, Paper as PP, category, fmt, Limits
+from .tokens import C, Brand, Motion, Paper as PP, ReelsChrome as RC, category, fmt, Limits
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 S2 = 2                      # text tiles are drawn at 2x and downsampled
@@ -231,7 +231,8 @@ class Layout:
         self.x0 = PP.margin
         self.x1 = W - self.sr              # clear of the action rail
         self.top_x1 = W - PP.margin        # the rail does not reach the top band
-        self.bottom = H - self.sb          # clear of the caption overlay
+        # clear of the caption overlay, measured on a phone (D96)
+        self.bottom = min(H - self.sb, RC.bottom * W / 1080)
         self.cw = self.x1 - self.x0
         self.band_h = PP.reel_photo        # the picture band
         self.win_top = 0
@@ -458,7 +459,7 @@ class Chrome:
     def progress(self, frame: Image.Image, idx: int, p: float, end: bool):
         """Segments, one per story — filled, filling, or still to come."""
         L = self.L
-        gap, y, h = 8, L.st - 60, 6
+        gap, y, h = 8, RC.top + 8, 6        # below Instagram's header (D96)
         span = L.top_x1 - L.x0
         seg = (span - gap * (self.n - 1)) / self.n
         d = ImageDraw.Draw(frame)
@@ -474,7 +475,7 @@ class Chrome:
         self.progress(frame, idx, p, end)
         if end:
             return
-        frame.alpha_composite(self.bug, (self.L.x0, self.L.st))
+        frame.alpha_composite(self.bug, (self.L.x0, RC.top + 34))
 
 
 def _fade(tile: Image.Image, a: float) -> Image.Image:
