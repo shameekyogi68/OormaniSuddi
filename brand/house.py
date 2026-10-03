@@ -243,7 +243,13 @@ def brief(scope: str = '') -> str:
     if not live:
         return ''
     head = (f'HOUSE RULES ({scope})' if scope else 'HOUSE RULES')
-    out = [f'  {head} — {len(live)} in force:']
+    # One line each, cut at 110 characters: the full text prints on every
+    # render and is ~4,000 tokens of the same rules every time (D97). The
+    # whole rule is one command away.
+    out = [f'  {head} — {len(live)} in force '
+           f'(full text: python3 scripts/house_rule.py list):']
     for r in live:
-        out.append(f'    · [{r.id}] {r.said}')
+        said = ' '.join(r.said.split())
+        out.append(f'    · [{r.id}] ' + (said if len(said) <= 110
+                                         else said[:107].rstrip() + '…'))
     return '\n'.join(out)

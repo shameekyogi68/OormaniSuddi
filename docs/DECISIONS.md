@@ -2792,6 +2792,45 @@ own safe zone started the top at 230 px — Instagram's header reaches 250.
 `tests/test_reel_news.py`
 
 ---
+## D97 · An Instagram reach desk, and fewer agent runs for the same checking
+
+**Decided (2026-10-03).**
+1. **A reach desk.** `instagram-strategist` runs once per edition, after every
+   story has a segment: format fit, cover hooks, text load, the slot, the first
+   comment and the first-hour plan, from `docs/INSTAGRAM.md`. It is a desk like
+   the others — due until it has read the edition's current formats and
+   categories (`desk_gaps`, `OPS-04`) — but its hash is the strategy fields only
+   (`segment`, `category`, `location`, `published_at`, `photo_plan`), so a Kannada
+   copy edit never sends it round again. The social-writer audits the posts
+   against the same playbook; the planning-editor's weekly review keeps it
+   honest. `MASTER_COPY.md` carries the first-hour checklist and the alt text.
+2. **Every line of the playbook is labelled** [Official] / [Reported] / [House] /
+   [Data]. Only two posts were ever logged, so nearly all of it is [House]: a
+   hypothesis. `scripts/metrics.py` now also takes `--nonfollowers` (the growth
+   signal) and the new format names, and the dispatcher asks the editor for the
+   week's numbers when the log goes quiet. No multiplier is written down that
+   the numbers do not show.
+3. **Batched runs.** The plan is launched as AGENT RUNS: a per-story desk reads
+   up to `Limits.agent_batch_max` stories in one run and files a receipt per
+   story, against that story's own hash (`--story 1 2 3`). The gate still asks the
+   per-story question. A six-story day is 5–6 runs, not 15–18; every spawn
+   re-loads its instructions and conventions.
+4. **Every agent pins its model** (`sonnet`), so what a run costs does not depend
+   on which model the chat is on. The house-rules printout at each render is one
+   short line per rule.
+5. **No forged receipts.** `scripts/daily_flow.py receipts` used to write PASS
+   receipts for desks that had not run; it now only shows what is due.
+
+**Why.** The owner asked for someone who understands Instagram and the people on
+it, and for the same quality at lower token cost. The cost was the spawn count
+and re-reading the same text, not the thinking; the shortcut that had appeared
+to save it defeated the gate that exists because of the 27 Sept slips.
+
+`brand/dispatch.py :: launches, strategy_hash, _insights_task` ·
+`.claude/agents/instagram-strategist.md` · `docs/INSTAGRAM.md` ·
+`scripts/metrics.py` · `tests/test_dispatch.py :: TheTeamRunsInBatches…`
+
+---
 
 ## Changing something here
 

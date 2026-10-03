@@ -63,6 +63,7 @@ ROSTER: dict[str, dict] = {
     'legal-standards':     {'kind': 'reactive', 'stage': 'desk'},
     'kannada-editor':      {'kind': 'reactive', 'stage': 'desk'},
     'picture-editor':      {'kind': 'reactive', 'stage': 'picture'},
+    'instagram-strategist': {'kind': 'reactive', 'stage': 'reach'},
     'package-inspector':   {'kind': 'reactive', 'stage': 'package'},
     'social-writer':       {'kind': 'reactive', 'stage': 'package'},
     'gate-doctor':         {'kind': 'reactive', 'stage': 'gate'},
@@ -70,6 +71,9 @@ ROSTER: dict[str, dict] = {
     'planning-editor':     {'kind': 'ops',      'stage': 'planning'},
     'systems-steward':     {'kind': 'ops',      'stage': 'operations'},
 }
+
+# Desks that work story by story and may read several in one run (D97).
+BATCHED = ('fact-checker', 'legal-standards', 'kannada-editor', 'picture-editor')
 
 # A failing gate code, routed to the agent that can do the work.
 CODE_AGENT = {
@@ -104,6 +108,12 @@ FACT_FIELDS = ('headline', 'deck', 'points', 'numbers', 'quote', 'sources',
 # The Kannada desk reads every line a reader sees or hears, for its format.
 COPY_FIELDS = FACT_FIELDS + ('hook', 'takeaway', 'reel_points', 'reel_support',
                              'narration_script', 'segment')
+# The reach desk decides format, hook, slot and first hour from what kind of
+# story it is and when — NOT from its wording, so a Kannada copy edit never
+# sends it round again (D97). The hook it proposes lives in `hook`, which is
+# deliberately outside this list for the same reason.
+STRATEGY_FIELDS = ('segment', 'category', 'location', 'published_at',
+                   'photo_plan')
 # The picture desk reads the picture, the plan for it, and what it must show.
 PICTURE_FIELDS = ('photo', 'photo_plan', 'segment', 'headline', 'location',
                   'category', 'involves_minor', 'sexual_offence')
@@ -145,6 +155,37 @@ class Plan:
             out.setdefault(t.wave, []).append(t)
         return out
 
+    def launches(self) -> dict[int, list[dict]]:
+        """The same plan as AGENT RUNS, which is what costs tokens (D97).
+
+        A per-story desk reads several stories in one run, up to
+        Limits.agent_batch_max; everything else is one run per task. The gate
+        still asks the per-story question (desk_gaps) — only the launching is
+        batched, never the checking."""
+        from .tokens import Limits
+        out: dict[int, list[dict]] = {}
+        for wave, tasks in self.waves().items():
+            groups: dict[tuple, list[Task]] = {}
+            runs: list[dict] = []
+            for t in tasks:
+                if t.story and t.agent in BATCHED and not t.part:
+                    groups.setdefault((t.agent, t.target), []).append(t)
+                else:
+                    runs.append({'agent': t.agent, 'target': t.target,
+                                 'stories': [t.story] if t.story else [],
+                                 'part': t.part, 'urgent': t.urgent,
+                                 'reasons': [t.reason]})
+            for (agent, target), ts in groups.items():
+                for k in range(0, len(ts), Limits.agent_batch_max):
+                    chunk = ts[k:k + Limits.agent_batch_max]
+                    runs.append({'agent': agent, 'target': target,
+                                 'stories': [t.story for t in chunk], 'part': '',
+                                 'urgent': any(t.urgent for t in chunk),
+                                 'reasons': list(dict.fromkeys(t.reason for t in chunk))})
+            out[wave] = sorted(runs, key=lambda r: (not r['urgent'], r['agent'],
+                                                    r['stories'][:1]))
+        return out
+
     def to_dict(self) -> dict:
         return {'day': self.day, 'tasks': [asdict(t) for t in self.tasks],
                 'ops': [asdict(t) for t in self.ops], 'person': self.person}
@@ -173,13 +214,18 @@ def copy_hash(story: dict) -> str:
     return _digest({k: story.get(k) for k in COPY_FIELDS if k in story})
 
 
+def strategy_hash(story: dict) -> str:
+    return _digest({k: story.get(k) for k in STRATEGY_FIELDS if k in story})
+
+
 def picture_hash(story: dict) -> str:
     return _digest({k: story.get(k) for k in PICTURE_FIELDS if k in story})
 
 
 # Which hash stamps which desk's receipt.
 HASH_OF = {'fact-checker': fact_hash, 'legal-standards': fact_hash,
-           'kannada-editor': copy_hash, 'picture-editor': picture_hash}
+           'kannada-editor': copy_hash, 'picture-editor': picture_hash,
+           'instagram-strategist': strategy_hash}
 
 
 def hash_for(agent: str, story: dict) -> str:
@@ -376,6 +422,15 @@ def _edition_tasks(plan: Plan, path: str) -> None:
                  f'({", ".join(map(str, no_segment[:8]))}) — split the paste, keep '
                  f'each source, propose mukhya / speed / saara', rel)
 
+    if stories and not no_segment:
+        # One reach plan for the whole edition, due once every story has a
+        # format and again only if a format or category changes (D97).
+        eh = edition_hash(raw, strategy_hash)
+        if read_receipt('instagram-strategist', stem, 0).get('hash') != eh:
+            plan.add('instagram-strategist', 'reactive', 1,
+                     'reach plan: format fit, cover hooks, slot, first comment '
+                     'and first hour', rel)
+
     for i, (st, sd) in enumerate(zip(objs, stories), 1):
         fh_ = fact_hash(sd)
         receipt = _receipt_current('fact-checker', stem, fh_, i)
@@ -571,7 +626,7 @@ def _ops_tasks(plan: Plan, today: date) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 PRE_RENDER_DESKS = ('fact-checker', 'legal-standards', 'kannada-editor',
-                    'picture-editor')
+                    'picture-editor', 'instagram-strategist')
 POST_RENDER_DESKS = ('package-inspector', 'social-writer')
 
 
@@ -631,7 +686,51 @@ def plan(day: str | None = None, include_ops: bool = True) -> Plan:
     if include_ops:
         _corrections_tasks(p)
         _ops_tasks(p, today)
+        _insights_task(p, today)
     return p
+
+
+INSIGHTS_STALE_DAYS = 8
+
+
+def _insights_task(p: Plan, today: date) -> None:
+    """The editor logs what Instagram Insights shows, weekly (D97).
+
+    Only two posts were ever logged, so every rule in docs/INSTAGRAM.md is a
+    hypothesis. Nothing else in the system can fix that; a person has to type
+    the numbers in. Asked only once the channel has posted for a while, and
+    only when the log has gone quiet."""
+    import sqlite3
+    db = os.path.join(ROOT, 'archive', 'metrics.db')
+    last = None
+    try:
+        if not os.path.exists(db):      # connect() would create an empty file
+            raise sqlite3.Error('no log yet')
+        con = sqlite3.connect(db)
+        row = con.execute('SELECT MAX(date) FROM posts').fetchone()
+        con.close()
+        last = date.fromisoformat(row[0]) if row and row[0] else None
+    except (sqlite3.Error, ValueError):
+        pass
+    if last is None or (today - last).days > INSIGHTS_STALE_DAYS:
+        since = f'last logged {last.isoformat()}' if last else 'nothing logged yet'
+        p.person.append(f'log last week\'s Instagram numbers ({since}): '
+                        f'python3 scripts/metrics.py add --date … --asset … '
+                        f'--format saara|mukhya|roundup --reach … --saves … '
+                        f'--shares … --nonfollowers … — two minutes, and the '
+                        f'only way docs/INSTAGRAM.md stops being a guess')
+
+
+def _run_line(r: dict) -> str:
+    where = r['target']
+    if r['stories']:
+        nums = ','.join(map(str, r['stories']))
+        where += f' stor{"ies" if len(r["stories"]) > 1 else "y"} {nums}'
+    if r['part']:
+        where += f' [{r["part"]}]'
+    why = r['reasons'][0] if len(r['reasons']) == 1 else \
+        f'{r["reasons"][0]} (+{len(r["reasons"]) - 1} more reasons — it will see them)'
+    return f'    {"‼ " if r["urgent"] else ""}{r["agent"]:<20} {where} — {why}'
 
 
 def _line(t: Task) -> str:
@@ -645,18 +744,22 @@ def brief(p: Plan, limit: int = 30) -> str:
     """The plan as the team lead reads it: waves, parallel within a wave."""
     if not p.tasks and not p.person and not p.ops:
         return f'Team plan {p.day}: nothing due. Every receipt is current.'
-    lines = [f'Team plan {p.day} — {len(p.tasks)} production task(s). Launch each '
-             f'wave as ONE message of Agent calls so it runs in parallel; one '
-             f'agent per story (per format after render). Each agent files its '
-             f'report with `python3 scripts/dispatch.py receipt`.']
+    launches = p.launches()
+    n_runs = sum(len(v) for v in launches.values())
+    lines = [f'Team plan {p.day} — {len(p.tasks)} production task(s) in {n_runs} '
+             f'agent run(s). Launch each wave as ONE message of Agent calls so it '
+             f'runs in parallel; ONE agent per line below (a desk reads several '
+             f'stories in one run; one inspector per format after render). Each '
+             f'agent files a receipt per story with '
+             f'`python3 scripts/dispatch.py receipt`.']
     n = 0
-    for wave, tasks in p.waves().items():
+    for wave, runs in launches.items():
         lines.append(f'  wave {wave}:')
-        for t in tasks:
+        for r in runs:
             n += 1
             if n > limit:
                 break
-            lines.append(_line(t))
+            lines.append(_run_line(r))
     if n > limit:
         lines.append(f'    … and {n - limit} more (python3 scripts/dispatch.py)')
     if p.ops:

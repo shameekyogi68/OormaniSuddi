@@ -12,11 +12,13 @@ Then, depending on the job:
 | take news the editor pasted and make the day | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) "Chat workflow", then [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) |
 | pick a format for a story | [`docs/DECISIONS.md`](docs/DECISIONS.md) D92, then `python3 render.py --describe` |
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
+| write or judge anything for Instagram (formats, hooks, captions, timing) | [`docs/INSTAGRAM.md`](docs/INSTAGRAM.md) — labelled by how reliable each line is |
 | know which agents to run | `python3 scripts/dispatch.py` — agents in `.claude/agents/`, in waves (D87, D89) |
 | edit raw clips into a long-format YouTube video | [`.claude/skills/youtube-longform-edit/SKILL.md`](.claude/skills/youtube-longform-edit/SKILL.md) |
 | edit raw clips into an Instagram Reel / YouTube Short | [`.claude/skills/reels-shorts-edit/SKILL.md`](.claude/skills/reels-shorts-edit/SKILL.md) |
 
 The system before D92 is at the git tag `pre-final-upgrade-2026`.
+`docs/DECISIONS.md` is ~140 KB: never read it whole — `grep -n "^## D<n>"` and read that entry.
 
 ## Before you touch anything
 

@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS posts (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     date      TEXT NOT NULL,          -- the edition date, YYYY-MM-DD
     asset     TEXT NOT NULL,          -- reel_01.mp4, carousel, broadsheet …
-    format    TEXT NOT NULL,          -- reel | carousel | story | broadsheet | bulletin | footage
+    format    TEXT NOT NULL,          -- saara | mukhya | roundup | footage | short (older rows: reel, carousel …)
     category  TEXT,                   -- the tokens.CATEGORIES key
     platform  TEXT DEFAULT 'instagram',
     at        TEXT,                   -- HH:MM the slot it actually went out
@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS posts (
     comments  INTEGER DEFAULT 0,
     follows   INTEGER DEFAULT 0,
     watch_pct REAL,                   -- average watch-through, 0-100
+    nonfollower_pct REAL,             -- share of reach from people who do NOT follow us, 0-100
     note      TEXT,
     entered   TEXT NOT NULL,
     UNIQUE(date, asset, platform)
@@ -87,6 +88,7 @@ CREATE INDEX IF NOT EXISTS posts_slot ON posts(at);
 MIGRATIONS = (
     ('local_reach', 'INTEGER DEFAULT 0'),
     ('place', 'TEXT'),
+    ('nonfollower_pct', 'REAL'),
 )
 
 
@@ -110,20 +112,22 @@ def add(args) -> int:
             """INSERT INTO posts (date, asset, format, category, platform, at,
                                   seconds, views, reach, local_reach, place,
                                   likes, saves, shares,
-                                  comments, follows, watch_pct, note, entered)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                                  comments, follows, watch_pct, nonfollower_pct,
+                                  note, entered)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(date, asset, platform) DO UPDATE SET
                  views=excluded.views, reach=excluded.reach,
                  local_reach=excluded.local_reach, place=excluded.place,
                  likes=excluded.likes, saves=excluded.saves,
                  shares=excluded.shares, comments=excluded.comments,
                  follows=excluded.follows, watch_pct=excluded.watch_pct,
+                 nonfollower_pct=excluded.nonfollower_pct,
                  note=excluded.note, entered=excluded.entered""",
             (args.date, args.asset, args.format, args.category, args.platform,
              args.at, args.seconds, args.views, args.reach, args.local_reach,
              args.place, args.likes,
              args.saves, args.shares, args.comments, args.follows, args.watch,
-             args.note, datetime.now().isoformat(timespec='seconds')))
+             args.nonfollowers, args.note, datetime.now().isoformat(timespec='seconds')))
         con.commit()
     finally:
         con.close()
@@ -244,15 +248,16 @@ def report(args) -> int:
         block = [f'## {title}', '']
         if note:
             block += [note, '']
-        block += ['| | n | reach | shares/1k | saves/1k | watch % |',
-                  '|---|--:|--:|--:|--:|--:|']
+        block += ['| | n | reach | shares/1k | saves/1k | watch % | non-followers % |',
+                  '|---|--:|--:|--:|--:|--:|--:|']
         for k, rs in sorted(grouped.items(),
                             key=lambda kv: -_per_thousand(kv[1], 'shares')):
             block.append(
                 f'| {k} | {len(rs)} | {_mean(rs, "reach"):.0f} | '
                 f'{_per_thousand(rs, "shares"):.1f} | '
                 f'{_per_thousand(rs, "saves"):.1f} | '
-                f'{_mean(rs, "watch_pct"):.0f} |')
+                f'{_mean(rs, "watch_pct"):.0f} | '
+                f'{_mean(rs, "nonfollower_pct"):.0f} |')
         return block + ['']
 
     lines += table('By posting slot', _group(rows, 'at'),
@@ -332,8 +337,12 @@ def main() -> int:
     a.add_argument('--date', required=True, help='edition date YYYY-MM-DD')
     a.add_argument('--asset', required=True, help='reel_01.mp4, carousel, …')
     a.add_argument('--format', required=True,
-                   choices=['reel', 'carousel', 'story', 'broadsheet',
-                            'bulletin', 'footage', 'short'])
+                   choices=['saara', 'mukhya', 'roundup', 'footage', 'short',
+                            'reel', 'carousel', 'story', 'broadsheet',
+                            'bulletin'])
+    a.add_argument('--nonfollowers', type=float, default=None,
+                   help='share of reach from people who do not follow us, '
+                        '0-100 (Insights → audience). The growth signal.')
     a.add_argument('--category', default='')
     a.add_argument('--place', default='',
                    help='the taluk this post was written for')

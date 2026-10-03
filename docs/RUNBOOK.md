@@ -38,12 +38,13 @@ machine refuses to move on until each has done theirs (D95).
 | **The editor** (a person) | pastes the news and says what to make; answers "real photo or generate?"; approves with their name; looks at `_review/` and signs; posts | — |
 | **The managing editor** (the AI assistant in chat) | keeps sources (`intake.py`), builds the edition, runs `dispatch.py` and launches each wave, applies the desks' edits, shows the editor every story, runs `verify.py` with the name the editor gave, renders, reports the gate | writes a fact the paste does not say; invents a name; signs; skips a wave |
 | **intake-editor** | turns a large paste into the edition, one segment and a true category per story | — |
-| **fact-checker** · one per story | every figure, name and place against the kept source | edits copy for style |
+| **fact-checker** · up to `Limits.agent_batch_max` stories per run | every figure, name and place against the kept source, one receipt per story | edits copy for style |
+| **instagram-strategist** · one run per edition | the reach plan: is each story in the right format, the cover hook, text load, the slot, the first comment and the first-hour plan — from `docs/INSTAGRAM.md` and the channel's own numbers | edits anything; invents a multiplier; recommends bait; decides a segment |
 | **legal-standards** · each risky story | reads as the lawyer for the person named | — |
-| **kannada-editor** · one per story | natural Kannada, the source's own words, no fact changed | — |
+| **kannada-editor** · batched like the fact desk | natural Kannada, the source's own words, no fact changed | — |
 | **picture-editor** · each story with a picture | checks a real photo; writes the brief and checks an AI one — only after `photo_plan: ai` | generates without being asked |
 | **package-inspector** · one per rendered format | every frame at feed size | — |
-| **social-writer** | every paste file: captions, WhatsApp, Facebook | — |
+| **social-writer** | every paste file — captions, WhatsApp, Facebook — against the Instagram rules, marking which are platform rules and which are our hypotheses | — |
 | **gate-doctor** | only when the gate is HELD: names each fault's owner | fixes copy itself |
 | **corrections-officer** | complaints and the IT Rules clocks | — |
 | **planning-editor**, **systems-steward** | weekly, off the production path | — |
@@ -81,11 +82,15 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
    A source already published on an earlier day is refused at the gate
    (`DUP-01`) unless the story sets `follows_up` and carries a new fact.
 4. **Runs the desks in waves.** `python3 scripts/dispatch.py` lists who is
-   due. Each wave is ONE message of parallel Agent calls, one agent per story:
-   - wave 1 — `fact-checker` + `legal-standards`
+   due, as agent runs. Each wave is ONE message of parallel Agent calls, one
+   per line (a desk reads several stories in one run, D97):
+   - wave 1 — `fact-checker` + `legal-standards` + `instagram-strategist`
      (`python3 scripts/fact_check.py editions/<date>.json` checks every figure
      against the kept source, offline);
    - wave 2 — `kannada-editor` + `picture-editor`.
+
+   Apply the strategist's proposals the way you apply any desk's edit — the
+   hooks into `hook`, a format change only if the editor agrees.
 
    No sentence is polished before its fact check passes (D84, D87). These
    waves are not optional: the gate holds any edition a due desk has not

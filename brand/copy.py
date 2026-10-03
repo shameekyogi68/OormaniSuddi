@@ -503,6 +503,10 @@ class PostCopy:
             'instagram': self.instagram,
             'whatsapp': self.whatsapp,
             'first_comment': self.first_comment,
+            # Written for every post since the start and exported nowhere, so
+            # no one ever pasted it (found 2026-10-03, D97).
+            'alt_text': self.alt_text,
+            'hashtags': self.hashtags,
             'youtube_title': self.youtube_title,
             'youtube_description': self.youtube_description,
             'youtube_tags': self.youtube_tags,

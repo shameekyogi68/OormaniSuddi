@@ -37,9 +37,10 @@ contradicts the contract, stop and say so.
    `editions/<date>.json` with one `segment` per story (`speed` / `saara` /
    `mukhya`, D92). Then `python3 scripts/intake.py seen editions/<date>.json`.
 3. **Desks, in waves.** `python3 scripts/dispatch.py` says who is due. Each
-   wave is ONE message of parallel Agent calls, one agent per story:
-   fact-checker + legal-standards first (`scripts/fact_check.py` runs
-   offline against the kept source), then kannada-editor + picture-editor.
+   wave is ONE message of parallel Agent calls, one per line it prints (a desk
+   reads several stories in one run): fact-checker + legal-standards +
+   instagram-strategist first (`scripts/fact_check.py` runs offline against the
+   kept source), then kannada-editor + picture-editor.
    Check each agent's evidence against the kept source before applying it.
 4. **Show & ask — then wait.** Every story in plain language, its source, its
    flags, and its proposed segment. Ask the editor to confirm segments; for

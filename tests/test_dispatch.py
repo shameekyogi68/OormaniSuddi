@@ -72,7 +72,7 @@ class TheRosterIsTheTeam(unittest.TestCase):
             conv = fh.read()
         self.assertFalse(conv.startswith('---'), 'no agent frontmatter')
         for rule in ('Workspace jail', 'dispatch.py receipt', 'verified_by',
-                     'One story per instance'):
+                     'story by story, in batches'):
             self.assertIn(rule, conv)
 
     def test_the_scouts_are_gone(self):
@@ -98,10 +98,10 @@ class TheRosterIsTheTeam(unittest.TestCase):
             self.assertNotIn('WebSearch', tools, name)
 
     def test_models(self):
-        want = {'systems-steward': 'sonnet', 'gate-doctor': 'sonnet',
-                'planning-editor': 'sonnet'}
+        # D97: every agent pins its model, so what a run costs never depends
+        # on which model the chat happens to be using.
         for name in D.ROSTER:
-            self.assertEqual(frontmatter(name).get('model'), want.get(name), name)
+            self.assertEqual(frontmatter(name).get('model'), 'sonnet', name)
 
     def test_nothing_names_the_stock_library_as_a_source_of_pictures(self):
         for name in D.ROSTER:
@@ -598,6 +598,7 @@ class TheDesksAreNotOptional(unittest.TestCase):
         for i, _ in enumerate(stories, 1):
             for agent in ('fact-checker', 'kannada-editor'):
                 D.write_receipt(agent, self.ed, 'PASS', 'read', story=i)
+        D.write_receipt('instagram-strategist', self.ed, 'PASS', 'plan')
         self.assertEqual(D.desk_gaps(self.ed), [])
 
     def test_changing_the_wording_reopens_the_kannada_desk(self):
@@ -606,6 +607,7 @@ class TheDesksAreNotOptional(unittest.TestCase):
         for i, _ in enumerate(data['stories'], 1):
             for agent in ('fact-checker', 'kannada-editor'):
                 D.write_receipt(agent, self.ed, 'PASS', 'read', story=i)
+        D.write_receipt('instagram-strategist', self.ed, 'PASS', 'plan')
         data['stories'][0]['headline'] += ' ಇಂದು'
         with open(self.ed, 'w', encoding='utf-8') as fh:
             json.dump(data, fh, ensure_ascii=False)
@@ -625,3 +627,83 @@ class TheDesksAreNotOptional(unittest.TestCase):
                            capture_output=True, text=True, timeout=60)
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertIn('not been looked at', r.stderr)
+
+
+class TheTeamRunsInBatchesAndTheReachDeskIsHeard(unittest.TestCase):
+    """D97: fewer agent runs for the same checking, and one reach desk."""
+
+    def setUp(self):
+        import shutil
+        self.stem = f'zz_d97_{os.getpid()}'
+        self.tmp = tempfile.mkdtemp()
+        self.ed = os.path.join(self.tmp, f'{self.stem}.json')
+        st = dict(story(verified_by='Test Editor'), segment='saara',
+                  category='civic')
+        self.write([dict(st, headline=f'ಕುಂದಾಪುರ: ಸುದ್ದಿ {i}') for i in range(6)])
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.addCleanup(shutil.rmtree, os.path.join(D.RECEIPTS, self.stem),
+                        ignore_errors=True)
+
+    def write(self, stories):
+        with open(self.ed, 'w', encoding='utf-8') as fh:
+            json.dump({'schema_version': 4, 'date': '2026-09-30T07:00:00+05:30',
+                       'edition_no': 1, 'stories': stories}, fh,
+                      ensure_ascii=False)
+
+    def plan(self):
+        p = D.Plan(day='')
+        D._edition_tasks(p, self.ed)
+        return p
+
+    def test_six_stories_are_one_run_per_desk_not_six(self):
+        p = self.plan()
+        runs = [r for rs in p.launches().values() for r in rs]
+        fact = [r for r in runs if r['agent'] == 'fact-checker']
+        kn = [r for r in runs if r['agent'] == 'kannada-editor']
+        self.assertEqual(len(fact), 1)
+        self.assertEqual(fact[0]['stories'], [1, 2, 3, 4, 5, 6])
+        self.assertEqual(len(kn), 1)
+        # …but the gate still asks the per-story question
+        self.assertEqual(len([t for t in p.tasks if t.agent == 'fact-checker']), 6)
+
+    def test_a_batch_never_exceeds_the_limit(self):
+        from brand.tokens import Limits
+        st = json.load(open(self.ed, encoding='utf-8'))['stories'][0]
+        self.write([dict(st, headline=f'ಕುಂದಾಪುರ: ಸುದ್ದಿ {i}')
+                    for i in range(Limits.agent_batch_max + 2)])
+        runs = [r for rs in self.plan().launches().values() for r in rs
+                if r['agent'] == 'fact-checker']
+        self.assertEqual(len(runs), 2)
+        self.assertLessEqual(max(len(r['stories']) for r in runs),
+                             Limits.agent_batch_max)
+
+    def test_one_command_files_a_receipt_for_each_story_in_a_batch(self):
+        import subprocess
+        r = subprocess.run([sys.executable, 'scripts/dispatch.py', 'receipt',
+                            '--agent', 'fact-checker', '--edition', self.ed,
+                            '--story', '1', '2', '3', '--verdict', 'PASS',
+                            '--file', '-'], cwd=D.ROOT, input='read',
+                           capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(r.stdout.count('receipt filed'), 3)
+
+    def test_the_reach_desk_is_due_once_and_a_copy_edit_does_not_reopen_it(self):
+        def due():
+            return [t for t in self.plan().tasks if t.agent == 'instagram-strategist']
+        self.assertEqual(len(due()), 1)
+        D.write_receipt('instagram-strategist', self.ed, 'PASS', 'plan')
+        self.assertEqual(due(), [])
+        data = json.load(open(self.ed, encoding='utf-8'))
+        data['stories'][0]['headline'] += ' ಇಂದು'          # wording only
+        self.write(data['stories'])
+        self.assertEqual(due(), [], 'a Kannada edit must not send it round again')
+        data['stories'][0]['segment'] = 'mukhya'            # a format change
+        self.write(data['stories'])
+        self.assertEqual(len(due()), 1)
+
+    def test_it_waits_until_every_story_has_a_format(self):
+        data = json.load(open(self.ed, encoding='utf-8'))
+        data['stories'][0]['segment'] = ''
+        self.write(data['stories'])
+        self.assertEqual([t for t in self.plan().tasks
+                          if t.agent == 'instagram-strategist'], [])

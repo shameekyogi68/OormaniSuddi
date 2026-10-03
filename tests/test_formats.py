@@ -238,3 +238,42 @@ class EverySlideLeadsToTheNext(unittest.TestCase):
             self.assertGreater(sum(last.getpixel((last.width - 12,
                                                   last.height // 2))), 600,
                                'the last slide has nowhere to go')
+
+
+class TheEditorGetsWhatPostingNeeds(unittest.TestCase):
+    """D97: the first-hour checklist and the alt text travel with the package;
+    the shortcuts that saved tokens by skipping the desks do not exist."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        with frozen(NOW):
+            render.render_edition(Edition.load(FIXTURE), cls.tmp.name,
+                                  ['saara', 'mukhya'])
+        with open(os.path.join(cls.tmp.name, 'MASTER_COPY.md'),
+                  encoding='utf-8') as fh:
+            cls.master = fh.read()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_the_first_hour_checklist_is_in_the_master_copy(self):
+        self.assertIn('First hour', self.master)
+        self.assertIn('metrics.py add', self.master)
+
+    def test_every_post_has_its_alt_text_ready_to_paste(self):
+        self.assertIn('Alt text', self.master)
+        self.assertIn('saara', self.master.split('Alt text', 1)[1])
+
+    def test_the_house_rules_printout_is_one_short_line_each(self):
+        from brand import house
+        for line in house.brief().splitlines()[1:]:
+            self.assertLessEqual(len(line), 140, line)
+
+    def test_no_script_can_file_a_receipt_for_a_desk_that_did_not_run(self):
+        """daily_flow.py once wrote PASS receipts — "figures verified against
+        kept source" — for desks that had read nothing."""
+        with open('scripts/daily_flow.py', encoding='utf-8') as fh:
+            src = fh.read()
+        self.assertNotIn('write_receipt', src)

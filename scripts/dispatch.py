@@ -130,7 +130,9 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument('--agent', required=True)
     r.add_argument('--edition', required=True,
                    help='editions/X.json, out/X, or a YYYY-MM-DD day')
-    r.add_argument('--story', type=int, default=0)
+    r.add_argument('--story', type=int, nargs='*', default=[],
+                   help='one or more story numbers (same verdict for all; file '
+                        'differing verdicts separately)')
     r.add_argument('--format', default='',
                    help='roundup, saara or mukhya_N — one rendered format')
     r.add_argument('--verdict', required=True)
@@ -144,9 +146,10 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == 'receipt':
         body = (sys.stdin.read() if a.file == '-'
                 else open(a.file, encoding='utf-8').read())
-        path = D.write_receipt(a.agent, a.edition, a.verdict, body, a.story,
-                               a.format)
-        print(f'✓ receipt filed: {os.path.relpath(path, ROOT)}')
+        for n in (a.story or [0]):
+            path = D.write_receipt(a.agent, a.edition, a.verdict, body, n,
+                                   a.format)
+            print(f'✓ receipt filed: {os.path.relpath(path, ROOT)}')
         return 0
     p = D.plan(a.day)
     print(json.dumps(p.to_dict(), ensure_ascii=False, indent=1) if a.json

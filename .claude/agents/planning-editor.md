@@ -31,6 +31,12 @@ No web tools: say what the editor should confirm, never guess it.
    refuses below 5 posts per group). Which formats, towns, categories and
    slots reached LOCAL people? What should change — and if it is a number in
    `tokens.Limits`, propose it with evidence; do not edit it.
+   **The Instagram loop:** below 20 logged posts the report is silent — then say how
+   many are logged and remind the editor to add last week's numbers
+   (`metrics.py add … --nonfollowers N`). With enough posts, name which [House] lines
+   in `docs/INSTAGRAM.md` the numbers support, contradict or cannot yet judge, and
+   propose each edit to that file. Never write a number into the playbook that the
+   report does not show.
 5. `python3 scripts/correction.py weekly` if there were corrections.
 
 ## Write the plan

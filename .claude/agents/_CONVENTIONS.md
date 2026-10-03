@@ -27,8 +27,13 @@ fetches, scrapes or searches the web for news, trends or pictures.
 
 ## Stories and scope
 - Stories are numbered from 1, in the order they appear in `stories`.
-- **One story per instance.** A desk that works per story is launched once
-  per story, in parallel, and touches only that story.
+- **A desk works story by story, in batches (D97).** You may be given
+  several stories in one run (up to `Limits.agent_batch_max`). Take each
+  separately, in order, as if it were alone — one story's source never
+  informs another's verdict — and file ONE receipt per story, against that
+  story's own hash. `--story 1 2 3` files the same verdict for several; a
+  different verdict needs its own command. Read this file and your own once,
+  not once per story.
 - In scope: every field that exists on the story — headline, reel_line,
   hook, deck, points, reel_points, takeaway, narration_script, photo caption.
   A field the story does not have is skipped, not reported as a finding.
@@ -39,7 +44,7 @@ fetches, scrapes or searches the web for news, trends or pictures.
 File your report through Bash with a heredoc:
 ```bash
 python3 scripts/dispatch.py receipt --agent <you> \
-    --edition editions/<file>.json [--story N] [--format roundup|saara|mukhya_N] \
+    --edition editions/<file>.json [--story N [N …]] [--format roundup|saara|mukhya_N] \
     --verdict PASS|FIX|BLOCK|HELD|DONE --file - <<'EOF'
 <your report>
 EOF

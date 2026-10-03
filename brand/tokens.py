@@ -394,6 +394,11 @@ class Limits:
     saara_max_stories = 6
     # ಮುಖ್ಯ ಸುದ್ದಿ is the day's top story. Three "top" stories is none. D92.
     mukhya_max_per_day = 2
+    # A per-story desk reads up to this many stories in ONE agent run (D97).
+    # Each spawn re-loads its instructions and conventions, so six spawns for
+    # six stories paid that cost six times for no gain in care: the receipt is
+    # still filed per story, against that story's own hash.
+    agent_batch_max = 6
     reel_warn_seconds = 45.0
     reel_fail_seconds = 60.0
     reel_platform_cap = 90.0

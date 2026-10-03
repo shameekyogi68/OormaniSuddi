@@ -270,6 +270,32 @@ def _write_master_copy(outdir: str, ed, plan) -> None:
     for s in plan:
         lines += [f'- **{s.at}** · {s.platform} · `{s.asset}`',
                   f'  {s.what}', '']
+    lines += ['## First hour (docs/INSTAGRAM.md §5)', '',
+              '1. Post, then stay: reply to every comment in the first hour, '
+              'by name, in Kannada.',
+              '2. Paste the first comment from the caption file (an honest '
+              'question about the reader\'s own town).',
+              '3. Send it to the WhatsApp community now (`whatsapp_*.txt`) — '
+              'sends from people who trust us are the strongest early signal.',
+              '4. Share to Stories with the town named.',
+              '5. Tomorrow: log the numbers — `python3 scripts/metrics.py add …` '
+              '(reach, saves, shares, non-followers %).', '']
+    alts = []
+    for n in sorted(os.listdir(outdir)):
+        if re.fullmatch(r'(saara|mukhya_\d+|roundup)_copy\.json', n):
+            try:
+                with open(os.path.join(outdir, n), encoding='utf-8') as fh:
+                    alt = json.load(fh).get('alt_text', '')
+            except (OSError, ValueError):
+                alt = ''
+            if alt:
+                alts.append((n[:-len('_copy.json')], alt))
+    if alts:
+        lines += ['## Alt text — paste in Advanced settings → Write alt text', '',
+                  'Helps search, and is the only way a blind reader gets the post.', '']
+        for name, alt in alts:
+            lines += [f'- **{name}** — {alt}']
+        lines += ['']
     def _read(p: str) -> str:
         with open(p, encoding='utf-8') as fh:
             return fh.read().rstrip()

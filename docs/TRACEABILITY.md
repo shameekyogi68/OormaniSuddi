@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **59/96** decisions are named by at least one test
+- **60/97** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -426,10 +426,15 @@ those carry a reason rather than a test.
 ## D95 · The desks are not optional
 
 - **Tested by:** `tests/test_dispatch.py`
-- Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/sign_off.py`
+- Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/daily_flow.py`, `scripts/sign_off.py`
 
 ## D96 · A footage reel's news layer is laid out around Instagram, not over it
 
 - **Tested by:** `tests/test_reel_news.py`
 - Enforced in: `brand/reel_news.py`, `brand/speednews.py`, `brand/tokens.py`
+
+## D97 · An Instagram reach desk, and fewer agent runs for the same checking
+
+- **Tested by:** `tests/test_dispatch.py`, `tests/test_formats.py`
+- Enforced in: `brand/copy.py`, `brand/dispatch.py`, `brand/house.py`, `brand/tokens.py`, `scripts/daily_flow.py`
 

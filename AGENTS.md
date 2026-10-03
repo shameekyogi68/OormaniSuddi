@@ -182,12 +182,21 @@ DATE`. Never delete the edition JSON.
 ## The team
 
 Agents live in `.claude/agents/` — intake-editor, fact-checker,
-legal-standards, kannada-editor, picture-editor, social-writer,
-package-inspector, gate-doctor, corrections-officer, systems-steward,
-planning-editor. Do not decide from memory which to call:
-`python3 scripts/dispatch.py` lists who is due, in waves. Launch each wave as
-ONE message of parallel Agent calls, one agent per story. No agent verifies,
-signs, uploads or answers a complaint. D87, D89.
+legal-standards, instagram-strategist, kannada-editor, picture-editor,
+social-writer, package-inspector, gate-doctor, corrections-officer,
+systems-steward, planning-editor. Do not decide from memory which to call:
+`python3 scripts/dispatch.py` lists who is due, in waves, as the agent RUNS to
+launch. Launch each wave as ONE message of parallel Agent calls, one per line:
+a per-story desk reads several stories in one run (`Limits.agent_batch_max`)
+and still files a receipt per story. Every agent pins its model. For anything
+about Instagram — formats, hooks, captions, timing, what to measure — read
+`docs/INSTAGRAM.md`, not memory. No agent verifies, signs, uploads or answers a
+complaint. D87, D89, D97.
+
+**Reading cost.** `docs/DECISIONS.md` is ~140 KB of history: never read it
+whole — `grep -n "^## D<number>"` and read that entry. Read `docs/RUNBOOK.md`
+"Chat workflow" and `docs/AI_BRIEF.md` once per session, and agents read only
+their own file and `_CONVENTIONS.md`.
 
 ---
 
