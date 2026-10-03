@@ -65,8 +65,9 @@ python3 scripts/dispatch.py                        # which agents are due, in wa
 python3 scripts/verify.py editions/DATE.json --story N --by NAME   # a person checked it
 
 # making
-python3 render.py editions/DATE.json               # every segment present in the edition
+python3 render.py editions/DATE.json               # every segment present; carousel slides as .jpg + animated .mp4
 python3 render.py editions/DATE.json --only saara  # any of: roundup saara mukhya
+python3 render.py editions/DATE.json --still       # a quick draft: no animated twins
 python3 render.py editions/greetings/X.json        # a festival wish
 python3 render.py --describe                       # every format and its rules
 python3 render.py --schema story                   # the input contract

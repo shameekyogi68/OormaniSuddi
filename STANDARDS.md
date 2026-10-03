@@ -240,6 +240,31 @@ use for figures; mixing the two is a preflight failure.
 - A counter and a progress segment per story — viewers stay for an end they
   can see.
 
+### Carousel motion — the scan wipe (D98, D99)
+
+`brand/animate.py`, `Motion.anim_*`. Every ಸುದ್ದಿ ಸಾರ and ಮುಖ್ಯ ಸುದ್ದಿ slide
+is also a short video, made from the finished slide.
+
+- **Lines flow, they do not queue.** Each line is revealed left to right
+  through a soft feathered edge (`anim_feather`) behind a thin gold light
+  that rides on the letters and goes out across gaps. The next line starts
+  `anim_gap` after the one above it (`anim_head_gap` between headline lines,
+  which also settle up `anim_rise` px), with an `anim_beat` where a block
+  ends. Easing: a gentle start and a long, slow settle — never linear,
+  never a bounce.
+- **A cover is never blank.** Its photograph and headline are there at
+  frame 0; what follows them is revealed. Every other slide opens on its
+  chrome alone.
+- **The chrome never moves**: the bug, date, rules, footer, the swipe tab.
+- **The hold is what gets read** — `read_rate`, between `anim_hold` and
+  `anim_hold_max`. While it holds, the chevrons nudge right every
+  `anim_nudge` s: the slide asks to be swiped.
+- **No seam.** The last `anim_out` s dissolve back to frame 0, so the loop
+  restarts as if it were the first play.
+- **Never letter by letter** — a cut conjunct is a broken shape.
+- **A photograph is never wiped.** On a cover it is there at frame 0; on
+  another slide it fades. The gold sunline under it draws across (`anim_sun`).
+
 ### Audio
 
 - Loudness normalised to `Limits.lufs` / `Limits.true_peak_dbtp` — what the

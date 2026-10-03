@@ -411,9 +411,11 @@ def main() -> int:
                     choices=list(Limits.daily_templates),
                     help='render only these formats: '
                          + ', '.join(Limits.daily_templates))
-    ap.add_argument('--animate', action='store_true',
-                    help='also make each carousel slide as a scan-wipe video '
-                         '(.mp4 beside the .jpg), to post as a video carousel (D98)')
+    ap.add_argument('--animate', action='store_true', default=True,
+                    help='(the default) every carousel slide also as a scan-wipe '
+                         'video (.mp4 beside the .jpg), posted as a video carousel (D98, D99)')
+    ap.add_argument('--still', action='store_true',
+                    help='skip the animated twins — quicker, for checking a draft')
     ap.add_argument('--at', metavar='ISO',
                     help='pin the clock, e.g. 2026-08-25T09:40:00+05:30')
     ap.add_argument('--check', action='store_true',
@@ -555,7 +557,8 @@ def main() -> int:
     print(f'\nRENDER → {outdir}')
     t0 = time.time()
     try:
-        made = render_edition(ed, outdir, args.only, log=log, animate=args.animate)
+        made = render_edition(ed, outdir, args.only, log=log,
+                              animate=args.animate and not args.still)
         log.done('render', seconds=round(time.time() - t0, 1),
                  files=len(made))
 

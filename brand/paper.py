@@ -169,8 +169,12 @@ def edge_tab(sf: Surface, cy: float | None = None):
     The first carousels had no cue at all, and readers did not swipe
     (2026-09-27)."""
     cy = sf.h * 0.5 if cy is None else cy
-    _rect(sf, (sf.w - 40, cy - 48, sf.w, cy + 48), RED)
-    chevron(sf, sf.w - 26, cy, 34, WHITE, 5)
+    # Rounded where it meets the page, square where it meets the screen edge;
+    # the chevron centred with room to nudge right in the animated twin (D99).
+    sf.draw.rounded_rectangle(
+        [sf.s(sf.w - 40), sf.s(cy - 48), sf.s(sf.w) - 1, sf.s(cy + 48) - 1],
+        radius=int(sf.s(10)), fill=RED, corners=(True, False, False, True))
+    chevron(sf, sf.w - 29, cy, 32, WHITE, 5)
 
 
 def footer(sf: Surface, page_label: str = '', next_label: str = ''):

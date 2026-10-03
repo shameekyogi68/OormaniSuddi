@@ -538,18 +538,33 @@ class Motion:
                              # briskly; still well inside intelligible
     speed_end       = 2.0    # follow card — two seconds, not a speech
 
-    # ── animated carousel slides: the scan wipe (D98) ─────────────────────
-    # Each text line is revealed left to right behind a thin gold edge, top
-    # to bottom, then the finished slide HOLDS: an Instagram carousel video
-    # loops until the reader swipes, so the hold is what gets read.
-    anim_start      = 0.25   # before the first line starts
-    anim_gap        = 0.42   # between one line starting and the next
-    anim_reveal_max = 4.6    # the whole reveal never takes longer than this
-    anim_line_min   = 0.35   # a short line's wipe
-    anim_line_max   = 0.70   # a full-width line's wipe
-    anim_photo      = 0.70   # a photograph fades in this long
-    anim_hold       = 5.0    # the finished slide, still, so it can be read
-    anim_edge       = 6      # px, the leading edge
+    # ── animated carousel slides: the scan wipe (D98, refined D99) ────────
+    # Every line is revealed left to right behind a soft gold light, the lines
+    # flowing into one another top to bottom, and the finished slide then
+    # HOLDS — an Instagram carousel video loops until the reader swipes, so
+    # the hold is what gets read. On a COVER the stop-sign (the photograph,
+    # the headline) is there at frame 0: the feed and the profile grid see
+    # the first frame, and a blank first frame wastes the one second a
+    # stranger gives a post (docs/INSTAGRAM.md §2).
+    anim_start      = 0.20   # before the first line starts
+    anim_gap        = 0.13   # one line starting after the line above it
+    anim_head_gap   = 0.18   # the same, between headline lines — they land slower
+    anim_beat       = 0.22   # extra pause where one block ends and the next begins
+    anim_reveal_max = 3.6    # the whole reveal never takes longer than this
+    anim_line_min   = 0.55   # a short line's wipe
+    anim_line_max   = 0.85   # a full-width line's wipe
+    anim_head_line  = 0.95   # a headline line's wipe
+    anim_photo      = 0.80   # a photograph (not on a cover) fades in this long
+    anim_sun        = 0.70   # the gold sunline under a photograph draws across
+    anim_rise       = 10     # px a headline line settles up as it is revealed
+    anim_feather    = 70     # px, the soft leading edge of the wipe
+    anim_light      = 5      # px, the width of the gold light at that edge
+    anim_hold       = 6.0    # the finished slide is held at least this long …
+    anim_hold_max   = 20.0   # … and long enough to read (`read_rate`), to this
+    anim_nudge      = 3.0    # the swipe chevrons nudge right once every …
+    anim_nudge_px   = 7      # … by this much: the slide asks to be swiped
+    anim_out        = 0.50   # the slide dissolves back to its first frame, so
+                             # the loop starts again without a cut
     speed_push      = 0.05   # a settle INTO the whole picture, never a crop
                              # that stays — the photo ends the story entire
     # Where speed news may put things, measured against Instagram's own

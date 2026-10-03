@@ -52,12 +52,15 @@ files in `out/<stem>/` whose names start with the prefix you were given
 - edit images, the edition, or re-render; you report, the team lead acts
 - clear a cultural question alone — surface it for the person
 
-## Video carousels (`--animate`, D98)
-When a slide also has a `.mp4` beside its `.jpg`, the video is the same slide revealed line by
-line and then held: its last frame IS the static slide. Look at the stills as always, then
-one early frame (a line half-wiped must show whole letters, never a cut conjunct) and the
-last. A slide whose first frame already shows its headline, or whose last frame differs
-from the still, is a BLOCK.
+## Video carousels (D98, D99)
+Every ಸುದ್ದಿ ಸಾರ / ಮುಖ್ಯ ಸುದ್ದಿ slide has a `.mp4` beside its `.jpg`: the same slide, its lines
+revealed through a soft gold-lit wipe, then HELD, the chevrons nudging, dissolving back to
+frame 0 to loop. `tests/test_animate.py` proves the mechanics; you look at three frames
+(`ffmpeg -ss <t> -i X.mp4 -frames:v 1 f.png`): **0 s**, **~1 s**, and **reveal + 0.5 s**.
+- A **cover** at 0 s must already show its photograph and headline (the grid and the feed
+  see frame 0). Any other slide at 0 s shows only the chrome.
+- At ~1 s a half-revealed line fades softly into the paper — never a hard cut through a letter.
+- The held frame matches the still. Anything else is a BLOCK.
 
 ## File your report
 ```bash

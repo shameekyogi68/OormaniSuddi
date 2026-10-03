@@ -2856,6 +2856,50 @@ fallback.
 `tests/test_animate.py`
 
 ---
+## D99 · The scan wipe, refined to a premium standard — and on by default
+
+**Decided (2026-10-03).** The owner asked for the animated carousels to be
+taken to a premium, "luxurious" standard and made the final version. What
+changed from D98, and why:
+
+* **Flow, not a queue.** Lines used to start 0.42 s apart, each a hard-edged
+  wipe — it read as typing. Now each line wipes through a soft 70 px feathered
+  edge and the next starts 0.13 s later (0.18 s between headline lines, a
+  0.22 s beat between blocks), so the page fills like one wave in at most
+  `anim_reveal_max`. Headline lines also settle up `anim_rise` px. The easing
+  is a cubic-bezier with a gentle start and a long settle.
+* **The gold edge became a light.** A thin gold line with a soft halo — the
+  logo's sun — that rides only on the letters (it goes out across the gap
+  between a kicker and the slide number) and fades as the line completes.
+* **A cover is never blank.** In D98 a cover opened on empty paper. But the
+  profile grid and a fast thumb see frame 0, and a stranger gives a post one
+  second (INSTAGRAM.md §2). Now the photograph and the headline — the
+  stop-sign, found as the first run of display-size lines with its kicker —
+  are there at frame 0, and what follows is revealed.
+* **The hold is long enough to read.** D98 held 5 s; a story slide carries
+  ~280 Kannada characters, 40 s at `read_rate`. Video carousels loop, and a
+  loop that wipes the text away mid-read is hostile. The hold now follows the
+  type on the slide (estimated from the picture, measured against the
+  fixture: 288 estimated, 285 typed) between `anim_hold` and `anim_hold_max`.
+* **The slide asks to be swiped.** While it holds, the chevrons on the edge
+  tab and in the footer nudge right — two soft taps every `anim_nudge` s.
+* **No seam.** The last `anim_out` s dissolve back to frame 0, so the loop
+  starts again as if it were the first play.
+* **The edge tab** is rounded where it meets the page and square at the
+  screen edge, its chevron centred with room to nudge. The only change to a
+  still slide; the golden renders were re-blessed after looking at them.
+* **On by default.** `render.py` makes the videos unless `--still` is given:
+  an option the operator must remember is an option that gets forgotten.
+
+Considered and left out: a Ken Burns push on the photograph (the bug and the
+credit are drawn on it, and would zoom with it); a shimmer over the headline
+(the owner has twice rejected decoration that reads as AI-made); sound
+(carousel videos play muted).
+
+`brand/animate.py` · `brand/tokens.py :: Motion.anim_*` · `brand/paper.py :: edge_tab` ·
+`render.py --still` · `tests/test_animate.py`
+
+---
 
 ## Changing something here
 

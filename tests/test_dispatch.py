@@ -553,7 +553,7 @@ class ARenderNeverOverwritesAnotherEdition(unittest.TestCase):
             with open(os.path.join(out, '.edition'), 'w') as fh:
                 fh.write('editions/some_other_edition.json\n')
             r = subprocess.run(
-                [sys.executable, 'render.py', ed, '--out', out],
+                [sys.executable, 'render.py', ed, '--out', out, '--still'],
                 cwd=D.ROOT, capture_output=True, text=True, timeout=120)
             self.assertEqual(r.returncode, 1, r.stdout[-400:] + r.stderr[-400:])
             self.assertIn('would overwrite', r.stderr)

@@ -87,6 +87,12 @@ headline within `Limits.headline_chars`, three points at most.
 4. **Alt text** is written for every post (`MASTER_COPY.md` lists it): it helps
    search and it is the only way a blind reader gets the post.
 
+**Video carousels** (D98, D99): every carousel is posted as videos. Motion in
+the feed is itself a stop-sign, but the first frame is what the grid and a
+fast thumb see, so a cover is never blank: its picture and headline are there
+at frame 0. [House] — compare swipe-through and saves against the still
+carousels once `metrics.py` has enough posts.
+
 **Reels from footage:** the hook in the first two seconds, the news card clear of
 Instagram's own interface (D96).
 
