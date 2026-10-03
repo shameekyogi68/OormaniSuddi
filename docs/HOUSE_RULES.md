@@ -61,6 +61,8 @@ the things that are genuinely house style rather than contract.
 - **2026-09-24-01** — Every town and topic in a carousel or speed-news post must be discoverable: the five hashtags carry the two most-covered towns, one trend the edition is genuinely about, ಕರಾವಳಿಸುದ್ದಿ and the channel; every other town appears in the caption's 📍 line in Kannada and English (brand/copy.py does this).
   - _why:_ supersedes 2026-09-17-07: Instagram reads 5 hashtags since Dec 2025 (D86); caption keywords are searchable
   - _asked by:_ Shameek Yogi
+- **2026-10-04-01** — Carousels (ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ) are fixed in this format: every slide is its own animated scan-wipe .mp4 (D99), posted together as ONE carousel post in slide order, never joined into one video; seams drawn as one sheet across the swipe (D100). Do not change the motion or the seam design without the owner asking.
+  - _why:_ The owner approved the D99/D100 carousel videos on 2026-10-04 and asked that it stay fixed from now on.
 
 ## Retired
 

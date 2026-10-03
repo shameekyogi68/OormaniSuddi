@@ -244,6 +244,15 @@
       "added": "2026-09-30",
       "retired": "",
       "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-10-04-01",
+      "said": "Carousels (ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ) are fixed in this format: every slide is its own animated scan-wipe .mp4 (D99), posted together as ONE carousel post in slide order, never joined into one video; seams drawn as one sheet across the swipe (D100). Do not change the motion or the seam design without the owner asking.",
+      "scope": "package",
+      "why": "The owner approved the D99/D100 carousel videos on 2026-10-04 and asked that it stay fixed from now on.",
+      "added": "2026-10-04",
+      "retired": "",
+      "by": ""
     }
   ]
 }
