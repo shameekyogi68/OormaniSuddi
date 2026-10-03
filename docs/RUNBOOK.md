@@ -131,7 +131,8 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
    `mukhya_1_02_points.jpg`, `mukhya_1_03_source.jpg`; each with its
    `_copy.txt` and `_caption.txt`. Every carousel slide also has its animated
    twin (`saara_02.mp4` beside `saara_02.jpg`, D98, D99): **post the .mp4s** as
-   one video carousel, in the order `schedule.txt` lists. The .jpgs are the
+   ONE carousel post of separate videos (＋ → Post → select multiple → tick
+   them in order, D100) — never joined into one video. The .jpgs are the
    same slides — the fallback, and what the inspector reads. `--still` skips
    the videos for a quick draft render.
 3. **Runs one adversary pass, then the gate.** The Chief Editor gate writes

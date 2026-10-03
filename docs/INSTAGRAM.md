@@ -90,7 +90,9 @@ headline within `Limits.headline_chars`, three points at most.
 **Video carousels** (D98, D99): every carousel is posted as videos. Motion in
 the feed is itself a stop-sign, but the first frame is what the grid and a
 fast thumb see, so a cover is never blank: its picture and headline are there
-at frame 0. [House] — compare swipe-through and saves against the still
+at frame 0. Each slide is its own video, posted together as one carousel —
+never one long video — and the slides are drawn as one sheet across the swipe
+(D100). [House] — compare swipe-through and saves against the still
 carousels once `metrics.py` has enough posts.
 
 **Reels from footage:** the hook in the first two seconds, the news card clear of

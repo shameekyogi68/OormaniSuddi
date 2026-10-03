@@ -2900,6 +2900,35 @@ credit are drawn on it, and would zoom with it); a shimmer over the headline
 `render.py --still` · `tests/test_animate.py`
 
 ---
+## D100 · A carousel is separate slides, drawn as one sheet across the swipe
+
+**Decided (2026-10-04).** The owner, after seeing a stitched preview: "make
+sure carousels are carousels, not one video — and perfect transitions when
+the user swipes."
+
+* **Separate slides.** The engine has always written one .mp4 per slide; the
+  joined file was only a preview. That is now stated where it is acted on:
+  `schedule.txt` says "ONE carousel post of N separate videos … never join
+  them", and a test proves each video is a single 1080×1350 slide.
+* **The swipe is Instagram's** — the native, finger-driven slide. A
+  transition baked into a video would fight it. What the design controls is
+  what the reader sees DURING the swipe: slide N's right edge against slide
+  N+1's left edge. So every seam is continuous: the footer hairline runs to
+  every inner edge (one line from the first slide to the last), and the red
+  edge tab meets a new red landing mark at the same height on the next
+  slide, so mid-swipe the two are one pill across the seam — the carousel
+  reads as one sheet of paper being pulled along. The landing mark is
+  chrome: it is there at frame 0, which is the frame the reader swipes into,
+  and the lines start to flow the moment the slide lands.
+* The landing mark is 16 px wide (the tab is 40) so it never crowds the
+  text at the 64 px margin. On ಮುಖ್ಯ ಸುದ್ದಿ slide 2 it sits at the cover's tab
+  height, half-way down the photograph.
+
+`brand/paper.py :: landing, footer(seam=)` · `templates/saara.py` ·
+`templates/mukhya.py` · `brand/animate.py` (the landing mark is chrome) ·
+`brand/copy.py :: publishing_plan` · `tests/test_animate.py`
+
+---
 
 ## Changing something here
 

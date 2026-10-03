@@ -265,6 +265,21 @@ is also a short video, made from the finished slide.
 - **A photograph is never wiped.** On a cover it is there at frame 0; on
   another slide it fades. The gold sunline under it draws across (`anim_sun`).
 
+### The swipe — a carousel is one sheet of paper (D100)
+
+- **Separate slides, always.** One .mp4 (and one .jpg) per slide, posted
+  together as ONE carousel. Never joined into one video: Instagram does the
+  swipe, and the reader controls it.
+- **Every seam is continuous.** Mid-swipe, slide N's right edge sits against
+  slide N+1's left edge. The footer hairline runs out to every inner edge,
+  so it is one unbroken line from the first slide to the last; the red edge
+  tab (`paper.edge_tab`) meets a red landing mark (`paper.landing`) at the
+  same height on the next slide, and the two read as one pill across the
+  seam. The first slide's left edge and the last slide's right edge keep
+  their margins.
+- **The reader swipes into frame 0** — paper, chrome, the landing mark — and
+  the lines start to flow the moment the slide lands.
+
 ### Audio
 
 - Loudness normalised to `Limits.lufs` / `Limits.true_peak_dbtp` — what the

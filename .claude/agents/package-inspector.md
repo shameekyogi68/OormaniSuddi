@@ -61,6 +61,9 @@ frame 0 to loop. `tests/test_animate.py` proves the mechanics; you look at three
   see frame 0). Any other slide at 0 s shows only the chrome.
 - At ~1 s a half-revealed line fades softly into the paper — never a hard cut through a letter.
 - The held frame matches the still. Anything else is a BLOCK.
+- **The swipe** (D100): one .mp4 per slide, never one joined video. Put slide N's still
+  beside slide N+1's frame 0: the footer hairline runs straight across and the red tab
+  meets the red landing mark as one pill. A broken seam is a FIX.
 
 ## File your report
 ```bash

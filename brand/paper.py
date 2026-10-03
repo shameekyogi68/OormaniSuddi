@@ -172,17 +172,37 @@ def edge_tab(sf: Surface, cy: float | None = None):
     # Rounded where it meets the page, square where it meets the screen edge;
     # the chevron centred with room to nudge right in the animated twin (D99).
     sf.draw.rounded_rectangle(
-        [sf.s(sf.w - 40), sf.s(cy - 48), sf.s(sf.w) - 1, sf.s(cy + 48) - 1],
+        [sf.s(sf.w - 40), sf.s(cy - TAB_H / 2), sf.s(sf.w) - 1, sf.s(cy + TAB_H / 2) - 1],
         radius=int(sf.s(10)), fill=RED, corners=(True, False, False, True))
     chevron(sf, sf.w - 29, cy, 32, WHITE, 5)
 
 
-def footer(sf: Surface, page_label: str = '', next_label: str = ''):
+TAB_H = 96
+LANDING_W = 16
+
+
+def landing(sf: Surface, cy: float | None = None):
+    """The other half of the previous slide's edge tab, on this slide's left
+    edge at the same height: mid-swipe the two meet as one red pill across
+    the seam, so the carousel reads as one sheet of paper (D100). `cy` is the
+    previous slide's tab centre."""
+    cy = sf.h * 0.5 if cy is None else cy
+    sf.draw.rounded_rectangle(
+        [0, sf.s(cy - TAB_H / 2), sf.s(LANDING_W) - 1, sf.s(cy + TAB_H / 2) - 1],
+        radius=int(sf.s(8)), fill=RED, corners=(False, True, True, False))
+
+
+def footer(sf: Surface, page_label: str = '', next_label: str = '',
+           seam: tuple[bool, bool] = (False, False)):
     """Hairline, a gold mark, the handle; on the right, where the swipe
-    goes next — in red, with a chevron — and the page number."""
+    goes next — in red, with a chevron — and the page number.
+
+    `seam` = (a slide before, a slide after): the hairline runs out to that
+    edge, so across a swipe it is one unbroken line from the first slide to
+    the last (D100)."""
     W, H, m = sf.w, sf.h, P.margin
     y = H - P.footer_h
-    _rect(sf, (m, y, W - m, y + 2), RULE)
+    _rect(sf, (0 if seam[0] else m, y, W if seam[1] else W - m, y + 2), RULE)
     _rect(sf, (m, y + 32, m + 24, y + 56), GOLD)
     f = typo.font('kn_var', sf.s(P.meta), weight=620)
     typo.draw_text(sf.img, Brand.handle, sf.s(m + 40), sf.s(y + 54), f, INK)

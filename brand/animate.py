@@ -45,6 +45,7 @@ from .tokens import C, Motion as M, Paper as P
 FPS = M.fps
 TOP_STATIC = 140          # the bug, date and the rule under them
 TAB_W = 44                # the right-edge swipe tab
+LAND_W = 24               # the left-edge landing mark (D100)
 INK_DIFF = 40             # summed RGB distance from the paper that counts as ink
 MERGE_GAP = 3             # rows of paper that still belong to one line
 PAD = (3, 4)              # rows kept above / below a line, for anti-aliasing
@@ -92,6 +93,7 @@ def analyse(im: Image.Image, cover: bool = False) -> dict:
     paper = tuple(int(v) for v in a[H - 20, 4])
     ink = _ink(a, paper)
     ink[:, W - TAB_W:] = False                           # the swipe tab is chrome
+    ink[:, :LAND_W] = False                              # so is the landing mark
     foot = H - P.footer_h
     rows_cov = ink.mean(axis=1)
 
@@ -359,6 +361,11 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
     if info['tab']:
         x0, y0, x1, y1 = info['tab']
         base[y0:y1, x0:x1] = full[y0:y1, x0:x1]
+    # The landing mark is there at frame 0: it is what the previous slide's
+    # tab meets while the reader is still swiping.
+    edge = full[:, :LAND_W]
+    red_edge = np.abs(edge - np.array(C.red_500, np.float32)).sum(axis=2) < 90
+    base[:, :LAND_W][red_edge] = edge[red_edge]
 
     # Each line, cut once, with paper below it to rise from.
     crops = {}

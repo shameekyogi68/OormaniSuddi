@@ -956,13 +956,23 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
     """
     plan: list[Slot] = []
     ext = (lambda n: n.replace('.jpg', '.mp4')) if animated else (lambda n: n)
-    video = ' — video carousel (the scan-wipe .mp4s; the .jpgs are the same slides)' if animated else ''
+
+    def video(last_name: str) -> str:
+        # A carousel is SEPARATE items the reader swipes between — never the
+        # slides joined into one video (D100). Instagram does the swipe.
+        if not animated:
+            return ''
+        m_ = re.search(r'_(\d+)_\w+\.jpg$', last_name)
+        n_ = f'{int(m_.group(1))} ' if m_ else ''
+        return (f' — ONE carousel post of {n_}separate videos: ＋ → Post → select '
+                f'multiple → tick them in this order. Never join them into one '
+                f'video. (The .jpgs are the same slides.)')
     if has_saara:
         last = saara_last or 'saara_NN_sources.jpg'
         plan.append(Slot(
             Limits.carousel_slot, f'{ext("saara_01_cover.jpg")} … {ext(last)}',
             'Instagram + Facebook',
-            f'ಸುದ್ದಿ ಸಾರ — the day\'s bulletin, swipeable{video}. Caption: saara_caption.txt',
+            f'ಸುದ್ದಿ ಸಾರ — the day\'s bulletin, swipeable{video(last)}. Caption: saara_caption.txt',
             'The morning scroll. A carousel gets a second impression when '
             'someone does not swipe the first time.'))
     for k, breaking, last in mukhya:
@@ -970,7 +980,7 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
             'NOW' if breaking else Limits.mukhya_slot,
             f'{ext(f"mukhya_{k}_01_cover.jpg")} … {ext(last or f"mukhya_{k}_03_source.jpg")}',
             'Instagram + Facebook',
-            f'ಮುಖ್ಯ ಸುದ್ದಿ {k}{video}. Caption: mukhya_{k}_caption.txt',
+            f'ಮುಖ್ಯ ಸುದ್ದಿ {k}{video(last or f"mukhya_{k}_03_source.jpg")}. Caption: mukhya_{k}_caption.txt',
             'Breaking: post the moment it is signed; being first is the story.'
             if breaking else
             'The day\'s top story on its own, with its picture and its source.'))

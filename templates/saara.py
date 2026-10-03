@@ -135,7 +135,7 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     assert y <= bottom + 1, f'index overran the footer by {y - bottom:.0f}px'
     _swipe_bar(sf, H - P.footer_h - 28 - BAR_H)
     pp.edge_tab(sf)
-    pp.footer(sf, f'1/{n}')
+    pp.footer(sf, f'1/{n}', seam=(False, True))
     p = os.path.join(outdir, f'{prefix}_01_cover.jpg')
     sf.save(p)
     paths.append(p)
@@ -164,8 +164,9 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
         nxt = stories[i] if i < len(stories) else None
         nxt_label = ('ಮುಂದೆ: ' + ((nxt.location or '').strip() or Brand.coverage)
                      if nxt else 'ಮೂಲಗಳು')
+        pp.landing(sf)
         pp.edge_tab(sf)
-        pp.footer(sf, f'{i + 1}/{n}', nxt_label)
+        pp.footer(sf, f'{i + 1}/{n}', nxt_label, seam=(True, True))
         p = os.path.join(outdir, f'{prefix}_{i + 1:02d}.jpg')
         sf.save(p)
         paths.append(p)
@@ -195,7 +196,8 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
         pp.meta(sf, m + 64, y, line, pp.BODY, size=28, max_w=cw - 64)
         y += 50
     pp.grievance(sf, H - P.footer_h - 30)
-    pp.footer(sf, f'{n}/{n}')
+    pp.landing(sf)
+    pp.footer(sf, f'{n}/{n}', seam=(True, False))
     p = os.path.join(outdir, f'{prefix}_{n:02d}_sources.jpg')
     sf.save(p)
     paths.append(p)

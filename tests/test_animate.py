@@ -24,7 +24,9 @@ from PIL import Image  # noqa: E402
 import render  # noqa: E402
 from brand import animate as A  # noqa: E402
 from brand.content import Edition, frozen  # noqa: E402
-from brand.tokens import Motion, Paper as P  # noqa: E402
+from brand.tokens import C as PALETTE, Motion, Paper as P  # noqa: E402
+
+P_RED = PALETTE.red_500
 
 FIXTURE = 'tests/fixture_edition.json'
 NOW = '2026-08-25T09:40:00+05:30'
@@ -167,6 +169,54 @@ class TheScanWipe(unittest.TestCase):
                  'size': (1080, 1350)}
         self.assertEqual(A.plan(short)['hold'], Motion.anim_hold)
 
+    def carousels(self):
+        saara = sorted(f for f in self.files if f.startswith('saara_') and f.endswith('.jpg'))
+        mukhya = sorted(f for f in self.files if f.startswith('mukhya_1_') and f.endswith('.jpg'))
+        return [saara, mukhya]
+
+    def test_a_carousel_is_separate_slides_not_one_video(self):
+        """D100: one .mp4 per slide, each a single 4:5 slide of its own —
+        Instagram does the swipe between them."""
+        for slides in self.carousels():
+            self.assertGreaterEqual(len(slides), 3)
+            for j in slides:
+                mp4 = self.path(j[:-4] + '.mp4')
+                r = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+                                    '-show_entries', 'stream=width,height', '-of', 'csv=p=0',
+                                    mp4], capture_output=True, text=True)
+                self.assertEqual(r.stdout.strip(), '1080,1350', j)
+                self.assertLessEqual(duration(mp4), Motion.anim_reveal_max
+                                     + Motion.anim_hold_max + Motion.anim_out + 0.5, j)
+
+    def test_every_seam_is_continuous_across_a_swipe(self):
+        """D100: mid-swipe, slide N's right edge sits against slide N+1's left
+        edge. There they must agree — the footer hairline runs on, and the
+        edge tab meets the landing mark as one pill — on the stills and on the
+        video frame the reader swipes into."""
+        for slides in self.carousels():
+            for left, right in zip(slides, slides[1:]):
+                a = np.asarray(Image.open(self.path(left)).convert('RGB')).astype(int)
+                info = A.analyse(Image.open(self.path(left)))
+                y0 = info['photo_end']            # a photograph has its own edge
+                for b, what in (
+                        (np.asarray(Image.open(self.path(right)).convert('RGB')).astype(int), 'still'),
+                        (np.asarray(frame_at(self.path(right[:-4] + '.mp4'), 0.0)).astype(int),
+                         'frame 0')):
+                    ea, eb = a[y0:, -1], b[y0:, 0]
+                    self.assertLess(np.abs(ea - eb).mean(), 4.0, f'{left} → {right} ({what})')
+                    red = np.array(P_RED)          # the pill: over the full height
+                    ra = np.abs(a[:, -1] - red).sum(axis=1) < 90
+                    rb = np.abs(b[:, 0] - red).sum(axis=1) < 90
+                    self.assertTrue(ra.any() and rb.any(), f'{left} → {right}: no tab / landing')
+                    self.assertLessEqual(np.logical_xor(ra, rb).sum(), 4,
+                                         f'{left} → {right} ({what}): the pill does not meet')
+            # The first slide's left edge and the last slide's right edge are margins.
+            first = np.asarray(Image.open(self.path(slides[0])).convert('RGB')).astype(int)
+            last = np.asarray(Image.open(self.path(slides[-1])).convert('RGB')).astype(int)
+            fy = A.analyse(Image.open(self.path(slides[0])))['photo_end']
+            for col in (first[fy:, 0], last[:, -1]):
+                self.assertLess((np.abs(col - col[-20]).sum(axis=1) > 60).mean(), 0.01)
+
     def test_the_schedule_names_the_videos(self):
         with frozen(NOW):
             from brand import copy as C
@@ -174,6 +224,8 @@ class TheScanWipe(unittest.TestCase):
                                      animated=True)
         self.assertIn('saara_01_cover.mp4', plan[0].asset)
         self.assertIn('saara_05_sources.mp4', plan[0].asset)
+        self.assertIn('ONE carousel post of 5 separate videos', plan[0].what)
+        self.assertIn('Never join them', plan[0].what)
 
 
 if __name__ == '__main__':
