@@ -2831,6 +2831,31 @@ to save it defeated the gate that exists because of the 27 Sept slips.
 `scripts/metrics.py` · `tests/test_dispatch.py :: TheTeamRunsInBatches…`
 
 ---
+## D98 · Every carousel slide has an animated twin: the scan wipe
+
+**Decided (2026-10-03).** `python3 render.py editions/DATE.json --animate` makes
+a `.mp4` beside every ಸುದ್ದಿ ಸಾರ and ಮುಖ್ಯ ಸುದ್ದಿ slide, to be posted as a video
+carousel (Instagram lets a carousel be videos, and a video in a carousel loops
+until the reader swipes). Each line of text is revealed left to right behind a
+thin gold edge, top to bottom (`Motion.anim_*`: lines start `anim_gap` apart,
+the whole reveal is at most `anim_reveal_max`); the finished slide then HOLDS
+for `anim_hold`, because the hold is what gets read. A photograph fades in
+first. The red bug, date, footer and swipe tab never move.
+
+`brand/animate.py` works from the finished PICTURE — it finds the lines of text
+— so every present and future slide animates the same way, and the last frame
+is the static slide. Nothing is ever revealed letter by letter: cutting a
+Kannada conjunct shows broken shapes, so whole lines are wiped.
+
+**Why.** The owner chose the scan wipe from four demos (word pop, swipe push,
+mask rise, scan wipe) and asked for it as the carousel itself, in the style of
+news-brand carousels. The static slides remain the source of truth and the
+fallback.
+
+`brand/animate.py` · `brand/tokens.py :: Motion.anim_*` · `render.py --animate` ·
+`tests/test_animate.py`
+
+---
 
 ## Changing something here
 

@@ -165,7 +165,7 @@ class _NullLog:
 
 
 def render_edition(ed: Edition, outdir: str, only: list[str] | None,
-                   log=None) -> list[tuple[str, str]]:
+                   log=None, animate: bool = False) -> list[tuple[str, str]]:
     """Render every format the edition's stories ask for (D92).
 
     Each story is drawn in its own segment's format and nowhere else, so the
@@ -230,6 +230,18 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         log.done('roundup', seconds=round(time.time() - _t, 1),
                  stories=res['stories'])
 
+    # The animated twin of every carousel slide (D98): the scan wipe.
+    if animate:
+        from brand.animate import animate_all
+        _t = time.time()
+        stills = [p for p, _k in made
+                  if re.match(r'(saara|mukhya_\d+)_', os.path.basename(p))
+                  and p.endswith('.jpg')]
+        vids = animate_all(stills)
+        for v in vids:
+            print(f'  ✓ {os.path.basename(v)}  (animated)')
+        log.done('animate', seconds=round(time.time() - _t, 1), slides=len(vids))
+
     # The publishing plan, derived from what was actually rendered, so it can
     # never list a post that does not exist (D43).
     slides = sorted(f for f in os.listdir(outdir)
@@ -238,7 +250,8 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         has_saara=os.path.exists(os.path.join(outdir, 'saara_01_cover.jpg')),
         saara_last=slides[-1] if slides else '',
         mukhya=mukhya_done,
-        has_roundup=os.path.exists(os.path.join(outdir, 'roundup.mp4')))
+        has_roundup=os.path.exists(os.path.join(outdir, 'roundup.mp4')),
+        animated=animate)
     if plan:
         with open(os.path.join(outdir, 'schedule.txt'), 'w', encoding='utf-8') as f:
             f.write(copywriter.plan_text(plan, ed.date_kn))
@@ -398,6 +411,9 @@ def main() -> int:
                     choices=list(Limits.daily_templates),
                     help='render only these formats: '
                          + ', '.join(Limits.daily_templates))
+    ap.add_argument('--animate', action='store_true',
+                    help='also make each carousel slide as a scan-wipe video '
+                         '(.mp4 beside the .jpg), to post as a video carousel (D98)')
     ap.add_argument('--at', metavar='ISO',
                     help='pin the clock, e.g. 2026-08-25T09:40:00+05:30')
     ap.add_argument('--check', action='store_true',
@@ -539,7 +555,7 @@ def main() -> int:
     print(f'\nRENDER → {outdir}')
     t0 = time.time()
     try:
-        made = render_edition(ed, outdir, args.only, log=log)
+        made = render_edition(ed, outdir, args.only, log=log, animate=args.animate)
         log.done('render', seconds=round(time.time() - t0, 1),
                  files=len(made))
 

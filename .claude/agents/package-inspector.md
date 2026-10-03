@@ -52,6 +52,13 @@ files in `out/<stem>/` whose names start with the prefix you were given
 - edit images, the edition, or re-render; you report, the team lead acts
 - clear a cultural question alone — surface it for the person
 
+## Video carousels (`--animate`, D98)
+When a slide also has a `.mp4` beside its `.jpg`, the video is the same slide revealed line by
+line and then held: its last frame IS the static slide. Look at the stills as always, then
+one early frame (a line half-wiped must show whole letters, never a cut conjunct) and the
+last. A slide whose first frame already shows its headline, or whose last frame differs
+from the still, is a BLOCK.
+
 ## File your report
 ```bash
 python3 scripts/dispatch.py receipt --agent package-inspector \

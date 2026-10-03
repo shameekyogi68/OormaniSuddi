@@ -537,6 +537,19 @@ class Motion:
     speed_tempo     = 1.06   # on top of the house 1.15 — speed news is read
                              # briskly; still well inside intelligible
     speed_end       = 2.0    # follow card — two seconds, not a speech
+
+    # ── animated carousel slides: the scan wipe (D98) ─────────────────────
+    # Each text line is revealed left to right behind a thin gold edge, top
+    # to bottom, then the finished slide HOLDS: an Instagram carousel video
+    # loops until the reader swipes, so the hold is what gets read.
+    anim_start      = 0.25   # before the first line starts
+    anim_gap        = 0.42   # between one line starting and the next
+    anim_reveal_max = 4.6    # the whole reveal never takes longer than this
+    anim_line_min   = 0.35   # a short line's wipe
+    anim_line_max   = 0.70   # a full-width line's wipe
+    anim_photo      = 0.70   # a photograph fades in this long
+    anim_hold       = 5.0    # the finished slide, still, so it can be read
+    anim_edge       = 6      # px, the leading edge
     speed_push      = 0.05   # a settle INTO the whole picture, never a crop
                              # that stays — the photo ends the story entire
     # Where speed news may put things, measured against Instagram's own

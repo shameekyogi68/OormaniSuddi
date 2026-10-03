@@ -945,7 +945,8 @@ class Slot:
 
 def publishing_plan(has_saara: bool = False, saara_last: str = '',
                     mukhya: list[tuple[int, bool, str]] = (),
-                    has_roundup: bool = False) -> list[Slot]:
+                    has_roundup: bool = False,
+                    animated: bool = False) -> list[Slot]:
     """The day's upload order, derived from what was actually rendered (D92).
 
     `mukhya` is one (k, breaking, last_slide) per ಮುಖ್ಯ ಸುದ್ದಿ set. A breaking
@@ -954,20 +955,22 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
     card formats do not go to YouTube (AGENTS rule 9, D55).
     """
     plan: list[Slot] = []
+    ext = (lambda n: n.replace('.jpg', '.mp4')) if animated else (lambda n: n)
+    video = ' — video carousel (the scan-wipe .mp4s; the .jpgs are the same slides)' if animated else ''
     if has_saara:
         last = saara_last or 'saara_NN_sources.jpg'
         plan.append(Slot(
-            Limits.carousel_slot, f'saara_01_cover.jpg … {last}',
+            Limits.carousel_slot, f'{ext("saara_01_cover.jpg")} … {ext(last)}',
             'Instagram + Facebook',
-            'ಸುದ್ದಿ ಸಾರ — the day\'s bulletin, swipeable. Caption: saara_caption.txt',
+            f'ಸುದ್ದಿ ಸಾರ — the day\'s bulletin, swipeable{video}. Caption: saara_caption.txt',
             'The morning scroll. A carousel gets a second impression when '
             'someone does not swipe the first time.'))
     for k, breaking, last in mukhya:
         plan.append(Slot(
             'NOW' if breaking else Limits.mukhya_slot,
-            f'mukhya_{k}_01_cover.jpg … {last or f"mukhya_{k}_03_source.jpg"}',
+            f'{ext(f"mukhya_{k}_01_cover.jpg")} … {ext(last or f"mukhya_{k}_03_source.jpg")}',
             'Instagram + Facebook',
-            f'ಮುಖ್ಯ ಸುದ್ದಿ {k}. Caption: mukhya_{k}_caption.txt',
+            f'ಮುಖ್ಯ ಸುದ್ದಿ {k}{video}. Caption: mukhya_{k}_caption.txt',
             'Breaking: post the moment it is signed; being first is the story.'
             if breaking else
             'The day\'s top story on its own, with its picture and its source.'))

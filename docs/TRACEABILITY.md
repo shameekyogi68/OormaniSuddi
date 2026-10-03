@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **60/97** decisions are named by at least one test
+- **61/98** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -437,4 +437,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_dispatch.py`, `tests/test_formats.py`
 - Enforced in: `brand/copy.py`, `brand/dispatch.py`, `brand/house.py`, `brand/tokens.py`, `scripts/daily_flow.py`
+
+## D98 · Every carousel slide has an animated twin: the scan wipe
+
+- **Tested by:** `tests/test_animate.py`
+- Enforced in: `brand/animate.py`, `brand/tokens.py`
 
