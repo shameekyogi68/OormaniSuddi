@@ -33,7 +33,7 @@ python3 render.py editions/DATE.json --only saara roundup
 
 ## `saara`
 
-ಸುದ್ದಿ ಸಾರ — the day's text bulletin: index cover → one slide per story → sources and follow. No pictures, ever.
+ಸುದ್ದಿ ಸಾರ — the day's video bulletin: index cover → one slide per story → sources and follow. Animated scan-wipe .mp4 per slide (D98–D100). No pictures, ever.
 
 **When to use.** Stories with segment "saara". The everyday digest: useful, quick to read, forwarded. Needs Limits.saara_min_stories to Limits.saara_max_stories stories.
 
@@ -51,13 +51,13 @@ python3 render.py editions/DATE.json --only saara roundup
 
 **Limits.** `stories_min` = 2, `stories_max` = 6, `points` = 3
 
-**Note.** Paper & Red (D92). A photograph on a saara story is ignored. Writes saara_01_cover.jpg, saara_02.jpg … saara_NN_sources.jpg, saara_copy.txt and saara_caption.txt.
+**Note.** Paper & Red (D92). A photograph on a saara story is ignored. Writes animated scan-wipe video slides saara_01_cover.mp4, saara_02.mp4 … saara_NN_sources.mp4 (D98–D100) to post as a video carousel, with saara_copy.txt and saara_caption.txt.
 
 ---
 
 ## `mukhya`
 
-ಮುಖ್ಯ ಸುದ್ದಿ — one breaking or top story: photo cover → ಏನಾಗಿದೆ? → source and corrections.
+ಮುಖ್ಯ ಸುದ್ದಿ — one breaking or top story: photo cover → ಏನಾಗಿದೆ? → source and corrections. Animated scan-wipe .mp4 per slide (D98–D100).
 
 **When to use.** Stories with segment "mukhya": breaking news, or the day's story that deserves its own post. Always a picture — a real one first; AI only when the editor was asked and said generate (photo_plan "ai", photo.approved_by).
 
@@ -75,7 +75,7 @@ python3 render.py editions/DATE.json --only saara roundup
 
 **Limits.** `per_day` = 2, `points` = 3
 
-**Note.** Paper & Red (D92). A breaking story's kicker is the red ಬ್ರೇಕಿಂಗ್ block, computed from published_at, never asserted. Writes mukhya_<k>_01_cover.jpg, _02_points.jpg, _03_source.jpg and mukhya_<k>_copy.txt / _caption.txt.
+**Note.** Paper & Red (D92). A breaking story's kicker is the red ಬ್ರೇಕಿಂಗ್ block, computed from published_at, never asserted. Writes animated scan-wipe video slides mukhya_<k>_01_cover.mp4, _02_points.mp4, _03_source.mp4 (D98–D100) to post as a video carousel, and mukhya_<k>_copy.txt / _caption.txt.
 
 ---
 

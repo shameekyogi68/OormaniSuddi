@@ -2929,6 +2929,37 @@ the user swipes."
 `brand/copy.py :: publishing_plan` · `tests/test_animate.py`
 
 ---
+## D101 · Every frame is a safe thumbnail: a whole cover, and pencil before ink
+
+**Decided (2026-10-04).** The owner: Instagram asks for a thumbnail (cover
+frame) when a video carousel is posted, and picking the first slide's frame
+is a problem for all the slides. They left the design to us.
+
+Instagram takes the post's thumbnail — the profile-grid tile — from the first
+video, and lets the editor scrub to any frame. D99 opened every slide on
+paper and revealed it, so the default frame was a half-built or empty slide.
+Now **no frame is ever unfinished-looking**:
+
+* **A cover is whole at frame 0.** Nothing on it is revealed; the gold light
+  passes over its lines (and the swipe bar) instead, swelling and fading as
+  it goes. The default thumbnail is the finished cover.
+* **Slides after the cover open as pencil, then ink.** Frame 0 is paper, the
+  chrome and a faint outline of the slide's own layout (`anim_ghost`, 12 %);
+  the ink wipes in over it. The settle-up (`anim_rise`) is gone — the layout
+  is already in place, and a rising line would double against it.
+* **Any frame after ~4 s is a finished slide, on every slide** (reveal ends
+  ≤ 3.6 s; the loop dissolve only starts in the last 0.5 s), so one scrub
+  position is safe for the whole carousel.
+
+Considered: a one-frame "poster" of the finished slide at frame 0 on every
+slide (a flicker on every swipe), and a separate cover picture (Instagram
+does not take one for carousel videos). The posting plan now says: keep the
+default thumbnail.
+
+`brand/animate.py` · `brand/tokens.py :: anim_ghost, anim_rise` ·
+`brand/copy.py :: publishing_plan` · `tests/test_animate.py`
+
+---
 
 ## Changing something here
 

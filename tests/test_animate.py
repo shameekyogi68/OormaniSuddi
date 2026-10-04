@@ -27,6 +27,7 @@ from brand.content import Edition, frozen  # noqa: E402
 from brand.tokens import C as PALETTE, Motion, Paper as P  # noqa: E402
 
 P_RED = PALETTE.red_500
+M_OUT = Motion.anim_out
 
 FIXTURE = 'tests/fixture_edition.json'
 NOW = '2026-08-25T09:40:00+05:30'
@@ -80,41 +81,55 @@ class TheScanWipe(unittest.TestCase):
             held = np.asarray(frame_at(self.path(name + '.mp4'), tl['reveal'] + 0.3)).astype(int)
             self.assertLess(np.abs(still - held).mean(), 3.0, name)
 
-    def test_nothing_is_readable_before_it_is_revealed(self):
-        """A story slide's frame zero shows the chrome only."""
+    def test_a_slide_is_never_blank_and_never_fully_there_at_frame_zero(self):
+        """A slide after the cover opens as paper, the chrome and a faint
+        pencil outline of its layout (D101): the ink is not there yet, and the
+        page is not empty either."""
         name = 'saara_02'
-        f0 = np.asarray(frame_at(self.path(name + '.mp4'), 0.0))
+        f0 = np.asarray(frame_at(self.path(name + '.mp4'), 0.0)).astype(int)
         info, _tl = self.info(name)
         paper = np.array(info['paper'])
         for b in info['bands']:
-            zone = f0[b.y0:b.y1, b.x0:b.x1].astype(int)
-            share = (np.abs(zone - paper).sum(axis=2) > 60).mean()
-            self.assertLess(share, 0.02, f'band at y={b.y0} is already visible')
+            if b.rule:
+                continue
+            diff = np.abs(f0[b.y0:b.y1, b.x0:b.x1] - paper).sum(axis=2)
+            self.assertLess((diff > 200).mean(), 0.02, f'ink already at y={b.y0}')
+            self.assertGreater((diff > 12).mean(), 0.005, f'no pencil outline at y={b.y0}')
 
-    def test_a_cover_is_never_blank(self):
-        """The feed and the grid see frame 0: the photograph and the headline
-        are there; what follows them is not yet."""
+    def test_a_cover_is_the_finished_slide_from_the_first_frame(self):
+        """Instagram takes the post's thumbnail from the first video, so the
+        cover must be whole at frame 0 (and nothing may hide while light
+        passes over it)."""
         for name in ('saara_01_cover', 'mukhya_1_01_cover'):
             info, tl = self.info(name)
-            self.assertTrue(info['static'], name)
-            # Against the held frame, not the JPEG: video softens red type
-            # the same amount in both, and only the difference matters here.
             still = np.asarray(frame_at(self.path(name + '.mp4'), tl['reveal'] + 0.3)).astype(int)
-            f0 = np.asarray(frame_at(self.path(name + '.mp4'), 0.0)).astype(int)
-            for i in info['static']:
-                b = info['bands'][i]
-                d = np.abs(f0[b.y0:b.y1, b.x0:b.x1] - still[b.y0:b.y1, b.x0:b.x1]).mean()
-                self.assertLess(d, 1.5, f'{name}: the headline is not there at frame 0')
-            later = [b for k, b in enumerate(info['bands'])
-                     if k not in info['static'] and not b.rule]
-            self.assertTrue(later, name)
-            b = later[-1]
-            zone = f0[b.y0:b.y1, b.x0:b.x1]
-            self.assertLess((np.abs(zone - np.array(info['paper'])).sum(axis=2) > 60).mean(),
-                            0.02, f'{name}: the last line is already there')
-            if info['photo_end']:
-                d = np.abs(f0[:info['photo_end'] - 20] - still[:info['photo_end'] - 20]).mean()
-                self.assertLess(d, 1.5, f'{name}: the photograph is not there at frame 0')
+            for t in (0.0, 0.4, 1.0, 1.8, tl['reveal'] * 0.8):
+                f = np.asarray(frame_at(self.path(name + '.mp4'), t)).astype(int)
+                self.assertLess(np.abs(f - still).mean(), 1.5, f'{name} at {t:.1f}s')
+                # and no line of text is thinner than it should be
+                for b in info['bands']:
+                    if b.rule:
+                        continue
+                    ink_f = (np.abs(f[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
+                    ink_s = (np.abs(still[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
+                    self.assertGreater(ink_f, ink_s * 0.9, f'{name} at {t:.1f}s, y={b.y0}')
+
+    def test_any_frame_you_could_pick_as_a_thumbnail_is_finished(self):
+        """The cover picker lets the editor scrub to any frame. From the end
+        of the reveal to the start of the loop dissolve, every slide is its
+        finished self, so one choice of frame is safe for all of them."""
+        for slides in self.carousels():
+            for j in slides:
+                name = j[:-4]
+                _i, tl = self.info(name)
+                mp4 = self.path(name + '.mp4')
+                still = np.asarray(Image.open(self.path(j)).convert('RGB')).astype(int)
+                safe_from = tl['reveal'] + 0.1
+                safe_to = tl['total'] - M_OUT - 0.1
+                self.assertLessEqual(safe_from, 4.0, name)       # early enough to pick
+                for t in (safe_from, (safe_from + safe_to) / 2, safe_to - 0.2):
+                    f = np.asarray(frame_at(mp4, t)).astype(int)
+                    self.assertLess(np.abs(f - still).mean(), 3.5, f'{name} at {t:.1f}s')
 
     def test_the_loop_has_no_seam(self):
         name = 'saara_02'
@@ -226,6 +241,7 @@ class TheScanWipe(unittest.TestCase):
         self.assertIn('saara_05_sources.mp4', plan[0].asset)
         self.assertIn('ONE carousel post of 5 separate videos', plan[0].what)
         self.assertIn('Never join them', plan[0].what)
+        self.assertIn('THUMBNAIL', plan[0].what)
 
 
 if __name__ == '__main__':

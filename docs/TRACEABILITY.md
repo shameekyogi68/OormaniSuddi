@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **63/100** decisions are named by at least one test
+- **64/101** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -441,7 +441,7 @@ those carry a reason rather than a test.
 ## D98 · Every carousel slide has an animated twin: the scan wipe
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/animate.py`, `brand/tokens.py`
+- Enforced in: `brand/animate.py`, `brand/tokens.py`, `templates/__init__.py`, `templates/registry.json`
 
 ## D99 · The scan wipe, refined to a premium standard — and on by default
 
@@ -451,5 +451,10 @@ those carry a reason rather than a test.
 ## D100 · A carousel is separate slides, drawn as one sheet across the swipe
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/animate.py`, `brand/copy.py`, `brand/paper.py`
+- Enforced in: `brand/animate.py`, `brand/copy.py`, `brand/paper.py`, `templates/__init__.py`, `templates/registry.json`
+
+## D101 · Every frame is a safe thumbnail: a whole cover, and pencil before ink
+
+- **Tested by:** `tests/test_animate.py`
+- Enforced in: `brand/animate.py`, `brand/tokens.py`
 

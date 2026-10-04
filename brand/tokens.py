@@ -556,7 +556,10 @@ class Motion:
     anim_head_line  = 0.95   # a headline line's wipe
     anim_photo      = 0.80   # a photograph (not on a cover) fades in this long
     anim_sun        = 0.70   # the gold sunline under a photograph draws across
-    anim_rise       = 10     # px a headline line settles up as it is revealed
+    anim_rise       = 0      # px a line settles up as it is revealed: none — the
+                             # pencil layout is already in place under it (D101)
+    anim_ghost      = 0.12   # how visible a slide's layout is at frame 0: a faint
+                             # pencil outline, so no frame is ever a blank page (D101)
     anim_feather    = 70     # px, the soft leading edge of the wipe
     anim_light      = 5      # px, the width of the gold light at that edge
     anim_hold       = 6.0    # the finished slide is held at least this long …

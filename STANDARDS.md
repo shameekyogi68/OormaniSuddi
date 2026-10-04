@@ -252,9 +252,14 @@ is also a short video, made from the finished slide.
   which also settle up `anim_rise` px), with an `anim_beat` where a block
   ends. Easing: a gentle start and a long, slow settle — never linear,
   never a bounce.
-- **A cover is never blank.** Its photograph and headline are there at
-  frame 0; what follows them is revealed. Every other slide opens on its
-  chrome alone.
+- **A cover is the finished slide from frame 0** (D101) — Instagram takes
+  the post's thumbnail from the first video, so nothing on it is revealed;
+  the gold light passes over it instead. Every other slide opens as paper,
+  its chrome and a faint pencil outline of its own layout
+  (`anim_ghost`), and the ink wipes in over that. **No frame of any slide is
+  ever blank**, and from the end of the reveal to the loop dissolve every
+  slide is finished — so whichever frame is picked as the thumbnail, it is
+  safe on all of them.
 - **The chrome never moves**: the bug, date, rules, footer, the swipe tab.
 - **The hold is what gets read** — `read_rate`, between `anim_hold` and
   `anim_hold_max`. While it holds, the chevrons nudge right every

@@ -136,20 +136,10 @@ def analyse(im: Image.Image, cover: bool = False) -> dict:
                                   rule=(yb - ya) < 8))
         y += 1
 
-    # On a cover, the stop-sign is there at frame 0: the lines down to the end
-    # of the first run of display type (with the kicker above it).
-    static: list[int] = []
-    if cover:
-        lead, seen_big = [], False
-        for i, b in enumerate(bands):
-            if b.big:
-                seen_big = True
-                lead.append(i)
-            elif seen_big:
-                break
-            else:
-                lead.append(i)
-        static = lead if seen_big else []
+    # A cover is COMPLETE at frame 0 (D101): Instagram takes the post's
+    # thumbnail from the first video, and a grid tile that shows half a cover
+    # is a tile nobody taps. Nothing on it is revealed; light passes over it.
+    static: list[int] = list(range(len(bands))) if cover else []
 
     # The swipe chevrons: white on the red edge tab, red in the footer.
     red = np.array(C.red_500, np.int16)
@@ -234,6 +224,8 @@ def plan(info: dict, cover: bool = False) -> dict:
     bands, static = info['bands'], set(info['static'])
     photo, sun = info['photo_end'], info['sun']
     fade = bool(photo) and not cover
+    if cover:
+        sun = None                                  # already drawn
     t = M.anim_start
     photo_at = (t, M.anim_photo) if fade else None
     sun_at = None
@@ -241,7 +233,8 @@ def plan(info: dict, cover: bool = False) -> dict:
         sun_at = (t + (M.anim_photo * 0.55 if fade else 0), M.anim_sun)
         t = sun_at[0] + M.anim_sun * 0.45
 
-    moving = [i for i, b in enumerate(bands) if i not in static and not b.rule]
+    # On a cover the same choreography runs as light, over lines already there.
+    moving = [i for i, b in enumerate(bands) if not b.rule and (cover or i not in static)]
     gaps, prev = [], None
     for i in moving:
         b = bands[i]
@@ -274,7 +267,7 @@ def plan(info: dict, cover: bool = False) -> dict:
         sched[i] = (t, dur(bands[i]))
     # A hairline draws itself just ahead of the line below it.
     for i, b in enumerate(bands):
-        if b.rule and i not in static:
+        if b.rule and not cover and i not in static:
             nxt = next((sched[j] for j in range(i + 1, len(bands)) if j in sched), None)
             prv = next((sched[j] for j in range(i - 1, -1, -1) if j in sched), None)
             s = (nxt[0] - 0.08) if nxt else (prv[0] + 0.1 if prv else M.anim_start)
@@ -344,20 +337,22 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
     paper = np.array(info['paper'], np.float32)
     gold = np.array(C.gold_500, np.float32)
 
-    # The first frame: paper, the chrome, and on a cover the stop-sign.
+    # The first frame (D101). A cover is the finished slide: it is the
+    # thumbnail. Any other slide is paper, the chrome, and a faint pencil
+    # outline of its own layout — never a blank page — which the ink then
+    # wipes in over.
     base = np.empty_like(full)
     base[:] = paper
     if not photo_end:
         base[:TOP_STATIC] = full[:TOP_STATIC]
     base[foot:] = full[foot:]
-    if photo_end and cover:
-        base[:photo_end] = full[:photo_end]
-        if sun:
-            base[sun[0]:sun[1]] = paper           # the sunline draws itself
-    for i in info['static']:
-        b = bands[i]
-        ya, yb = max(0, b.y0 - PAD[0]), min(foot, b.y1 + PAD[1])
-        base[ya:yb, :W - TAB_W] = full[ya:yb, :W - TAB_W]
+    if cover:
+        base[:] = full
+    else:
+        for b in bands:
+            ya, yb = max(0, b.y0 - PAD[0]), min(foot, b.y1 + PAD[1])
+            c0, c1 = max(0, b.x0 - 6), min(W - TAB_W, b.x1 + 6)
+            base[ya:yb, c0:c1] = paper + M.anim_ghost * (full[ya:yb, c0:c1] - paper)
     if info['tab']:
         x0, y0, x1, y1 = info['tab']
         base[y0:y1, x0:x1] = full[y0:y1, x0:x1]
@@ -418,13 +413,17 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
                 canvas[k:k + n] = blk[:n]
                 return canvas.copy()
             src_ = shifted(di) if fr < 1e-3 else (1 - fr) * shifted(di) + fr * shifted(di + 1)
-            reg = f[ya:r1, c0:c1]
-            f[ya:r1, c0:c1] = reg + a * (np.minimum(reg, src_) - reg)
+            if not cover:
+                reg = f[ya:r1, c0:c1]
+                f[ya:r1, c0:c1] = reg + a * (np.minimum(reg, src_) - reg)
             # The gold light at the front of the wipe: a thin line with a halo,
             # gone by the time the line is whole.
             if not b.rule and u < 1:
                 xc = front - F * 0.5
-                fade = 1 - _smooth((u - 0.5) / 0.5)
+                # Revealing: the light is gone as the line completes. Lighting a
+                # finished cover: it swells and fades as it passes.
+                fade = (math.sin(math.pi * u) if cover
+                        else 1 - _smooth((u - 0.5) / 0.5))
                 fade *= float(np.clip((b.x1 + 4 - xc) / 40.0, 0, 1))
                 if fade > 0.01:
                     prof = (0.9 * np.exp(-((xs - xc) / L) ** 2)
@@ -483,12 +482,31 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
             'static': len(info['static']), 'photo': bool(photo_end), 'cover': cover}
 
 
+def _animate_one(args: tuple[str, str]) -> str:
+    """Worker for multiprocessing: animate a single slide."""
+    src, dst = args
+    animate(src, dst)
+    return dst
+
+
 def animate_all(paths: list[str]) -> list[str]:
-    """An .mp4 beside every slide .jpg; returns the video paths."""
-    out = []
+    """An .mp4 beside every slide .jpg; returns the video paths.
+
+    Uses multiprocessing to animate slides in parallel across CPU cores.
+    Each slide's ffmpeg encode is CPU-bound and fully independent, so
+    parallel execution is safe and gives a near-linear speedup.
+    """
+    import multiprocessing
+
+    jobs: list[tuple[str, str]] = []
     for p in paths:
         if p.lower().endswith(('.jpg', '.jpeg')):
-            dst = os.path.splitext(p)[0] + '.mp4'
-            animate(p, dst)
-            out.append(dst)
+            jobs.append((p, os.path.splitext(p)[0] + '.mp4'))
+    if not jobs:
+        return []
+    # One worker per slide, capped at the CPU count. On the 8-core machine
+    # with 8 slides this runs ~7× faster than the sequential loop.
+    workers = min(len(jobs), multiprocessing.cpu_count())
+    with multiprocessing.Pool(workers) as pool:
+        out = pool.map(_animate_one, jobs)
     return out

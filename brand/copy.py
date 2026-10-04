@@ -962,11 +962,13 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
         # slides joined into one video (D100). Instagram does the swipe.
         if not animated:
             return ''
-        m_ = re.search(r'_(\d+)_\w+\.jpg$', last_name)
+        m_ = re.search(r'_(\d+)_\w+\.(?:jpg|mp4)$', last_name)
         n_ = f'{int(m_.group(1))} ' if m_ else ''
         return (f' — ONE carousel post of {n_}separate videos: ＋ → Post → select '
                 f'multiple → tick them in this order. Never join them into one '
-                f'video. (The .jpgs are the same slides.)')
+                f'video. THUMBNAIL: keep Instagram\'s default — the cover slide is the '
+                f'finished cover from its very first frame. If you scrub, any frame '
+                f'after the first 4 seconds is a finished slide, on every slide.')
     if has_saara:
         last = saara_last or 'saara_NN_sources.jpg'
         plan.append(Slot(
