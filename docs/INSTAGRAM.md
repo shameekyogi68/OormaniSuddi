@@ -66,8 +66,8 @@ All [House] — to be tested.
 | Format | Job it is built for | The signal it should earn |
 |---|---|---|
 | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (reel) | reach people who do not follow us | watch time, then sends |
-| ಸುದ್ದಿ ಸಾರ (text carousel) | be the morning habit | saves, swipe-through |
-| ಮುಖ್ಯ ಸುದ್ದಿ (photo carousel) | the one story worth sending | sends, comments |
+| ಸುದ್ದಿ ಸಾರ (animated video carousel) | be the morning habit | saves, swipe-through |
+| ಮುಖ್ಯ ಸುದ್ದಿ (animated video carousel) | the one story worth sending | sends, comments |
 
 ## 4 · Writing for it
 

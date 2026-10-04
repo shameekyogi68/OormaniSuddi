@@ -2960,6 +2960,36 @@ default thumbnail.
 `brand/copy.py :: publishing_plan` · `tests/test_animate.py`
 
 ---
+## D102 · The render folder holds what gets posted; the stills move to _review/
+
+**Decided (2026-10-04).** The owner asked for everything to be made right and
+to work the same way from now on. Changes made outside the session had
+already started to deliver the carousels as videos only; three things in
+them were unsafe, and are fixed here:
+
+* **The stills are moved, not deleted.** `render.py` used to delete each
+  carousel `.jpg` once its `.mp4` existed. The still is the exact finished
+  slide — what the package inspector reads and the feed-size sheet is made
+  from — and if the evidence step had failed, the delete would have lost the
+  only copy. Now it moves into `out/<date>/_review/`; `out/<date>/` holds the
+  .mp4 slides to post, the captions and the paste files.
+* **A frame taken from a video is a finished frame.** Where no still exists,
+  the evidence frame was taken at 0.5 s — since D101 that is a pencil outline
+  or a half-wiped line. It is now taken from the held part of the video.
+* **A render cannot hang.** `animate_all` encodes slides in parallel with
+  spawned worker processes, which re-import the program that started them. A
+  program typed into `python3 -` cannot be re-imported, so every worker died
+  and was replaced, silently, for ten minutes (it happened on 2026-10-04).
+  The pool is now used only when the program is a real file; otherwise the
+  slides are encoded one at a time.
+
+Kept from those changes: the three segments render on threads, the slides
+encode in parallel, and the docs say carousels are animated video slides.
+
+`render.py :: _finish, stills_dir` · `brand/review.py :: evidence` ·
+`brand/animate.py :: animate_all` · `tests/test_animate.py :: TheDeliveryFolder`
+
+---
 
 ## Changing something here
 

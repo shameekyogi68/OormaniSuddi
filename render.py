@@ -170,7 +170,12 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
 
     Each story is drawn in its own segment's format and nowhere else, so the
     same news never runs twice on one day as a carousel AND a reel.
+
+    Segments render in parallel (ThreadPoolExecutor) when more than one is
+    requested. The animated scan-wipe step uses its own multiprocessing pool.
     """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     made: list[tuple[str, str]] = []
     want = set(only) if only else None
     log = log or _NullLog()
@@ -178,43 +183,54 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
     def run(key):
         return want is None or key in want
 
-    # ── ಸುದ್ದಿ ಸಾರ ─────────────────────────────────────────────────────────
-    saara = ed.segment('saara')
-    if saara and run('saara'):
+    # ── segment renderers — each returns (made, mukhya_done, prints) ─────
+    # They are pure functions of their inputs, writing to distinct files, so
+    # running them on threads is safe. PIL releases the GIL during file I/O
+    # and each segment spawns its own ffmpeg subprocesses.
+
+    def _render_saara():
+        saara = ed.segment('saara')
+        if not saara or not run('saara'):
+            return [], [], []
         _t = time.time()
         sub = replace(ed, stories=saara)
+        segment_made, prints = [], []
         for p in TP.render('saara', sub, outdir):
-            made.append((p, 'post'))
-            print(f'  ✓ {os.path.basename(p)}')
+            segment_made.append((p, 'post'))
+            prints.append(f'  ✓ {os.path.basename(p)}')
         write_copy(sub, outdir, 'saara_copy')
-        print('  ✓ saara_copy.txt')
+        prints.append('  ✓ saara_copy.txt')
         log.done('saara', seconds=round(time.time() - _t, 1),
                  stories=len(saara))
+        return segment_made, [], prints
 
-    # ── ಮುಖ್ಯ ಸುದ್ದಿ ───────────────────────────────────────────────────────
-    mukhya_done: list[tuple[int, bool, str]] = []
-    if run('mukhya'):
-        for k, st in enumerate(ed.segment('mukhya'), 1):
+    def _render_mukhya():
+        mukhya_stories = ed.segment('mukhya')
+        if not mukhya_stories or not run('mukhya'):
+            return [], [], []
+        segment_made, md, prints = [], [], []
+        for k, st in enumerate(mukhya_stories, 1):
             _t = time.time()
             paths = TP.get('mukhya')(st, outdir, k=k)
             for p in paths:
-                made.append((p, 'post'))
-                print(f'  ✓ {os.path.basename(p)}')
+                segment_made.append((p, 'post'))
+                prints.append(f'  ✓ {os.path.basename(p)}')
             write_copy(st, outdir, f'mukhya_{k}_copy')
             with open(os.path.join(outdir, f'facebook_group_{k}.txt'), 'w',
                       encoding='utf-8') as fh:
                 fh.write(copywriter.facebook_group_post(st) + '\n')
-            mukhya_done.append((k, st.category == 'breaking' and st.is_breaking,
-                                os.path.basename(paths[-1])))
+            md.append((k, st.category == 'breaking' and st.is_breaking,
+                       os.path.basename(paths[-1])))
             log.done(f'mukhya_{k}', seconds=round(time.time() - _t, 1))
+        return segment_made, md, prints
 
-    # ── ಸ್ಪೀಡ್ ನ್ಯೂಸ್ ──────────────────────────────────────────────────────
-    # Through the engine, so the gate reviews it, the caption file is written
-    # and the schedule knows it exists (D81).
-    speed = ed.segment('speed')
-    if speed and run('roundup'):
+    def _render_roundup():
+        speed = ed.segment('speed')
+        if not speed or not run('roundup'):
+            return [], [], []
         _t = time.time()
         sub = replace(ed, stories=speed)
+        segment_made, prints = [], []
         p = os.path.join(outdir, 'roundup.mp4')
         res = TP.render('roundup', sub, p)
         used = replace(ed, stories=speed[:res['stories']])
@@ -222,15 +238,30 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
                    voice_script='\n'.join(res['spoken']),
                    post=copywriter.for_roundup(used, res['seconds']))
         if os.path.exists(res['cover']):
-            made.append((res['cover'], 'story'))
+            segment_made.append((res['cover'], 'story'))
         if res['dropped']:
-            print('  ⚠ left out of ಸ್ಪೀಡ್ ನ್ಯೂಸ್ to stay short — move them to '
-                  'ಸುದ್ದಿ ಸಾರ or shorten their reel_line: '
-                  + ' · '.join(h[:30] for h in res['dropped']))
+            prints.append('  ⚠ left out of ಸ್ಪೀಡ್ ನ್ಯೂಸ್ to stay short — move them to '
+                          'ಸುದ್ದಿ ಸಾರ or shorten their reel_line: '
+                          + ' · '.join(h[:30] for h in res['dropped']))
         log.done('roundup', seconds=round(time.time() - _t, 1),
                  stories=res['stories'])
+        return segment_made, [], prints
+
+    # Run all three segments concurrently — they write to different files.
+    mukhya_done: list[tuple[int, bool, str]] = []
+    fns = [_render_saara, _render_mukhya, _render_roundup]
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {pool.submit(fn): fn.__name__ for fn in fns}
+        for fut in as_completed(futures):
+            segment_made, md, prints = fut.result()
+            made.extend(segment_made)
+            mukhya_done.extend(md)
+            for line in prints:
+                print(line)
 
     # The animated twin of every carousel slide (D98): the scan wipe.
+    # animate_all() uses multiprocessing.Pool internally — all slides encode
+    # in parallel across CPU cores.
     if animate:
         from brand.animate import animate_all
         _t = time.time()
@@ -245,9 +276,9 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
     # The publishing plan, derived from what was actually rendered, so it can
     # never list a post that does not exist (D43).
     slides = sorted(f for f in os.listdir(outdir)
-                    if f.startswith('saara_') and f.endswith('.jpg'))
+                    if f.startswith('saara_') and (f.endswith('.mp4') if animate else f.endswith('.jpg')))
     plan = copywriter.publishing_plan(
-        has_saara=os.path.exists(os.path.join(outdir, 'saara_01_cover.jpg')),
+        has_saara=os.path.exists(os.path.join(outdir, 'saara_01_cover.mp4' if animate else 'saara_01_cover.jpg')),
         saara_last=slides[-1] if slides else '',
         mukhya=mukhya_done,
         has_roundup=os.path.exists(os.path.join(outdir, 'roundup.mp4')),
@@ -589,6 +620,11 @@ def main() -> int:
         release()
 
 
+def stills_dir(outdir: str) -> str:
+    """Where a carousel's finished .jpg stills live once its videos exist."""
+    return os.path.join(outdir, '_review')
+
+
 def _finish(outdir, ed, made, log, t0) -> int:
     import os
     import time
@@ -632,6 +668,26 @@ def _finish(outdir, ed, made, log, t0) -> int:
         print(f'  🔴 HELD — {len(rep.fail)} fault(s) above must be fixed and '
               f'the render re-run. Do NOT publish this folder: it has no '
               f'APPROVAL.md. Codes and owners in review_report.json.')
+
+    # The editor's folder holds what gets posted: a carousel slide's .jpg
+    # whose .mp4 twin exists MOVES into _review/ (D102). Carousels are posted
+    # as the .mp4 slides only (D98–D100, house rule 2026-10-04-01); the still
+    # is the exact finished slide, so it is kept — it is what the package
+    # inspector and the feed-size sheet read. Moved, never deleted: if the
+    # evidence step failed, a delete would have lost the only finished stills.
+    stills = stills_dir(outdir)
+    moved = []
+    for f in sorted(os.listdir(outdir)):
+        if re.match(r'(saara|mukhya_\d+)_', f) and f.endswith('.jpg'):
+            if os.path.exists(os.path.join(outdir, f[:-4] + '.mp4')):
+                try:
+                    os.makedirs(stills, exist_ok=True)
+                    os.replace(os.path.join(outdir, f), os.path.join(stills, f))
+                    moved.append(f)
+                except OSError:
+                    pass
+    if moved:
+        print(f'  ✓ {len(moved)} carousel still(s) moved to _review/ — post the .mp4 slides')
 
     if rep.clean:
         log.done('finish', seconds=round(time.time() - t0, 1), files=len(made))

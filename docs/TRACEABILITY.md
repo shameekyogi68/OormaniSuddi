@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **64/101** decisions are named by at least one test
+- **65/102** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -456,5 +456,9 @@ those carry a reason rather than a test.
 ## D101 · Every frame is a safe thumbnail: a whole cover, and pencil before ink
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/animate.py`, `brand/tokens.py`
+- Enforced in: `brand/animate.py`, `brand/review.py`, `brand/tokens.py`
+
+## D102 · The render folder holds what gets posted; the stills move to _review/
+
+- **Tested by:** `tests/test_animate.py`
 

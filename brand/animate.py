@@ -35,6 +35,7 @@ from __future__ import annotations
 import math
 import os
 import subprocess
+import sys
 from dataclasses import dataclass
 
 import numpy as np
@@ -506,7 +507,17 @@ def animate_all(paths: list[str]) -> list[str]:
         return []
     # One worker per slide, capped at the CPU count. On the 8-core machine
     # with 8 slides this runs ~7× faster than the sequential loop.
+    #
+    # Workers are spawned (macOS), and a spawned worker re-imports the
+    # program that started it. A program read from stdin or typed at a prompt
+    # cannot be re-imported: every worker then dies on start-up and the pool
+    # replaces it forever — a render that hangs with no error. So the pool is
+    # used only when the program is a real file; otherwise one at a time.
+    main = sys.modules.get('__main__')
+    path = getattr(main, '__file__', None)
     workers = min(len(jobs), multiprocessing.cpu_count())
+    if workers <= 1 or not path or not os.path.isfile(path):
+        return [_animate_one(j) for j in jobs]
     with multiprocessing.Pool(workers) as pool:
         out = pool.map(_animate_one, jobs)
     return out

@@ -126,15 +126,16 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
    python3 render.py editions/<date>.json --check
    python3 render.py editions/<date>.json          # or --only roundup saara mukhya
    ```
-   Into `out/<date>/`: `roundup.mp4` + `roundup_cover.jpg`; `saara_01_cover.jpg`,
-   `saara_02.jpg` … `saara_NN_sources.jpg`; `mukhya_1_01_cover.jpg`,
-   `mukhya_1_02_points.jpg`, `mukhya_1_03_source.jpg`; each with its
-   `_copy.txt` and `_caption.txt`. Every carousel slide also has its animated
-   twin (`saara_02.mp4` beside `saara_02.jpg`, D98, D99): **post the .mp4s** as
-   ONE carousel post of separate videos (＋ → Post → select multiple → tick
-   them in order, D100) — never joined into one video. The .jpgs are the
-   same slides — the fallback, and what the inspector reads. `--still` skips
-   the videos for a quick draft render.
+   Into `out/<date>/`: `roundup.mp4` + `roundup_cover.jpg`; the carousels as
+   animated slides — `saara_01_cover.mp4`, `saara_02.mp4` … `saara_NN_sources.mp4`;
+   `mukhya_1_01_cover.mp4`, `mukhya_1_02_points.mp4`, `mukhya_1_03_source.mp4` —
+   each with its `_copy.txt` and `_caption.txt`. **Post the .mp4s** as ONE
+   carousel post of separate videos (＋ → Post → select multiple → tick them
+   in order, D100) — never joined into one video — and keep Instagram's
+   default thumbnail (D101). Each slide's finished still (`.jpg`) is kept in
+   `out/<date>/_review/`: what the inspector reads, never what is posted
+   (D102). `--still` skips the videos for a quick draft render (the .jpgs then
+   stay in `out/<date>/`).
 3. **Runs one adversary pass, then the gate.** The Chief Editor gate writes
    `APPROVAL.md` only when clean. If it is HELD, `gate-doctor` maps each code
    to its fix (table below). Then **wave 3**, as one message: a
@@ -180,8 +181,8 @@ rm ~/Library/LaunchAgents/com.oormanisuddi.morning.plist
 
 | File | Where | When |
 |---|---|---|
-| `saara_*.jpg` + `saara_caption.txt` | Instagram carousel | `Limits.carousel_slot` |
-| `mukhya_<k>_*.jpg` + `mukhya_<k>_caption.txt` | Instagram carousel | `Limits.mukhya_slot`, or the moment it breaks |
+| `saara_*.mp4` + `saara_caption.txt` | Instagram carousel (separate videos, one post) | `Limits.carousel_slot` |
+| `mukhya_<k>_*.mp4` + `mukhya_<k>_caption.txt` | Instagram carousel (separate videos, one post) | `Limits.mukhya_slot`, or the moment it breaks |
 | `roundup.mp4` + `roundup_cover.jpg` + `roundup_caption.txt` | Instagram Reels only | a slot in `Limits.reel_slots` |
 
 `schedule.txt` in the folder is written from what was actually rendered —

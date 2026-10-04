@@ -147,9 +147,9 @@ Every story carries exactly one `segment`. One story, one format.
 
 | `segment` | Format | Use it for |
 |---|---|---|
-| `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ — 4:5 carousel for ONE story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | the breaking or top story of the day. **Always has a picture.** At most `Limits.mukhya_max_per_day`. |
+| `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ — 4:5 animated video carousel (scan-wipe .mp4 per slide, D98–D100) for ONE story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | the breaking or top story of the day. **Always has a picture.** At most `Limits.mukhya_max_per_day`. |
 | `speed` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — 9:16 reel, one frame per story | quick hits that read in one line. Only when there are at least `Limits.roundup_min_stories` of them. |
-| `saara` | ಸುದ್ದಿ ಸಾರ — 4:5 text carousel: index cover → one slide per story → sources | everything else. **Never has pictures.** Between `Limits.saara_min_stories` and `Limits.saara_max_stories`. |
+| `saara` | ಸುದ್ದಿ ಸಾರ — 4:5 animated video carousel (scan-wipe .mp4 per slide, D98–D100): index cover → one slide per story → sources | everything else. **Never has pictures.** Between `Limits.saara_min_stories` and `Limits.saara_max_stories`. |
 
 The editor's instruction wins. When they gave none, propose segments and have
 the editor confirm them **before anything renders**.

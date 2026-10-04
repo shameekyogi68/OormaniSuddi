@@ -40,8 +40,8 @@ runs in that one format only — one story, one format.
 | `segment` | renders as | name | shape | pictures |
 |---|---|---|---|---|
 | `speed` | `roundup` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | 9:16 reel, one frame per story | a picture if the story has one; otherwise a type-only frame |
-| `saara` | `saara` | ಸುದ್ದಿ ಸಾರ | 4:5 carousel: index cover → one slide per story → sources & follow | **never** |
-| `mukhya` | `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ | 4:5 carousel for ONE breaking/top story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | **always** |
+| `saara` | `saara` | ಸುದ್ದಿ ಸಾರ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100): index cover → one slide per story → sources & follow | **never** |
+| `mukhya` | `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100) for ONE breaking/top story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | **always** |
 
 How many stories each takes lives in `tokens.Limits` (`roundup_min_stories`,
 `saara_min_stories`, `saara_max_stories`, `mukhya_max_per_day`) — quote the
@@ -65,7 +65,7 @@ python3 scripts/dispatch.py                        # which agents are due, in wa
 python3 scripts/verify.py editions/DATE.json --story N --by NAME   # a person checked it
 
 # making
-python3 render.py editions/DATE.json               # every segment present; carousel slides as .jpg + animated .mp4
+python3 render.py editions/DATE.json               # every segment present; carousels render as animated scan-wipe .mp4 slides (D98–D100)
 python3 render.py editions/DATE.json --only saara  # any of: roundup saara mukhya
 python3 render.py editions/DATE.json --still       # a quick draft: no animated twins
 python3 render.py editions/greetings/X.json        # a festival wish
@@ -174,6 +174,13 @@ already exist (`python3 render.py --describe`).
     `/Users/shameekyogi/My Apps/Oormani Suddi`. Path traversal out of it is
     prohibited and must fail closed. Anything outside (for example a
     LaunchAgent) is a job for a person.
+11. **Carousels are animated video slides (.mp4), never static JPG posts (D98–D100, house rule 2026-10-04-01).**
+    Both ಸುದ್ದಿ ಸಾರ and ಮುಖ್ಯ ಸುದ್ದಿ render every slide as an animated scan-wipe
+    `.mp4` video. They are posted to Instagram as ONE video carousel of
+    separate slides (＋ → Post → select multiple → tick them in slide order)
+    — never joined into one video. Static `.jpg` files are only internal raster
+    rendering intermediates and inspector review fallbacks; they are NEVER
+    presented or handed over to the editor as the carousel to post.
 
 **Stop means one thing:** archive with `python3 scripts/archive_edition.py
 DATE`. Never delete the edition JSON.

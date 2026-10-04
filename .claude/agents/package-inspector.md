@@ -53,7 +53,8 @@ files in `out/<stem>/` whose names start with the prefix you were given
 - clear a cultural question alone — surface it for the person
 
 ## Video carousels (D98, D99)
-Every ಸುದ್ದಿ ಸಾರ / ಮುಖ್ಯ ಸುದ್ದಿ slide has a `.mp4` beside its `.jpg`: the same slide, its lines
+Every ಸುದ್ದಿ ಸಾರ / ಮುಖ್ಯ ಸುದ್ದಿ slide is a `.mp4` in `out/<stem>/`; its finished still (`.jpg`)
+is in `out/<stem>/_review/` (D102) — read the stills there. The video is the same slide, its lines
 revealed through a soft gold-lit wipe, then HELD, the chevrons nudging, dissolving back to
 frame 0 to loop. `tests/test_animate.py` proves the mechanics; you look at three frames
 (`ffmpeg -ss <t> -i X.mp4 -frames:v 1 f.png`): **0 s**, **~1 s**, and **reveal + 0.5 s**.

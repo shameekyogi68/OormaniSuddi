@@ -253,7 +253,7 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
     # Festival wish posters (D54) are deliverables too; without this a
     # greetings folder was rejected as having nothing in it.
     slides = [f for f in files
-              if (re.match(r'(saara|mukhya_\d+)_', f) and f.endswith('.jpg'))
+              if (re.match(r'(saara|mukhya_\d+)_', f) and f.endswith(('.jpg', '.mp4')))
               or re.fullmatch(r'wish_\w+\.jpg', f)]
 
     # ── the handle ────────────────────────────────────────────────────────
@@ -286,7 +286,7 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
             r'(?<![\w.-])[A-Za-z][\w.-]*\.(?:mp4|jpg|png|mp3|txt|md)', body))
     for name in sorted(referenced):
         base = os.path.basename(name)
-        if base in ('APPROVAL.md', 'CHANNELS.md'):
+        if base in ('APPROVAL.md', 'CHANNELS.md', 'INSTAGRAM.md'):
             continue
         if base not in files:
             r.add_fail('PKG-01', f'the copy points at {base}, which was not rendered', where=base)
@@ -728,8 +728,25 @@ def evidence(outdir: str, into: str | None = None) -> list[str]:
 
     for f in sorted(os.listdir(outdir)):
         src = os.path.join(outdir, f)
-        if re.match(r'(saara|mukhya_\d+)_', f) and f.endswith('.jpg'):
-            out.append(src)
+        if re.match(r'(saara|mukhya_\d+)_', f) and f.endswith(('.jpg', '.mp4')):
+            if f.endswith('.mp4'):
+                # The still is the evidence. Only when it is gone is a frame
+                # taken from the video — from the HELD part, where the slide
+                # is finished: early frames are pencil outline or half-wiped
+                # ink (D101), and judging those is judging the wrong picture.
+                dst = os.path.join(into, f'{f[:-4]}.jpg')
+                still = os.path.join(outdir, f'{f[:-4]}.jpg')
+                if not os.path.exists(dst) and not os.path.exists(still):
+                    from .tokens import Motion
+                    d = _duration(src)
+                    t = max(0.0, d - Motion.anim_out - 0.4) if d > 0 else 0.0
+                    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-ss',
+                                    f'{t:.2f}', '-i', src, '-frames:v', '1',
+                                    '-q:v', '3', dst], check=False)
+                if os.path.exists(dst):
+                    out.append(dst)
+            else:
+                out.append(src)
         elif f.endswith('_cover.jpg'):
             out.append(src)
         elif re.fullmatch(r'roundup\.mp4', f):
@@ -797,16 +814,23 @@ def feed_size_sheet(outdir: str, into: str) -> str:
             return 'story'
         return None
 
-    tiles: list[tuple[str, Image.Image]] = []
+    candidates = {}
+    if os.path.isdir(into):
+        for f in sorted(os.listdir(into)):
+            if f.lower().endswith('.jpg') and f != 'feed_sizes.jpg':
+                candidates[f] = os.path.join(into, f)
     for f in sorted(os.listdir(outdir)):
-        if not f.lower().endswith('.jpg'):
-            continue
+        if f.lower().endswith('.jpg'):
+            candidates[f] = os.path.join(outdir, f)
+
+    tiles: list[tuple[str, Image.Image]] = []
+    for f in sorted(candidates):
         k = key_for(f)
         if not k:
             continue
         w = L.FEED_WIDTH.get(k, 300)
         try:
-            im = Image.open(os.path.join(outdir, f)).convert('RGB')
+            im = Image.open(candidates[f]).convert('RGB')
         except Exception:
             continue
         im.thumbnail((w, w * 3), Image.Resampling.LANCZOS)

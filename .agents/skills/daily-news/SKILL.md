@@ -11,8 +11,8 @@ description: >
 
 > **Trigger**: The editor pastes news stories (e.g. from Udayavani, Prajavani, Vijay Karnataka, etc.),
 > or says "start today", "stop yesterday and start today".
-> **Formats**: `saara` (ಸುದ್ದಿ ಸಾರ text carousel, 2–6 stories, no photos),
-> `mukhya` (ಮುಖ್ಯ ಸುದ್ದಿ 4:5 photo carousel, 1 top story, always photo),
+> **Formats**: `saara` (ಸುದ್ದಿ ಸಾರ animated 4:5 video carousel, 2–6 stories, scan-wipe .mp4 per slide, no photos),
+> `mukhya` (ಮುಖ್ಯ ಸುದ್ದಿ animated 4:5 video carousel, 1 top story, scan-wipe .mp4 per slide, always photo),
 > `speed` (ಸ್ಪೀಡ್ ನ್ಯೂಸ್ 9:16 reel, 3+ stories).
 
 ---
@@ -101,6 +101,7 @@ When the editor gives their name (e.g. "approved by Gautam Paduvari"):
    ```
 
 3. **Handover**:
+   - Deliver the animated video carousel files (`out/<DATE>/saara_01_cover.mp4` … `saara_NN_sources.mp4`). Carousels are posted to Instagram as video carousels (＋ → Post → Select multiple → tick them in slide order, D98–D100). Never post JPGs; JPGs are internal raster references and inspector review fallbacks only.
    - Point to `out/<DATE>/saara_caption.txt` for Instagram caption (ready to copy-paste).
    - Point to `out/<DATE>/whatsapp_kundapura_byndoor.txt` for WhatsApp broadcasts.
    - Instruct the editor to view `out/<DATE>/_review/feed_sizes.jpg` and sign:

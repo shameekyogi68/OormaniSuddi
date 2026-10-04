@@ -272,7 +272,8 @@ is also a short video, made from the finished slide.
 
 ### The swipe — a carousel is one sheet of paper (D100)
 
-- **Separate slides, always.** One .mp4 (and one .jpg) per slide, posted
+- **Separate slides, always.** One .mp4 per slide (its finished still kept
+  in `_review/`, D102), posted
   together as ONE carousel. Never joined into one video: Instagram does the
   swipe, and the reader controls it.
 - **Every seam is continuous.** Mid-swipe, slide N's right edge sits against

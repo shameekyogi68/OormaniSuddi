@@ -180,6 +180,7 @@ def cmd_render(args) -> int:
     print("\n" + D.brief(D.plan(today), limit=200))
     print("\n" + "=" * 60)
     print(f"✓ Output ready in out/{today}/")
+    print(f"  Instagram Carousel: Animated .mp4 video slides (out/{today}/saara_01_cover.mp4 …)")
     print(f"  Instagram Caption : out/{today}/saara_caption.txt")
     print(f"  Sign-off Command  : python3 scripts/sign_off.py out/{today} --by \"{args.by or 'Editor'}\"")
     print("=" * 60)

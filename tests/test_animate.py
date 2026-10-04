@@ -246,3 +246,74 @@ class TheScanWipe(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TheDeliveryFolder(unittest.TestCase):
+    """D102 — what the editor opens after a real render: the .mp4 slides to
+    post; every finished still kept in _review/ for the inspector; and a
+    render that cannot hang, however it was started."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.out = os.path.join(cls.tmp.name, 'out')
+        ed = Edition.load(FIXTURE)
+        cls.ed = os.path.join(cls.tmp.name, 'ed.json')
+        with open(FIXTURE, encoding='utf-8') as fh:
+            data = fh.read()
+        with open(cls.ed, 'w', encoding='utf-8') as fh:
+            fh.write(data)
+        cls.r = subprocess.run(
+            [sys.executable, 'render.py', cls.ed, '--only', 'saara', '--out', cls.out,
+             '--at', NOW],
+            cwd=_ROOT, capture_output=True, text=True, timeout=900)
+        cls.n_stories = len(ed.segment('saara'))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_the_folder_holds_the_videos_to_post_not_the_stills(self):
+        files = os.listdir(self.out)
+        mp4 = sorted(f for f in files if f.startswith('saara_') and f.endswith('.mp4'))
+        self.assertGreaterEqual(len(mp4), 3, self.r.stdout[-600:] + self.r.stderr[-600:])
+        self.assertFalse([f for f in files if f.startswith('saara_') and f.endswith('.jpg')])
+
+    def test_every_finished_still_is_kept_for_the_inspector(self):
+        review = os.path.join(self.out, '_review')
+        for f in os.listdir(self.out):
+            if f.startswith('saara_') and f.endswith('.mp4'):
+                still = os.path.join(review, f[:-4] + '.jpg')
+                self.assertTrue(os.path.exists(still), f)
+                # the still is the FINISHED slide: it matches the held frame
+                info = A.analyse(Image.open(still), cover='_cover' in f)
+                tl = A.plan(info, cover='_cover' in f)
+                held = np.asarray(frame_at(os.path.join(self.out, f), tl['reveal'] + 0.3)).astype(int)
+                s = np.asarray(Image.open(still).convert('RGB')).astype(int)
+                self.assertLess(np.abs(held - s).mean(), 3.0, f)
+
+    def test_the_schedule_points_at_the_videos(self):
+        with open(os.path.join(self.out, 'schedule.txt'), encoding='utf-8') as fh:
+            text = fh.read()
+        self.assertIn('saara_01_cover.mp4', text)
+        self.assertIn('separate videos', text)
+        self.assertIn('THUMBNAIL', text)
+
+    def test_a_render_started_from_stdin_does_not_hang(self):
+        """2026-10-04: a render typed into `python3 -` spawned workers that
+        could not re-import their parent, died, and were replaced for ten
+        minutes. It now falls back to one slide at a time."""
+        import shutil
+        srcs = []
+        for k, name in enumerate(('saara_02.jpg', 'saara_03.jpg')):   # two: the pool's path
+            dst = os.path.join(self.tmp.name, f'stdin_{k}.jpg')
+            shutil.copy(os.path.join(self.out, '_review', name), dst)
+            srcs.append(dst)
+        code = (f'import sys; sys.path.insert(0, {_ROOT!r})\n'
+                f'from brand.animate import animate_all\n'
+                f'print(animate_all({srcs!r}))\n')
+        r = subprocess.run([sys.executable, '-'], input=code, cwd=_ROOT,
+                           capture_output=True, text=True, timeout=240)
+        self.assertEqual(r.returncode, 0, r.stderr[-500:])
+        for p_ in srcs:
+            self.assertTrue(os.path.exists(p_[:-4] + '.mp4'), p_)
