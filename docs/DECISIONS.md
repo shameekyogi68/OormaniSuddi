@@ -3023,6 +3023,32 @@ light passes over the lead and the teasers.
 `.claude/agents/intake-editor.md` · `tests/test_formats.py :: TheFrontPageCover`
 
 ---
+## D104 · The ಸುದ್ದಿ ಸಾರ cover moves as a running order
+
+**Decided (2026-10-06).** The owner was not happy with the cover's animation
+(D101: a gold light sweeping over every line of the finished page). From
+four previews on the 4 Oct cover — A peek, B running order, C spotlight,
+D calm — they chose **B · running order**.
+
+* The cover stays whole from frame 0 (the thumbnail, D101). Nothing passes
+  over it any more.
+* From `anim_order_start`, a soft gold underlay (`anim_order_tint`) and a
+  red tick at the left edge light ONE teaser at a time, top to bottom, each
+  for `anim_order_step`, then a rest beat — like a newsroom's running order
+  being read down. The tint goes only where the page is paper: the type is
+  never touched. The lead and its kicker are never lit.
+* The cover runs whole rounds, so the loop comes round in step with the
+  order; the hold stays under `anim_hold_max`.
+* The teasers are found from the picture — a light hairline, then a line
+  that opens with a red place name — so the black rule under the header
+  never makes the lead's kicker a teaser, and the order follows however many
+  stories the day has.
+* A cover with no teasers (ಮುಖ್ಯ ಸುದ್ದಿ) keeps only the chevron nudge.
+
+`brand/animate.py :: analyse (teasers), plan (order), _running` ·
+`brand/tokens.py :: Motion.anim_order_*` · `tests/test_animate.py`
+
+---
 
 ## Changing something here
 

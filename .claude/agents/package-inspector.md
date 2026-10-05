@@ -59,8 +59,9 @@ is in `out/<stem>/_review/` (D102) — read the stills there. The video is the s
 revealed through a soft gold-lit wipe, then HELD, the chevrons nudging, dissolving back to
 frame 0 to loop. `tests/test_animate.py` proves the mechanics; you look at three frames
 (`ffmpeg -ss <t> -i X.mp4 -frames:v 1 f.png`): **0 s**, **~1 s**, and **reveal + 0.5 s**.
-- A **cover** at 0 s must already show its photograph and headline (the grid and the feed
-  see frame 0). Any other slide at 0 s shows only the chrome.
+- A **cover** at 0 s must already be the finished slide (the grid and the feed see frame 0).
+  On the ಸುದ್ದಿ ಸಾರ cover, a frame at ~1.2 s shows ONE teaser lit (gold underlay, red tick) and
+  the lead untouched (D104). Any other slide at 0 s shows the chrome and a faint outline.
 - At ~1 s a half-revealed line fades softly into the paper — never a hard cut through a letter.
 - The held frame matches the still. Anything else is a BLOCK.
 - **The swipe** (D100): one .mp4 per slide, never one joined video. Put slide N's still

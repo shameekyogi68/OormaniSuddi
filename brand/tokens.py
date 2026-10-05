@@ -566,6 +566,13 @@ class Motion:
     anim_hold_max   = 20.0   # … and long enough to read (`read_rate`), to this
     anim_nudge      = 3.0    # the swipe chevrons nudge right once every …
     anim_nudge_px   = 7      # … by this much: the slide asks to be swiped
+    # The ಸುದ್ದಿ ಸಾರ cover's running order (D104): a soft gold underlay with a
+    # red tick steps down the teasers one at a time, like a newsroom's
+    # running order; the lead stays still. The cover is whole at frame 0.
+    anim_order_start = 0.8   # before the first teaser is lit
+    anim_order_step  = 0.9   # each teaser's turn (fade in, hold, fade out)
+    anim_order_tint  = 0.22  # how strong the gold underlay is
+    anim_order_tick  = 6     # px, the red tick at the row's left edge
     anim_out        = 0.50   # the slide dissolves back to its first frame, so
                              # the loop starts again without a cut
     speed_push      = 0.05   # a settle INTO the whole picture, never a crop

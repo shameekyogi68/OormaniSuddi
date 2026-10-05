@@ -253,8 +253,12 @@ is also a short video, made from the finished slide.
   ends. Easing: a gentle start and a long, slow settle — never linear,
   never a bounce.
 - **A cover is the finished slide from frame 0** (D101) — Instagram takes
-  the post's thumbnail from the first video, so nothing on it is revealed;
-  the gold light passes over it instead. Every other slide opens as paper,
+  the post's thumbnail from the first video, so nothing on it is revealed
+  and nothing passes over it. On the ಸುದ್ದಿ ಸಾರ cover a **running order**
+  steps down the teasers (D104): a soft gold underlay and a red tick light
+  one teaser at a time (`anim_order_*`), the type untouched, the lead never
+  lit, in whole rounds so the loop comes round in step. A cover with no
+  teasers keeps only the chevron nudge. Every other slide opens as paper,
   its chrome and a faint pencil outline of its own layout
   (`anim_ghost`), and the ink wipes in over that. **No frame of any slide is
   ever blank**, and from the end of the reveal to the loop dissolve every

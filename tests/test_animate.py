@@ -98,14 +98,19 @@ class TheScanWipe(unittest.TestCase):
 
     def test_a_cover_is_the_finished_slide_from_the_first_frame(self):
         """Instagram takes the post's thumbnail from the first video, so the
-        cover must be whole at frame 0 (and nothing may hide while light
-        passes over it)."""
+        cover must be whole at frame 0 — and from then on nothing passes over
+        it but the running order behind its teasers (D104)."""
         for name in ('saara_01_cover', 'mukhya_1_01_cover'):
             info, tl = self.info(name)
-            still = np.asarray(frame_at(self.path(name + '.mp4'), tl['reveal'] + 0.3)).astype(int)
-            for t in (0.0, 0.4, 1.0, 1.8, tl['reveal'] * 0.8):
-                f = np.asarray(frame_at(self.path(name + '.mp4'), t)).astype(int)
-                self.assertLess(np.abs(f - still).mean(), 1.5, f'{name} at {t:.1f}s')
+            mp4 = self.path(name + '.mp4')
+            still = np.asarray(frame_at(mp4, 0.5)).astype(int)
+            lit = np.zeros(still.shape[:2], bool)
+            for y0, y1, x0 in info['teasers']:
+                lit[y0:y1, max(0, x0 - 22):] = True
+            for t in (0.0, 1.0, 1.8, 3.0, 5.0):
+                f = np.asarray(frame_at(mp4, t)).astype(int)
+                d = np.abs(f - still).sum(axis=2)
+                self.assertLess(d[~lit].mean(), 1.5, f'{name} at {t:.1f}s: something passed over it')
                 # and no line of text is thinner than it should be
                 for b in info['bands']:
                     if b.rule:
@@ -113,6 +118,47 @@ class TheScanWipe(unittest.TestCase):
                     ink_f = (np.abs(f[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
                     ink_s = (np.abs(still[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
                     self.assertGreater(ink_f, ink_s * 0.9, f'{name} at {t:.1f}s, y={b.y0}')
+
+    def test_the_running_order_lights_one_teaser_at_a_time(self):
+        """D104 — the ಸುದ್ದಿ ಸಾರ cover: a gold underlay and a red tick step down
+        the teasers, one each turn, in order; the lead is never lit; the
+        loop comes round in step."""
+        name = 'saara_01_cover'
+        info, tl = self.info(name)
+        n_saara = len(Edition.load(FIXTURE).segment('saara'))
+        self.assertEqual(len(info['teasers']), n_saara - 1)
+        order = tl['order']
+        self.assertIsNotNone(order)
+        mp4 = self.path(name + '.mp4')
+        rest = np.asarray(frame_at(mp4, 0.5)).astype(int)
+        gold = np.array(PALETTE.gold_500)
+        lead_bottom = min(y0 for y0, _y1, _x in info['teasers'])
+        for k in range(len(info['teasers'])):
+            t = order['start'] + (k + 0.5) * order['step']    # the middle of turn k
+            f = np.asarray(frame_at(mp4, t)).astype(int)
+            for j, (y0, y1, x0) in enumerate(info['teasers']):
+                warm = (np.abs(f[y0:y1, x0:x0 + 900] - rest[y0:y1, x0:x0 + 900]).sum(axis=2) > 25).mean()
+                if j == k:
+                    self.assertGreater(warm, 0.3, f'turn {k}: teaser {j} is not lit')
+                else:
+                    self.assertLess(warm, 0.02, f'turn {k}: teaser {j} is lit too')
+            # the lead, its kicker and the masthead are never touched
+            self.assertLess(np.abs(f[:lead_bottom - 10] - rest[:lead_bottom - 10]).mean(), 1.0)
+        # the rest beat, and whole rounds: the last frame is the first
+        rnd = (len(info['teasers']) + 1) * order['step']
+        self.assertAlmostEqual((order['end'] - order['start']) / rnd,
+                               round((order['end'] - order['start']) / rnd), places=6)
+        first = np.asarray(frame_at(mp4, 0.0)).astype(int)
+        last = np.asarray(frame_at(mp4, duration(mp4) - 0.05)).astype(int)
+        self.assertLess(np.abs(first - last).mean(), 1.5)
+
+    def test_a_cover_with_no_teasers_keeps_the_swipe_nudge(self):
+        """The ಮುಖ್ಯ ಸುದ್ದಿ cover has no teasers: no running order, and its
+        chevrons still ask for the swipe."""
+        info, tl = self.info('mukhya_1_01_cover')
+        self.assertEqual(info['teasers'], [])
+        self.assertIsNone(tl['order'])
+        self.assertTrue(tl['nudges'])
 
     def test_any_frame_you_could_pick_as_a_thumbnail_is_finished(self):
         """The cover picker lets the editor scrub to any frame. From the end

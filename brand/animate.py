@@ -142,6 +142,34 @@ def analyse(im: Image.Image, cover: bool = False) -> dict:
     # is a tile nobody taps. Nothing on it is revealed; light passes over it.
     static: list[int] = list(range(len(bands))) if cover else []
 
+    # The ಸುದ್ದಿ ಸಾರ cover's teaser rows (D104): a hairline, then a line that
+    # opens with a red place name. Found from the picture, like everything
+    # here, so the running order follows however many stories the day has.
+    teasers: list[tuple[int, int, int]] = []
+    if cover:
+        # Hairlines are the light rule colour across most of the measure —
+        # the black rule under the header is not one, so the lead's kicker
+        # (red, small, under that black rule) is never taken for a teaser.
+        x0m, x1m = P.margin, W - P.margin
+        rule_c = np.array(C.paper_200, np.int16)
+        near = np.abs(a[:foot, x0m:x1m].astype(np.int16) - rule_c).sum(axis=2) < 25
+        hair = np.nonzero(near.mean(axis=1) > 0.8)[0]
+        red_px = np.abs(a.astype(np.int16) - np.array(C.red_500, np.int16)).sum(axis=2) < 120
+        for k, b in enumerate(bands):
+            if b.rule or b.big:
+                continue
+            if red_px[b.y0:b.y1, b.x0:b.x0 + 60].mean() < 0.08:
+                continue
+            above = hair[(hair < b.y0) & (hair >= b.y0 - 40)]
+            if not above.size:
+                continue
+            top_ = int(above.max()) + 3
+            below = hair[hair > b.y1]
+            nxt = min([int(below.min()) - 1] if below.size else [foot]
+                      + ([bands[k + 1].y0 - 3] if k + 1 < len(bands) else []))
+            bot = min(nxt, b.y1 + (b.y0 - top_))
+            teasers.append((top_, bot, b.x0))
+
     # The swipe chevrons: white on the red edge tab, red in the footer.
     red = np.array(C.red_500, np.int16)
     is_red = np.abs(a.astype(np.int16) - red).sum(axis=2) < 90
@@ -159,7 +187,7 @@ def analyse(im: Image.Image, cover: bool = False) -> dict:
 
     chars = sum((b.x1 - b.x0) / max(1, b.h) * CHARS_PER_H for b in bands if not b.rule)
     return {'paper': paper, 'photo_end': photo_end, 'sun': sun, 'bands': bands,
-            'static': static, 'tab': tab, 'tab_chevron': tab_chev,
+            'static': static, 'teasers': teasers, 'tab': tab, 'tab_chevron': tab_chev,
             'footer_chevron': fchev,
             'chars': round(chars), 'top': top, 'foot': foot, 'size': (W, H)}
 
@@ -234,8 +262,10 @@ def plan(info: dict, cover: bool = False) -> dict:
         sun_at = (t + (M.anim_photo * 0.55 if fade else 0), M.anim_sun)
         t = sun_at[0] + M.anim_sun * 0.45
 
-    # On a cover the same choreography runs as light, over lines already there.
-    moving = [i for i, b in enumerate(bands) if not b.rule and (cover or i not in static)]
+    # A cover is finished from frame 0 and nothing passes over it (D104: the
+    # owner did not like the light sweeping a finished page).
+    moving = [] if cover else [i for i, b in enumerate(bands)
+                               if not b.rule and i not in static]
     gaps, prev = [], None
     for i in moving:
         b = bands[i]
@@ -282,12 +312,27 @@ def plan(info: dict, cover: bool = False) -> dict:
     reveal = max(ends + [M.anim_start])
     hold = min(M.anim_hold_max, max(M.anim_hold, info['chars'] / M.read_rate))
     total = reveal + hold + M.anim_out
-    nudges, n = [], reveal + 0.6
-    while n + 0.8 < total - M.anim_out - 0.4:
-        nudges.append(n)
-        n += M.anim_nudge
+    order = None
+    teasers = info.get('teasers') or []
+    if cover and teasers:
+        # Whole rounds of the running order — every teaser, then a rest beat
+        # — so the loop comes round in step with it.
+        rnd = (len(teasers) + 1) * M.anim_order_step
+        k = max(1, math.ceil((hold - M.anim_order_start) / rnd))
+        if M.anim_order_start + k * rnd - reveal > M.anim_hold_max:   # never past the ceiling
+            k = max(1, math.floor((M.anim_hold_max + reveal - M.anim_order_start) / rnd))
+        total = M.anim_order_start + k * rnd + M.anim_out
+        hold = total - reveal - M.anim_out
+        order = {'start': M.anim_order_start, 'step': M.anim_order_step,
+                 'rounds': k, 'end': M.anim_order_start + k * rnd}
+    nudges = []
+    if not order:
+        n = reveal + 0.6
+        while n + 0.8 < total - M.anim_out - 0.4:
+            nudges.append(n)
+            n += M.anim_nudge
     return {'bands': sched, 'photo': photo_at, 'sun': sun_at, 'reveal': reveal,
-            'hold': hold, 'total': total, 'nudges': nudges}
+            'hold': hold, 'total': total, 'nudges': nudges, 'order': order}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -320,6 +365,36 @@ def _chevron(full: np.ndarray, box, ground, mark, dx: float) -> np.ndarray:
         dx = min(dx, max(0.0, alpha.shape[1] - 1 - cols[-1] - 3.0))
     alpha = _shift_x(alpha, dx, np.zeros(1, np.float32))
     return g + alpha * (m - g)
+
+
+def _running(full: np.ndarray, paper: np.ndarray, teasers, order: dict,
+             t: float) -> np.ndarray | None:
+    """The running order at `t`: one teaser lit with a soft gold underlay
+    and a red tick, or None when no teaser is lit. The type is never
+    touched — the underlay goes only where the page is paper."""
+    if not order or t < order['start'] or t >= order['end']:
+        return None
+    step, n = order['step'], len(teasers)
+    i = int((t - order['start']) / step) % (n + 1)
+    if i == n:                                      # the rest beat
+        return None
+    u = ((t - order['start']) % step) / step
+    a = _smooth(u / 0.25) * (1 - _smooth((u - 0.75) / 0.25))
+    if a <= 0.01:
+        return None
+    y0, y1, x0 = teasers[i]
+    W = full.shape[1]
+    c0, c1 = max(0, x0 - 16), min(W - TAB_W, W - x0 + 16)
+    f = full.copy()
+    reg = full[y0:y1, c0:c1]
+    ink = (np.abs(reg - paper).sum(axis=2, keepdims=True) > 60)
+    gold = np.array(C.gold_500, np.float32)
+    f[y0:y1, c0:c1] = np.where(ink, reg, reg + M.anim_order_tint * a * (gold - reg))
+    tx0 = max(0, x0 - 22)
+    tick = full[y0 + 8:y1 - 8, tx0:tx0 + M.anim_order_tick]
+    f[y0 + 8:y1 - 8, tx0:tx0 + M.anim_order_tick] = \
+        tick + a * (np.array(C.red_500, np.float32) - tick)
+    return f
 
 
 def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> dict:
@@ -466,8 +541,11 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
         if t < reveal:
             put(frame(t))
         elif t < out_at:
+            lit = _running(full, paper, info['teasers'], tl['order'], t)
             dx = _nudge(t, tl['nudges'])
-            if dx > 0.05:
+            if lit is not None:
+                put(lit)
+            elif dx > 0.05:
                 put(held(dx))
             else:
                 p.stdin.write(still)
