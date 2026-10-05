@@ -57,7 +57,7 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
     # by its `segment`: speed → roundup, saara → saara, mukhya → mukhya.
     Spec(key='saara', module='saara', entry='saara',
          takes='edition', format='post', size=(1080, 1350), produces='files',
-         summary='ಸುದ್ದಿ ಸಾರ — the day\'s video bulletin: index cover → one slide '
+         summary='ಸುದ್ದಿ ಸಾರ — the day\'s video bulletin: front-page cover (lead + teasers, D103) → one slide '
                  'per story → sources and follow. Animated scan-wipe .mp4 per slide (D98–D100). No pictures, ever.',
          when='Stories with segment "saara". The everyday digest: useful, '
               'quick to read, forwarded. Needs Limits.saara_min_stories to '

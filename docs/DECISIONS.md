@@ -2990,6 +2990,39 @@ encode in parallel, and the docs say carousels are animated video slides.
 `brand/animate.py :: animate_all` · `tests/test_animate.py :: TheDeliveryFolder`
 
 ---
+## D103 · The ಸುದ್ದಿ ಸಾರ cover is a front page: one lead, the rest as teasers
+
+**Decided (2026-10-05).** The owner was not happy with the first slide and
+chose, from four drafts made with the day's real stories (A front page,
+B towns, C big number, D top three), **A · ಮುಖಪುಟ**.
+
+The index cover set every headline at the same weight. On a six-story day
+(4 Oct) it was a wall of bold two-line text with nothing to look at first,
+grey texture at profile-grid size, and — as 27 Sept showed — it gave the
+whole day away, so readers stopped at slide one.
+
+Now:
+* **The lead.** The edition's FIRST saara story is set as a headline in the
+  house grammar (place in ink, the news half in red; ink only for crime and
+  death), as large as the day leaves room for — up to `LEAD_HI` on a light
+  day, down to the house floor on a full one. Its kicker sits above it.
+* **The teasers.** Every other story is one line, pinned above the swipe
+  bar under "ಇನ್ನಷ್ಟು ಇಂದು": its place in red (the headline's own place,
+  else its location, else its category), then as much of the rest as fits,
+  **cut at a word** — never inside an akshara, where a cut shows a broken
+  conjunct. Its own slide carries it in full.
+* **Order matters now.** The intake desk orders saara stories lead-first and
+  says why; the editor's word wins.
+* A cover that cannot hold the lead and every teaser is refused with a
+  reason (ContentError), never drawn over the footer.
+
+The animation (D101) is unchanged: the cover is whole at frame 0 and the gold
+light passes over the lead and the teasers.
+
+`templates/saara.py :: saara, _teaser, _one_line, LEAD_HI` ·
+`.claude/agents/intake-editor.md` · `tests/test_formats.py :: TheFrontPageCover`
+
+---
 
 ## Changing something here
 

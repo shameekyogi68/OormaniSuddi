@@ -1,6 +1,7 @@
 """ಸುದ್ದಿ ಸಾರ — the day's text bulletin (D92).
 
-Index cover → one slide per story → sources and follow. 4:5, Paper & Red,
+Front-page cover (the lead story + one-line teasers, D103) → one slide per
+story → sources and follow. 4:5, Paper & Red,
 and no pictures, ever: a photograph on a saara story is not drawn. That is the
 format's promise — the words, quickly, with where they came from.
 """
@@ -55,6 +56,40 @@ def _swipe_bar(sf, y: float):
     pp.chevron(sf, sf.w - m - 44, y + BAR_H / 2, 30, pp.WHITE, 5)
 
 
+# The cover (D103).
+LEAD_HI = 124         # px, the largest a lead headline is set
+TEASE_LABEL = 36      # "ಇನ್ನಷ್ಟು ಇಂದು"
+TEASE_H = 62          # one teaser line
+TEASE_GAP = 18        # the hairline and the air above a teaser
+
+
+def _teaser(st) -> tuple[str, str]:
+    """(place, the rest) for one teaser row: the headline's own place when it
+    opens with one ("ಕೋಟ: …"), else the story's location, else its category."""
+    a, b = pp.split_headline(st.headline)
+    if b:
+        return a.rstrip(':：').strip(), b
+    place = (st.location or '').strip() or category(st.category)['kn']
+    text = st.headline.strip()
+    if text.startswith(place):
+        text = text[len(place):].lstrip(' :：,-–')
+    return place, text
+
+
+def _one_line(text: str, f, max_w: float) -> str:
+    """As much of `text` as fits on one line, cut at a word — never inside an
+    akshara, where a cut shows a broken conjunct."""
+    if typo.text_width(text, f) <= max_w:
+        return text
+    words = text.split()
+    while len(words) > 1:
+        words.pop()
+        cand = ' '.join(words).rstrip(',;:–-') + '…'
+        if typo.text_width(cand, f) <= max_w:
+            return cand
+    return ''
+
+
 def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     """Render the ಸುದ್ದಿ ಸಾರ set. `edition` carries the saara stories only."""
     edition.validate()
@@ -66,73 +101,56 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     os.makedirs(outdir, exist_ok=True)
     paths: list[str] = []
 
-    # ── cover: the index ────────────────────────────────────────────────────
-    # Measured, never estimated: the first real ಸುದ್ದಿ ಸಾರ (2026-09-27) ran
-    # its sixth entry into the footer because the budget under-counted each
-    # entry and the loop drew anyway when nothing fitted. Now the index is
-    # laid out, measured whole, and the title block gives way before the
-    # stories do.
-    indent = 84
-    bottom = H - P.footer_h - 28 - BAR_H - 20
-
-    def label_of(st) -> str:
-        # The headline already opens with its place — say the category.
-        if pp.leads_with_place(st):
-            return category(st.category)['kn']
-        return (st.location or '').strip() or Brand.coverage
-
-    def plan(size, labels):
-        f = typo.font('kn', weight=pp.HEAD_WEIGHT, size=2 * size)
-        blocks = [typo.layout(s_.headline, f, 2 * (cw - indent), 1.26)
-                  for s_ in stories]
-        lab, gap, rule = (36, 18, 16) if labels else (0, 12, 12)
-        need = sum(lab + b.height / 2 + gap for b in blocks) + rule * (len(blocks) - 1)
-        return blocks, need
-
-    # Most generous first. The last level drops the small label row — each
-    # story's own slide still carries its category and place.
-    fitted = None
-    for title_px, sub_gap, labels in ((120, 0, True), (96, -40, True),
-                                      (80, -64, True), (80, -64, False)):
-        top = 440 + sub_gap
-        for size in range(44, 27, -2):
-            blocks, need = plan(size, labels)
-            if need <= bottom - top:
-                fitted = blocks
-                break
-        if fitted:
-            break
-    if not fitted:
-        raise ContentError(
-            'the ಸುದ್ದಿ ಸಾರ index cannot hold these headlines on one cover — '
-            'shorten the longest, or move a story to ಸ್ಪೀಡ್ ನ್ಯೂಸ್')
-    blocks = fitted
-
+    # ── cover: ಮುಖಪುಟ — the lead story, then the rest as one-line teasers ──
+    # D103. The index cover set every headline at the same weight: on a
+    # six-story day it was a wall of bold text with nothing to look at first,
+    # grey texture in the profile grid, and it gave the whole day away so
+    # readers stopped at slide one (2026-09-27). Now the edition's FIRST story
+    # leads, set as a headline; each other story is one line — its place in
+    # red, then as much of the rest as fits, cut at a word. Its own slide
+    # carries it in full.
     sf = pp.page(W, H)
     pp.bug(sf, m, 52)
     pp.meta(sf, W - m, 92, edition.date_kn, anchor='r')
-    title = typo.layout(TITLE, typo.font('kn', weight=pp.HEAD_WEIGHT,
-                                         size=sf.s(title_px)), sf.s(cw), 1.1)
-    typo.draw_block(sf.img, title, sf.s(m), sf.s(150), pp.INK)
-    pp.meta(sf, m, 352 + sub_gap, f'ಇಂದಿನ {len(stories)} ಮುಖ್ಯ ಸುದ್ದಿಗಳು, '
-            f'ಒಂದೇ ನೋಟದಲ್ಲಿ', size=34, weight=520)
-    y = 396 + sub_gap
-    pp._rect(sf, (m, y, W - m, y + 3), pp.INK)
-    pp.accent(sf, m, y + 7, 160, 6)
-    y = top
-    lab, gap, rule = (36, 18, 16) if labels else (0, 12, 12)
-    for i, (st, b) in enumerate(zip(stories, blocks), 1):
-        pp.chip(sf, m, y + 2 if labels else y - 2, i, 26)
-        if labels:
-            pp.meta(sf, m + indent, y + 22, label_of(st), pp.RED, size=24,
-                    weight=700)
-        yb = typo.draw_block(sf.img, b, sf.s(m + indent), sf.s(y + lab),
-                             pp.INK, box_w=sf.s(cw - indent)) / sf.ss
-        y = yb + gap
-        if i < len(stories):
-            pp._rect(sf, (m + indent, y, W - m, y + 2), pp.RULE)
-            y += rule
-    assert y <= bottom + 1, f'index overran the footer by {y - bottom:.0f}px'
+    pp.meta(sf, m, 196, f'{TITLE}  ·  ಇಂದಿನ {len(stories)} ಸುದ್ದಿ', pp.RED,
+            size=32, weight=760)
+    pp._rect(sf, (m, 222, W - m, 225), pp.INK)
+    pp.accent(sf, m, 229, 160, 6)
+
+    lead, rest = stories[0], stories[1:]
+    bottom = H - P.footer_h - 28 - BAR_H - 24
+    rows_h = (TEASE_LABEL + len(rest) * (TEASE_H + TEASE_GAP)) if rest else 0
+    teasers_top = bottom - rows_h                 # pinned above the swipe bar
+    y = pp.kicker(sf, m, 268, lead)
+    head_room = teasers_top - 44 - (y + 18)
+    if head_room < 2 * pp.HEAD_FLOOR * P.head_lead:
+        raise ContentError(
+            'the ಸುದ್ದಿ ಸಾರ cover cannot hold the lead and every teaser — '
+            'move a story to ಸ್ಪೀಡ್ ನ್ಯೂಸ್, or shorten the lead headline')
+    # The lead takes the room the day leaves it: up to LEAD_HI on a light day,
+    # down to the house floor on a full one.
+    y = pp.headline(sf, m, y + 18, cw, lead.headline, head_room, hi=LEAD_HI,
+                    lo=60, ink_only=pp.ink_only(lead))
+    assert y + 44 <= teasers_top + 1, f'the lead overran the teasers by {y + 44 - teasers_top:.0f}px'
+
+    if rest:
+        y = teasers_top
+        pp.meta(sf, m, y + 26, 'ಇನ್ನಷ್ಟು ಇಂದು', pp.GREY, size=26, weight=700)
+        y += TEASE_LABEL
+        fp = typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(34))
+        fr = typo.font('kn_var', weight=600, size=sf.s(32))
+        for st in rest:
+            pp._rect(sf, (m, y, W - m, y + 2), pp.RULE)
+            y += TEASE_GAP
+            place, line = _teaser(st)
+            wp = typo.text_width(place, fp) / sf.ss
+            typo.draw_text(sf.img, place, sf.s(m), sf.s(y + 38), fp, pp.RED)
+            if line:
+                line = _one_line(line, fr, sf.s(cw - wp - 20))
+                typo.draw_text(sf.img, line, sf.s(m + wp + 20), sf.s(y + 38),
+                               fr, pp.BODY)
+            y += TEASE_H
+        assert y <= bottom + 1, f'the teasers overran the footer by {y - bottom:.0f}px'
     _swipe_bar(sf, H - P.footer_h - 28 - BAR_H)
     pp.edge_tab(sf)
     pp.footer(sf, f'1/{n}', seam=(False, True))

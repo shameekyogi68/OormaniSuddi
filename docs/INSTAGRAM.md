@@ -44,9 +44,10 @@ All [House] — to be tested.
 * **They share what is theirs.** Nobody forwards a seven-town digest; people
   forward their own town's news (D72). Name the town first.
 * **Curiosity pulls, a full list does not.** On 27 Sept the cover listed every
-  headline and readers stopped there. Keep the index (the owner's choice) but
-  the swipe cue and the second slide must earn the swipe. Judge it by
-  swipe-through, not by taste.
+  headline at the same weight and readers stopped there. Since D103 the cover
+  is a front page: ONE lead story set as a headline, the rest as one-line
+  teasers that name the town and stop at a word. Judge it by swipe-through,
+  not by taste.
 * **Utility is saved; news is sent.** Deadlines, holidays, helplines, rules →
   saves. Something a neighbour should know *now* → sends. Write each for the
   action it should produce.

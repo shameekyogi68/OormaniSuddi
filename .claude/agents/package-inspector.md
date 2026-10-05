@@ -27,7 +27,8 @@ files in `out/<stem>/` whose names start with the prefix you were given
    what does it show? Then compare with the story (`editions/<stem>.json`).
 4. **Paper & Red (D92 point 5), frame by frame:**
    - legibility at feed size: headline and town readable at ~200px wide;
-     the ಸುದ್ದಿ ಸಾರ index cover readable as a list
+     the ಸುದ್ದಿ ಸಾರ cover (D103): the lead headline readable in the grid, every
+     teaser's town readable, a teaser cut only at a word (never inside a letter)
    - **gold is a fill** (the rule under a photograph, the stroke under the
      wordmark, numeral chips, accent rules) — gold small type is a finding;
      gold type is only `gold_800`

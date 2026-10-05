@@ -21,6 +21,7 @@ import render  # noqa: E402
 import templates as TP  # noqa: E402
 from brand import paper, typo  # noqa: E402
 from brand.content import ContentError, Edition, frozen  # noqa: E402
+from brand.tokens import Paper as P  # noqa: E402
 
 FIXTURE = 'tests/fixture_edition.json'
 NOW = '2026-08-25T09:40:00+05:30'
@@ -277,3 +278,70 @@ class TheEditorGetsWhatPostingNeeds(unittest.TestCase):
         with open('scripts/daily_flow.py', encoding='utf-8') as fh:
             src = fh.read()
         self.assertNotIn('write_receipt', src)
+
+
+class TheFrontPageCover(unittest.TestCase):
+    """D103 — the ಸುದ್ದಿ ಸಾರ cover: the first story leads as a headline, every
+    other story is one teaser line, cut only at a word."""
+
+    def test_a_teaser_names_its_place(self):
+        from templates.saara import _teaser
+        ed = Edition.load(FIXTURE)
+        for st in ed.segment('saara'):
+            place, rest = _teaser(st)
+            self.assertTrue(place)
+            self.assertNotIn(place + ':', rest)
+            if ':' in st.headline:
+                self.assertTrue(st.headline.startswith(place))
+
+    def test_a_teaser_is_cut_at_a_word_never_inside_one(self):
+        from templates.saara import _one_line
+        from brand import typo
+        f = typo.font('kn_var', weight=600, size=64)
+        text = 'ಕಾರಂತ ಪಾರ್ಕ್‌ನ 75 ಲಕ್ಷ ರೂ. ವೆಚ್ಚದ ಸಂಗೀತ ಕಾರಂಜಿ 3 ದಿನಕ್ಕೆ ಸ್ಥಗಿತ'
+        words = text.split()
+        for max_w in (300, 500, 800, 1100):
+            out = _one_line(text, f, max_w)
+            if not out:
+                continue
+            self.assertLessEqual(typo.text_width(out, f), max_w)
+            body = out.rstrip('…').split()
+            self.assertEqual(body, words[:len(body)], out)   # whole words only
+        self.assertEqual(_one_line(text, f, 10 ** 6), text)
+
+    def test_every_day_size_fits_and_the_lead_is_the_first_story(self):
+        from PIL import Image
+        import numpy as np
+        from brand.tokens import Limits
+        ed = Edition.load(FIXTURE)
+        base = ed.segment('saara')
+        for n_ in range(Limits.saara_min_stories, Limits.saara_max_stories + 1):
+            stories = [base[i % len(base)] for i in range(n_)]
+            sub = replace(ed, stories=stories)
+            with tempfile.TemporaryDirectory() as d, frozen(NOW):
+                paths = TP.render('saara', sub, d)
+                im = np.asarray(Image.open(paths[0]).convert('RGB')).astype(int)
+            self.assertEqual(len(paths), n_ + 2)
+            # the paper strip between the swipe bar and the footer hairline is clear
+            foot = im[-P.footer_h - 24:-P.footer_h - 4, 20:-60]
+            self.assertLess((np.abs(foot - im[-6, 30]).sum(axis=2) > 60).mean(), 0.02, n_)
+
+    def test_a_crime_lead_stays_in_ink(self):
+        """The fixture's first saara story is a crime: no red in its headline."""
+        from PIL import Image
+        import numpy as np
+        from brand.tokens import C
+        ed = Edition.load(FIXTURE)
+        sub = replace(ed, stories=ed.segment('saara'))
+        self.assertTrue(pp_ink_only(sub.stories[0]))
+        with tempfile.TemporaryDirectory() as d, frozen(NOW):
+            paths = TP.render('saara', sub, d)
+            im = np.asarray(Image.open(paths[0]).convert('RGB')).astype(int)
+        lead_zone = im[330:900, 40:1000]          # below the kicker, above the teasers
+        red = (np.abs(lead_zone - np.array(C.red_500)).sum(axis=2) < 60).mean()
+        self.assertLess(red, 0.001)
+
+
+def pp_ink_only(st):
+    from brand import paper
+    return paper.ink_only(st)

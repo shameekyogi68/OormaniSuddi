@@ -40,7 +40,7 @@ runs in that one format only — one story, one format.
 | `segment` | renders as | name | shape | pictures |
 |---|---|---|---|---|
 | `speed` | `roundup` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | 9:16 reel, one frame per story | a picture if the story has one; otherwise a type-only frame |
-| `saara` | `saara` | ಸುದ್ದಿ ಸಾರ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100): index cover → one slide per story → sources & follow | **never** |
+| `saara` | `saara` | ಸುದ್ದಿ ಸಾರ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100): front-page cover (the lead story + one-line teasers, D103) → one slide per story → sources & follow | **never** |
 | `mukhya` | `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100) for ONE breaking/top story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | **always** |
 
 How many stories each takes lives in `tokens.Limits` (`roundup_min_stories`,

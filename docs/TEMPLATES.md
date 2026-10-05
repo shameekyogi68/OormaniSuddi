@@ -33,7 +33,7 @@ python3 render.py editions/DATE.json --only saara roundup
 
 ## `saara`
 
-ಸುದ್ದಿ ಸಾರ — the day's video bulletin: index cover → one slide per story → sources and follow. Animated scan-wipe .mp4 per slide (D98–D100). No pictures, ever.
+ಸುದ್ದಿ ಸಾರ — the day's video bulletin: front-page cover (lead + teasers, D103) → one slide per story → sources and follow. Animated scan-wipe .mp4 per slide (D98–D100). No pictures, ever.
 
 **When to use.** Stories with segment "saara". The everyday digest: useful, quick to read, forwarded. Needs Limits.saara_min_stories to Limits.saara_max_stories stories.
 

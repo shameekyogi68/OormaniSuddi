@@ -51,6 +51,10 @@ editor — never look it up.
    - quick hits → `speed`, and only when there are 3 or more of them; fewer
      than 3 go to `saara`
    - everything else → `saara`
+   **Order the `saara` stories lead-first.** The ಸುದ್ದಿ ಸಾರ cover sets the
+   FIRST saara story as its headline and the rest as one-line teasers (D103):
+   put the story most readers in the most towns need first — not a death
+   notice unless that is the day's news. Say which you chose and why.
    The editor's own instruction ("make X the main story") wins. Say in your
    report that the segments are a proposal for the editor to confirm.
 6. **Pictures: set `photo_plan: ""` on every story.** You do not decide real
