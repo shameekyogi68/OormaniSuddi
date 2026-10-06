@@ -18,6 +18,7 @@ exists for anything that wants to know without rendering.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -53,11 +54,11 @@ def formats_for_edition(path: str) -> tuple[list[str], str]:
     return formats, why
 
 
-def main() -> int:
-    if len(sys.argv) != 2:
-        print('usage: pick_formats.py editions/{date}.json', file=sys.stderr)
-        return 1
-    path = sys.argv[1]
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(
+        description='Which formats an edition renders, read off its segments (D92).')
+    ap.add_argument('edition', help='editions/YYYY-MM-DD.json')
+    path = ap.parse_args(argv).edition
     if not os.path.exists(path):
         print(f'✗ {path} does not exist', file=sys.stderr)
         return 1

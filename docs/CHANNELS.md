@@ -46,12 +46,12 @@ Live: 9611756514
 
 ## Distribution — where each format goes (D94)
 
-| When | Format | Where | What it is for |
+| When (`brand/tokens.py`; the rendered `schedule.txt` has the times) | Format | Where | What it is for |
 |---|---|---|---|
-| 08:00 | ಸುದ್ದಿ ಸಾರ | Instagram + Facebook | the morning digest — saves and swipes |
-| 13:30, or at once if breaking | ಮುಖ್ಯ ಸುದ್ದಿ | Instagram + Facebook | the day's top story — shares and comments |
-| 18:30 | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | Instagram Reels + Facebook Reels | the evening round-up |
-| after each post | area digests | WhatsApp community | `whatsapp_<group>.txt`, 3 stories at most |
+| `Limits.carousel_slot` | ಸುದ್ದಿ ಸಾರ | Instagram + Facebook | the morning digest — saves and swipes |
+| `Limits.mukhya_slot`, or at once if breaking | ಮುಖ್ಯ ಸುದ್ದಿ | Instagram + Facebook | the day's top story — shares and comments |
+| `Limits.roundup_slot` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | Instagram Reels + Facebook Reels | the evening round-up |
+| after each post | area digests | WhatsApp community | `whatsapp_<group>.txt`, `Limits.whatsapp_items_max` stories at most |
 | as it happens | real footage | YouTube (+ Shorts) | the footage skills only — never AI card reels (AGENTS rule 9) |
 
 **WhatsApp community.** One community, three admin-only area groups:
