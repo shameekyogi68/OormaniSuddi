@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timedelta
@@ -104,7 +105,8 @@ def check_backups() -> list[str]:
     local = os.path.join(ROOT, '.backups')
     # Newest by TIME. Sorted by name, `oormani-full-2026-09-16` outranked
     # every daily `oormani-2026-09-2x` and a fresh backup read as 9 days old.
-    tars = sorted(os.listdir(local), reverse=True,
+    tars = sorted((f for f in os.listdir(local) if f.endswith('.tar.gz')),
+                  reverse=True,
                   key=lambda f: os.path.getmtime(os.path.join(local, f))) \
         if os.path.isdir(local) else []
     if not tars:
@@ -180,11 +182,56 @@ def check_git() -> list[str]:
     return out
 
 
+def check_disk() -> list[str]:
+    """Room to render. A full disk fails mid-render with an error about
+    something else entirely. D113."""
+    from brand.tokens import Limits
+    free = shutil.disk_usage(ROOT).free / 1e9
+    if free < Limits.disk_min_gb:
+        return [f'{BAD} disk — {free:.1f} GB free. Renders will fail. Archive '
+                'finished days (scripts/archive_edition.py) and empty the Trash.']
+    if free < Limits.disk_warn_gb:
+        return [f'{WARN} disk — {free:.1f} GB free; under {Limits.disk_warn_gb} GB. '
+                'du -sh out build .backups shows what is local to this project.']
+    return [f'{OK} disk — {free:.0f} GB free']
+
+
+def check_tools() -> list[str]:
+    """What a render needs from this Mac, beyond Python. A system update can
+    take any of these away without touching the repo. D113."""
+    out = []
+    missing = [t for t in ('ffmpeg', 'ffprobe') if not shutil.which(t)]
+    if missing:
+        out.append(f'{BAD} tools — {", ".join(missing)} not found: no reel, no '
+                   'carousel video. brew install ffmpeg')
+    try:
+        from PIL import features
+        raqm = features.check_feature('raqm')
+    except Exception:
+        raqm = False
+    if not raqm:
+        out.append(f'{BAD} tools — Pillow has no raqm: Kannada conjuncts will '
+                   'render broken. The wheel bundles it: python3 -m pip install '
+                   '--break-system-packages --force-reinstall Pillow')
+    try:
+        import importlib.util
+        edge = importlib.util.find_spec('edge_tts') is not None
+    except Exception:
+        edge = False
+    if not edge:
+        out.append(f'{WARN} tools — edge-tts not installed: no fallback voice if '
+                   'Google TTS is down. pip install -r requirements.txt')
+    return out or [f'{OK} tools — ffmpeg, Kannada shaping, fallback voice']
+
+
 def check_tests() -> list[str]:
+    # Every suite but the four that render video — the same set the
+    # pre-commit hook runs, a few seconds in all.
+    slow = {'test_golden', 'test_animate', 'test_formats', 'test_speednews'}
+    suites = sorted(f'tests.{f[:-3]}' for f in os.listdir(os.path.join(ROOT, 'tests'))
+                    if f.startswith('test_') and f.endswith('.py') and f[:-3] not in slow)
     r = subprocess.run(
-        [sys.executable, '-m', 'unittest', 'tests.test_contract',
-         'tests.test_legibility', 'tests.test_legal_corpus',
-         'tests.test_intake', 'tests.test_calendar', '-q'],
+        [sys.executable, '-m', 'unittest', *suites, '-q'],
         cwd=ROOT, capture_output=True, text=True)
     tail = (r.stderr or r.stdout).strip().split('\n')[-1]
     if r.returncode == 0:
@@ -197,7 +244,8 @@ def main() -> int:
     print(f'\n  ಊರ್ಮನಿ ಸುದ್ದಿ — health   {datetime.now():%Y-%m-%d %H:%M}\n')
     lines: list[str] = []
     for fn in (check_edition, check_clocks, check_reviews,
-               check_house, check_music, check_backups, check_git, check_tests):
+               check_house, check_music, check_disk, check_tools,
+               check_backups, check_git, check_tests):
         try:
             lines += fn()
         except Exception as e:                      # never fail the check

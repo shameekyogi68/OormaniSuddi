@@ -429,6 +429,11 @@ class Limits:
     # The three news formats (D92). What renders is decided by the stories'
     # segments, not by this list; it is the full set --only accepts.
     daily_templates = ('roundup', 'saara', 'mukhya')
+    # Free disk, in GB, under which health.py warns and then fails. A day's
+    # render, its ffmpeg intermediates and the nightly backup all need room,
+    # and a full disk fails mid-render with an error about something else. D113.
+    disk_warn_gb = 10
+    disk_min_gb = 3
     # The reel gate is "drama, public stakes, shareability", and crime wins on
     # all three every single time. Left alone, a metrics loop that rewards
     # what performs will walk this channel into being a crime channel — which

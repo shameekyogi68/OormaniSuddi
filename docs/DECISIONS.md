@@ -3243,6 +3243,47 @@ against a one-line "source".
 
 ---
 
+## D112 · The backup keeps the record once, and prunes what it says it prunes
+
+**Decided (2026-10-06).** Each item in `archive/` — a day's published
+record, or any file over 1 MB — is tarred once into `.backups/record/` and
+re-tarred only when something in it changes. The nightly tarball now holds
+only the small registers: the pasted sources, the calendar and `archive/`'s
+loose ledgers. Pruning reads one path per line, and the second copy (iCloud or
+a drive) mirrors the same layout and is pruned the same way. A restore is the
+record items plus the newest nightly; `scripts/backup.sh` says how.
+
+**Replaced.** Every night re-tarred the whole of `archive/` (159 MB after
+three weeks, growing ~5 MB a day), and `ls | xargs rm` split every path at the
+space in "My Apps", so nothing was ever pruned — locally or in iCloud, which
+had no pruning at all. On a disk with 6 GB free, the job that exists to save
+the record was on course to be the thing that filled the disk.
+
+**If you undo it.** The nightly backup fills the Mac within months, and then
+renders start failing for want of space.
+
+`scripts/backup.sh` · `scripts/health.py` · `tests/test_backup.py`
+
+---
+
+## D113 · Health says when the Mac itself is the problem
+
+**Decided (2026-10-06).** `scripts/health.py` checks free disk against
+`Limits.disk_warn_gb` and `Limits.disk_min_gb`, and checks the three things a
+render needs from the machine that the repository cannot carry: ffmpeg and
+ffprobe on the PATH, Pillow built with raqm (Kannada shaping), and edge-tts
+(the fallback voice). Its test run is every suite but the four that render
+video — the set the pre-commit hook runs — discovered, not listed.
+
+**Replaced.** A health page that could be all green on a Mac with 6 GB left,
+or after an update that dropped raqm and would render every conjunct broken —
+the failures most likely in a year nobody touches the code.
+
+`scripts/health.py :: check_disk, check_tools, check_tests` ·
+`brand/tokens.py :: Limits.disk_warn_gb, disk_min_gb` · `tests/test_health.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

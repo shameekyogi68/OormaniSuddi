@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **74/111** decisions are named by at least one test
+- **76/113** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -233,7 +233,7 @@ those carry a reason rather than a test.
 ## D53 · A dot that is not a sentence end is heard, never seen
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_speednews.py`
-- Enforced in: `brand/speednews.py`
+- Enforced in: `brand/__init__.py`, `brand/speednews.py`
 
 ## D54 · A festival greeting is its own genre, not a news card with a festive photo
 
@@ -278,7 +278,7 @@ those carry a reason rather than a test.
 ## D62 · The gate records what a machine established, and names who judged the rest
 
 - **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/review.py`
+- Enforced in: `brand/__init__.py`, `brand/review.py`
 
 ## D63 · The intake retrieves; it never supplies what the source lacks
 
@@ -361,7 +361,7 @@ those carry a reason rather than a test.
 ## D81 · ಸ್ಪೀಡ್ ನ್ಯೂಸ್: the day as one quick-news reel, built into the engine
 
 - **Tested by:** `tests/test_pick_formats.py`, `tests/test_speednews.py`
-- Enforced in: `brand/copy.py`, `brand/qa.py`, `brand/review.py`, `brand/speednews.py`, `brand/tokens.py`, `templates/roundup.py`
+- Enforced in: `brand/__init__.py`, `brand/copy.py`, `brand/qa.py`, `brand/review.py`, `brand/speednews.py`, `brand/tokens.py`, `templates/roundup.py`
 
 ## D82 · Sound effects are made here, registered, and tied to the cut
 
@@ -390,6 +390,7 @@ those carry a reason rather than a test.
 ## D87 · The newsroom runs as a team of agents, in parallel, fact desk first
 
 - **Tested by:** `tests/test_reach_copy.py`
+- Enforced in: `brand/__init__.py`
 
 ## D88 · Fresh, ours, a real article, and credited to the outlet it came from
 
@@ -413,7 +414,7 @@ those carry a reason rather than a test.
 ## D92 · Three formats, one story in one of them, pasted news, real pictures first
 
 - **Tested by:** `tests/test_calendar.py`, `tests/test_captions.py`, `tests/test_contract.py`, `tests/test_discard_edition.py`, `tests/test_dispatch.py`, `tests/test_formats.py`, `tests/test_golden.py`, `tests/test_grounding.py`, `tests/test_intake.py`, `tests/test_pick_formats.py`, `tests/test_reach.py`, `tests/test_reach_copy.py`, `tests/test_speednews.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/motion.py`, `brand/paper.py`, `brand/provenance.py`, `brand/qa.py`, `brand/reach.py`, `brand/reel_news.py`, `brand/review.py`, `brand/sourcing.py`, `brand/speednews.py`, `brand/tokens.py`, `brand/trends.py`, `brand/typo.py`, `scripts/archive_edition.py`, `scripts/dispatch.py`, `scripts/fact_check.py`, `scripts/health.py`, `scripts/intake.py`, `scripts/pick_formats.py`, `templates/__init__.py`, `templates/mukhya.py`, `templates/registry.json`, `templates/saara.py`
+- Enforced in: `brand/__init__.py`, `brand/codes.py`, `brand/content.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/motion.py`, `brand/paper.py`, `brand/provenance.py`, `brand/qa.py`, `brand/reach.py`, `brand/reel_news.py`, `brand/review.py`, `brand/sourcing.py`, `brand/speednews.py`, `brand/tokens.py`, `brand/trends.py`, `brand/typo.py`, `scripts/archive_edition.py`, `scripts/dispatch.py`, `scripts/fact_check.py`, `scripts/health.py`, `scripts/intake.py`, `scripts/pick_formats.py`, `templates/__init__.py`, `templates/mukhya.py`, `templates/registry.json`, `templates/saara.py`
 
 ## D93 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
 
@@ -427,7 +428,7 @@ those carry a reason rather than a test.
 ## D95 · The desks are not optional
 
 - **Tested by:** `tests/test_dispatch.py`
-- Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/daily_flow.py`, `scripts/sign_off.py`
+- Enforced in: `brand/__init__.py`, `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/daily_flow.py`, `scripts/sign_off.py`
 
 ## D96 · A footage reel's news layer is laid out around Instagram, not over it
 
@@ -442,7 +443,7 @@ those carry a reason rather than a test.
 ## D98 · Every carousel slide has an animated twin: the scan wipe
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/animate.py`, `brand/tokens.py`, `templates/__init__.py`, `templates/registry.json`
+- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/tokens.py`, `templates/__init__.py`, `templates/registry.json`
 
 ## D99 · The scan wipe, refined to a premium standard — and on by default
 
@@ -452,7 +453,7 @@ those carry a reason rather than a test.
 ## D100 · A carousel is separate slides, drawn as one sheet across the swipe
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/animate.py`, `brand/copy.py`, `brand/paper.py`, `templates/__init__.py`, `templates/registry.json`
+- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/copy.py`, `brand/paper.py`, `templates/__init__.py`, `templates/registry.json`
 
 ## D101 · Every frame is a safe thumbnail: a whole cover, and pencil before ink
 
@@ -491,7 +492,7 @@ those carry a reason rather than a test.
 ## D108 · A signature covers the package it was given for
 
 - **Tested by:** `tests/test_package_integrity.py`
-- Enforced in: `brand/review.py`, `scripts/sign_off.py`
+- Enforced in: `brand/__init__.py`, `brand/review.py`, `scripts/sign_off.py`
 
 ## D109 · The guilt guard follows the words, not the category
 
@@ -506,4 +507,13 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_intake.py`
 - Enforced in: `scripts/daily_flow.py`
+
+## D112 · The backup keeps the record once, and prunes what it says it prunes
+
+- **Tested by:** `tests/test_backup.py`
+
+## D113 · Health says when the Mac itself is the problem
+
+- **Tested by:** `tests/test_health.py`
+- Enforced in: `brand/tokens.py`, `scripts/health.py`
 

@@ -30,6 +30,22 @@
 # and both keys can be reissued from the Google Cloud console in two minutes.
 # Losing them costs a morning; leaking them costs more.
 #
+# Layout (D112):
+#
+#   .backups/record/<day>.tar.gz   each archive/<day>/ — and any big file in
+#                                  archive/ — tarred ONCE, re-tarred only if it
+#                                  changes. The published record costs its own
+#                                  size, not a copy of itself every night.
+#   .backups/oormani-<date>.tar.gz the small registers — pasted sources, the
+#                                  calendar, archive/'s loose ledgers — every
+#                                  night, the newest KEEP kept.
+#   .backups/oormani-full-*.tar.gz --full images, the newest 3 kept.
+#
+# The second copy mirrors the same layout and is pruned the same way.
+#
+# Restore the record:   for f in .backups/record/*.tar.gz; do tar -xzf "$f"; done
+# Restore the registers: tar -xzf "$(ls -t .backups/oormani-2*.tar.gz | head -1)"
+#
 # Deliberately dumb: tar and cp. Nothing to keep alive, no account, no service.
 
 set -uo pipefail
@@ -37,7 +53,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 1
 
-LOCAL="$ROOT/.backups"
+LOCAL="${OORMANI_BACKUP_LOCAL:-$ROOT/.backups}"
 STAMP="$(date +%Y-%m-%d)"
 KEEP=14                    # daily archives to retain locally
 
@@ -59,6 +75,7 @@ if [ -z "$EXTERNAL" ] && [ -d "$(dirname "$ICLOUD")" ]; then
 fi
 
 notify() {
+  [ -n "${OORMANI_BACKUP_QUIET:-}" ] && return 0
   /usr/bin/osascript -e "display notification \"$2\" with title \"ಊರ್ಮನಿ ಸುದ್ದಿ\" subtitle \"$1\"" 2>/dev/null || true
 }
 
@@ -73,9 +90,10 @@ case "${1:-run}" in
     else
       echo "  offsite     ⚠️  no upstream set — 'git push -u origin master'"
     fi
-    LAST="$(ls -t "$LOCAL"/oormani-*.tar.gz 2>/dev/null | head -1)"
+    LAST="$(ls -t "$LOCAL"/oormani-2*.tar.gz 2>/dev/null | head -1)"
     [ -n "$LAST" ] && echo "  local       $(basename "$LAST")  $(du -h "$LAST" | cut -f1)" \
                    || echo "  local       ⚠️  never run"
+    echo "  record      $(ls "$LOCAL"/record/*.tar.gz 2>/dev/null | wc -l | tr -d ' ') archived day(s) held once  ($(du -sh "$LOCAL/record" 2>/dev/null | cut -f1))"
     if [ -n "$EXTERNAL" ] && [ -d "$EXTERNAL" ]; then
       LASTX="$(ls -t "$EXTERNAL"/oormani-*.tar.gz 2>/dev/null | head -1)"
       WHICH="$([ "$EXTERNAL_IS_ICLOUD" = "1" ] && echo 'iCloud Drive (default)' || echo "$EXTERNAL")"
@@ -136,12 +154,45 @@ esac
 
 mkdir -p "$LOCAL" "$ROOT/logs"
 
+# Keep the newest $3 files in $1 matching $2. One path per line, read whole:
+# the project lives under "My Apps", and `ls | xargs rm` split every path at
+# that space, so nothing was ever pruned (D112).
+prune() {
+  local dir="$1" pattern="$2" keep="$3" n=0 f
+  while IFS= read -r f; do
+    n=$((n + 1))
+    [ "$n" -gt "$keep" ] && rm -f -- "$f"
+  done < <(ls -t "$dir"/$pattern 2>/dev/null)
+}
+
 FULL=0
 [ "${1:-}" = "--full" ] && FULL=1
 
+echo "$(date '+%Y-%m-%d %H:%M:%S')  backup ($([ "$FULL" = "1" ] && echo full || echo daily))"
+
+# ── 1a · the published record, one tarball per item, written once ───────────
+mkdir -p "$LOCAL/record"
+RECORD_NEW=0
+if [ -d "$ROOT/archive" ]; then
+  for item in "$ROOT"/archive/*; do
+    [ -e "$item" ] || continue
+    name="$(basename "$item")"
+    if [ -f "$item" ] && [ "$(wc -c < "$item")" -lt 1000000 ]; then
+      continue                      # a small register — goes in the nightly
+    fi
+    tgt="$LOCAL/record/$name.tar.gz"
+    if [ -f "$tgt" ] && [ -z "$(find "$item" -newer "$tgt" -print -quit)" ]; then
+      continue                      # already held, and unchanged since
+    fi
+    tar -czf "$tgt.part" -C "$ROOT" "archive/$name" 2>/dev/null \
+      && mv -f "$tgt.part" "$tgt" && RECORD_NEW=$((RECORD_NEW + 1))
+  done
+fi
+echo "  record    $(ls "$LOCAL"/record/*.tar.gz 2>/dev/null | wc -l | tr -d ' ') item(s), $RECORD_NEW new or changed  ($(du -sh "$LOCAL/record" | cut -f1))"
+
+# ── 1b · the registers, or the full image ────────────────────────────────────
 if [ "$FULL" = "1" ]; then
   ARCHIVE="$LOCAL/oormani-full-$STAMP.tar.gz"
-  KIND="full"
   # Everything needed to rebuild on a machine that has never seen this repo,
   # for the case where GitHub is also unreachable.
   CANDIDATES=(archive editions inbox/sources assets/bgm_options
@@ -150,48 +201,57 @@ if [ "$FULL" = "1" ]; then
               AGENTS.md CLAUDE.md STANDARDS.md)
 else
   ARCHIVE="$LOCAL/oormani-$STAMP.tar.gz"
-  KIND="daily"
-  # Only what git does not have. Everything else is one `git clone` away.
-  CANDIDATES=(archive inbox/sources editions/greetings/calendar.json)
+  # Only what git does not have and the record above does not hold.
+  CANDIDATES=(inbox/sources editions/greetings/calendar.json)
+  for item in "$ROOT"/archive/*; do
+    [ -f "$item" ] && [ "$(wc -c < "$item")" -lt 1000000 ] \
+      && CANDIDATES+=("archive/$(basename "$item")")
+  done
 fi
-
-echo "$(date '+%Y-%m-%d %H:%M:%S')  backup ($KIND)"
 
 TARGETS=()
 for d in "${CANDIDATES[@]}"; do
   [ -e "$ROOT/$d" ] && TARGETS+=("$d")
 done
 
-if [ ${#TARGETS[@]} -eq 0 ]; then
-  echo "  nothing to back up yet — archive/ is empty until an edition is archived"
-  exit 0
-fi
-
-tar -czf "$ARCHIVE" "${TARGETS[@]}" 2>/dev/null
-SIZE="$(du -h "$ARCHIVE" | cut -f1)"
-echo "  local     $ARCHIVE  ($SIZE)"
-if [ "$FULL" = "0" ]; then
-  echo "            (archive/ and inbox/sources/ — the code, fonts and beds are in git)"
+if [ ${#TARGETS[@]} -gt 0 ]; then
+  tar -czf "$ARCHIVE" -C "$ROOT" "${TARGETS[@]}" 2>/dev/null
+  echo "  local     $(basename "$ARCHIVE")  ($(du -h "$ARCHIVE" | cut -f1))"
+else
+  ARCHIVE=""
+  echo "  local     nothing outside the record to keep yet"
 fi
 
 # Prune each kind separately — a full image should outlive a fortnight of
 # dailies, and mixing them meant one --full run evicted two weeks of record.
-ls -t "$LOCAL"/oormani-2*.tar.gz 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
-ls -t "$LOCAL"/oormani-full-*.tar.gz 2>/dev/null | tail -n +4 | xargs -r rm -f
+prune "$LOCAL" 'oormani-2*.tar.gz' "$KEEP"
+prune "$LOCAL" 'oormani-full-*.tar.gz' 3
 
 # ── 2 · the second medium ────────────────────────────────────────────────────
+EXT_OK=0
 if [ -n "$EXTERNAL" ] && [ -d "$EXTERNAL" ]; then
-  mkdir -p "$EXTERNAL"
-  if cp "$ARCHIVE" "$EXTERNAL/"; then
+  COPIED=1
+  mkdir -p "$EXTERNAL/record" || COPIED=0
+  for f in "$LOCAL"/record/*.tar.gz; do
+    [ -e "$f" ] || continue
+    g="$EXTERNAL/record/$(basename "$f")"
+    if [ ! -f "$g" ] || [ "$(wc -c < "$f")" != "$(wc -c < "$g")" ]; then
+      cp -f "$f" "$g" || COPIED=0
+    fi
+  done
+  if [ -n "$ARCHIVE" ]; then
+    cp -f "$ARCHIVE" "$EXTERNAL/" || COPIED=0
+  fi
+  if [ "$COPIED" = "1" ]; then
+    prune "$EXTERNAL" 'oormani-2*.tar.gz' "$KEEP"
+    prune "$EXTERNAL" 'oormani-full-*.tar.gz' 3
     [ "$EXTERNAL_IS_ICLOUD" = "1" ] && echo "  second    iCloud Drive" \
                                     || echo "  second    $EXTERNAL"
     EXT_OK=1
   else
-    echo "  second    ⚠️  could not write to $EXTERNAL"
-    EXT_OK=0
+    echo "  second    ⚠️  could not write everything to $EXTERNAL"
   fi
 else
-  EXT_OK=0
   [ -n "$EXTERNAL" ] && echo "  second    ⚠️  $EXTERNAL not mounted" \
                      || echo "  second    ⚠️  nowhere to put a second copy"
 fi
