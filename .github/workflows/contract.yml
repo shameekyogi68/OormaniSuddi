@@ -22,31 +22,40 @@ on:
 jobs:
   contract:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest Python this is known to run on, and the one the Mac runs.
+        python-version: ['3.12', '3.14']
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install
         run: |
           python -m pip install --upgrade pip
           # Line A only. torch is for the footage upscaler and is a ~2 GB
           # download that no test here touches.
-          pip install "Pillow>=10.0" "numpy>=1.26" trafilatura
+          pip install "Pillow>=10.0" "numpy>=1.26"
 
       - name: The contract
         run: python -m unittest tests.test_contract -v
 
-      - name: Legibility floors
-        run: python -m unittest tests.test_legibility -v
-
       - name: The legal corpus
         run: python -m unittest tests.test_legal_corpus -v
 
-      - name: The intake retrieves, never invents
-        run: python -m unittest tests.test_intake -v
+      - name: Every other suite that does not rasterise Kannada or render video
+        # By exclusion, so a new test file is checked from the day it lands.
+        # golden / animate / formats / speednews render video; greeting draws
+        # Kannada posters. Both depend on the Mac's exact raqm and font build.
+        run: |
+          FAST=$(ls tests/test_*.py \
+            | grep -vE 'test_(contract|legal_corpus|golden|animate|formats|speednews|greeting)\.py' \
+            | sed 's|/|.|; s|\.py$||')
+          python -m unittest $FAST -v
 
       - name: Every decision is enforced by something
         run: python docs/_build_traceability.py --check

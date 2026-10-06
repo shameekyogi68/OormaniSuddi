@@ -26,10 +26,13 @@ fail() { echo "✗ $1" >&2; echo "  commit refused. Fix it, or 'git commit --no-
 echo "  pre-commit: the contract…"
 python3 -m unittest tests.test_contract -q 2>&1 | tail -3 | grep -q '^OK' || fail "tests.test_contract"
 
-echo "  pre-commit: legibility, legal corpus, intake, calendar…"
-python3 -m unittest tests.test_legibility tests.test_legal_corpus \
-                    tests.test_intake tests.test_calendar -q 2>&1 \
-  | tail -3 | grep -q '^OK' || fail "one of the fast suites"
+# Every other suite except the four that render video (about five seconds in
+# all). By exclusion, so a new test file is checked from the day it is added.
+echo "  pre-commit: every fast suite…"
+FAST=$(ls tests/test_*.py | grep -vE 'test_(contract|golden|animate|formats|speednews)\.py' \
+       | sed 's|/|.|; s|\.py$||')
+# shellcheck disable=SC2086
+python3 -m unittest $FAST -q 2>&1 | tail -3 | grep -q '^OK' || fail "one of the fast suites"
 
 echo "  pre-commit: every decision enforced by something…"
 python3 docs/_build_traceability.py --check >/dev/null 2>&1 \

@@ -18,13 +18,11 @@
 # ── Line A: the daily package. Required. ─────────────────────────────────────
 Pillow>=10.0            # the renderer. Needs libraqm for Kannada shaping.
 numpy>=1.26             # grades, grain, scrims, the editorial plate
-google-genai>=1.0       # TTS, and the intake's extraction pass
+edge-tts>=6.1           # the narration fallback when Google TTS is down (D53,
+                        # D110). Gemini TTS is called over plain HTTPS, no SDK.
 
-# ── Intake accuracy. Optional, and the single biggest one. ───────────────────
-# Without this the tip sheet has headlines and RSS blurbs; with it, the model
-# condenses the actual article instead of expanding a headline. The sheet says
-# which it had, either way. See D63.
-trafilatura>=1.8
+# Nothing fetches news (D92): no scraper, no extraction model. The editor's
+# paste is the source.
 
 # ── Narration verification. Optional, local, no key. ─────────────────────────
 # Transcribes the rendered audio and diffs it against the script — the only

@@ -11,7 +11,7 @@
 # discovered later.
 set -uo pipefail
 
-ROOT="${CLAUDE_PROJECT_DIR:-/Users/shameekyogi/Oormani Suddi}"
+ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 f=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty' 2>/dev/null)
 [ -n "$f" ] || exit 0
 
