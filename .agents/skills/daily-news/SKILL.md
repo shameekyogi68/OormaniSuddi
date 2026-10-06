@@ -44,12 +44,12 @@ When the editor says "Stop yesterday and start today" and pastes news copy:
 
 ### Step 2: Draft the Edition & Preflight
 
-Write `editions/<DATE>.json` (schema_version 4) respecting the character budgets:
-- **Headlines**: maximum 78 characters (`tokens.Limits.headline_chars_carousel`). Crime headlines MUST carry `ಆರೋಪಿ` / `ಆರೋಪ` / `ಶಂಕಿತ` / `ಪ್ರಕರಣ ದಾಖಲು`.
-- **Decks**: maximum 190 characters (`tokens.Limits.deck_chars_carousel`).
-- **Points**: 3 points, each maximum 150 characters (`tokens.Limits.point_chars_carousel`).
+Write `editions/<DATE>.json` (schema_version 4). Lengths live in `tokens.Limits` — quote the names, do not restate the numbers:
+- **Headlines**: `Limits.headline_chars`. Crime headlines MUST carry `ಆರೋಪಿ` / `ಆರೋಪ` / `ಶಂಕಿತ` / `ಪ್ರಕರಣ ದಾಖಲು`.
+- **Decks**: `Limits.deck_chars`.
+- **Points**: `Limits.point_chars` each.
 - **Takeaway**: Actionable advisory or authority contact.
-- **Numbers**: Latin numerals (`600`, `16`, `4`), never Kannada digits.
+- **Numbers**: Latin numerals, never Kannada digits.
 
 Check and preflight:
 ```bash

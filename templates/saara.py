@@ -11,7 +11,7 @@ import os
 
 from brand import paper as pp
 from brand import typo
-from brand.content import ContentError, Edition
+from brand.content import ContentError, Edition, url_host
 from brand.tokens import Brand, Paper as P, category, fmt
 
 TITLE = 'ಸುದ್ದಿ ಸಾರ'
@@ -208,7 +208,7 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     y += 110
     for i, st in enumerate(stories, 1):
         url = next((u for u in st.source_urls if u), '')
-        where = url.split('/')[2] if url.startswith('http') else ''
+        where = url_host(url)
         line = ' · '.join(x for x in (' / '.join(st.sources), where) if x)
         pp.meta(sf, m, y, f'{i:02d}', pp.GREY, size=28, weight=720)
         pp.meta(sf, m + 64, y, line, pp.BODY, size=28, max_w=cw - 64)

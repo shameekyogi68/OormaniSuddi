@@ -3085,6 +3085,41 @@ Where the time was, and what changed:
 
 ---
 
+## D106 · A day, a source and an archive stay inside the contract
+
+**Decided (2026-10-06).** The render was already right. Four gates were
+looser than the words next to them, and each one fails on a deadline.
+
+**Decided.**
+* A day argument is `YYYY-MM-DD` and a real calendar day. Archive, discard
+  and the daily flow resolve it and then refuse a path that leaves the
+  project, before they create or delete anything.
+* Stop keeps the files a phone posts from: `forward_*.txt`,
+  `facebook_group_*.txt`, `REACH.md`, captions, WhatsApp copy and
+  `MASTER_COPY.md`. The mp4s are still deleted.
+* A source URL is an http(s) URL with a host. `http:not-a-url` is refused
+  at validation, and the source slide no longer crashes on it.
+* Own reporting, a press release, and a statute waive the URL only when a
+  source *entry* is exactly that mark. A wire credit that mentions POCSO
+  is still a sourced story.
+* The daily-flow sign-off hint prints `<name>` until the editor gives one.
+  Gemini TTS sends its key in a header, not in the URL.
+
+**Replaced.** `startswith('http')`, a substring match on the source list,
+an archive keep-list that dropped the circulation files, and `..` joined
+onto `out/` before `rmtree`.
+
+**If you undo it.** A bad date can delete a folder outside this repo, Stop
+throws away the town forwards, and a story whose credit merely contains
+"POCSO" renders with no link to reopen.
+
+`brand/content.py :: edition_day, path_inside, http_url, is_own_reporting` ·
+`scripts/archive_edition.py` · `scripts/discard_edition.py` ·
+`scripts/daily_flow.py` · `tests/test_archive_edition.py` ·
+`tests/test_discard_edition.py` · `tests/test_contract.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

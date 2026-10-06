@@ -47,8 +47,26 @@ def get_today() -> str:
     return dt.date.today().isoformat()
 
 
+def resolve_day(value: str | None) -> str:
+    """Today, or a real YYYY-MM-DD. A path-shaped date is refused. D106."""
+    if not value:
+        return get_today()
+    from brand.content import ContentError, edition_day
+    try:
+        return edition_day(value)
+    except ContentError as e:
+        print(f'✗ {e}', file=sys.stderr)
+        raise SystemExit(2)
+
+
+def sign_off_hint(day: str, by: str | None) -> str:
+    """The command to print. Never invents a person's name. D106."""
+    who = (by or '').strip() or '<name>'
+    return f'python3 scripts/sign_off.py out/{day} --by "{who}"'
+
+
 def cmd_archive_yesterday(args) -> int:
-    today = args.date or get_today()
+    today = resolve_day(args.date)
     editions = sorted(glob.glob(os.path.join(ROOT, 'editions', '????-??-??.json')))
     prev = [e for e in editions if os.path.basename(e)[:10] < today]
     if not prev:
@@ -62,7 +80,7 @@ def cmd_archive_yesterday(args) -> int:
 
 
 def cmd_intake(args) -> int:
-    today = args.date or get_today()
+    today = resolve_day(args.date)
     text = ""
     if args.file:
         with open(args.file, encoding='utf-8') as f:
@@ -150,7 +168,7 @@ def cmd_receipts(args) -> int:
     real and now comes honestly: dispatch.py launches ONE agent per desk for
     up to Limits.agent_batch_max stories (D97), not one per story.
     """
-    today = args.date or get_today()
+    today = resolve_day(args.date)
     print(D.brief(D.plan(today), limit=200))
     print("\nLaunch each wave as ONE message of parallel Agent calls, one per "
           "line above. Each agent files its own receipts; this script files none.")
@@ -158,7 +176,7 @@ def cmd_receipts(args) -> int:
 
 
 def cmd_verify(args) -> int:
-    today = args.date or get_today()
+    today = resolve_day(args.date)
     ed_path = os.path.join(ROOT, 'editions', f"{today}.json")
     if not args.by:
         print("Error: --by <name> is required to verify.", file=sys.stderr)
@@ -169,7 +187,7 @@ def cmd_verify(args) -> int:
 
 
 def cmd_render(args) -> int:
-    today = args.date or get_today()
+    today = resolve_day(args.date)
     ed_path = os.path.join(ROOT, 'editions', f"{today}.json")
     print(f"Rendering {ed_path}...")
     cmd = [sys.executable, os.path.join(ROOT, 'render.py'), ed_path]
@@ -182,7 +200,7 @@ def cmd_render(args) -> int:
     print(f"✓ Output ready in out/{today}/")
     print(f"  Instagram Carousel: Animated .mp4 video slides (out/{today}/saara_01_cover.mp4 …)")
     print(f"  Instagram Caption : out/{today}/saara_caption.txt")
-    print(f"  Sign-off Command  : python3 scripts/sign_off.py out/{today} --by \"{args.by or 'Editor'}\"")
+    print(f"  Sign-off Command  : {sign_off_hint(today, args.by)}")
     print("=" * 60)
     return 0
 

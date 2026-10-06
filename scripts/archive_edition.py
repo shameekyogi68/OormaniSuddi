@@ -30,13 +30,29 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 KEEP_NAMES = (
     'APPROVAL.md', 'APPROVAL_FOOTAGE.md', 'MASTER_COPY.md',
-    'schedule.txt', 'schedule.json',
+    'schedule.txt', 'schedule.json', 'REACH.md',
     # The evidence of HOW it was cleared, not only that it was. Six months
     # later "who signed this and what did the machine actually check" is the
     # question, and prose in a chat log does not answer it.
     'SIGNOFF.json', 'review_report.json', 'PROVENANCE.json',
     'run_report.md', 'narration_audit.json',
 )
+
+
+def _keep(name: str) -> bool:
+    """Copy that has to survive Stop: captions, town forwards, Facebook posts.
+
+    The heavy renders are deleted. The files a phone posts from are not —
+    `forward_*.txt` exists so nobody copies the wrong town out of
+    MASTER_COPY.md at 20:00. D106.
+    """
+    if name in KEEP_NAMES:
+        return True
+    if name.startswith('facebook_group_') and name.endswith('.txt'):
+        return True
+    if name.startswith('forward_') and name.endswith('.txt'):
+        return True
+    return name.endswith(('_copy.txt', '_copy.json', '_caption.txt', '_whatsapp.txt'))
 
 
 def snapshot_sources(date: str, dest: str) -> None:
@@ -65,6 +81,12 @@ def snapshot_sources(date: str, dest: str) -> None:
                 continue
             seen.add(url)
             row = {'story': i, 'url': url, 'headline': st.get('headline', '')[:80]}
+            from brand.content import http_url
+            if not http_url(url):
+                row['status'] = 'skipped (not an http URL)'
+                print(f'  ! {url} — not an http URL, not sent')
+                rows.append(row)
+                continue
             try:
                 req = urllib.request.Request(
                     'https://web.archive.org/save/' + url,
@@ -100,11 +122,16 @@ def main() -> int:
                     help='ask the Wayback Machine to keep a copy of every '
                          'source URL this edition cited')
     args = ap.parse_args()
-    date = args.date
-    out = os.path.join(ROOT, 'out', date)
-    daily = os.path.join(ROOT, 'assets', 'daily', date)
-    edition = os.path.join(ROOT, 'editions', f'{date}.json')
-    dest = os.path.join(ROOT, 'archive', date)
+    from brand.content import ContentError, edition_day, path_inside
+    try:
+        date = edition_day(args.date)
+        out = path_inside(ROOT, 'out', date)
+        daily = path_inside(ROOT, 'assets', 'daily', date)
+        edition = path_inside(ROOT, 'editions', f'{date}.json')
+        dest = path_inside(ROOT, 'archive', date)
+    except ContentError as e:
+        print(f'✗ {e}', file=sys.stderr)
+        return 2
     os.makedirs(dest, exist_ok=True)
 
     if os.path.exists(edition):
@@ -118,9 +145,7 @@ def main() -> int:
         if os.path.isdir(review):
             shutil.copytree(review, os.path.join(dest, '_review'), dirs_exist_ok=True)
         for name in os.listdir(out):
-            if (name in KEEP_NAMES or
-                    name.endswith('_copy.txt') or name.endswith('_copy.json') or
-                    name.endswith('_caption.txt') or name.endswith('_whatsapp.txt')):
+            if _keep(name):
                 shutil.copy2(os.path.join(out, name), os.path.join(dest, name))
         shutil.rmtree(out, ignore_errors=True)
         print(f'  archived copy/approval/review → {dest}')

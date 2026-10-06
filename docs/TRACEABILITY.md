@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **68/105** decisions are named by at least one test
+- **69/106** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -476,4 +476,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_animate.py`
 - Enforced in: `brand/animate.py`, `brand/typo.py`
+
+## D106 · A day, a source and an archive stay inside the contract
+
+- **Tested by:** `tests/test_archive_edition.py`, `tests/test_contract.py`, `tests/test_discard_edition.py`
+- Enforced in: `brand/content.py`, `scripts/archive_edition.py`, `scripts/daily_flow.py`
 

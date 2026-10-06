@@ -160,9 +160,10 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
 python3 scripts/archive_edition.py <date>
 ```
 
-It copies the edition JSON, `APPROVAL.md`, `SIGNOFF.json`, the copy and the
+It copies the edition JSON, `APPROVAL.md`, `SIGNOFF.json`, the captions, the
+town forwards (`forward_*.txt`), the Facebook posts, `REACH.md` and the
 review frames into `archive/<date>/`, then clears the heavy renders. **The
-edition JSON is never deleted.**
+edition JSON is never deleted.** The date has to be `YYYY-MM-DD`.
 
 ### If the old morning job still runs
 

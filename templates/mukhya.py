@@ -10,7 +10,7 @@ import os
 
 from brand import paper as pp
 from brand import typo
-from brand.content import ContentError, Story
+from brand.content import ContentError, Story, url_host
 from brand.tokens import Brand, Paper as P, category, fmt
 
 
@@ -104,7 +104,7 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
     y += 60
     url = next((u for u in story.source_urls if u), '')
     rows = [('ಮೂಲ', ' · '.join(story.sources)),
-            ('ಲಿಂಕ್', url.split('/')[2] if url.startswith('http') else 'ಸ್ವಂತ ವರದಿ'),
+            ('ಲಿಂಕ್', url_host(url) or 'ಸ್ವಂತ ವರದಿ'),
             ('ಚಿತ್ರ', story.photo.disclosure),
             ('ತಿದ್ದುಪಡಿ', 'ತಪ್ಪು ಕಂಡರೆ ತಿಳಿಸಿ — ಪರಿಶೀಲಿಸಿ ಸರಿಪಡಿಸುತ್ತೇವೆ')]
     if Brand.whatsapp_url:

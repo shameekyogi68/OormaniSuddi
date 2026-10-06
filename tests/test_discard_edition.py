@@ -120,6 +120,21 @@ class ASignedOffDayIsNeverTouched(WithAFakeDay):
                         'a signed-off render must survive a discard attempt')
 
 
+class ADayArgumentCannotLeaveTheRepo(WithAFakeDay):
+    """D106: the date is a calendar day, not a path."""
+
+    def test_a_path_is_refused_and_nothing_is_deleted(self):
+        self.make_edition()
+        self.make_out(signed=False)
+        rc = run('../' + FAKE_DATE)
+        self.assertEqual(rc, 2)
+        self.assertTrue(os.path.exists(self.edition))
+        self.assertTrue(os.path.isdir(self.out))
+
+    def test_an_impossible_day_is_refused(self):
+        self.assertEqual(run('2099-13-40'), 2)
+
+
 class DailyAssetsNeedTheForceFlag(WithAFakeDay):
 
     def test_daily_assets_survive_without_force_assets(self):

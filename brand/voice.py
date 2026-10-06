@@ -633,7 +633,12 @@ def _google_tts_synthesize(text: str, out_path: str, tempo: float = 1.15) -> str
 def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_key: str | None = None) -> str:
     """Synthesize speech using Google Gemini Flash TTS."""
     key = api_key or DEFAULT_GEMINI_KEY
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key={key}'
+    if not (key or '').strip():
+        raise RuntimeError(
+            'Gemini TTS needs GEMINI_API_KEY (or .gemini_key). '
+            'The key is not sent in the URL.')
+    url = ('https://generativelanguage.googleapis.com/v1beta/models/'
+           'gemini-2.5-flash-preview-tts:generateContent')
     payload = {
         'contents': [{'parts': [{'text': text}]}],
         'generationConfig': {
@@ -650,7 +655,7 @@ def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_ke
     req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode('utf-8'),
-        headers={'Content-Type': 'application/json'}
+        headers={'Content-Type': 'application/json', 'x-goog-api-key': key}
     )
     with urllib.request.urlopen(req, timeout=30) as resp:
         res = json.loads(resp.read().decode('utf-8'))

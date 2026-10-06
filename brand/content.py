@@ -21,8 +21,10 @@ from __future__ import annotations
 
 import contextlib
 import os
+import re
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 IST = timezone(timedelta(hours=5, minutes=30))
 BREAKING_WINDOW_H = 12          # after this, a story is news, not breaking
@@ -126,6 +128,56 @@ def parse_dt(v) -> datetime:
     return d if d.tzinfo else d.replace(tzinfo=IST)
 
 
+def edition_day(value: str) -> str:
+    """A calendar day used in a path: YYYY-MM-DD, and a real date.
+
+    Archive and discard join this string onto `out/`, `editions/` and
+    `archive/`. Anything else — `..`, a slash, a month that does not exist —
+    is refused before a file is created or deleted. D106.
+    """
+    text = (value or '').strip()
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', text):
+        raise ContentError(
+            f'{value!r} is not a day. Pass YYYY-MM-DD, the same form as '
+            'editions/YYYY-MM-DD.json.')
+    try:
+        datetime.strptime(text, '%Y-%m-%d')
+    except ValueError:
+        raise ContentError(f'{text} is not a real calendar day.') from None
+    return text
+
+
+def path_inside(root: str, *parts: str) -> str:
+    """`root/parts` after `..` is resolved, refused if it leaves `root`. D106."""
+    base = os.path.realpath(root)
+    path = os.path.realpath(os.path.join(base, *parts))
+    if os.path.commonpath([base, path]) != base:
+        raise ContentError(f'{path} is outside the project')
+    return path
+
+
+def http_url(value: str) -> bool:
+    """True when `value` is an http(s) URL with a host. D106."""
+    text = (value or '').strip()
+    parsed = urlparse(text)
+    return parsed.scheme in ('http', 'https') and bool(parsed.hostname)
+
+
+def url_host(value: str) -> str:
+    """The host shown on a source slide. Empty when the URL is not real.
+
+    For a valid URL this is the same slice the slides have always shown
+    (`https://example.com/a` → `example.com`), so a good link does not move
+    a pixel. A string that only starts with `http` used to raise IndexError
+    at render. D106.
+    """
+    text = (value or '').strip()
+    if not http_url(text):
+        return ''
+    parts = text.split('/')
+    return parts[2] if len(parts) > 2 else ''
+
+
 CATEGORIES_KEYS: list[str] = []   # filled below from tokens, kept here so
 # schema generation has one import to reach for.
 
@@ -215,8 +267,14 @@ PRESS_RELEASE = 'ಪತ್ರಿಕಾ ಪ್ರಕಟಣೆ'
 
 
 def is_own_reporting(sources: list[str]) -> bool:
-    marks = (OWN_REPORTING, PRESS_RELEASE, *STATUTORY_SOURCES)
-    return any(any(m in (s or '') for m in marks) for s in sources)
+    """True when a source *entry* is own reporting, a press release, or a statute.
+
+    The match is the whole entry, after stripping. A wire credit that merely
+    contains "POCSO" or the channel name is still a sourced story and still
+    needs a URL. D106.
+    """
+    marks = {OWN_REPORTING, PRESS_RELEASE, *STATUTORY_SOURCES}
+    return any((s or '').strip() in marks for s in sources)
 
 
 # What you are allowed to do with a picture. 'own' means the channel shot it.
@@ -439,7 +497,7 @@ class Story:
                     f'can reopen, or mark it as own reporting: sources=["{OWN_REPORTING}"]. '
                     'A named source without a URL is how invented detail gets a dateline.')
             for u in urls:
-                if not u.startswith('http'):
+                if not http_url(u):
                     raise ContentError(
                         f'source_url {u!r} must be a real http(s) URL')
         if self.category == 'obituary' and len(self.sources) < 2 and not is_own_reporting(self.sources):
@@ -456,7 +514,7 @@ class Story:
                     "'actual'; change nature to 'file'.")
         for p in self.gallery:
             p.validate(schema)
-        if self.live_url and not self.live_url.startswith('http'):
+        if self.live_url and not http_url(self.live_url):
             raise ContentError('live_url must be a real stream URL, or empty')
         # The criminal-reporting guards run BEFORE the breaking demotion below.
         # Demotion is a presentation decision — it drops the red treatment on a

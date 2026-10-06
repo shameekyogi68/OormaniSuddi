@@ -1170,6 +1170,21 @@ class LockV10(unittest.TestCase):
     def test_own_reporting_needs_no_url(self):
         base(sources=['ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ'], source_urls=[]).validate()
 
+    def test_a_url_must_have_a_host(self):
+        """D106: startswith('http') is not a URL."""
+        with self.assertRaisesRegex(ContentError, 'source_url'):
+            base(source_urls=['http:not-a-url']).validate()
+        with self.assertRaisesRegex(ContentError, 'live_url'):
+            base(live_url='http:not-a-stream').validate()
+        base(source_urls=['https://example.test/story']).validate()
+
+    def test_a_statute_inside_a_wire_credit_does_not_waive_the_url(self):
+        """D106: the exemption is the whole source entry, not a substring."""
+        with self.assertRaisesRegex(ContentError, 'source_url'):
+            base(sources=['ದಿ ಹಿಂದು — POCSO ವರದಿ'], source_urls=[]).validate()
+        base(sources=['POCSO'], source_urls=[]).validate()
+        base(sources=['ಪತ್ರಿಕಾ ಪ್ರಕಟಣೆ'], source_urls=[]).validate()
+
     def test_unknown_category_is_refused(self):
         with self.assertRaisesRegex(ContentError, 'unknown category'):
             base(category='governance').validate()

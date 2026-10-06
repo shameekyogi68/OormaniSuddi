@@ -35,11 +35,15 @@ def main() -> int:
                          'keeping any real photograph the editor sent; '
                          'nothing there is deleted without this flag')
     args = ap.parse_args()
-    date = args.date
-
-    edition = os.path.join(ROOT, 'editions', f'{date}.json')
-    out = os.path.join(ROOT, 'out', date)
-    daily = os.path.join(ROOT, 'assets', 'daily', date)
+    from brand.content import ContentError, edition_day, path_inside
+    try:
+        date = edition_day(args.date)
+        edition = path_inside(ROOT, 'editions', f'{date}.json')
+        out = path_inside(ROOT, 'out', date)
+        daily = path_inside(ROOT, 'assets', 'daily', date)
+    except ContentError as e:
+        print(f'✗ {e}', file=sys.stderr)
+        return 2
 
     if os.path.isdir(out) and is_signed(out):
         print(f'✗ out/{date} is signed off — this day was published. '
