@@ -32,10 +32,11 @@ import base64
 import shutil
 import asyncio
 import subprocess
+import time
+import urllib.error
 import urllib.request
 import urllib.parse
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .content import Story
 from .tokens import Motion
@@ -516,11 +517,6 @@ def narration_beats(story: Story) -> list[tuple[str, str]]:
     return [(k, t) for k, t in beats if t]
 
 
-def build_narration_script(story: Story) -> str:
-    """The full narration as one string — for the copy sheet, not for timing."""
-    return ' '.join(t for _k, t in narration_beats(story))
-
-
 async def _edge_tts_synthesize(text: str, out_path: str,
                                voice: str = VOICE_SAPNA,
                                rate: str = ANCHOR_RATE,
@@ -602,32 +598,59 @@ def _google_tts_synthesize(text: str, out_path: str, tempo: float = 1.15) -> str
 
     temp_dir = out_path + '_gchunks'
     os.makedirs(temp_dir, exist_ok=True)
-    temp_files = []
+    try:
+        temp_files = []
 
-    for i, c in enumerate(chunks):
-        enc = urllib.parse.quote(c)
-        url = f'https://translate.google.com/translate_tts?ie=UTF-8&q={enc}&tl=kn&total={len(chunks)}&idx={i}&textlen={len(c)}&client=tw-ob'
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        tmp_f = os.path.join(temp_dir, f'part_{i:03d}.mp3')
-        with urllib.request.urlopen(req, timeout=20) as resp, open(tmp_f, 'wb') as out_f:
-            out_f.write(resp.read())
-        temp_files.append(tmp_f)
+        for i, c in enumerate(chunks):
+            enc = urllib.parse.quote(c)
+            url = f'https://translate.google.com/translate_tts?ie=UTF-8&q={enc}&tl=kn&total={len(chunks)}&idx={i}&textlen={len(c)}&client=tw-ob'
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            tmp_f = os.path.join(temp_dir, f'part_{i:03d}.mp3')
+            audio = _fetch(req, timeout=20)
+            with open(tmp_f, 'wb') as out_f:
+                out_f.write(audio)
+            temp_files.append(tmp_f)
 
-    list_path = os.path.join(temp_dir, 'list.txt')
-    with open(list_path, 'w', encoding='utf-8') as lf:
-        for f in temp_files:
-            lf.write(f"file '{os.path.abspath(f)}'\n")
+        list_path = os.path.join(temp_dir, 'list.txt')
+        with open(list_path, 'w', encoding='utf-8') as lf:
+            for f in temp_files:
+                lf.write(f"file '{os.path.abspath(f)}'\n")
 
-    raw_concat = os.path.join(temp_dir, 'concat.mp3')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list_path, '-c', 'copy', raw_concat], check=True)
+        raw_concat = os.path.join(temp_dir, 'concat.mp3')
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list_path, '-c', 'copy', raw_concat], check=True)
 
-    # Apply news anchor broadcast tempo (tempo=1.15)
-    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw_concat, '-filter:a', f'atempo={tempo}', '-b:a', '192k', out_path], check=True)
-
-    # Cleanup
-    shutil.rmtree(temp_dir, ignore_errors=True)
+        # Apply news anchor broadcast tempo (tempo=1.15)
+        os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw_concat, '-filter:a', f'atempo={tempo}', '-b:a', '192k', out_path], check=True)
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
     return out_path
+
+
+# A network call that fails for a moment is retried before the beat falls
+# back to another engine: a single dropped packet used to hand the whole beat
+# to the voice the native ear rejected (FALLBACK_ORDER). A refusal of the
+# INPUT (4xx other than 408/429) is not retried — it would fail the same way.
+NET_ATTEMPTS = 3
+NET_BACKOFF = 1.5          # seconds before the second try; doubled after
+
+
+def _fetch(req: urllib.request.Request, timeout: float) -> bytes:
+    """`urlopen(req).read()`, retried on a transient failure."""
+    for attempt in range(NET_ATTEMPTS):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as e:
+            if e.code not in (408, 429) and e.code < 500:
+                raise
+            if attempt == NET_ATTEMPTS - 1:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            if attempt == NET_ATTEMPTS - 1:
+                raise
+        time.sleep(NET_BACKOFF * 2 ** attempt)
+    raise AssertionError('unreachable')
 
 
 def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_key: str | None = None) -> str:
@@ -657,11 +680,9 @@ def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_ke
         data=json.dumps(payload).encode('utf-8'),
         headers={'Content-Type': 'application/json', 'x-goog-api-key': key}
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        res = json.loads(resp.read().decode('utf-8'))
-        part = res['candidates'][0]['content']['parts'][0]
-        b64_pcm = part['inlineData']['data']
-        raw_pcm = base64.b64decode(b64_pcm)
+    res = json.loads(_fetch(req, timeout=30).decode('utf-8'))
+    part = res['candidates'][0]['content']['parts'][0]
+    raw_pcm = base64.b64decode(part['inlineData']['data'])
 
     pcm_tmp = out_path + '.raw.pcm'
     with open(pcm_tmp, 'wb') as f:
@@ -958,38 +979,3 @@ def synthesize_track(story: Story, out_path: str,
     return track
 
 
-def synthesize_narration(story: Story, out_path: str,
-                         engine: str = DEFAULT_ENGINE,
-                         voice: str | None = None,
-                         script: str | None = None,
-                         api_key: str | None = None) -> tuple[str, float, str]:
-    """Generate audio voiceover for a news story.
-    
-    Supported engines:
-      - 'google': Google's native Indic Kannada TTS voice (tuned to broadcast tempo)
-      - 'edge': Microsoft Neural kn-IN-SapnaNeural (Female TV Anchor) / kn-IN-GaganNeural (Male)
-      - 'gemini': Google Gemini Flash TTS
-      
-    Returns: (audio_path, duration_seconds, script_text)
-    """
-    text = script or build_narration_script(story)
-    
-    eng = (os.environ.get('OORMANI_TTS_ENGINE') or engine).lower()
-    
-    if eng == 'gemini':
-        v = voice or 'Aoede'
-        _gemini_tts_synthesize(text, out_path, voice=v, api_key=api_key)
-    elif eng == 'edge':
-        v = voice or DEFAULT_VOICE
-        asyncio.run(_edge_tts_synthesize(text, out_path, voice=v, rate='+5%'))
-    else:
-        # Default: Google native Indic Kannada voice
-        try:
-            _google_tts_synthesize(text, out_path, tempo=1.15)
-        except Exception:
-            # Fallback to Edge-TTS neural if network glitch
-            v = voice or DEFAULT_VOICE
-            asyncio.run(_edge_tts_synthesize(text, out_path, voice=v, rate='+5%'))
-        
-    dur = get_audio_duration(out_path)
-    return out_path, dur, text

@@ -232,9 +232,15 @@ ALLEGATION_MARKERS = [
     'ತನಿಖೆ', 'ವಿಚಾರಣೆ',
 ]
 
-# Categories where a conviction has actually happened, so plain past tense is
-# accurate and no allegation marker is needed.
-CONVICTED_STATUSES = {'convicted'}
+# Words in GUILT_ASSERTING that also describe what an animal, a fire or the
+# weather did. Outside crime copy they are not guarded — "ಹಸುವನ್ನು ಕೊಂದ
+# ಚಿರತೆ" is a leopard, "ಸುಟ್ಟ ಮನೆ" a fire. Every other word on the list can
+# only be said of a person committing a crime, so it is guarded whatever the
+# story is filed under. D109.
+NOT_ONLY_CRIME = frozenset({
+    'ಕೊಂದ', 'ಕೊಂದು', 'ಚುಚ್ಚಿ ಕೊಂದ', 'ಇರಿದ', 'ಸುಟ್ಟ', 'ಬೆಂಕಿ ಹಚ್ಚಿದ',
+    'ನಾಶ ಮಾಡಿದ', 'ಸಾಗಾಟ ಮಾಡಿದ',
+})
 
 
 def asserts_guilt(text: str) -> list[str]:
@@ -246,7 +252,19 @@ def asserts_guilt(text: str) -> list[str]:
     """
     if any(m in text for m in ALLEGATION_MARKERS):
         return []
-    return [v for v in GUILT_ASSERTING if v in text]
+    text = _IDIOMS.sub(' ', text)
+    return [v for v in GUILT_ASSERTING if _GUILT_RE[v].search(text)]
+
+
+# A guilt word counts only where a word begins: ನಿರ್ದೋಷಿ ("acquitted") ends
+# in ದೋಷಿ and is the opposite of it. Kannada letters, ZWNJ and ZWJ are inside
+# a word; anything else starts one. D109.
+_KN_LETTER = 'ಀ-೿‌‍'
+_GUILT_RE = {v: re.compile(f'(?<![{_KN_LETTER}])' + re.escape(v))
+             for v in GUILT_ASSERTING}
+# Fixed phrases that contain a guilt word and mean something else.
+# ಕದ್ದುಮುಚ್ಚಿ — "secretly", not "stole". D109.
+_IDIOMS = re.compile('ಕದ್ದುಮುಚ್ಚಿ')
 
 
 class ContentError(ValueError):
@@ -577,6 +595,23 @@ class Story:
                     'about someone who has not been convicted. Rewrite it as an '
                     'allegation — add ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ, or say ಪ್ರಕರಣ ದಾಖಲು — '
                     'or set convicted=True if a court has actually convicted.')
+        elif not self.convicted:
+            # 1b · The category is chosen by a desk, and a desk can be wrong.
+            #      A bribe filed as civic news or a killing filed as an
+            #      accident used to skip the guard entirely. Here only the
+            #      words that can describe nothing but a person's crime. D109.
+            for where, text in (('headline', self.headline),
+                                ('reel_line', self.reel_line),
+                                ('hook', self._hook), ('copy', copy)):
+                hits = [v for v in asserts_guilt(text) if v not in NOT_ONLY_CRIME]
+                if hits:
+                    raise ContentError(
+                        f'the {where} states a crime as fact ({", ".join(hits)}) '
+                        f'in a story filed as {self.category!r}. Whatever the '
+                        'category, it names someone as having done it. File it '
+                        'as crime and write it as an allegation — ಆರೋಪ / ಆರೋಪಿ '
+                        '/ ಶಂಕಿತ, or ಪ್ರಕರಣ ದಾಖಲು — or set convicted=True only '
+                        'if a court has actually convicted.')
 
         # 2 · A child in conflict with law, or a child victim, may not be
         #     identified. JJ Act 2015 §74.
@@ -639,9 +674,6 @@ class Story:
         h = h24 % 12 or 12
         return f'{ampm} {h}:{d.minute:02d}'
 
-    @property
-    def day_kn(self) -> str:
-        return KN_DAYS[self.published_at.weekday()]
 
     @property
     def source_line(self) -> str:
@@ -731,14 +763,6 @@ class Story:
         says about their own work, and only a person can fill it in.
         """
         return bool((self.verified_by or '').strip())
-
-    @property
-    def verification_line(self) -> str:
-        if not self.is_verified:
-            return ''
-        who = self.verified_by.strip()
-        when = f' · {self.verified_at:%Y-%m-%d %H:%M}' if self.verified_at else ''
-        return f'{who}{when}'
 
 
 import re as _re

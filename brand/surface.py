@@ -9,7 +9,7 @@ outlined-rounded-box habit with things that actually look printed:
   * rule()     a hairline, not a border
   * grain()    fine luminance noise; flat digital black is the cheapest-looking
                thing on a phone screen, and grain is what kills it
-  * place_photo() the single house grade every image passes through
+  * house_grade() the single house grade every image passes through
 
 Everything is drawn at `ss`x and downsampled once, at the end, with Lanczos.
 Layout code always speaks in final delivery pixels.
@@ -314,23 +314,6 @@ def panel(sf: Surface, box, fill, radius: float = 0, outline=None, weight: float
     sf.img.alpha_composite(lay)
 
 
-def soft_shadow(sf: Surface, box, blur: float = 26, dy: float = 10,
-                a: float = 0.55, radius: float = 0):
-    ss = sf.ss
-    pad = int((blur * 3 + abs(dy)) * ss)
-    w = int((box[2] - box[0]) * ss) + pad * 2
-    h = int((box[3] - box[1]) * ss) + pad * 2
-    lay = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(lay)
-    inner = [pad, pad + dy * ss, w - pad, h - pad + dy * ss]
-    if radius:
-        d.rounded_rectangle(inner, radius=radius * ss, fill=(0, 0, 0, int(a * 255)))
-    else:
-        d.rectangle(inner, fill=(0, 0, 0, int(a * 255)))
-    lay = lay.filter(ImageFilter.GaussianBlur(blur * ss))
-    sf.img.alpha_composite(lay, (int(box[0] * ss) - pad, int(box[1] * ss) - pad))
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  PHOTOGRAPHY — the house grade
 # ─────────────────────────────────────────────────────────────────────────────
@@ -426,70 +409,6 @@ def cover(im: Image.Image, w: int, h: int, focal=(0.5, 0.42),
     cx = int((nw - w) * clamp01(focal[0]))
     cy = int((nh - h) * clamp01(focal[1]))
     return im.crop((cx, cy, cx + w, cy + h))
-
-
-def place_photo(sf: Surface, path: str, box, focal=(0.5, 0.42),
-                zoom: float = 1.0, strength: float = 1.0, mono: bool = False,
-                radius: float = 0, grade: bool = True,
-                fade_bottom: float = 0.0, fade_top: float = 0.0
-                ) -> Image.Image | None:
-    """Grade, crop and paste a photograph into `box` (final-pixel coords).
-
-    `fade_bottom` (0..1) fades the picture's own alpha to nothing over that
-    fraction of its height. Fading the IMAGE is not the same as painting a dark
-    veil over it: a veil is one particular colour and will always mismatch the
-    page underneath by a shade, leaving a faint band exactly where you were
-    trying to hide the join. An alpha fade lets whatever is beneath come
-    through, so there is no join to find.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    ss = sf.ss
-    W = int((box[2] - box[0]) * ss)
-    H = int((box[3] - box[1]) * ss)
-    im = Image.open(path)
-    im = cover(im, W, H, focal, zoom)
-    if grade:
-        im = house_grade(im, strength=strength, mono=mono)
-    im = im.convert('RGBA')
-
-    if fade_bottom or fade_top:
-        a = np.ones(H, dtype=np.float32)
-        if fade_bottom > 0:
-            n = max(1, int(H * fade_bottom))
-            u = np.linspace(0.0, 1.0, n)
-            a[H - n:] = 1.0 - (u * u * (3.0 - 2.0 * u))
-        if fade_top > 0:
-            n = max(1, int(H * fade_top))
-            u = np.linspace(0.0, 1.0, n)
-            a[:n] = np.minimum(a[:n], u * u * (3.0 - 2.0 * u))
-        mask = np.repeat((a * 255).astype(np.uint8)[:, None], W, axis=1)
-        m = Image.fromarray(mask, 'L')
-        if radius:
-            rm = Image.new('L', (W, H), 0)
-            ImageDraw.Draw(rm).rounded_rectangle([0, 0, W - 1, H - 1],
-                                                 radius=radius * ss, fill=255)
-            m = Image.fromarray(np.minimum(np.asarray(m), np.asarray(rm)), 'L')
-        im.putalpha(m)
-    elif radius:
-        m = Image.new('L', (W, H), 0)
-        ImageDraw.Draw(m).rounded_rectangle([0, 0, W - 1, H - 1],
-                                            radius=radius * ss, fill=255)
-        im.putalpha(m)
-
-    sf.img.alpha_composite(im, (int(box[0] * ss), int(box[1] * ss)))
-    return im
-
-
-def duotone(im: Image.Image, dark, light) -> Image.Image:
-    """Map luminance onto a two-colour ramp. Used only for backgrounds behind
-    heavy type (quote cards, stat cards) where a full-colour photo would fight
-    the words."""
-    g = np.asarray(im.convert('L')).astype(np.float32) / 255.0
-    d = np.array(dark, np.float32)
-    l = np.array(light, np.float32)
-    out = d + (l - d) * g[..., None]
-    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), 'RGB')
 
 
 def logo(size: int, variant: str = 'circle') -> Image.Image:

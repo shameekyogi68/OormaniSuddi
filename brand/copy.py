@@ -16,6 +16,7 @@ any particular day's news, and nothing is templated to a specific story.
 """
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass, field, asdict
 
@@ -892,10 +893,6 @@ def youtube_tags(subject: Story | Edition, limit: int = 30) -> list[str]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  PUBLIC API
-# ─────────────────────────────────────────────────────────────────────────────
-
-# ─────────────────────────────────────────────────────────────────────────────
 #  PUBLISHING PLAN
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -910,28 +907,7 @@ def youtube_tags(subject: Story | Edition, limit: int = 30) -> list[str]:
 #   * reels are spaced at least 2.5h apart, because two of ours in one window
 #     compete with each other rather than with anyone else;
 #   * AI-card reels are Instagram-only (Rule 7). YouTube gets real footage.
-# Peak engagement windows, IST — starting positions, not measured truth.
-REEL_MIN_GAP_MIN = Limits.reel_gap_min
-REEL_SLOTS = list(Limits.reel_slots)
-
-
-def _reel_times(n: int) -> list[str]:
-    """Upload times for n reels, never closer together than the gap rule.
-
-    Four is the documented shape of a day. Beyond that the times simply keep
-    stepping by the gap — spacing is preserved, but a fifth and sixth reel are
-    landing late enough that the plan is telling you to publish fewer, better.
-    """
-    out: list[str] = []
-    for i in range(n):
-        if i < len(REEL_SLOTS):
-            out.append(REEL_SLOTS[i])
-            continue
-        prev = out[-1]
-        m = min(int(prev[:2]) * 60 + int(prev[3:]) + REEL_MIN_GAP_MIN,
-                23 * 60 + 45)
-        out.append(f'{m // 60:02d}:{m % 60:02d}')
-    return out
+# The windows and the gap live in tokens.Limits (reel_slots, reel_gap_min).
 
 
 @dataclass(frozen=True)
@@ -964,11 +940,13 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
             return ''
         m_ = re.search(r'_(\d+)_\w+\.(?:jpg|mp4)$', last_name)
         n_ = f'{int(m_.group(1))} ' if m_ else ''
+        from .tokens import Motion
+        settled = math.ceil(Motion.anim_start + Motion.anim_reveal_max)
         return (f' — ONE carousel post of {n_}separate videos: ＋ → Post → select '
                 f'multiple → tick them in this order. Never join them into one '
                 f'video. THUMBNAIL: keep Instagram\'s default — the cover slide is the '
                 f'finished cover from its very first frame. If you scrub, any frame '
-                f'after the first 4 seconds is a finished slide, on every slide.')
+                f'after the first {settled} seconds is a finished slide, on every slide')
     if has_saara:
         last = saara_last or 'saara_NN_sources.jpg'
         plan.append(Slot(

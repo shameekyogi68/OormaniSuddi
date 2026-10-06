@@ -148,16 +148,6 @@ def date_in_url(url: str) -> datetime | None:
     return None
 
 
-def parse_when(value: str) -> datetime | None:
-    if not value:
-        return None
-    try:
-        dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
-    except ValueError:
-        return None
-    return dt if dt.tzinfo else dt.replace(tzinfo=IST)
-
-
 def age_hours(published: datetime | None, now: datetime | None = None
               ) -> float | None:
     if published is None:

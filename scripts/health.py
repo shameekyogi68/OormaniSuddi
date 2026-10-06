@@ -32,13 +32,6 @@ sys.path.insert(0, ROOT)
 OK, WARN, BAD = '  ✓', '  !', '  ✗'
 
 
-def _age(iso: str) -> timedelta | None:
-    try:
-        return datetime.now() - datetime.fromisoformat(iso)
-    except Exception:
-        return None
-
-
 def check_edition() -> list[str]:
     """Does today have a draft, and how far is it from postable."""
     from datetime import date

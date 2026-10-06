@@ -34,7 +34,7 @@ from PIL import Image, ImageDraw
 
 from . import typo, components as cp
 from .surface import (Surface, scrim, rule, panel, vgradient,
-                      place_photo, grain, cover,
+                      grain, cover,
                       house_grade, paste_logo, radial_glow, vrule,
                       editorial_plate)
 from .tokens import (C, Role, T, Grid, fmt, category, alpha, Grade, Motion,
@@ -1359,11 +1359,6 @@ def card_read_seconds(card: Card) -> float:
         return Motion.reel_outro
     return (Motion.build_in + reading_seconds(card.text) * Motion.reel_read_ease
             + Motion.settle)
-
-
-def reel_min_spans(story: Story) -> dict[str, float]:
-    """{beat key: seconds it needs on screen} — the contract with brand.voice."""
-    return {c.key: card_read_seconds(c) for c in reel_cards(story)}
 
 
 def audit_sync(video: str, cuts: list[float], vo_path: str,

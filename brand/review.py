@@ -41,7 +41,6 @@ from . import typo
 
 # What each platform will actually accept, and what it does to what it accepts.
 REEL_MAX_SECONDS = Limits.reel_platform_cap
-SHORT_MAX_SECONDS = 180.0      # YouTube Shorts
 REEL_MIN_SECONDS = Limits.reel_min_seconds
 REEL_FAIL_SECONDS = Limits.reel_fail_seconds
 REEL_WARN_SECONDS = Limits.reel_warn_seconds
@@ -236,6 +235,39 @@ def audio_gaps(path: str, limit: float = MAX_INTERNAL_GAP) -> list[tuple]:
     return list(zip(starts, ends))
 
 
+_SLIDE = re.compile(r'(saara|mukhya_\d+)_(\d{2})(?:_([a-z]+))?\.(jpg|mp4)$')
+
+
+def carousel_sequence_problems(files) -> list[str]:
+    """Why the carousel slides among `files` are not each one clean sequence.
+
+    Each carousel (saara, mukhya_1, …) is checked per file type: numbered
+    01…N with no gap or double, 01 the cover, and at most one closing source
+    slide, which comes last. What a leftover from an earlier render looks
+    like. A closing slide that is missing outright is PKG-01's: the schedule
+    names it. D107.
+    """
+    groups: dict[tuple[str, str], list[tuple[int, str, str]]] = {}
+    for f in files:
+        m = _SLIDE.fullmatch(f)
+        if m:
+            groups.setdefault((m[1], m[4]), []).append((int(m[2]), m[3] or '', f))
+    out: list[str] = []
+    for (name, ext), slides in sorted(groups.items()):
+        slides.sort()
+        nums = [n for n, _s, _f in slides]
+        ends = [f for _n, s, f in slides if s in ('source', 'sources')]
+        if nums != list(range(1, len(slides) + 1)):
+            out.append(f'{name} .{ext} slides are numbered {nums}, not 1…{len(slides)} — '
+                       'a slide is missing or left over from an earlier render')
+        if slides[0][1] != 'cover':
+            out.append(f'{name} .{ext}: the first slide is {slides[0][2]}, not a cover')
+        if len(ends) > 1 or (ends and slides[-1][2] != ends[0]):
+            out.append(f'{name} .{ext}: the closing source slide must be last and only '
+                       f'once; found {ends}, and the last slide is {slides[-1][2]}')
+    return out
+
+
 def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
     """Establish every fact about a finished package that a machine can."""
     r = ReviewReport()
@@ -290,6 +322,14 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
             continue
         if base not in files:
             r.add_fail('PKG-01', f'the copy points at {base}, which was not rendered', where=base)
+
+    # ── every carousel is one sequence, and only this render's ────────────
+    # The inverse of PKG-01: a slide in the folder that this render did not
+    # make. A carousel is posted by ticking its files in order, so a leftover
+    # saara_07.mp4 from a longer earlier render is a slide somebody posts. D107.
+    r.checked.append('every carousel runs cover → … → sources with no gap or leftover')
+    for problem in carousel_sequence_problems(files):
+        r.add_fail('PKG-06', problem)
 
     # ── the reels ─────────────────────────────────────────────────────────
     for f in reels:
@@ -675,8 +715,7 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
     # until it is there, and APPROVAL.md says so in as many words.
     r.checked.append('human judgement seats')
     if not is_signed(outdir):
-        missing = [s for s in JUDGEMENT_SEATS
-                   if not str(signoff_state(outdir).get(s, '')).strip()]
+        missing = [s for s in JUDGEMENT_SEATS if s not in signed_seats(outdir)]
         r.add_warn(
             'OPS-03',
             f'unsigned: {", ".join(missing)}. Mechanical checks cannot '
@@ -897,10 +936,62 @@ def signoff_state(outdir: str) -> dict:
         return {}
 
 
-def is_signed(outdir: str) -> bool:
-    """True only when every judgement seat carries a real name."""
+# What a person posts or sends out of a package: the slides, the reel and its
+# cover, and every paste file. A signature covers exactly these bytes. D108.
+_POSTED = re.compile(r'[^.].*\.(mp4|jpg|png|txt)')
+
+
+def _posted_files(outdir: str) -> list[str]:
+    return [f for f in sorted(os.listdir(outdir))
+            if _POSTED.fullmatch(f) and os.path.isfile(os.path.join(outdir, f))]
+
+
+def package_fingerprint(outdir: str) -> str:
+    """One hash over the name and bytes of everything a person posts."""
+    import hashlib
+    h = hashlib.sha256()
+    for f in _posted_files(outdir):
+        h.update(f.encode('utf-8') + b'\0')
+        with open(os.path.join(outdir, f), 'rb') as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b''):
+                h.update(chunk)
+        h.update(b'\0')
+    return h.hexdigest()
+
+
+def signature_current(outdir: str, state: dict | None = None) -> bool:
+    """True when the signature on file was given for the package as it is now.
+
+    A re-render after signing used to leave SIGNOFF.json standing, and the
+    next APPROVAL.md read "Signed. Cleared to publish." over slides nobody
+    had looked at (D62's whole point). A signature now carries the package's
+    fingerprint. One written before that existed counts only if it is newer
+    than every posted file. D108.
+    """
+    state = signoff_state(outdir) if state is None else state
+    if 'package' in state:
+        return state['package'] == package_fingerprint(outdir)
+    try:
+        signed_at = os.path.getmtime(os.path.join(outdir, SIGN_FILE))
+        return all(os.path.getmtime(os.path.join(outdir, f)) <= signed_at
+                   for f in _posted_files(outdir))
+    except OSError:
+        return False
+
+
+def signed_seats(outdir: str) -> dict[str, str]:
+    """Seat → name, for signatures that still cover the package as it is."""
     state = signoff_state(outdir)
-    return all(str(state.get(k, '')).strip() for k in JUDGEMENT_SEATS)
+    if not signature_current(outdir, state):
+        return {}
+    return {k: str(state.get(k, '')).strip() for k in JUDGEMENT_SEATS
+            if str(state.get(k, '')).strip()}
+
+
+def is_signed(outdir: str) -> bool:
+    """True only when every judgement seat carries a real name, given for
+    this package as it is now."""
+    return len(signed_seats(outdir)) == len(JUDGEMENT_SEATS)
 
 
 def sign(outdir: str, by: str, seats: tuple[str, ...] = (), notes: str = '') -> str:
@@ -918,9 +1009,13 @@ def sign(outdir: str, by: str, seats: tuple[str, ...] = (), notes: str = '') -> 
                          f'choose from {sorted(JUDGEMENT_SEATS)}')
     from .content import now
     state = signoff_state(outdir)
+    if not signature_current(outdir, state):
+        # Seats signed for an earlier render do not carry over to this one.
+        state = {}
     for seat in (seats or tuple(JUDGEMENT_SEATS)):
         state[seat] = by
     state['at'] = now().isoformat()
+    state['package'] = package_fingerprint(outdir)
     if notes:
         state['notes'] = notes
     with open(os.path.join(outdir, SIGN_FILE), 'w', encoding='utf-8') as fh:
@@ -947,12 +1042,17 @@ def _restamp(outdir: str) -> None:
 
 def _judgement_block(outdir: str) -> list[str]:
     state = signoff_state(outdir)
+    signed = signed_seats(outdir)
     lines = ['## Human judgement', '',
              'These three cannot be established by any check in `brand/review.py`,',
              'and an assistant scoring itself out of ten is not evidence for them.',
              '']
+    stale = sorted({str(state.get(k, '')).strip() for k in JUDGEMENT_SEATS} - {''})
+    if stale and not signed:
+        lines += [f'⚠️ Signed earlier by {", ".join(stale)} — for a different render. '
+                  'The package has changed since; look again and sign again (D108).', '']
     for seat, question in JUDGEMENT_SEATS.items():
-        who = str(state.get(seat, '')).strip()
+        who = signed.get(seat, '')
         mark = 'x' if who else ' '
         lines.append(f'- [{mark}] **{seat}** — {question}'
                      + (f'  →  signed by **{who}**' if who else ''))

@@ -85,11 +85,6 @@ def source_text(story: Story, tips: dict[str, str] | None = None
     return '\n'.join(parts), missing
 
 
-def ledger_path(edition_path: str) -> str:
-    stem = os.path.splitext(os.path.basename(edition_path))[0]
-    return os.path.join(LEDGER_DIR, stem + '.json')
-
-
 def load_ledger(edition_path: str | None = None) -> list[dict]:
     """Every claim the fact-checker proved with a quote, from every ledger.
 

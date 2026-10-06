@@ -32,10 +32,10 @@ def load_cases() -> list[dict]:
         return json.load(fh)['cases']
 
 
-def crime_story(headline: str, convicted: bool) -> Story:
+def crime_story(headline: str, convicted: bool, category: str = 'crime') -> Story:
     return Story(
         headline=headline,
-        category='crime',
+        category=category,
         deck='',
         convicted=convicted,
         sources=[OWN_REPORTING],
@@ -50,7 +50,8 @@ class TheGuiltGuardIsMeasured(unittest.TestCase):
         missed: list[str] = []
         over: list[str] = []
         for case in load_cases():
-            st = crime_story(case['headline'], case.get('convicted', False))
+            st = crime_story(case['headline'], case.get('convicted', False),
+                             case.get('category', 'crime'))
             try:
                 st.validate()
                 refused = False
@@ -116,9 +117,6 @@ class TheGuiltGuardIsMeasured(unittest.TestCase):
                               f'does not carry')
 
 
-if __name__ == '__main__':
-    unittest.main()
-
 
 class TheVictimLocationGuardCoversThisDistrictsLandmarks(unittest.TestCase):
     """POCSO 2012 §23 and BNS §72, measured the same way as the guilt guard.
@@ -161,3 +159,7 @@ class TheVictimLocationGuardCoversThisDistrictsLandmarks(unittest.TestCase):
         for place in ('ಉಡುಪಿ ಜಿಲ್ಲೆ', 'ಕುಂದಾಪುರ ತಾಲೂಕು', 'ಉಡುಪಿ'):
             self.assertFalse(self._refused(place),
                              f'{place} is the level a story may name')
+
+
+if __name__ == '__main__':
+    unittest.main()

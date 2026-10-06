@@ -21,7 +21,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from brand.review import (JUDGEMENT_SEATS, is_signed, sign,  # noqa: E402
-                          signoff_state)
+                          signed_seats, signoff_state)
 
 
 def main() -> int:
@@ -40,10 +40,13 @@ def main() -> int:
         return 1
 
     if args.status or not args.by:
-        state = signoff_state(args.outdir)
+        state = signed_seats(args.outdir)
         print(f'\n  {args.outdir}')
+        if signoff_state(args.outdir) and not state:
+            print('    ⚠️  signed earlier for a different render — the package has '
+                  'changed since; look again and sign again (D108)')
         for seat, question in JUDGEMENT_SEATS.items():
-            who = str(state.get(seat, '')).strip()
+            who = state.get(seat, '')
             print(f'    [{"x" if who else " "}] {seat:<8} {who or "— unsigned"}')
             print(f'             {question}')
         print(f'\n  {"🟢 cleared to publish" if is_signed(args.outdir) else "🟡 not yet cleared to publish"}\n')
@@ -85,8 +88,7 @@ def main() -> int:
     if is_signed(args.outdir):
         print('🟢 APPROVAL.md now reads: cleared to publish.')
     else:
-        left = [s for s in JUDGEMENT_SEATS
-                if not str(signoff_state(args.outdir).get(s, '')).strip()]
+        left = [s for s in JUDGEMENT_SEATS if s not in signed_seats(args.outdir)]
         print(f'🟡 still unsigned: {", ".join(left)}')
     return 0
 

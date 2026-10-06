@@ -361,5 +361,3 @@ def leads_with_place(story: Story) -> bool:
     return bool(place) and bool(_rest) and place in head
 
 
-def disclosure_line(story: Story) -> str:
-    return story.photo.disclosure if story.photo else ''

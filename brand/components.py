@@ -37,8 +37,6 @@ def masthead(sf: sfx.Surface, x: float, y: float, w: float,
     sfx.paste_logo(sf, x, y, mark, glow=0.13 if on_photo else 0.0)
 
     tx = x + mark + 20 * scale
-    f_name = typo.font('kn', int(T.h4[0] * 0.80 * scale))
-    f_tag = typo.font('kn_var', int(T.micro[0] * 1.10 * scale), weight=600)
 
     typo.draw_text(sf.img, Brand.name, sf.s(tx), sf.s(y + mark * 0.53),
                    typo.font('kn', int(sf.s(T.h4[0] * 0.80 * scale))),
@@ -168,36 +166,6 @@ def deck(sf: sfx.Surface, x: float, y: float, w: float, text: str,
 #  FACT LIST — numbered, ruled, no bullets-in-boxes
 # ─────────────────────────────────────────────────────────────────────────────
 
-def factlist(sf: sfx.Surface, x: float, y: float, w: float, points: list[str],
-             size: int = None, gap: float = 22, rules: bool = True,
-             numeral_color=C.gold_500, text_color=C.paper_100,
-             indent: float = 62, max_h: float = 1e9) -> float:
-    """01 ─ point one
-       02 ─ point two"""
-    size = size or T.body[0]
-    # Shrink to fit the space we were given, uniformly across all items.
-    for s in range(int(size), int(size * 0.72), -1):
-        f = typo.font('kn_var', int(sf.s(s)), weight=440)
-        blocks = [typo.layout(p, f, sf.s(w - indent), T.body[1]) for p in points]
-        total = sum(b.height / sf.ss for b in blocks) + gap * (len(points) - 1)
-        if total <= max_h:
-            break
-    f_num = typo.font('latin', int(sf.s(size * 0.80)), weight=760)
-
-    cy = y
-    for i, (p, b) in enumerate(zip(points, blocks)):
-        if i and rules:
-            sfx.rule(sf, x, cy - gap / 2, x + w, Role.hairline_soft, 1.0)
-        bl = cy + b.first_rise / sf.ss * 0.92
-        typo.draw_text(sf.img, f'{i + 1:02d}', sf.s(x), sf.s(bl), f_num,
-                       numeral_color, tracking=0.02)
-        sfx.rule(sf, x + 2, bl - size * 0.20, x + indent - 20,
-                 alpha(numeral_color, 0.42), 1.5)
-        typo.draw_block(sf.img, b, sf.s(x + indent), sf.s(cy), text_color,
-                        box_w=sf.s(w - indent))
-        cy += b.height / sf.ss + gap
-    return cy - gap
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  TAKEAWAY — advisory strip. A gold rule, not a yellow box.
@@ -227,23 +195,6 @@ def takeaway(sf: sfx.Surface, x: float, y: float, w: float, text: str,
 # ─────────────────────────────────────────────────────────────────────────────
 #  PROVENANCE — the disclosure line under a photograph
 # ─────────────────────────────────────────────────────────────────────────────
-
-def credit_strip(sf: sfx.Surface, x: float, y: float, w: float, story: Story,
-                 color=None, align_right_extra: str = '') -> float:
-    """Image nature + caption + photographer. Small, quiet, always present."""
-    line = story.credit_line
-    if not line:
-        return y
-    f = typo.font('kn_var', int(sf.s(T.micro[0])), weight=420)
-    col = color or alpha(C.paper_200, 0.78)
-    b = typo.layout(line, f, sf.s(w - (170 if align_right_extra else 0)), 1.34)
-    typo.draw_block(sf.img, b, sf.s(x), sf.s(y), col,
-                    shadow=(0, sf.s(1), sf.s(6), (0, 0, 0, 170)))
-    if align_right_extra:
-        typo.draw_text(sf.img, align_right_extra, sf.s(x + w),
-                       sf.s(y + b.first_rise / sf.ss), f, col, anchor_x='r',
-                       shadow=(0, sf.s(1), sf.s(6), (0, 0, 0, 170)))
-    return y + b.height / sf.ss
 
 
 def sourceline(sf: sfx.Surface, x: float, y: float, w: float, story: Story,
@@ -295,45 +246,6 @@ def footer(sf: sfx.Surface, x: float, y: float, w: float,
 # ─────────────────────────────────────────────────────────────────────────────
 #  DATA & QUOTE
 # ─────────────────────────────────────────────────────────────────────────────
-
-def stat_row(sf: sfx.Surface, x: float, y: float, w: float,
-             stats: list[tuple[str, str]], accent=C.gold_500) -> float:
-    """Big numerals with a Kannada label beneath. Separated by hairlines, not
-    boxes — numbers are already loud enough."""
-    n = max(1, len(stats))
-    colw = w / n
-    f_v = typo.font('latin', int(sf.s(T.h2[0])), weight=760, width=92)  # numerals only
-    f_l = typo.font('kn_var', int(sf.s(T.micro[0] * 1.06)), weight=520)
-    h = 0.0
-    for i, (val, lab) in enumerate(stats):
-        cx = x + colw * i
-        if i:
-            sfx.vrule(sf, cx - 1, y + 4, y + T.h2[0] * 1.5, Role.hairline, 1.0)
-        typo.draw_text(sf.img, val, sf.s(cx + (18 if i else 0)),
-                       sf.s(y + T.h2[0] * 0.80), f_v, accent)
-        lb = typo.layout(lab, f_l, sf.s(colw - 30), 1.32)
-        typo.draw_block(sf.img, lb, sf.s(cx + (18 if i else 0)),
-                        sf.s(y + T.h2[0] * 1.02), Role.text_dim)
-        h = max(h, T.h2[0] * 1.02 + lb.height / sf.ss)
-    return y + h
-
-
-def pullquote(sf: sfx.Surface, x: float, y: float, w: float, text: str,
-              attrib: str = '', size: int = None, accent=C.gold_500) -> float:
-    size = size or T.h3[0]
-    sfx.vrule(sf, x, y, y + 10, accent, 3)     # placeholder, redrawn to height
-    f = typo.font('kn_serif', int(sf.s(size)))
-    b = typo.layout(f'"{text}"', f, sf.s(w - 46), 1.34)
-    typo.draw_block(sf.img, b, sf.s(x + 46), sf.s(y), Role.text_hi, box_w=sf.s(w - 46))
-    cy = y + b.height / sf.ss
-    sfx.vrule(sf, x, y, cy, accent, 3)
-    if attrib:
-        cy += 26
-        typo.draw_text(sf.img, f'— {attrib}', sf.s(x + 46), sf.s(cy),
-                       typo.font('kn_var', int(sf.s(T.meta[0])), weight=600),
-                       C.gold_500)
-        cy += 10
-    return cy
 
 
 # ─────────────────────────────────────────────────────────────────────────────

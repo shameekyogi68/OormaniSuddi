@@ -3120,6 +3120,129 @@ throws away the town forwards, and a story whose credit merely contains
 
 ---
 
+## D107 · A render folder holds this render and nothing older
+
+**Decided (2026-10-06).** Each format clears its own previous output — the
+slides, their stills in `_review/`, their copy — before it is drawn, and the
+town forwards and WhatsApp posts are rebuilt from the whole edition every
+time. `render.py --only saara` touches nothing of `mukhya` or `roundup`; a
+full render clears a format the day no longer has. The render lock is taken
+before the folder is stamped or touched.
+
+The gate adds `PKG-06`: each carousel in the folder must run 01 cover → … →
+one closing source slide, with no gap, no double and nothing after the close.
+
+**Replaced.** Overwrite-in-place. A day re-rendered with one story fewer kept
+`saara_05.mp4` and `saara_06_sources.mp4` from the earlier render beside the
+new `saara_05_sources.mp4`; `schedule.txt`, derived from the folder, told the
+editor to post "6 separate videos … saara_06_sources" — the cut story among
+them. The gate checked that every named file existed, never that every file
+present belonged.
+
+**If you undo it.** Dropping a story after the desks — the most ordinary
+deadline change there is — publishes it anyway.
+
+`render.py :: FORMAT_FILES, EDITION_FILES, clear_previous` ·
+`brand/review.py :: carousel_sequence_problems` · `brand/codes.py` PKG-06 ·
+`tests/test_package_integrity.py`
+
+---
+
+## D108 · A signature covers the package it was given for
+
+**Decided (2026-10-06).** `sign_off.py` records, beside the names, a
+fingerprint of everything a person posts or sends from the folder — every
+`.mp4`, `.jpg`, `.png` and `.txt` at its top level. `is_signed()` is true only
+while that fingerprint still matches. Change a slide, add one, re-render with
+different bytes, and the package is unsigned again; `APPROVAL.md` says it was
+signed for a different render. Seats signed for an earlier render do not carry
+over when the remaining seats are signed later. The gate's own bookkeeping
+(`APPROVAL.md`, `review_report.json`, `build.log`) does not unsign.
+
+A signature written before this existed has no fingerprint; it counts only
+while it is newer than every posted file, so the packages already signed stay
+signed and a later render still unsigns them.
+
+**Replaced.** `SIGNOFF.json` survived a re-render. The next `APPROVAL.md`
+read "Signed. Cleared to publish." over slides nobody had looked at, which is
+the exact overclaim D62 exists to prevent — and `discard_edition.py` refused
+to discard a package on the strength of it.
+
+**If you undo it.** A person's name ends up on a package they never saw.
+
+`brand/review.py :: package_fingerprint, signature_current, signed_seats,
+is_signed, sign` · `scripts/sign_off.py` · `brand/dispatch.py` ·
+`tests/test_package_integrity.py`
+
+---
+
+## D109 · The guilt guard follows the words, not the category
+
+**Decided (2026-10-06).** `Story.validate()` still checks every crime and
+breaking story against the whole of `GUILT_ASSERTING` (D29). A story filed
+under ANY other category is now checked too — headline, reel_line, hook and
+the joined copy — against the words that can describe nothing but a person
+committing a crime (ಕೊಲೆಗೈದ, ಲಂಚ ಪಡೆದ, ವಂಚಿಸಿದ, ಥಳಿಸಿದ, ಕದ್ದ …). Words with
+an innocent sense — ಕೊಂದ for an animal, ಸುಟ್ಟ for a fire, ಇರಿದ for a bull,
+ನಾಶ ಮಾಡಿದ for the rain — are listed in `NOT_ONLY_CRIME` and stay crime-only.
+
+A guilt word now counts only where a word begins, so ನಿರ್ದೋಷಿ ("acquitted")
+no longer reads as ದೋಷಿ; the idiom ಕದ್ದುಮುಚ್ಚಿ ("secretly") no longer reads as
+ಕದ್ದ.
+
+**Replaced.** A guard scoped by `category`, which a desk — often a model —
+chooses. A bribe filed as civic news, a killing filed as an accident or a
+fraud filed under farm skipped the guard entirely. And an acquittal headline
+was refused as a guilt assertion.
+
+**Measured (D61).** Nine rows were added to `tests/legal_corpus.json` first:
+five misfiled crimes (all five got through before the change), and four safe
+lines in other categories. Two more safe rows — the acquittal and the idiom —
+failed before the word-boundary change. All 48 rows now land.
+
+`brand/content.py :: NOT_ONLY_CRIME, asserts_guilt, _check_criminal_reporting`
+· `tests/legal_corpus.json` · `tests/test_legal_corpus.py`
+
+---
+
+## D110 · A moment's network trouble does not change the voice
+
+**Decided (2026-10-06).** Every TTS request — Google's chunks and Gemini's —
+goes through `voice._fetch`, which retries a dropped connection, a timeout, a
+429 or a 5xx up to `NET_ATTEMPTS` times with a doubling back-off. A refusal of
+the input (another 4xx) is not retried. A failed Google synthesis no longer
+leaves its chunk folder behind.
+
+**Replaced.** One `urlopen` per chunk. A single dropped request failed the
+whole beat over to the next engine in `FALLBACK_ORDER` — the neural voice the
+native ear rejected (D53) — so a reel could go out in two voices because of
+one bad second on the network.
+
+`brand/voice.py :: _fetch, NET_ATTEMPTS, NET_BACKOFF` · `tests/test_reliability.py`
+
+---
+
+## D111 · No script splits a paste or guesses an outlet
+
+**Decided (2026-10-06).** `scripts/daily_flow.py intake` is retired; it now
+refuses and names `scripts/intake.py source`, one story at a time, or the
+intake-editor agent. Its other subcommands stay.
+
+**Replaced.** A regex batch intake that treated every line holding a link as
+a story, kept that one line as the story's "source", and credited any link it
+did not recognise to ಉದಯವಾಣಿ — the misattribution FACT-06 and house rule
+2026-09-25-01 forbid. It also pre-wrote fact-check evidence for Kannada
+number words; its patterns could never match (a `\b` after a vowel sign), and
+had they matched, a common word like ಒಂದು would have been filed as evidence
+for any "1" in the copy.
+
+**If you undo it.** Stories credited to a paper that never ran them, checked
+against a one-line "source".
+
+`scripts/daily_flow.py` · `tests/test_intake.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

@@ -532,16 +532,6 @@ class Timeline:
             return 0.0
         return self.slates[cur].text_alpha(t - self.starts[cur], cur == 0)[0]
 
-    def band_on(self, t: float) -> bool:
-        """Is any part of a story's text block drawn at t — the test's handle
-        on 'nothing of the story block is on screen during a wipe'."""
-        cur, wiping, _s = self.at(t)
-        if cur >= self.n or wiping:
-            return False
-        sl = self.slates[cur]
-        tl = t - self.starts[cur]
-        return (cur == 0 or tl - Motion.speed_cross > 0) and \
-            tl < sl.dur - Motion.speed_cross
 
     def frame(self, t: float) -> Image.Image:
         XF, L = Motion.speed_cross, self.L

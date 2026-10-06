@@ -248,8 +248,3 @@ def audit_small_print() -> list[str]:
     return out
 
 
-def first_sight(format_key: str) -> tuple[str, float, float]:
-    """(step, designed px, effective px) for the line that sells the post."""
-    step = PRIMARY_STEP.get(format_key, 'h1')
-    designed = float(getattr(T, step)[0])
-    return step, designed, effective_px(designed, format_key)

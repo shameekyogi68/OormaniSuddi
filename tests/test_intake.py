@@ -224,5 +224,29 @@ class TheScraperIsGone(unittest.TestCase):
                 self.assertNotIn(f'import {net}', src, rel)
 
 
+class NoScriptSplitsAPasteOrGuessesAnOutlet(unittest.TestCase):
+    """D111: `daily_flow.py intake` split a paste line by line and credited any
+    link it did not recognise to ಉದಯವಾಣಿ. Splitting and crediting are the
+    intake desk's; the script now refuses and points at intake.py source."""
+
+    def test_the_batch_intake_refuses_and_saves_nothing(self):
+        from scripts import daily_flow
+        before = set(os.listdir(F.SOURCES_DIR)) if os.path.isdir(F.SOURCES_DIR) else set()
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            rc = daily_flow.cmd_intake(None)
+        self.assertEqual(rc, 2)
+        self.assertIn('intake.py source', err.getvalue())
+        after = set(os.listdir(F.SOURCES_DIR)) if os.path.isdir(F.SOURCES_DIR) else set()
+        self.assertEqual(before, after)
+
+    def test_no_script_defaults_an_outlet(self):
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for rel in ('scripts/daily_flow.py', 'scripts/intake.py', 'brand/intake.py'):
+            with open(os.path.join(root, rel), encoding='utf-8') as fh:
+                src = fh.read()
+            self.assertNotIn("else 'ಉದಯವಾಣಿ'", src, rel)
+
+
 if __name__ == '__main__':
     unittest.main()

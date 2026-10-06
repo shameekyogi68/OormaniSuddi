@@ -96,12 +96,6 @@ def _coverage(path: str) -> frozenset | None:
         return None
 
 
-def covers(f, ch: str) -> bool:
-    """Can this font render this character?"""
-    cov = _coverage(getattr(f, 'path', '') or '')
-    return True if cov is None else (ord(ch) in cov)
-
-
 @lru_cache(maxsize=4096)
 def _safe(s: str, path: str) -> tuple[str, tuple]:
     """(renderable text, letters the face is missing).

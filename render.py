@@ -155,6 +155,38 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None,
     return txt
 
 
+# What each format leaves in its folder — the posts, their copy, and their
+# stills in _review/. A re-render clears ITS OWN previous output first: a day
+# that drops from six ಸುದ್ದಿ ಸಾರ stories to five used to keep the old
+# saara_07.mp4 and saara_08_sources.mp4 beside the new ones, and schedule.txt
+# — derived from what is in the folder — told the editor to post all eight,
+# the cut story among them. D107.
+FORMAT_FILES = {
+    'saara':   re.compile(r'saara_'),
+    'mukhya':  re.compile(r'mukhya_\d+_|facebook_group_\d+\.txt$'),
+    'roundup': re.compile(r'roundup[._]'),
+}
+# Built from the whole edition on every render, so cleared on every render: a
+# town that dropped out of today's news must not keep its old forward.
+EDITION_FILES = re.compile(r'(forward_.+|whatsapp_.+)\.txt$')
+
+
+def clear_previous(outdir: str, formats) -> list[str]:
+    """Remove the previous render's files for `formats`. Returns their names."""
+    gone: list[str] = []
+    for folder in (outdir, os.path.join(outdir, '_review')):
+        if not os.path.isdir(folder):
+            continue
+        for f in sorted(os.listdir(folder)):
+            path = os.path.join(folder, f)
+            if not os.path.isfile(path):
+                continue
+            if f == 'feed_sizes.jpg' or any(FORMAT_FILES[k].match(f) for k in formats):
+                os.remove(path)
+                gone.append(f)
+    return gone
+
+
 class _NullLog:
     """So render_edition can be called without a log and not know it."""
     def start(self, *a, **k): pass
@@ -182,6 +214,10 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
 
     def run(key):
         return want is None or key in want
+
+    stale = clear_previous(outdir, [k for k in FORMAT_FILES if run(k)])
+    if stale:
+        log.event('cleared', files=len(stale))
 
     # ── segment renderers — each returns (made, mukhya_done, prints) ─────
     # They are pure functions of their inputs, writing to distinct files, so
@@ -297,6 +333,9 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
 
 def _write_master_copy(outdir: str, ed, plan) -> None:
     """One paste sheet: schedule + WhatsApp + Instagram. X is not a channel."""
+    for f in os.listdir(outdir):
+        if EDITION_FILES.match(f):
+            os.remove(os.path.join(outdir, f))
     lines = [
         f'# ಊರ್ಮನಿ ಸುದ್ದಿ — MASTER COPY',
         f'## {ed.date_kn} · ಆವೃತ್ತಿ {ed.edition_no}',
@@ -559,22 +598,11 @@ def main() -> int:
     # is `editions/<date>.json`, so its folder is still `out/<date>`. D90.
     stem = os.path.splitext(os.path.basename(args.input))[0]
     outdir = args.out or f'out/{stem}'
-    stamp = os.path.join(outdir, '.edition')
-    here = os.path.relpath(os.path.abspath(args.input))
-    if os.path.exists(stamp):
-        with open(stamp, encoding='utf-8') as fh:
-            there = fh.read().strip()
-        if there and there != here:
-            print(f'✗ {outdir} holds the package for {there}, not {here}. '
-                  f'Rendering here would overwrite it. Pick another --out, '
-                  f'or archive/remove that folder first.', file=sys.stderr)
-            return 1
-    os.makedirs(outdir, exist_ok=True)
-    with open(stamp, 'w', encoding='utf-8') as fh:
-        fh.write(here + '\n')
 
     # One heavy job at a time. Two renders on 8 GB of unified memory is how
     # macOS starts swapping and a three-minute master becomes indefinite.
+    # Taken BEFORE the folder is touched: a render refused here must not have
+    # already re-stamped or cleared a folder another render is writing.
     from brand.runlog import RunLog, acquire, release, lock_holder
     if not acquire(f'render {outdir}'):
         h = lock_holder() or {}
@@ -582,6 +610,21 @@ def main() -> int:
               f'{h.get("what")}). On this machine, two at once means neither '
               f'finishes. Wait, or kill it.', file=sys.stderr)
         return 1
+
+    stamp = os.path.join(outdir, '.edition')
+    here = os.path.relpath(os.path.abspath(args.input))
+    if os.path.exists(stamp):
+        with open(stamp, encoding='utf-8') as fh:
+            there = fh.read().strip()
+        if there and there != here:
+            release()
+            print(f'✗ {outdir} holds the package for {there}, not {here}. '
+                  f'Rendering here would overwrite it. Pick another --out, '
+                  f'or archive/remove that folder first.', file=sys.stderr)
+            return 1
+    os.makedirs(outdir, exist_ok=True)
+    with open(stamp, 'w', encoding='utf-8') as fh:
+        fh.write(here + '\n')
 
     log = RunLog(outdir)
     log.event('start', stories=len(ed.stories), only=args.only or 'all')
@@ -626,9 +669,6 @@ def stills_dir(outdir: str) -> str:
 
 
 def _finish(outdir, ed, made, log, t0) -> int:
-    import os
-    import time
-
     # ── the Chief Editor's desk ───────────────────────────────────────────
     # The last gate before a human is told the package is postable. It
     # establishes the facts a machine can establish — the handle, the file

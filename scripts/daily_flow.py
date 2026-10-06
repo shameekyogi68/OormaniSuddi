@@ -4,44 +4,25 @@
 ===================================================
 Automates the repetitive mechanical daily tasks:
   1. Archive yesterday's edition (`python3 scripts/daily_flow.py archive-yesterday`)
-  2. Parse pasted news, save sources to inbox/sources/, auto-quote number claims in inbox/factcheck/
-     (`python3 scripts/daily_flow.py intake < paste.txt`)
-  3. Show which desks are due, batched (`python3 scripts/daily_flow.py receipts`) — files nothing
-  4. Verify all stories (`python3 scripts/daily_flow.py verify --by "Gautam Paduvari"`)
-  5. Render, then show what still has to inspect it (`python3 scripts/daily_flow.py render`)
+  2. Show which desks are due, batched (`python3 scripts/daily_flow.py receipts`) — files nothing
+  3. Verify all stories, with the name the editor gave (`python3 scripts/daily_flow.py verify --by "<name>"`)
+  4. Render, then show what still has to inspect it (`python3 scripts/daily_flow.py render`)
+
+Sources are kept one story at a time with `scripts/intake.py source` (D111).
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
 import glob
-import json
 import os
-import re
 import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from brand import intake as I
-from brand import sourcing as S
 from brand import dispatch as D
-
-URL_PAT = re.compile(r'\[([^\]]+)\]\((https?://[^\)]+)\)|(https?://[^\s]+)')
-
-NUMBER_WORDS = [
-    (r'\b(?:ಆರುನೂರು|ಆರುನೂರಕ್ಕೂ)\b', '600'),
-    (r'\b(?:ಹದಿನಾರು|ಹದಿನಾರಕ್ಕೂ)\b', '16'),
-    (r'\b(?:ಇಪ್ಪತ್ತು|ಇಪ್ಪತ್ತಕ್ಕೂ)\b', '20'),
-    (r'\b(?:ಇಪ್ಪತ್ಮೂರು|ಇಪ್ಪತ್ತುಮೂರು)\b', '23'),
-    (r'\b(?:ಹತ್ತು|ಹತ್ತಕ್ಕೂ)\b', '10'),
-    (r'\b(?:ನಾಲ್ಕು|ನಾಲ್ಕರಂದು|ನಾಲ್ಕಕ್ಕೂ)\b', '4'),
-    (r'\b(?:ಮೂರು|ಮೂರರಂದು|ಮೂರಕ್ಕೂ)\b', '3'),
-    (r'\b(?:ಎರಡು|ಎರಡಕ್ಕೂ)\b', '2'),
-    (r'\b(?:ಒಂದು|ಒಂದಕ್ಕೂ)\b', '1'),
-]
-
 
 def get_today() -> str:
     return dt.date.today().isoformat()
@@ -80,81 +61,16 @@ def cmd_archive_yesterday(args) -> int:
 
 
 def cmd_intake(args) -> int:
-    today = resolve_day(args.date)
-    text = ""
-    if args.file:
-        with open(args.file, encoding='utf-8') as f:
-            text = f.read()
-    else:
-        text = sys.stdin.read()
-
-    if not text.strip():
-        print("Error: No pasted news text provided.", file=sys.stderr)
-        return 1
-
-    lines = [l.strip() for l in text.strip().split('\n') if l.strip()]
-    items = []
-    for line in lines:
-        m = URL_PAT.search(line)
-        if m:
-            url = m.group(2) or m.group(3)
-            clean_text = URL_PAT.sub('', line).strip()
-            outlet_list = S.outlet_names(url)
-            outlet = outlet_list[0] if outlet_list else 'ಉದಯವಾಣಿ'
-            items.append({'text': clean_text, 'url': url, 'outlet': outlet})
-
-    if not items:
-        # Fallback: maybe URL is in a multiline block
-        parts = re.split(r'\n{2,}', text.strip())
-        for part in parts:
-            m = URL_PAT.search(part)
-            if m:
-                url = m.group(2) or m.group(3)
-                clean_text = URL_PAT.sub('', part).strip()
-                outlet_list = S.outlet_names(url)
-                outlet = outlet_list[0] if outlet_list else 'ಉದಯವಾಣಿ'
-                items.append({'text': clean_text, 'url': url, 'outlet': outlet})
-
-    print(f"✓ Found {len(items)} news stories in paste:")
-    ledger_claims = []
-    for idx, item in enumerate(items, 1):
-        path = I.save_pasted(item['text'], url=item['url'], outlet=item['outlet'])
-        print(f"  [{idx}] {item['outlet']} → {os.path.relpath(path, ROOT)}")
-
-        # Check for number words in text to extract claims
-        sentences = re.split(r'[.!?।]\s*', item['text'])
-        for s in sentences:
-            s_clean = s.strip()
-            if not s_clean:
-                continue
-            for pat, token in NUMBER_WORDS:
-                if re.search(pat, s_clean):
-                    if not any(c['token'] == token and c['url'] == item['url'] for c in ledger_claims):
-                        ledger_claims.append({
-                            'token': token,
-                            'quote': s_clean,
-                            'url': item['url']
-                        })
-
-    # Save initial factcheck claims if any found
-    if ledger_claims:
-        os.makedirs(os.path.join(ROOT, 'inbox', 'factcheck'), exist_ok=True)
-        fc_path = os.path.join(ROOT, 'inbox', 'factcheck', f"{today}.json")
-        existing_claims = []
-        if os.path.exists(fc_path):
-            try:
-                with open(fc_path, encoding='utf-8') as f:
-                    existing_claims = json.load(f).get('claims', [])
-            except Exception:
-                pass
-        for c in ledger_claims:
-            if not any(e['token'] == c['token'] and e['url'] == c['url'] for e in existing_claims):
-                existing_claims.append(c)
-        with open(fc_path, 'w', encoding='utf-8') as f:
-            json.dump({'claims': existing_claims}, f, ensure_ascii=False, indent=2)
-        print(f"✓ Saved {len(existing_claims)} factcheck claim quote(s) to inbox/factcheck/{today}.json")
-
-    return 0
+    """Retired (D111). Splitting a paste into stories, and crediting each to
+    the outlet its own link belongs to, is the intake desk's judgement — not a
+    regex's. This command split by line, saved one line per "story", and
+    credited any link it did not recognise to ಉದಯವಾಣಿ (FACT-06)."""
+    print('✗ `daily_flow.py intake` is retired (D111). Keep each story\'s '
+          'source on its own:\n'
+          '    python3 scripts/intake.py source --url URL --outlet NAME < story.txt\n'
+          '    python3 scripts/intake.py source < notes.txt      # own reporting / press release\n'
+          'or let the intake-editor agent split the paste.', file=sys.stderr)
+    return 2
 
 
 def cmd_receipts(args) -> int:
@@ -212,13 +128,12 @@ def main():
     p_arch = sub.add_parser("archive-yesterday", help="Archive previous edition day")
     p_arch.add_argument("--date", help="Today's date (defaults to today)")
 
-    p_in = sub.add_parser("intake", help="Parse and save pasted news stories")
-    p_in.add_argument("--date", help="Today's date")
-    p_in.add_argument("--file", help="Path to paste file (reads stdin if omitted)")
+    p_in = sub.add_parser("intake", help="retired (D111) — use scripts/intake.py source")
+    p_in.add_argument("--date", help=argparse.SUPPRESS)
+    p_in.add_argument("--file", help=argparse.SUPPRESS)
 
     p_rec = sub.add_parser("receipts", help="Show which desks are due (files nothing)")
     p_rec.add_argument("--date", help="Today's date")
-    p_rec.add_argument("--wave", default="1,2", help="Wave numbers (1, 2, 3, or all)")
 
     p_ver = sub.add_parser("verify", help="Verify all stories in edition")
     p_ver.add_argument("--date", help="Today's date")

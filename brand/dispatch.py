@@ -541,7 +541,8 @@ def _package_tasks(plan: Plan, outdir: str) -> None:
             plan.add('social-writer', 'reactive', 3,
                      f'copy audit — {len(captions)} paste file(s): captions, '
                      f'WhatsApp, Facebook', rel)
-    if not os.path.exists(os.path.join(outdir, 'SIGNOFF.json')) and not fails:
+    from .review import is_signed
+    if not is_signed(outdir) and not fails:
         listen = (', listen to the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ once'
                   if os.path.exists(os.path.join(outdir, 'roundup.mp4')) else '')
         plan.person.append(f'{rel}: look at _review/{listen}, then '

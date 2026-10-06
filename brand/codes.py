@@ -75,6 +75,7 @@ CODES: dict[str, str] = {
     'PKG-03': 'a reel has no cover frame',
     'PKG-04': 'a file is heavy for its channel',
     'PKG-05': 'a music bed is not in the licence register',
+    'PKG-06': 'a carousel in the folder is not one clean sequence — a slide is missing or left over (D107)',
     # ── PUB ───────────────────────────────────────────────────────────────
     'PUB-01': 'the handle is miscapitalised',
     'PUB-02': 'the schedule routes an AI reel to YouTube (Rule 7)',

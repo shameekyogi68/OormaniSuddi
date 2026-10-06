@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **69/106** decisions are named by at least one test
+- **74/111** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -278,6 +278,7 @@ those carry a reason rather than a test.
 ## D62 · The gate records what a machine established, and names who judged the rest
 
 - **Tested by:** `tests/test_contract.py`
+- Enforced in: `brand/review.py`
 
 ## D63 · The intake retrieves; it never supplies what the source lacks
 
@@ -481,4 +482,28 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_archive_edition.py`, `tests/test_contract.py`, `tests/test_discard_edition.py`
 - Enforced in: `brand/content.py`, `scripts/archive_edition.py`, `scripts/daily_flow.py`
+
+## D107 · A render folder holds this render and nothing older
+
+- **Tested by:** `tests/test_package_integrity.py`
+- Enforced in: `brand/codes.py`, `brand/review.py`
+
+## D108 · A signature covers the package it was given for
+
+- **Tested by:** `tests/test_package_integrity.py`
+- Enforced in: `brand/review.py`, `scripts/sign_off.py`
+
+## D109 · The guilt guard follows the words, not the category
+
+- **Tested by:** `tests/legal_corpus.json`
+- Enforced in: `brand/content.py`
+
+## D110 · A moment's network trouble does not change the voice
+
+- **Tested by:** `tests/test_reliability.py`
+
+## D111 · No script splits a paste or guesses an outlet
+
+- **Tested by:** `tests/test_intake.py`
+- Enforced in: `scripts/daily_flow.py`
 
