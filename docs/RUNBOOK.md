@@ -150,7 +150,9 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
    ```bash
    python3 scripts/sign_off.py out/<date> --by "<name>"
    ```
-   The assistant never signs. D62.
+   The assistant never signs. D62. The signature covers the exact files that
+   were looked at: re-render after signing, and the package is unsigned again
+   until the editor looks and signs once more (D108).
 
 ### Stop — archive
 
@@ -239,15 +241,16 @@ Udupi panchanga. A greeting on the wrong day is worse than no greeting.
 | `FACT-01` | a figure is not in the kept source | find it in the source or cut it |
 | `FACT-02` | the source does not carry the story | wrong link — get the real article, or paste its text |
 | `FACT-05` / `FACT-06` | not an article page / credited to the wrong outlet | the publisher's own article URL, credited to that publisher |
-| `LAW-01` | a crime line asserts guilt | rewrite the **headline** and the **reel_line** themselves |
+| `LAW-01` | a crime line asserts guilt — in any category (D109) | rewrite the **headline** and the **reel_line** themselves; file a crime as `crime` |
 | `IMG-01` | an image would show with no disclosure | credit + a nature other than `actual`, or a caption |
 | `IMG-02` | a generated image is wearing the wrong nature | `nature: "ai"` |
 | `IMG-04` | a ಮುಖ್ಯ ಸುದ್ದಿ has no picture | ask the editor "real photo or generate?"; record `photo_plan` |
 | `IMG-05` | an AI picture has no `approved_by` | ask the editor; their name goes in `photo.approved_by` — or use a real photo |
-| `SND-01` / `SND-02` | the reel is silent, or narration failed | re-run; check the network and the TTS key |
+| `SND-01` / `SND-02` | the reel is silent, or narration failed | re-run; check the network and the TTS key. Each request is already retried (D110), so a failure here is a real outage, not a blip |
 | `SND-03` | a TTS hazard in the script | ₹, `%`, a decimal, dotted initials, a clock time — D50, D53 |
 | `TYPE-01` | a character no house font can set | replace it in the copy |
 | `PKG-01` | the copy names a file that was not rendered | re-render, or fix the copy |
+| `PKG-06` | a carousel slide is missing, doubled or left over from an older render | re-render the whole format (`--only saara` / `mukhya`); never delete or rename slides by hand |
 | `PUB-01` | the handle is miscapitalised | `@oormanisuddi`, exactly |
 | `PUB-05` | the town name is past the caption fold | put the town in the first 125 characters |
 | `PUB-08` | a story names no place | set `location` |

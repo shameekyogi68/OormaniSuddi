@@ -14,6 +14,7 @@ Then, depending on the job:
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
 | write or judge anything for Instagram (formats, hooks, captions, timing) | [`docs/INSTAGRAM.md`](docs/INSTAGRAM.md) — labelled by how reliable each line is |
 | know which agents to run | `python3 scripts/dispatch.py` — agents in `.claude/agents/`, in waves (D87, D89) |
+| look after the machine — updates, disk, backups, a new Mac | [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) |
 | edit raw clips into a long-format YouTube video | [`.claude/skills/youtube-longform-edit/SKILL.md`](.claude/skills/youtube-longform-edit/SKILL.md) |
 | edit raw clips into an Instagram Reel / YouTube Short | [`.claude/skills/reels-shorts-edit/SKILL.md`](.claude/skills/reels-shorts-edit/SKILL.md) |
 

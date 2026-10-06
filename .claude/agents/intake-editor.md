@@ -48,8 +48,8 @@ editor — never look it up.
    the reel_line; set `involves_minor` / `sexual_offence` honestly.
 5. **Propose a segment per story**, one value each:
    - breaking or the day's top story → `mukhya` (it will need a photograph)
-   - quick hits → `speed`, and only when there are 3 or more of them; fewer
-     than 3 go to `saara`
+   - quick hits → `speed`, and only when there are at least
+     `Limits.roundup_min_stories` of them; fewer go to `saara`
    - everything else → `saara`
    **Order the `saara` stories lead-first.** The ಸುದ್ದಿ ಸಾರ cover sets the
    FIRST saara story as its headline and the rest as one-line teasers (D103):

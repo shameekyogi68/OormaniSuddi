@@ -188,7 +188,10 @@ Real photographs first. AI only when there is none, and only after asking.
 **Crime stories state allegations, never verdicts.** Write
 <span>ಆರೋಪ</span> / <span>ಆರೋಪಿ</span> / <span>ಶಂಕಿತ</span> /
 <span>ಪ್ರಕರಣ ದಾಖಲು</span>. Plain past tense ("the son who killed…") is refused
-unless `"convicted": true`, meaning a court actually convicted. Set
+unless `"convicted": true`, meaning a court actually convicted. This holds
+whatever `category` the story is filed under: a bribe filed as `civic` or a
+killing filed as `accident` is refused the same way (D109) — file a crime as
+`crime`. Set
 `"involves_minor": true` or `"sexual_offence": true` where they apply and the
 system blocks identifying detail.
 

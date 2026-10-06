@@ -1,9 +1,11 @@
 ---
 name: second-brain
 description: >
-  Newsroom workflow for ಊರ್ಮನಿ ಸುದ್ದಿ. Activates when the editor pastes news
-  and says what to make (or says "start"). Paste → intake → desks in waves →
-  show & ask → approve → render → gate → sign → Stop (archive).
+  Newsroom workflow for ಊರ್ಮನಿ ಸುದ್ದಿ — the one skill for the daily news.
+  Activates when the editor pastes news and says what to make, or says
+  "start", "start today", "stop yesterday and start today", "approved by …",
+  or "stop". Paste → intake → desks in waves → show & ask → approve → render →
+  gate → sign → Stop (archive).
 ---
 
 # Second Brain — ಊರ್ಮನಿ ಸುದ್ದಿ
@@ -59,8 +61,24 @@ contradicts the contract, stop and say so.
 9. **Sign.** Show the `_review/` frames at feed size and point at the
    `*_caption.txt` files. The editor signs:
    `python3 scripts/sign_off.py out/<date> --by "<name>"`. You never sign.
+   Hand over the `.mp4` slides — never the `.jpg` stills (AGENTS rule 11). A
+   re-render unsigns the package (D108); the editor looks and signs again.
 10. **Stop.** `python3 scripts/archive_edition.py <date>`. The edition JSON is
     never deleted.
+
+### Shortcuts for the same steps
+
+`scripts/daily_flow.py` wraps the commands above; it decides nothing.
+
+```bash
+python3 scripts/daily_flow.py archive-yesterday        # Stop for the last day
+python3 scripts/daily_flow.py receipts                 # the waves due (files nothing)
+python3 scripts/daily_flow.py verify --by "<name the editor gave>"   # every story
+python3 scripts/daily_flow.py render --by "<name>"     # render, then wave 3
+```
+
+Sources are kept one story at a time — `scripts/intake.py source` — never by
+splitting a paste with a script (D111).
 
 ---
 

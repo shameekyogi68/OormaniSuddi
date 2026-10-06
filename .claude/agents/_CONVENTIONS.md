@@ -6,14 +6,16 @@ once here cannot drift between twelve copies.
 
 ## Workspace jail
 Work only inside `/Users/shameekyogi/My Apps/Oormani Suddi`. Never read,
-write or run anything outside it (AGENTS.md rule 8) — not a backup target,
+write or run anything outside it (AGENTS.md rule 10) — not a backup target,
 not a download folder, not a web page. Intake is paste-only (D92): no agent
 fetches, scrapes or searches the web for news, trends or pictures.
 
 ## The newsroom since D92
 - **Three formats.** `roundup` = ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (9:16 reel, one frame per
-  story), `saara` = ಸುದ್ದಿ ಸಾರ (4:5 text-only carousel — never a picture),
+  story), `saara` = ಸುದ್ದಿ ಸಾರ (4:5 carousel, no picture ever),
   `mukhya` = ಮುಖ್ಯ ಸುದ್ದಿ (4:5 photo carousel for ONE breaking/top story).
+  Both carousels are posted as animated `.mp4` slides (AGENTS rule 11); each
+  slide's finished `.jpg` still is in `out/<stem>/_review/` for inspection.
 - **One story, one format.** Every story carries `segment` — `speed`,
   `saara` or `mukhya`. The field holds one value; a story is never in two.
 - **Pictures.** `mukhya` always has a photo; `speed` may; `saara` never.

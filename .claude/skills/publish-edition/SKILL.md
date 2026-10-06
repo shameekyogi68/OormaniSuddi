@@ -31,13 +31,20 @@ python3 render.py "$EDITION"                       # every segment present
 python3 render.py "$EDITION" --only saara mukhya   # while iterating; skip the reel
 ```
 
-Pass `--at <ISO>` to pin the clock. Output in `out/<edition-stem>/`:
+Pass `--at <ISO>` to pin the clock. Output in `out/<edition-stem>/` — what
+gets posted, and nothing else (D102):
 
-| Format | Files |
-|---|---|
-| ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | `roundup.mp4`, `roundup_cover.jpg`, `roundup_copy.txt`, `roundup_caption.txt` |
-| ಸುದ್ದಿ ಸಾರ | `saara_01_cover.jpg`, `saara_02.jpg` … `saara_NN_sources.jpg`, `saara_copy.txt`, `saara_caption.txt` |
-| ಮುಖ್ಯ ಸುದ್ದಿ (per story k) | `mukhya_k_01_cover.jpg`, `mukhya_k_02_points.jpg`, `mukhya_k_03_source.jpg`, `mukhya_k_copy.txt`, `mukhya_k_caption.txt` |
+| Format | Post these | Copy |
+|---|---|---|
+| ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | `roundup.mp4` + `roundup_cover.jpg` as its cover | `roundup_caption.txt` |
+| ಸುದ್ದಿ ಸಾರ | `saara_01_cover.mp4`, `saara_02.mp4` … `saara_NN_sources.mp4` | `saara_caption.txt` |
+| ಮುಖ್ಯ ಸುದ್ದಿ (per story k) | `mukhya_k_01_cover.mp4`, `mukhya_k_02_points.mp4`, `mukhya_k_03_source.mp4` | `mukhya_k_caption.txt` |
+
+Carousels are animated `.mp4` slides posted as ONE carousel of separate
+videos, in order — never joined, never the `.jpg` stills (AGENTS rule 11).
+The stills are in `_review/`, for the inspectors and the sign-off. A re-render
+clears each format's previous slides (D107) and unsigns the package (D108):
+the editor signs again after looking.
 
 ## 3 · Gate
 

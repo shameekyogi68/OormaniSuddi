@@ -30,6 +30,9 @@ for a vertical Reel / Short.
 **A human changing the design → [`STANDARDS.md`](STANDARDS.md)**, then
 `docs/DECISIONS.md` before changing any value.
 
+**Looking after the machine — updates, disk, backups, a new Mac →
+[`docs/MAINTENANCE.md`](docs/MAINTENANCE.md).**
+
 ---
 
 ## What the channel makes
@@ -134,7 +137,7 @@ already exist (`python3 render.py --describe`).
    festival **greeting** is its own genre with its own look
    (`templates/greeting.py`, D54).
 4. **Crime copy states allegations, never verdicts.** Enforced by
-   `Story.validate()` (D29–D30). The `headline` and `reel_line` are checked
+   `Story.validate()` (D29–D30), in every category (D109). The `headline` and `reel_line` are checked
    **on their own** — each travels without the rest of the story, so each
    carries its own ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ. A qualifier in the deck does not
    cover a headline.
@@ -250,7 +253,8 @@ brand/              the engine — read STANDARDS.md before changing any of it
   voice.py            narration and the pronunciation normaliser (D53)
 scripts/            intake, fact check, verify, sign-off, archive, dispatch …
 schemas/            JSON Schema for the input, generated from the code
-docs/               AI_BRIEF, RUNBOOK, DECISIONS, TEMPLATES (generated)
+docs/               AI_BRIEF, RUNBOOK, MAINTENANCE, DECISIONS, INSTAGRAM,
+                    TEMPLATES and TRACEABILITY (both generated)
 tests/              the contract, and golden hashes pinning the design
 assets/  fonts/  sfx/    logo master + derivatives, the faces, sound
 out/                rendered deliverables (not tracked; out/_blessed/ holds the golden renders)

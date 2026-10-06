@@ -11,11 +11,17 @@ Layers, bottom up:
     tokens      colour, type scale, grid, formats, motion constants
     typo        Kannada-safe text engine (baselines, wrapping, fitting)
     surface     canvas, house photo grade, scrims, grain, hairlines
-    components  masthead, eyebrow, fact list, provenance, footer
+    components  masthead, eyebrow, provenance, footer
+    paper       the Paper & Red page every news slide is drawn on (D92)
     content     Story / Photo / Edition, the contract, the clock, legal guards
-    copy        captions, hashtags, YouTube metadata, alt text
-    motion      the reel engine (driven by templates/reel.py)
+    copy        captions, hashtags, forwards, alt text, the publishing plan
+    motion      the reel engine
+    speednews   ಸ್ಪೀಡ್ ನ್ಯೂಸ್, the 9:16 roundup reel (D81)
+    animate     the scan-wipe carousel videos (D98–D100)
+    voice       narration and the pronunciation normaliser (D53)
     qa          preflight and output audit
+    review      the Chief Editor gate, APPROVAL.md, the sign-off (D62, D108)
+    dispatch    which desks are due, and their receipts (D87, D95)
 """
 from .content import (Story, Photo, Edition, ContentError, IST,
                       now, freeze, frozen, parse_dt)
