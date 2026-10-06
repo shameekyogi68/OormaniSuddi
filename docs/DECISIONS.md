@@ -3049,6 +3049,41 @@ D calm — they chose **B · running order**.
 `brand/tokens.py :: Motion.anim_order_*` · `tests/test_animate.py`
 
 ---
+## D105 · The carousel render, eleven times faster
+
+**Decided (2026-10-06).** The owner: the daily carousel takes too long —
+make it as fast as possible. Measured on the 4 Oct edition (8 slides) on
+the studio Mac (4 performance + 4 efficiency cores): **120 s → 10 s**, with
+the same frames and better picture quality.
+
+Where the time was, and what changed:
+* **The animation (113 s of 120).** Every 23-second slide video pushed ~700
+  full frames through a pipe into a `medium` x264 encode, eight at once with a
+  dozen threads each on eight cores. Now:
+  - **One period, copied.** The hold's motion repeats exactly — a chevron
+    tap every `anim_nudge`, or one round of the running order — so one
+    period is encoded and joined N times by stream copy (no re-encode). Only
+    the opening and the ending are drawn frame by frame. The frames are the
+    ones the long way made: the motion is periodic to the frame.
+  - **8-bit frames, float only where it moves.** A frame starts from the
+    finished slide; only the strips moving at that instant are computed in
+    floating point; a finished line is a single `minimum`.
+  - **`veryfast` at a FIXED quantiser** (`-qp 16`, no macroblock-tree). A
+    quality target (CRF) looks ahead, so the same still encoded a shade
+    differently in each segment — a faint shimmer at every join, which the
+    tests caught. At a fixed quantiser the same picture encodes the same way
+    wherever it falls. Held-frame PSNR against the still: 52 dB (was ~48).
+    Files are 3–4 MB a slide.
+  - **The cores shared out**: half the cores as workers, the rest as encoder
+    threads (8 × 1: 15.5 s, 4 × 2: 9.9 s, 2 × 4: 11.1 s, serial: 15.1 s).
+* **The still slides (5.3 s → 1.7 s).** Layout fitting measured the same
+  words at the same sizes 55,000 times; text widths and ink extents are now
+  cached (`typo._length`, `typo._extents`).
+
+`brand/animate.py :: _period, _encode, _join, X264, animate_all` ·
+`brand/typo.py` · `tests/test_animate.py` (unchanged guarantees, now 5× faster to run)
+
+---
 
 ## Changing something here
 

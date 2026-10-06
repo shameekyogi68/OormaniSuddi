@@ -152,6 +152,27 @@ class TheScanWipe(unittest.TestCase):
         last = np.asarray(frame_at(mp4, duration(mp4) - 0.05)).astype(int)
         self.assertLess(np.abs(first - last).mean(), 1.5)
 
+    def test_the_hold_is_encoded_once_and_copied(self):
+        """D105 — speed: the hold's repeating motion is encoded once and
+        joined by copy. The proof is in the frames: the same moment of two
+        different periods decodes to the very same pixels — and the copied
+        hold still moves (a tap, a lit teaser), it is not frozen."""
+        for name in ('saara_02', 'saara_01_cover'):
+            info, tl = self.info(name)
+            n = int(round(tl['total'] * 30))
+            per, first, reps = A._period(tl, 30, n)
+            self.assertGreaterEqual(reps, 2, name)
+            mp4 = self.path(name + '.mp4')
+            for phase in (0.18, 1.5):                       # in the motion, and at rest
+                t1 = (first + 0.5) / 30 + phase
+                t2 = t1 + per / 30
+                f1 = np.asarray(frame_at(mp4, t1)).astype(int)
+                f2 = np.asarray(frame_at(mp4, t2)).astype(int)
+                self.assertEqual(np.abs(f1 - f2).max(), 0, f'{name} at +{phase}s')
+            moving = np.asarray(frame_at(mp4, (first + 0.5) / 30 + 0.18)).astype(int)
+            rest = np.asarray(frame_at(mp4, tl['reveal'] + 0.3)).astype(int)
+            self.assertGreater(np.abs(moving - rest).max(), 40, f'{name}: the hold does not move')
+
     def test_a_cover_with_no_teasers_keeps_the_swipe_nudge(self):
         """The ಮುಖ್ಯ ಸುದ್ದಿ cover has no teasers: no running order, and its
         chevrons still ask for the swipe."""

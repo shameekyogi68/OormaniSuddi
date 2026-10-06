@@ -247,11 +247,19 @@ def line_height(f: ImageFont.FreeTypeFont, leading: float = 1.35,
     return int(round(lh))
 
 
+@lru_cache(maxsize=200_000)
+def _length(s: str, f) -> float:
+    """One shaped measurement. Layout fitting asks the same word at the same
+    size thousands of times; a ಸುದ್ದಿ ಸಾರ set made 55,000 calls for 3.3 of its
+    5.3 seconds (D105). Fonts are cached objects, so they key safely."""
+    return _M.textlength(s, font=f)
+
+
 def text_width(s: str, f, tracking: float = 0.0) -> float:
     s = safe(s, f)
     if not s:
         return 0.0
-    w = _M.textlength(s, font=f)
+    w = _length(s, f)
     if tracking and not has_kannada(s):
         w += tracking * f.size * (len(s) - 1)
     return w
@@ -262,6 +270,11 @@ def ink_extents(s: str, f) -> tuple[float, float]:
     s = safe(s, f)
     if not s:
         return (0.0, 0.0)
+    return _extents(s, f)
+
+
+@lru_cache(maxsize=50_000)
+def _extents(s: str, f) -> tuple[float, float]:
     x0, y0, x1, y1 = _M.textbbox((0, 0), s, font=f, anchor='ls')
     return (-y0, y1)
 

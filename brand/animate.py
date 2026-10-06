@@ -367,6 +367,10 @@ def _chevron(full: np.ndarray, box, ground, mark, dx: float) -> np.ndarray:
     return g + alpha * (m - g)
 
 
+def _u8(a: np.ndarray) -> np.ndarray:
+    return np.clip(a + 0.5, 0, 255).astype(np.uint8)
+
+
 def _running(full: np.ndarray, paper: np.ndarray, teasers, order: dict,
              t: float) -> np.ndarray | None:
     """The running order at `t`: one teaser lit with a soft gold underlay
@@ -385,19 +389,88 @@ def _running(full: np.ndarray, paper: np.ndarray, teasers, order: dict,
     y0, y1, x0 = teasers[i]
     W = full.shape[1]
     c0, c1 = max(0, x0 - 16), min(W - TAB_W, W - x0 + 16)
-    f = full.copy()
-    reg = full[y0:y1, c0:c1]
+    f = full.copy()                                 # uint8; only the row is redrawn
+    reg = full[y0:y1, c0:c1].astype(np.float32)
     ink = (np.abs(reg - paper).sum(axis=2, keepdims=True) > 60)
     gold = np.array(C.gold_500, np.float32)
-    f[y0:y1, c0:c1] = np.where(ink, reg, reg + M.anim_order_tint * a * (gold - reg))
+    f[y0:y1, c0:c1] = _u8(np.where(ink, reg, reg + M.anim_order_tint * a * (gold - reg)))
     tx0 = max(0, x0 - 22)
-    tick = full[y0 + 8:y1 - 8, tx0:tx0 + M.anim_order_tick]
+    tick = full[y0 + 8:y1 - 8, tx0:tx0 + M.anim_order_tick].astype(np.float32)
     f[y0 + 8:y1 - 8, tx0:tx0 + M.anim_order_tick] = \
-        tick + a * (np.array(C.red_500, np.float32) - tick)
+        _u8(tick + a * (np.array(C.red_500, np.float32) - tick))
     return f
 
 
-def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> dict:
+def _period(tl: dict, fps: int, n_frames: int) -> tuple[int, int, int]:
+    """(frames per period, first frame of the first period, how many periods)
+    of the hold's repeating motion; (0, n_frames, 0) when it has none."""
+    if tl.get('order'):
+        o = tl['order']
+        per = int(round(o['step'] * fps)) * int(round((o['end'] - o['start'])
+                                                      / o['rounds'] / o['step']))
+        first = int(round(o['start'] * fps))
+        reps = o['rounds']
+    elif tl.get('nudges'):
+        per = int(round(M.anim_nudge * fps))
+        first = int(math.floor(tl['nudges'][0] * fps))
+        reps = len(tl['nudges'])
+    else:
+        return 0, n_frames, 0
+    # Every copied period must end before the loop's dissolve begins.
+    out_frame = int(math.floor((tl['total'] - M.anim_out) * fps))
+    while reps and first + reps * per > out_frame:
+        reps -= 1
+    if per <= 0 or not reps:
+        return 0, n_frames, 0
+    return per, first, reps
+
+
+# H.264 settings shared by every segment, so the segments join without being
+# re-encoded (D105). A FIXED quantiser, not a quality target: a quality
+# target looks ahead at the frames that follow, so the same still frame came
+# out a shade different in each segment — a faint shimmer at every join. At a
+# fixed quantiser the same picture encodes the same way wherever it falls.
+# `veryfast`: on flat paper and type the slower presets buy almost nothing.
+X264 = ['-c:v', 'libx264', '-qp', '16', '-preset', 'veryfast', '-pix_fmt', 'yuv420p',
+        '-profile:v', 'high', '-g', '60', '-x264-params', 'mbtree=0:scenecut=0']
+
+
+def _encode(gen, a: int, b: int, W: int, H: int, fps: int, path: str,
+            threads: int = 0) -> str:
+    """Frames a..b-1 from `gen`, encoded to `path` (video only)."""
+    cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
+           '-s', f'{W}x{H}', '-r', str(fps), '-i', '-', *X264,
+           '-threads', str(threads), path]
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    try:
+        for k in range(a, b):
+            p.stdin.write(memoryview(np.ascontiguousarray(gen(k))))
+    finally:
+        p.stdin.close()
+        p.wait()
+    if p.returncode:
+        raise RuntimeError(f'ffmpeg failed encoding {path}')
+    return path
+
+
+def _join(segs: list[str], dst: str, work: str) -> None:
+    """The segments, joined by copying (no re-encode), with a silent stereo
+    AAC track for platform compatibility."""
+    lst = os.path.join(work, 'list.txt')
+    with open(lst, 'w', encoding='utf-8') as fh:
+        for s_ in segs:
+            fh.write(f"file '{os.path.abspath(s_)}'\n")
+    r = subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0',
+                        '-i', lst, '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo',
+                        '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac',
+                        '-b:a', '64k', '-shortest', '-movflags', '+faststart', dst],
+                       capture_output=True, text=True)
+    if r.returncode:
+        raise RuntimeError(f'ffmpeg failed joining {dst}: {r.stderr[-300:]}')
+
+
+def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None,
+            threads: int = 0) -> dict:
     """Write `dst` (.mp4, 4:5, silent AAC track for platform compatibility).
     `cover` defaults to the file name: a slide called *_cover is a cover."""
     if cover is None:
@@ -455,24 +528,32 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
 
     F, L = float(M.anim_feather), float(M.anim_light)
 
+    # Frames are built in 8-bit from the finished slide; only the strips that
+    # are moving at that instant are computed in floating point (D105).
+    full_u8 = np.asarray(im).copy()
+    base_u8 = _u8(base)
+
     def frame(t: float) -> np.ndarray:
-        f = base.copy()
+        f = base_u8.copy()
         if tl['photo']:
             u = _glide((t - tl['photo'][0]) / tl['photo'][1])
             if u > 0:
                 top = sun[0] if sun else photo_end
-                f[:top] = base[:top] + u * (full[:top] - base[:top])
+                f[:top] = _u8(base[:top] + u * (full[:top] - base[:top]))
         if tl['sun'] and sun:
             u = _glide((t - tl['sun'][0]) / tl['sun'][1])
             x = int(W * u)
             if x > 0:
-                f[sun[0]:sun[1], :x] = full[sun[0]:sun[1], :x]
+                f[sun[0]:sun[1], :x] = full_u8[sun[0]:sun[1], :x]
         for i, (s, d) in tl['bands'].items():
             u = (t - s) / d
             if u <= 0:
                 continue
             ya, yb, c0, c1, rise, blk, col = crops[i]
             b = bands[i]
+            if u >= 1 and not cover:                # a finished line: just ink
+                np.minimum(f[ya:yb, c0:c1], full_u8[ya:yb, c0:c1], out=f[ya:yb, c0:c1])
+                continue
             e = _glide(u)
             front = b.x0 + e * (b.x1 - b.x0 + F)
             xs = np.arange(c0, c1, dtype=np.float32)
@@ -490,8 +571,8 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
                 return canvas.copy()
             src_ = shifted(di) if fr < 1e-3 else (1 - fr) * shifted(di) + fr * shifted(di + 1)
             if not cover:
-                reg = f[ya:r1, c0:c1]
-                f[ya:r1, c0:c1] = reg + a * (np.minimum(reg, src_) - reg)
+                reg = f[ya:r1, c0:c1].astype(np.float32)
+                f[ya:r1, c0:c1] = _u8(reg + a * (np.minimum(reg, src_) - reg))
             # The gold light at the front of the wipe: a thin line with a halo,
             # gone by the time the line is whole.
             if not b.rule and u < 1:
@@ -507,64 +588,73 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None) -> di
                     y0g = ya + int(dy) + 3
                     y1g = min(foot, yb + int(dy) - 3)
                     if y1g > y0g:
-                        reg = f[y0g:y1g, c0:c1]
-                        f[y0g:y1g, c0:c1] = reg + np.clip(prof, 0, 1)[None, :, None] * (gold - reg)
+                        reg = f[y0g:y1g, c0:c1].astype(np.float32)
+                        f[y0g:y1g, c0:c1] = _u8(reg + np.clip(prof, 0, 1)[None, :, None] * (gold - reg))
         return f
 
     def held(dx: float) -> np.ndarray:
-        if dx <= 0.05:
-            return full
-        f = full.copy()
+        f = full_u8.copy()
         if info['tab_chevron']:
             x0, y0, x1, y1 = info['tab_chevron']
-            f[y0:y1, x0:x1] = _chevron(full, info['tab_chevron'], C.red_500, C.paper_0, dx)
+            f[y0:y1, x0:x1] = _u8(_chevron(full, info['tab_chevron'], C.red_500, C.paper_0, dx))
         if info['footer_chevron']:
             x0, y0, x1, y1 = info['footer_chevron']
-            f[y0:y1, x0:x1] = _chevron(full, info['footer_chevron'], paper, C.red_500, dx)
+            f[y0:y1, x0:x1] = _u8(_chevron(full, info['footer_chevron'], paper, C.red_500, dx))
         return f
 
-    cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
-           '-s', f'{W}x{H}', '-r', str(fps), '-i', '-',
-           '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo',
-           '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-pix_fmt', 'yuv420p',
-           '-c:a', 'aac', '-b:a', '64k', '-shortest', '-movflags', '+faststart', dst]
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-
-    def put(a: np.ndarray):
-        p.stdin.write(np.clip(a + 0.5, 0, 255).astype(np.uint8).tobytes())
-
-    still = np.clip(full + 0.5, 0, 255).astype(np.uint8).tobytes()
     reveal, total = tl['reveal'], tl['total']
     out_at = total - M.anim_out
-    for k in range(int(round(total * fps))):
+
+    def gen(k: int) -> np.ndarray:
+        """Frame `k` of the video: an 8-bit RGB array."""
         t = k / fps
         if t < reveal:
-            put(frame(t))
-        elif t < out_at:
-            lit = _running(full, paper, info['teasers'], tl['order'], t)
-            dx = _nudge(t, tl['nudges'])
+            return frame(t)
+        if t < out_at:
+            lit = _running(full_u8, paper, info['teasers'], tl['order'], t)
             if lit is not None:
-                put(lit)
-            elif dx > 0.05:
-                put(held(dx))
-            else:
-                p.stdin.write(still)
-        else:                                   # back to the first frame
-            v = _smooth((t - out_at) / M.anim_out)
-            put(full + v * (base - full))
-    p.stdin.close()
-    p.wait()
-    if p.returncode:
-        raise RuntimeError(f'ffmpeg failed on {src}')
+                return lit
+            dx = _nudge(t, tl['nudges'])
+            return held(dx) if dx > 0.05 else full_u8
+        v = _smooth((t - out_at) / M.anim_out)  # back to the first frame
+        return _u8(full + v * (base - full))
+
+    # The hold repeats itself — a chevron tap every `anim_nudge`, or a round
+    # of the running order — so ONE period is encoded and then copied, not
+    # re-encoded, as many times as the hold needs (D105). Only the opening
+    # and the ending are drawn frame by frame. The frames are exactly the
+    # ones the long way would have made: the motion is periodic to the frame.
+    n_frames = int(round(total * fps))
+    period, first, reps = _period(tl, fps, n_frames)
+    work = os.path.join(os.path.dirname(os.path.abspath(dst)),
+                        f'.anim_{os.path.basename(dst)}')
+    os.makedirs(work, exist_ok=True)
+    try:
+        segs = []
+        if reps:
+            segs.append(_encode(gen, 0, first, W, H, fps, os.path.join(work, 'a.mp4'), threads))
+            loop = _encode(gen, first, first + period, W, H, fps,
+                           os.path.join(work, 'b.mp4'), threads)
+            segs += [loop] * reps
+            if first + reps * period < n_frames:
+                segs.append(_encode(gen, first + reps * period, n_frames, W, H, fps,
+                                    os.path.join(work, 'c.mp4'), threads))
+        else:
+            segs.append(_encode(gen, 0, n_frames, W, H, fps, os.path.join(work, 'a.mp4'), threads))
+        _join(segs, dst, work)
+    finally:
+        for f in os.listdir(work):
+            os.remove(os.path.join(work, f))
+        os.rmdir(work)
     return {'path': dst, 'seconds': round(total, 2), 'reveal': round(reveal, 2),
             'hold': round(tl['hold'], 2), 'lines': len(bands),
             'static': len(info['static']), 'photo': bool(photo_end), 'cover': cover}
 
 
-def _animate_one(args: tuple[str, str]) -> str:
+def _animate_one(args: tuple) -> str:
     """Worker for multiprocessing: animate a single slide."""
-    src, dst = args
-    animate(src, dst)
+    src, dst, threads = (*args, 0)[:3]
+    animate(src, dst, threads=threads)
     return dst
 
 
@@ -593,9 +683,16 @@ def animate_all(paths: list[str]) -> list[str]:
     # used only when the program is a real file; otherwise one at a time.
     main = sys.modules.get('__main__')
     path = getattr(main, '__file__', None)
-    workers = min(len(jobs), multiprocessing.cpu_count())
+    # Measured on the 8-core studio Mac (4 performance + 4 efficiency cores),
+    # 8 slides: 8 workers × 1 thread 15.5 s, 4 × 2 9.9 s, 2 × 4 11.1 s, one at
+    # a time 15.1 s. Half the cores as workers, the rest as encoder threads.
+    cpus = multiprocessing.cpu_count()
+    workers = min(len(jobs), max(2, cpus // 2))
     if workers <= 1 or not path or not os.path.isfile(path):
         return [_animate_one(j) for j in jobs]
+    # The cores are shared out: eight encoders each starting a dozen threads
+    # on eight cores spent more time switching than encoding (D105).
+    threads = max(1, cpus // workers)
     with multiprocessing.Pool(workers) as pool:
-        out = pool.map(_animate_one, jobs)
+        out = pool.map(_animate_one, [(s_, d_, threads) for s_, d_ in jobs])
     return out
