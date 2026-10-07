@@ -40,7 +40,7 @@ class Complaint:
     about: str                    # the edition date, or the asset
     summary: str                  # what they say is wrong
     complainant: str = ''         # name or handle, as given
-    channel: str = ''             # whatsapp | email | instagram | comment
+    channel: str = ''             # whatsapp | email | instagram | comment | phone | desk
     state: str = 'received'
     acknowledged_at: str = ''
     resolved_at: str = ''

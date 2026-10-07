@@ -97,7 +97,9 @@ def main() -> int:
     n.add_argument('--summary', required=True)
     n.add_argument('--from', dest='complainant', default='')
     n.add_argument('--channel', default='',
-                   choices=['', 'whatsapp', 'email', 'instagram', 'comment', 'phone'])
+                   choices=['', 'whatsapp', 'email', 'instagram', 'comment', 'phone',
+                            'desk'],
+                   help='desk = an error the newsroom found itself (D88, D116)')
     n.set_defaults(fn=cmd_new)
 
     k = sub.add_parser('ack')

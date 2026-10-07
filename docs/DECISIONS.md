@@ -3326,6 +3326,22 @@ check_tools` · `tests/test_fonts.py` · `tests/test_health.py`
 
 ---
 
+## D116 · An error the newsroom finds itself is logged like a complaint
+
+**Decided (2026-10-07).** `scripts/correction.py new` accepts
+`--channel desk` for an error the desk found itself, as D88 and the
+corrections-officer's instructions already said to log it. The same 24-hour /
+15-day ledger and the same visible-correction rule apply.
+
+**Replaced.** A command documented in two places that the script refused. The
+desk's 23–24 Sept errata (D84, D88) were found on 2026-09-25 and stayed
+unlogged; the dispatcher raised them every session and the documented way to
+clear them failed.
+
+`scripts/correction.py` · `brand/corrections.py` · `tests/test_corrections_cli.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

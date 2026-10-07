@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **78/115** decisions are named by at least one test
+- **79/116** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -394,8 +394,8 @@ those carry a reason rather than a test.
 
 ## D88 · Fresh, ours, a real article, and credited to the outlet it came from
 
-- **Tested by:** `tests/test_sourcing.py`
-- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/intake.py`, `brand/review.py`, `brand/sourcing.py`, `brand/tokens.py`
+- **Tested by:** `tests/test_corrections_cli.py`, `tests/test_sourcing.py`
+- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/intake.py`, `brand/review.py`, `brand/sourcing.py`, `brand/tokens.py`, `scripts/correction.py`
 
 ## D89 · The team is dispatched by the state of the newsroom, not by memory
 
@@ -525,4 +525,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_contract.py`, `tests/test_fonts.py`
 - Enforced in: `brand/typo.py`, `scripts/health.py`
+
+## D116 · An error the newsroom finds itself is logged like a complaint
+
+- **Tested by:** `tests/test_corrections_cli.py`
+- Enforced in: `scripts/correction.py`
 
