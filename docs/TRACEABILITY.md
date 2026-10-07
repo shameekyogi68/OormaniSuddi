@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **77/114** decisions are named by at least one test
+- **78/115** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -520,4 +520,9 @@ those carry a reason rather than a test.
 ## D114 · fontTools is a dependency, because the glyph guard depends on it
 
 - **Tested by:** `tests/test_health.py`
+
+## D115 · A missing system face never stops a render
+
+- **Tested by:** `tests/test_fonts.py`
+- Enforced in: `brand/typo.py`, `scripts/health.py`
 

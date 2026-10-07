@@ -213,6 +213,16 @@ def check_tools() -> list[str]:
         out.append(f'{BAD} tools — Pillow has no raqm: Kannada conjuncts will '
                    'render broken. The wheel bundles it: python3 -m pip install '
                    '--break-system-packages --force-reinstall Pillow')
+    try:
+        from brand.typo import missing_faces
+        gone = missing_faces()
+    except Exception:
+        gone = []
+    if gone:
+        out.append(f'{WARN} tools — Latin face(s) missing: {", ".join(gone)}. '
+                   'Posts still render, in the house Kannada face; the design is '
+                   'off-spec and the golden test will say so. Point '
+                   'brand/tokens.py FONTS at the face\'s new file (D115).')
     import importlib.util
     if importlib.util.find_spec('fontTools') is None:
         out.append(f'{BAD} tools — fontTools not installed: the guard against '
@@ -225,7 +235,7 @@ def check_tools() -> list[str]:
     if not edge:
         out.append(f'{WARN} tools — edge-tts not installed: no fallback voice if '
                    'Google TTS is down. pip install -r requirements.txt')
-    return out or [f'{OK} tools — ffmpeg, Kannada shaping, glyph check, fallback voice']
+    return out or [f'{OK} tools — ffmpeg, Kannada shaping, glyph check, Latin faces, fallback voice']
 
 
 def check_tests() -> list[str]:

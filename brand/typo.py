@@ -172,6 +172,14 @@ def font(family: str = 'kn', size: int = 40, weight: int | None = None,
         weight = DEFAULT_WEIGHT.get(family)
     if not os.path.isabs(path):
         path = os.path.join(BASE_DIR, path)
+    if not os.path.exists(path) and family in _LATIN_FALLBACK:
+        # The Latin faces are macOS system fonts — not ours to ship, and a
+        # macOS update has renamed SF's file before. Without this, a missing
+        # file stopped every render with "cannot open resource". The house
+        # Kannada faces carry full Latin, so the post still renders, and
+        # health.py says the design is off-spec until the face is back. D115.
+        _missing_face(family, path)
+        return font(_LATIN_FALLBACK[family], size, weight, width)
     f = ImageFont.truetype(path, int(size))
     if weight is not None or width is not None:
         try:
@@ -195,6 +203,19 @@ def font(family: str = 'kn', size: int = 40, weight: int | None = None,
 
 
 _LATIN_FALLBACK = {'latin': 'kn_var', 'latin_alt': 'kn_var', 'latin_srf': 'kn_serif'}
+
+
+def missing_faces() -> list[str]:
+    """The Latin system faces this machine does not have. D115."""
+    return [f'{fam} ({FONTS[fam]})' for fam in _LATIN_FALLBACK
+            if not os.path.exists(FONTS[fam])]
+
+
+@lru_cache(maxsize=None)
+def _missing_face(family: str, path: str) -> None:
+    import sys
+    print(f'  ! font {family}: {path} is not on this machine — using the house '
+          f'{_LATIN_FALLBACK[family]} face for Latin text (D115)', file=sys.stderr)
 
 
 def font_for(text: str, family: str = 'latin', size: int = 40,

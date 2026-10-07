@@ -68,6 +68,12 @@ class TheRenderToolsAreWatched(unittest.TestCase):
             reqs = fh.read().lower()
         self.assertIn('fonttools', reqs)
 
+    def test_a_missing_latin_face_is_worth_a_look(self):
+        from brand import tokens
+        with mock.patch.dict(tokens.FONTS, {'latin': '/nowhere/SFNS.ttf'}):
+            lines = health.check_tools()
+        self.assertTrue(any(l.startswith(health.WARN) and 'SFNS' in l for l in lines))
+
     def test_the_tests_it_runs_are_the_fast_suites(self):
         calls = []
 

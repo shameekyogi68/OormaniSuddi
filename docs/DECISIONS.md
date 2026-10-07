@@ -3303,6 +3303,29 @@ check_tools` · `tests/test_health.py`
 
 ---
 
+## D115 · A missing system face never stops a render
+
+**Decided (2026-10-07).** The Latin families in `tokens.FONTS` (`latin`,
+`latin_alt`, `latin_srf`) are macOS system fonts. When one is not on the
+machine, `typo.font()` uses the house face `_LATIN_FALLBACK` names for it
+(Anek Kannada or Noto Serif Kannada — both carry full Latin), prints a warning
+once, and `health.py` flags the design as off-spec. A missing *Kannada* face
+still fails at once: those ship in `fonts/`, so a missing one is a broken
+checkout.
+
+**Replaced.** A hard path to `/System/Library/Fonts/SFNS.ttf`. On any machine
+without it — the CI runner, or this Mac after a macOS update renames SF's file,
+as Apple has done before — every render stopped with "cannot open resource".
+It was the second reason CI's contract step had failed since September.
+
+**Unchanged.** On this Mac, with the faces present, not a pixel moves; the
+golden test holds that.
+
+`brand/typo.py :: font, missing_faces, _LATIN_FALLBACK` · `scripts/health.py ::
+check_tools` · `tests/test_fonts.py` · `tests/test_health.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:
