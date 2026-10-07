@@ -523,6 +523,6 @@ those carry a reason rather than a test.
 
 ## D115 · A missing system face never stops a render
 
-- **Tested by:** `tests/test_fonts.py`
+- **Tested by:** `tests/test_contract.py`, `tests/test_fonts.py`
 - Enforced in: `brand/typo.py`, `scripts/health.py`
 

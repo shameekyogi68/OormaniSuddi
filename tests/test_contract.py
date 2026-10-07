@@ -612,10 +612,12 @@ class GlyphsThatCannotBeSet(unittest.TestCase):
     def test_a_missing_letter_is_reported_and_never_dropped(self):
         """D46: a glyph the face lacks is a fault, not a substitution."""
         """Dropping a letter changes what a sentence says; that is worse."""
-        f = self.typo.font('latin', 40)          # SF has no Kannada
-        out = self.typo.safe('ಪರೀಕ್ಷೆ', f)
-        self.assertTrue(out, 'Kannada must not be silently deleted')
-        self.assertTrue(self.typo.missing_glyphs('ಪರೀಕ್ಷೆ', f),
+        # A house face and a script it does not carry, so this holds on any
+        # machine — not only one where SF (no Kannada) is installed. D115.
+        f = self.typo.font('kn_var', 40)
+        out = self.typo.safe('அறிவிப்பு', f)
+        self.assertEqual(out, 'அறிவிப்பு', 'a letter must not be silently deleted')
+        self.assertTrue(self.typo.missing_glyphs('அறிவிப்பு', f),
                         'a face that cannot set this must say so')
 
     def test_decoration_is_dropped_but_a_letter_is_escalated(self):
