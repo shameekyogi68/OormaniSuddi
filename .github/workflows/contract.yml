@@ -42,10 +42,14 @@ jobs:
           pip install "Pillow>=10.0" "numpy>=1.26" "fonttools>=4.40"
 
       - name: The contract
-        run: python -m unittest tests.test_contract -v
+        run: |
+          python -m unittest tests.test_contract -v 2>&1 | tee test.log
+          rc=${PIPESTATUS[0]}; [ $rc -eq 0 ] || python .github/annotate_failures.py test.log; exit $rc
 
       - name: The legal corpus
-        run: python -m unittest tests.test_legal_corpus -v
+        run: |
+          python -m unittest tests.test_legal_corpus -v 2>&1 | tee test.log
+          rc=${PIPESTATUS[0]}; [ $rc -eq 0 ] || python .github/annotate_failures.py test.log; exit $rc
 
       - name: Every other suite that does not rasterise Kannada or render video
         # By exclusion, so a new test file is checked from the day it lands.
@@ -55,7 +59,8 @@ jobs:
           FAST=$(ls tests/test_*.py \
             | grep -vE 'test_(contract|legal_corpus|golden|animate|formats|speednews|greeting)\.py' \
             | sed 's|/|.|; s|\.py$||')
-          python -m unittest $FAST -v
+          python -m unittest $FAST -v 2>&1 | tee test.log
+          rc=${PIPESTATUS[0]}; [ $rc -eq 0 ] || python .github/annotate_failures.py test.log; exit $rc
 
       - name: Every decision is enforced by something
         run: python docs/_build_traceability.py --check
