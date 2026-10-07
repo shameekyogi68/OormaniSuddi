@@ -213,15 +213,19 @@ def check_tools() -> list[str]:
         out.append(f'{BAD} tools — Pillow has no raqm: Kannada conjuncts will '
                    'render broken. The wheel bundles it: python3 -m pip install '
                    '--break-system-packages --force-reinstall Pillow')
+    import importlib.util
+    if importlib.util.find_spec('fontTools') is None:
+        out.append(f'{BAD} tools — fontTools not installed: the guard against '
+                   'letters rendering as empty boxes is OFF (TYPE-01). '
+                   'python3 -m pip install --break-system-packages -r requirements.txt')
     try:
-        import importlib.util
         edge = importlib.util.find_spec('edge_tts') is not None
     except Exception:
         edge = False
     if not edge:
         out.append(f'{WARN} tools — edge-tts not installed: no fallback voice if '
                    'Google TTS is down. pip install -r requirements.txt')
-    return out or [f'{OK} tools — ffmpeg, Kannada shaping, fallback voice']
+    return out or [f'{OK} tools — ffmpeg, Kannada shaping, glyph check, fallback voice']
 
 
 def check_tests() -> list[str]:

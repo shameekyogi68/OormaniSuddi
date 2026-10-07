@@ -3284,6 +3284,25 @@ the failures most likely in a year nobody touches the code.
 
 ---
 
+## D114 · fontTools is a dependency, because the glyph guard depends on it
+
+**Decided (2026-10-07).** `fonttools` is in `requirements.txt` and in CI's
+install. `health.py` fails the `tools` line when it is missing. CI's actions
+move to `checkout@v5` / `setup-python@v6` (Node 20 is retired on runners).
+
+**Replaced.** An unlisted import. `brand/typo.py :: _coverage` reads each
+face's cmap with fontTools and, deliberately, fails open when it cannot — so
+on any machine without fontTools the guard against letters shipping as empty
+boxes (TYPE-01, D53) was silently off. The Mac had it by accident; the CI
+runner did not, and `tests.test_contract` had been failing there on every
+push since at least 2026-09-18 with nobody reading it. A new Mac set up from
+the instructions would have rendered tofu with no warning.
+
+`requirements.txt` · `.github/workflows/contract.yml` · `scripts/health.py ::
+check_tools` · `tests/test_health.py`
+
+---
+
 ## Changing something here
 
 If you are about to change a value in `brand/tokens.py`:

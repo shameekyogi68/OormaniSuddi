@@ -51,6 +51,23 @@ class TheRenderToolsAreWatched(unittest.TestCase):
             lines = health.check_tools()
         self.assertTrue(any(l.startswith(health.BAD) and 'raqm' in l for l in lines))
 
+    def test_missing_fonttools_needs_attention(self):
+        # D114: without it typo._coverage fails open and the empty-box guard
+        # is silently off — which is how CI was red for three weeks.
+        import importlib.util
+        real = importlib.util.find_spec
+        with mock.patch.object(importlib.util, 'find_spec',
+                               lambda n, *a: None if n == 'fontTools' else real(n, *a)):
+            lines = health.check_tools()
+        self.assertTrue(any(l.startswith(health.BAD) and 'fontTools' in l for l in lines))
+
+    def test_fonttools_is_a_listed_requirement(self):
+        import os
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(root, 'requirements.txt'), encoding='utf-8') as fh:
+            reqs = fh.read().lower()
+        self.assertIn('fonttools', reqs)
+
     def test_the_tests_it_runs_are_the_fast_suites(self):
         calls = []
 

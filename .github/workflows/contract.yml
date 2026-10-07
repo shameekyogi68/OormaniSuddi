@@ -28,9 +28,9 @@ jobs:
         # The oldest Python this is known to run on, and the one the Mac runs.
         python-version: ['3.12', '3.14']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -39,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           # Line A only. torch is for the footage upscaler and is a ~2 GB
           # download that no test here touches.
-          pip install "Pillow>=10.0" "numpy>=1.26"
+          pip install "Pillow>=10.0" "numpy>=1.26" "fonttools>=4.40"
 
       - name: The contract
         run: python -m unittest tests.test_contract -v

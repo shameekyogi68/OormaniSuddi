@@ -18,6 +18,8 @@
 # ── Line A: the daily package. Required. ─────────────────────────────────────
 Pillow>=10.0            # the renderer. Needs libraqm for Kannada shaping.
 numpy>=1.26             # grades, grain, scrims, the editorial plate
+fonttools>=4.40         # reads which letters each face can set. Without it the
+                        # empty-box guard (TYPE-01) silently switches off (D114).
 edge-tts>=6.1           # the narration fallback when Google TTS is down (D53,
                         # D110). Gemini TTS is called over plain HTTPS, no SDK.
 

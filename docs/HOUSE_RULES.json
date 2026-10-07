@@ -123,9 +123,9 @@
       "id": "2026-09-19-02",
       "said": "Before generating any AI editorial image for cultural, language, historical, or government news: 1) Research the real news reporting, actual artifacts, or cultural context first (e.g. search real manuscripts, scripts, official settings). 2) Always strictly prohibit text in prompts: mandate 'Strictly NO text, NO signs, NO banners, NO posters, NO writing, NO typography, NO logos anywhere in the image' to prevent corrupted AI lettering. 3) Depict authentic coastal Karnataka material culture (props like palm-leaf manuscripts/lamps, coastal attire, real meeting settings) instead of generic fantasy tropes.",
       "scope": "picture",
-      "why": "Editor standing instruction (2026-09-19): Tulu language and cultural images require real-world research first and zero fake AI text to produce broadcast-grade, culturally accurate photography every time without manual back-and-forth",
+      "why": "Editor standing instruction (2026-09-19): Tulu language and cultural images require real-world research first and zero fake AI text to produce broadcast-grade, culturally accurate photography every time without manual back-and-forth  · retired: superseded by 2026-10-07-01: step 1 told the desk to search the web, which D92 ended",
       "added": "2026-09-19",
-      "retired": "",
+      "retired": "2026-10-07",
       "by": "Editor"
     },
     {
@@ -177,9 +177,9 @@
       "id": "2026-09-25-01",
       "said": "Every story credits the outlet its own link belongs to, and every news item the editor adds keeps its own source: a link → that outlet; a press release → who issued it; seen or told → ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ. Never fold added news under another paper's name, never cite a link copied from a chatbot answer, and only draft news published within Limits.news_max_age_hours that is about the coast.",
       "scope": "desk",
-      "why": "editor 2026-09-25: added news ended up credited to one paper; stale and unrelated news reached the draft (D88)",
+      "why": "editor 2026-09-25: added news ended up credited to one paper; stale and unrelated news reached the draft (D88)  · retired: superseded by 2026-10-07-02: the freshness clause was worded for the morning auto-draft deleted in D92",
       "added": "2026-09-25",
-      "retired": "",
+      "retired": "2026-10-07",
       "by": "Shameek Yogi"
     },
     {
@@ -253,6 +253,24 @@
       "added": "2026-10-04",
       "retired": "",
       "by": ""
+    },
+    {
+      "id": "2026-10-07-01",
+      "said": "Before writing the brief for an AI picture on cultural, language, historical or government news: 1) take the real setting, artefacts and people from the kept source and from the editor — if they do not say enough to picture it truthfully, ask the editor; never look it up on the web (D92). 2) Every prompt says 'Strictly NO text, NO signs, NO banners, NO posters, NO writing, NO typography, NO logos anywhere in the image' — AI lettering comes out corrupted. 3) Show authentic coastal Karnataka material culture (palm-leaf manuscripts, lamps, coastal attire, real meeting rooms), never generic fantasy.",
+      "scope": "picture",
+      "why": "replaces 2026-09-19-02, whose step 1 said to search the web; intake is paste-only since D92. Same intent: culturally accurate pictures with no fake lettering",
+      "added": "2026-10-07",
+      "retired": "",
+      "by": "Shameek Yogi"
+    },
+    {
+      "id": "2026-10-07-02",
+      "said": "Every story credits the outlet its own link belongs to, and every news item the editor adds keeps its own source: a link → that outlet; a press release → who issued it; seen or told → ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ. Never fold added news under another paper's name, and never cite a link copied from a chatbot answer. A pasted item older than Limits.news_max_age_hours, or not about the coast, is pointed out to the editor before it becomes a story (FACT-07 flags a stale source).",
+      "scope": "desk",
+      "why": "replaces 2026-09-25-01, whose last clause was worded for the morning auto-draft deleted in D92. Same intent: each story its own source; stale or off-coast news is not run by accident (D88)",
+      "added": "2026-10-07",
+      "retired": "",
+      "by": "Shameek Yogi"
     }
   ]
 }
