@@ -101,6 +101,10 @@ PAIRS = [
     # ── alert ─────────────────────────────────────────────────────────────
     ('alert on page',           Role.alert,            Role.page,        True),
     ('paper on alert',          C.paper_0,             Role.alert,       False),
+    # ── ಸ್ಪೀಡ್ ನ್ಯೂಸ್ on ink (D128): the reel is watched, so it is dark ────
+    ('reel headline on ink',    C.paper_50,            C.ink_850,        True),
+    ('reel news red on ink',    C.red_400,             C.ink_850,        False),
+    ('reel meta on ink',        C.paper_300,           C.ink_850,        False),
 ]
 
 # Pairs that must FAIL — encoded so the rule is a test, not a comment. If

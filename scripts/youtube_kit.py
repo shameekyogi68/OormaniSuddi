@@ -1,24 +1,31 @@
 """
 ಊರ್ಮನಿ ಸುದ್ದಿ — the YouTube channel kit, made from the logo.
 
-    python3 scripts/youtube_kit.py                 # every channel asset -> assets/youtube/
+    python3 scripts/youtube_kit.py                 # every asset, stills + motion -> assets/youtube/
+    python3 scripts/youtube_kit.py --still         # stills only
     python3 scripts/youtube_kit.py thumb \\
         --photo frame.jpg --title "ಸೇನೇಶ್ವರ ಗಣಪತಿ ಪ್ರತಿಷ್ಠಾಪನೆ" \\
         --place "ಬೈಂದೂರು" [--tag "ನೇರಪ್ರಸಾರ"] [--focal 0.47 0.30] --out thumb.jpg
 
-Everything is drawn from assets/logo_* and the house palette in brand/tokens.py,
-so the channel and the posts are one brand. Sizes are YouTube's own:
-profile 800², banner 2560x1440 (safe 1546x423), watermark 150², thumbnail
-1280x720 under 2 MB, end screen and live cards 1920x1080.
+The look: deep ink, warm gold light, a metallic gold medallion around the
+round logo — the logo's own sunset, lit like a studio. Sizes are YouTube's:
+profile 800², banner 2560x1440 (phone-safe 1546x423), watermark 150²,
+thumbnail 1280x720 under 2 MB, end screen and live cards 1920x1080.
 
-House rules kept: gold only as a fill, never as type; red only on news
-elements (the place and the live pill) and the logo's own speed strokes;
-nothing in the thumbnail's bottom-right, where YouTube puts the duration.
+Rules this file keeps, each one learned the hard way:
+  * no decorative lines — no stripes, rules, streaks or underlines; light only
+  * no claim the owner has not made — name, tagline, Karavali, Kannada, handle
+  * gold is a fill, never type; red only on news elements (place, live)
+  * text is centred on the letter BODY, not the full ink — Kannada subscripts
+    hang far below the line and would drag a label out of its pill
+  * nothing in the thumbnail's bottom-right, where YouTube puts the duration
 """
 from __future__ import annotations
 
 import argparse
+import math
 import os
+import subprocess
 import sys
 
 import numpy as np
@@ -30,14 +37,87 @@ sys.path.insert(0, ROOT)
 from brand.tokens import C, Brand                     # noqa: E402
 from brand.typo import font                           # noqa: E402
 from brand.surface import house_grade, cover          # noqa: E402
+from brand.surface import medallion as surface_medallion, MEDALLION_PAD  # noqa: E402
 
 OUT = os.path.join(ROOT, 'assets', 'youtube')
-S = 2                                                 # supersample
+S = 2                                                 # supersample for stills
 
-INK, INK2, INK3 = C.ink_900, C.ink_600, C.ink_400
-PAPER, PAPER2 = C.paper_50, C.paper_100
-GOLD, GOLD_HI, GOLD_LO = C.gold_500, C.gold_400, C.gold_600
-RED, SEA = C.red_500, C.sea_500
+INK, INK_DEEP, INK_LIFT = C.ink_900, C.ink_950, C.ink_800
+TEXT, TEXT_2 = C.paper_50, C.paper_300
+GOLD = C.gold_500
+RED = C.red_500
+
+# Metallic stops: light catches the top, the body is the logo's sunset gold,
+# the lower edge falls into shadow. Angle 90 = top to bottom.
+GOLD_METAL = [(0.0, C.gold_300), (0.42, C.gold_400), (0.72, C.gold_500), (1.0, C.gold_600)]
+RED_METAL = [(0.0, C.red_400), (1.0, C.red_600)]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  pixels
+# ─────────────────────────────────────────────────────────────────────────────
+
+def gradient(w, h, stops, angle=90):
+    """An RGB gradient along `angle` degrees through the given colour stops."""
+    a = math.radians(angle)
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    t = xx * math.cos(a) + yy * math.sin(a)
+    t = (t - t.min()) / max(1e-6, t.max() - t.min())
+    pos = np.array([p for p, _ in stops], np.float32)
+    out = np.zeros((h, w, 3), np.float32)
+    for ch in range(3):
+        out[..., ch] = np.interp(t, pos, np.array([c[ch] for _, c in stops], np.float32))
+    out += np.random.default_rng(11).uniform(-.7, .7, (h, w))[..., None]   # no banding
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), 'RGB')
+
+
+def glow_layer(w, h, cx, cy, rx, ry, color, a, power=2.0):
+    """A soft elliptical light — the only 'decoration' this brand allows."""
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    d = np.sqrt(((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2)
+    al = np.clip(1 - d, 0, 1) ** power * a * 255
+    lay = np.zeros((h, w, 4), np.float32)
+    lay[..., :3] = color
+    lay[..., 3] = al
+    return Image.fromarray(lay.astype(np.uint8), 'RGBA')
+
+
+def vignette(img, amount=0.35):
+    w, h = img.size
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    d = np.sqrt(((xx - w / 2) / (w / 2)) ** 2 + ((yy - h / 2) / (h / 2)) ** 2)
+    v = 1 - np.clip((d - 0.55) / 0.9, 0, 1) ** 1.6 * amount
+    a = np.asarray(img).astype(np.float32)
+    a[..., :3] *= v[..., None]
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), img.mode)
+
+
+def grain(img, sigma=1.8, seed=2026):
+    a = np.asarray(img).astype(np.float32)
+    n = np.random.default_rng(seed).normal(0, sigma, a.shape[:2])
+    lum = a[..., :3].mean(2) / 255
+    a[..., :3] += (n * (1.15 - lum * 0.6))[..., None]     # more in the shadows, like film
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), img.mode)
+
+
+def ink_scene(w, h, light=None, sea=None, warmth=1.0):
+    """The stage: ink deepening to near-black, warm gold light from `light`
+    (x, y, rx, ry), a cool sea-blue depth from `sea`, film grain, vignette."""
+    top = np.array(INK_LIFT, np.float32)
+    bot = np.array(INK_DEEP, np.float32)
+    t = np.linspace(0, 1, h, dtype=np.float32)[:, None, None]
+    a = top * (1 - t) + bot * t
+    a = np.repeat(a, w, 1)
+    img = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGB').convert('RGBA')
+    if sea:
+        sx, sy, srx, sry = sea
+        img.alpha_composite(glow_layer(w, h, sx, sy, srx, sry, C.sea_600, 0.55, 1.6))
+    if light:
+        lx, ly, lrx, lry = light
+        # gold, never amber: amber over navy goes brown, and brown reads cheap
+        img.alpha_composite(glow_layer(w, h, lx, ly, lrx, lry, C.gold_600, 0.16 * warmth, 1.7))
+        img.alpha_composite(glow_layer(w, h, lx, ly, lrx * 0.5, lry * 0.5, GOLD, 0.22 * warmth, 2.0))
+    return vignette(img, 0.42)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -47,190 +127,130 @@ RED, SEA = C.red_500, C.sea_500
 class K:
     """A supersampled RGBA canvas; every coordinate is in delivery pixels."""
 
-    def __init__(self, w, h, bg=PAPER):
-        self.w, self.h = w, h
-        self.img = Image.new('RGBA', (w * S, h * S), (*bg, 255) if len(bg) == 3 else bg)
-
-    def d(self):
-        return ImageDraw.Draw(self.img)
+    def __init__(self, w, h, bg=None, ss=S):
+        self.w, self.h, self.ss = w, h, ss
+        if isinstance(bg, Image.Image):
+            self.img = bg.convert('RGBA').resize((w * ss, h * ss), Image.Resampling.BICUBIC)
+        else:
+            bg = bg or (0, 0, 0, 0)
+            self.img = Image.new('RGBA', (w * ss, h * ss), bg if len(bg) == 4 else (*bg, 255))
 
     def lay(self):
         return Image.new('RGBA', self.img.size, (0, 0, 0, 0))
 
     # shapes ------------------------------------------------------------------
-    def rrect(self, box, r, fill, outline=None, width=0):
+    def _mask(self, box, r):
+        s = self.ss
+        x0, y0, x1, y1 = box
+        w, h = int(round((x1 - x0) * s)), int(round((y1 - y0) * s))
+        m = Image.new('L', (w, h), 0)
+        ImageDraw.Draw(m).rounded_rectangle([0, 0, w - 1, h - 1], r * s, fill=255)
+        return m, (int(round(x0 * s)), int(round(y0 * s)))
+
+    def fill(self, box, r, color=None, stops=None, angle=90, alpha=1.0, sheen=False):
+        """A rounded shape filled flat or with a metallic gradient."""
+        m, at = self._mask(box, r)
+        if stops:
+            src = gradient(m.width, m.height, stops, angle).convert('RGBA')
+        else:
+            src = Image.new('RGBA', m.size, (*color[:3], 255))
+        a = color[3] / 255 if color and len(color) == 4 else 1.0
+        src.putalpha(m.point(lambda v: int(v * a * alpha)))
+        self.img.alpha_composite(src, at)
+        if sheen:
+            # light on the upper half of a metal surface, soft-edged
+            hgt = m.height
+            sh = np.zeros((hgt, m.width), np.float32)
+            ramp = np.clip(1 - np.linspace(0, 1, hgt) / 0.55, 0, 1) ** 2 * 0.28
+            sh[:] = ramp[:, None]
+            al = (sh * np.asarray(m, np.float32)).astype(np.uint8)
+            lay = Image.new('RGBA', m.size, (255, 255, 255, 0))
+            lay.putalpha(Image.fromarray(al, 'L'))
+            self.img.alpha_composite(lay, at)
+
+    def shadow(self, box, r, blur=24, alpha=110, dy=12, color=None):
+        s = self.ss
         x0, y0, x1, y1 = box
         lay = self.lay()
         ImageDraw.Draw(lay).rounded_rectangle(
-            [x0 * S, y0 * S, x1 * S, y1 * S], r * S, fill=fill,
-            outline=outline, width=int(width * S))
-        self.img.alpha_composite(lay)
+            [x0 * s, (y0 + dy) * s, x1 * s, (y1 + dy) * s], r * s,
+            fill=(*(color or C.ink_950), alpha))
+        self.img.alpha_composite(lay.filter(ImageFilter.GaussianBlur(blur * s)))
 
-    def shadow(self, box, r, blur=24, alpha=60, dy=10):
-        x0, y0, x1, y1 = box
-        lay = self.lay()
-        ImageDraw.Draw(lay).rounded_rectangle(
-            [x0 * S, (y0 + dy) * S, x1 * S, (y1 + dy) * S], r * S,
-            fill=(*C.ink_950, alpha))
-        self.img.alpha_composite(lay.filter(ImageFilter.GaussianBlur(blur * S)))
-
-    def circle(self, cx, cy, r, fill, outline=None, width=0):
-        self.rrect((cx - r, cy - r, cx + r, cy + r), r, fill, outline, width)
-
-    def glow(self, cx, cy, radius, color, a=0.5, power=2.2):
-        W, H = self.img.size
-        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-        dd = np.sqrt((xx - cx * S) ** 2 + (yy - cy * S) ** 2) / (radius * S)
-        al = np.clip(1 - dd, 0, 1) ** power * a * 255
-        lay = np.zeros((H, W, 4), np.float32)
-        lay[..., :3] = color
-        lay[..., 3] = al
-        self.img.alpha_composite(Image.fromarray(lay.astype(np.uint8), 'RGBA'))
-
-    def vgrad(self, y0, y1, c0, c1, a0=1.0, a1=1.0):
-        Y0, Y1 = int(y0 * S), int(y1 * S)
-        t = np.linspace(0, 1, max(1, Y1 - Y0))[:, None]
-        rgb = np.array(c0)[None] * (1 - t) + np.array(c1)[None] * t
-        al = (a0 + (a1 - a0) * t) * 255
-        band = np.concatenate([rgb, al], 1)[:, None, :].repeat(self.img.width, 1)
-        band[..., :3] += np.random.default_rng(7).uniform(-.6, .6, band.shape[:2])[..., None]
-        self.img.alpha_composite(
-            Image.fromarray(np.clip(band, 0, 255).astype(np.uint8), 'RGBA'), (0, Y0))
-
-    def hscrim(self, x0, x1, color, a0, a1, y0=0, y1=None):
-        """A horizontal veil — smoothstep, so the join cannot be found."""
-        y1 = self.h if y1 is None else y1
-        X0, X1 = int(x0 * S), int(x1 * S)
-        u = np.linspace(0, 1, max(1, X1 - X0))
-        t = u * u * (3 - 2 * u)
-        al = (a0 + (a1 - a0) * t) * 255
-        band = np.zeros((1, X1 - X0, 4), np.float32)
-        band[..., :3] = color
-        band[..., 3] = al
-        band = band.repeat(int((y1 - y0) * S), 0)
-        self.img.alpha_composite(Image.fromarray(band.astype(np.uint8), 'RGBA'),
-                                 (X0, int(y0 * S)))
-
-    def sea(self, y0, y1, x0=0, x1=None, color=SEA, a=0.35, n=14):
-        """The logo's horizon reduced to geometry: ruled water, lines closing
-        up toward the horizon the way perspective does."""
-        x1 = self.w if x1 is None else x1
-        lay = self.lay()
-        dr = ImageDraw.Draw(lay)
-        for i in range(n):
-            t = (i / (n - 1)) ** 1.8
-            y = y0 + (y1 - y0) * t
-            w = 1.2 + 2.6 * t
-            al = int(255 * a * (0.35 + 0.65 * t))
-            dr.rectangle([x0 * S, y * S, x1 * S, (y + w) * S], fill=(*color, al))
-        self.img.alpha_composite(lay)
-
-    def reflection(self, cx, y0, y1, color=GOLD, a=0.8, n=10, w0=260):
-        """The sun's path on the water — short gold dashes that narrow away."""
-        lay = self.lay()
-        dr = ImageDraw.Draw(lay)
-        for i in range(n):
-            t = i / (n - 1)
-            y = y0 + (y1 - y0) * (t ** 1.6)
-            half = w0 * (1 - 0.75 * t) / 2
-            dr.rounded_rectangle([(cx - half) * S, y * S, (cx + half) * S, (y + 5 + 4 * t) * S],
-                                 4 * S, fill=(*color, int(255 * a * (1 - 0.6 * t))))
-        self.img.alpha_composite(lay)
-
-    def speed(self, x0, x1, y, n=6, gap=22, color=RED):
-        """The ಸುದ್ದಿ speed strokes from the logo — tapered, staggered."""
-        lay = self.lay()
-        dr = ImageDraw.Draw(lay)
-        for i in range(n):
-            yy = y + i * gap
-            sx = x0 + (i % 3) * 70 + (i * 37) % 90
-            th = 9 if i % 2 == 0 else 6
-            pts = [(sx * S, (yy + th / 2) * S), (x1 * S, yy * S),
-                   (x1 * S, (yy + th) * S)]
-            dr.polygon(pts, fill=(*color, 235))
-        self.img.alpha_composite(lay)
+    def light(self, cx, cy, rx, ry, color, a, power=2.0):
+        s = self.ss
+        self.img.alpha_composite(glow_layer(self.img.width, self.img.height,
+                                            cx * s, cy * s, rx * s, ry * s, color, a, power))
 
     # type --------------------------------------------------------------------
-    def text(self, s, x, base, f, fill, anchor='ls', stroke=0, stroke_fill=None,
-             shadow=None):
-        """Baseline-anchored type. `f` is a delivery-size font; drawn at S."""
-        fs = font(*f[:1], int(f[1] * S), *f[2:]) if isinstance(f, tuple) else f
+    def text(self, s_, x, base, f, fill, anchor='ls', shadow=None):
+        s = self.ss
+        fs = font(*f[:1], int(f[1] * s), *f[2:])
         if shadow:
             dx, dy, blur, col = shadow
             lay = self.lay()
-            ImageDraw.Draw(lay).text(((x + dx) * S, (base + dy) * S), s, font=fs,
-                                     fill=col, anchor=anchor,
-                                     stroke_width=int(stroke * S), stroke_fill=col)
-            self.img.alpha_composite(lay.filter(ImageFilter.GaussianBlur(blur * S)))
-        self.d().text((x * S, base * S), s, font=fs, fill=fill, anchor=anchor,
-                      stroke_width=int(stroke * S), stroke_fill=stroke_fill)
+            ImageDraw.Draw(lay).text(((x + dx) * s, (base + dy) * s), s_, font=fs,
+                                     fill=col, anchor=anchor)
+            self.img.alpha_composite(lay.filter(ImageFilter.GaussianBlur(blur * s)))
+        if len(fill) == 4:
+            lay = self.lay()
+            ImageDraw.Draw(lay).text((x * s, base * s), s_, font=fs, fill=fill, anchor=anchor)
+            self.img.alpha_composite(lay)
+        else:
+            ImageDraw.Draw(self.img).text((x * s, base * s), s_, font=fs, fill=fill,
+                                          anchor=anchor)
 
     @staticmethod
-    def width(s, f):
+    def width(s_, f):
         fs = font(*f[:1], int(f[1] * S), *f[2:])
-        return ImageDraw.Draw(Image.new('L', (8, 8))).textlength(s, font=fs) / S
+        return ImageDraw.Draw(Image.new('L', (8, 8))).textlength(s_, font=fs) / S
 
     @staticmethod
-    def ink(s, f):
+    def ink(s_, f):
         """(rise above baseline, drop below) of the real ink."""
         fs = font(*f[:1], int(f[1] * S), *f[2:])
-        b = ImageDraw.Draw(Image.new('L', (8, 8))).textbbox((0, 0), s, font=fs, anchor='ls')
+        b = ImageDraw.Draw(Image.new('L', (8, 8))).textbbox((0, 0), s_, font=fs, anchor='ls')
         return -b[1] / S, b[3] / S
 
-    def pill(self, x, y, s, f, fill, color, h=None, padx=22, dot=None):
-        """A label on a rounded fill, text optically centred on its ink."""
-        rise, drop = self.ink(s, f)
-        h = h or (rise + drop) + 30
-        w = self.width(s, f) + padx * 2 + (h * 0.42 if dot else 0)
-        self.rrect((x, y, x + w, y + h), h / 2, fill)
+    @staticmethod
+    def centre_base(cy, s_, f):
+        """The baseline that centres a line on `cy` by its letter BODY. A
+        subscript (್ರೈ ್ದಿ) hangs far below the line; centring on the full ink
+        drags the word up out of its pill. The eye centres the body: ಕ or x."""
+        ref = 'ಕ' if any('ಀ' <= ch <= '೿' for ch in s_) else 'x'
+        r, d = K.ink(ref, f)
+        return cy + (r - d) / 2
+
+    def pill(self, x, y, s_, f, h, color, fill=None, stops=None, padx=26, dot=None,
+             sheen=False):
+        """A label on a rounded fill, centred on its letter body. Returns right edge."""
+        w = self.width(s_, f) + padx * 2 + (h * 0.40 if dot else 0)
+        self.fill((x, y, x + w, y + h), h / 2, fill, stops, sheen=sheen)
         tx = x + padx
         if dot:
-            r = h * 0.13
-            self.circle(tx + r, y + h / 2, r, dot)
-            tx += h * 0.42
-        self.text(s, tx, y + h / 2 + (rise - drop) / 2, f, color)
+            r = h * 0.12
+            self.fill((tx, y + h / 2 - r, tx + 2 * r, y + h / 2 + r), r, dot)
+            tx += h * 0.40
+        self.text(s_, tx, self.centre_base(y + h / 2, s_, f), f, color)
         return x + w
 
     # images ------------------------------------------------------------------
     def paste(self, im, x, y, w=None, h=None):
+        s = self.ss
         im = im.convert('RGBA')
         if w and not h:
             h = w * im.height / im.width
         if h and not w:
             w = h * im.width / im.height
-        im = im.resize((int(w * S), int(h * S)), Image.Resampling.LANCZOS)
-        self.img.alpha_composite(im, (int(x * S), int(y * S)))
+        im = im.resize((int(round(w * s)), int(round(h * s))), Image.Resampling.LANCZOS)
+        self.img.alpha_composite(im, (int(round(x * s)), int(round(y * s))))
         return w, h
 
-    def grain(self, sigma=2.4):
-        a = np.asarray(self.img).astype(np.float32)
-        n = np.random.default_rng(2026).normal(0, sigma, a.shape[:2])
-        a[..., :3] += n[..., None]
-        self.img = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
-
-    def finish(self, mode='RGB'):
+    def finish(self, mode='RGB', grain_sigma=0.0):
         out = self.img.resize((self.w, self.h), Image.Resampling.LANCZOS)
+        if grain_sigma:
+            out = grain(out, grain_sigma)
         return out if mode == 'RGBA' else out.convert('RGB')
-
-
-def logo(variant='cutout'):
-    name = {'cutout': 'oormani_suddi_logo_cutout_bg_erased.png',
-            'circle': 'logo_clean_circle.png',
-            'card': 'logo_clean_card.png'}[variant]
-    im = Image.open(os.path.join(ROOT, 'assets', name)).convert('RGBA')
-    return im.crop(im.getbbox())
-
-
-def save(img, name, **kw):
-    os.makedirs(OUT, exist_ok=True)
-    p = os.path.join(OUT, name)
-    if p.endswith('.jpg'):
-        img.save(p, 'JPEG', quality=kw.get('q', 93), subsampling=0, optimize=True)
-    else:
-        img.save(p, optimize=True)
-    print(f'  {os.path.relpath(p, ROOT)}  {img.width}x{img.height}  '
-          f'{os.path.getsize(p) // 1024} KB')
-    return p
 
 
 # fonts: (family, size[, weight])
@@ -239,27 +259,90 @@ KNV = lambda s, w=600: ('kn_var', s, w)                # noqa: E731
 LAT = lambda s, w=600: ('latin', s, w)                 # noqa: E731
 
 
+def logo(variant='circle'):
+    name = {'cutout': 'oormani_suddi_logo_cutout_bg_erased.png',
+            'circle': 'logo_clean_circle.png'}[variant]
+    im = Image.open(os.path.join(ROOT, 'assets', name)).convert('RGBA')
+    return im.crop(im.getbbox())
+
+
+def medallion(d, glow=True):
+    """The house medallion (brand/surface.py, D128) — the same mark the posts
+    and reels carry — on ink: a warm halo, an ink bezel. (d * 1.5)² RGBA."""
+    return surface_medallion(int(round(d)), halo=0.30 if glow else 0.0, shadow=0.67,
+                             bezel=INK_DEEP)
+
+
+def ring_mask(d):
+    """The ring of medallion(d) as an L mask at the same scale and frame — the
+    path the light travels in the motion pieces."""
+    pad = d * MEDALLION_PAD
+    size = int(round(d + 2 * pad))
+    c = size / 2
+    ring_w = d * 0.045
+    m = Image.new('L', (size, size), 0)
+    dr = ImageDraw.Draw(m)
+    dr.ellipse([c - d / 2, c - d / 2, c + d / 2, c + d / 2], fill=255)
+    dr.ellipse([c - d / 2 + ring_w, c - d / 2 + ring_w, c + d / 2 - ring_w, c + d / 2 - ring_w], fill=0)
+    return m
+
+
+def place_medallion(k, cx, cy, d):
+    md = medallion(d)
+    k.paste(md, cx - md.width / 2, cy - md.height / 2, md.width, md.height)
+
+
 def play_icon(k, x, cy, h, color):
+    s = k.ss
     lay = k.lay()
     ImageDraw.Draw(lay).polygon(
-        [(x * S, (cy - h / 2) * S), ((x + h * 0.88) * S, cy * S), (x * S, (cy + h / 2) * S)],
+        [(x * s, (cy - h / 2) * s), ((x + h * 0.88) * s, cy * s), (x * s, (cy + h / 2) * s)],
         fill=color)
     k.img.alpha_composite(lay)
 
 
+def subscribe_button(k, x, cy, h=72, size=36):
+    """Metallic gold button, ink play-disc, Kannada call to action. Returns right edge."""
+    sub = 'ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ'
+    f = KN(size)
+    disc = h * 0.62
+    bw = h / 2 - disc / 2 + disc + 20 + K.width(sub, f) + 34
+    y = cy - h / 2
+    k.shadow((x, y, x + bw, y + h), h / 2, blur=18, alpha=150, dy=10)
+    k.light(x + bw / 2, cy, bw * 0.75, h * 1.6, GOLD, 0.10)
+    k.fill((x, y, x + bw, y + h), h / 2, stops=GOLD_METAL, sheen=True)
+    dx = x + (h - disc) / 2
+    k.fill((dx, cy - disc / 2, dx + disc, cy + disc / 2), disc / 2, INK)
+    play_icon(k, dx + disc * 0.38, cy, disc * 0.42, C.gold_400)
+    k.text(sub, dx + disc + 20, K.centre_base(cy, sub, f), f, INK)
+    return x + bw
+
+
+def save(img, name, **kw):
+    os.makedirs(OUT, exist_ok=True)
+    p = os.path.join(OUT, name)
+    if p.endswith('.jpg'):
+        img.save(p, 'JPEG', quality=kw.get('q', 94), subsampling=0, optimize=True)
+    else:
+        img.save(p, optimize=True)
+    print(f'  {os.path.relpath(p, ROOT)}  {img.width}x{img.height}  '
+          f'{os.path.getsize(p) // 1024} KB')
+    return p
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-#  1 · profile picture  800x800 (shown as a circle, as small as 24px)
+#  1 · profile picture  800x800 — the logo itself; YouTube crops a circle
 # ─────────────────────────────────────────────────────────────────────────────
 
 def profile():
-    k = K(800, 800, PAPER)
+    k = K(800, 800, C.paper_50)
     k.paste(logo('circle'), 0, 0, 800, 800)
     save(k.finish(), 'profile_800.png')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  2 · banner  2560x1440 · TV sees all, desktop the middle 2560x423,
-#      phones only the centre 1546x423 — everything that matters lives there
+#  2 · banner  2560x1440 · TV sees all, desktop the middle 2560x423, phones
+#      only the centre 1546x423 — everything that matters lives there
 # ─────────────────────────────────────────────────────────────────────────────
 
 SAFE = (507, 508, 2053, 931)
@@ -267,84 +350,42 @@ SAFE = (507, 508, 2053, 931)
 
 def banner(guides=False):
     W, H = 2560, 1440
-    k = K(W, H, PAPER)
-    hz = 905                                            # horizon
-    # sky: warm paper deepening toward the sunset at the horizon
-    k.vgrad(0, hz, PAPER, (252, 232, 190), 1, 1)
-    k.glow(2290, hz - 40, 1250, GOLD_HI, 0.55)
-    k.glow(2290, hz - 40, 520, GOLD, 0.55)
-    # the sun, set on the right — seen by desktop and TV, never under the copy
-    sun = Image.new('RGBA', (560 * S, 560 * S), (0, 0, 0, 0))
-    yy, xx = np.mgrid[0:560 * S, 0:560 * S]
-    t = (yy / (560 * S))[..., None]
-    col = np.array(C.gold_300) * (1 - t) + np.array(C.amber_500) * t
-    m = ((xx - 280 * S) ** 2 + (yy - 280 * S) ** 2) <= (275 * S) ** 2
-    arr = np.zeros((560 * S, 560 * S, 4), np.float32)
-    arr[..., :3] = col
-    arr[..., 3] = m * 255
-    sun = Image.fromarray(arr.astype(np.uint8), 'RGBA').filter(ImageFilter.GaussianBlur(1.2))
-    sun = sun.crop((0, 0, 560 * S, int((hz - (hz - 330)) * S)))   # sunk below the sea
-    k.img.alpha_composite(sun, (int((2290 - 280) * S), int((hz - 330) * S)))
-    # sea
-    k.vgrad(hz, H, (232, 238, 238), (214, 226, 230))
-    k.sea(hz + 4, H, color=SEA, a=0.30, n=18)
-    k.reflection(2290, hz + 14, hz + 260, GOLD, 0.85, 11, 520)
-    # horizon hairline
-    k.rrect((0, hz - 1.5, W, hz + 1.5), 0, (*INK, 90))
+    cy = (SAFE[1] + SAFE[3]) / 2
+    d = 392                                           # medallion fits the strip
+    mx = SAFE[0] + 40 + d / 2 + 10
+    bg = ink_scene(W, H, light=(mx, cy + 40, 1150, 760), sea=(W * 0.92, H * 0.15, 1100, 800))
+    k = K(W, H, bg)
+    place_medallion(k, mx, cy, d)
 
-    # the logo's red speed strokes run in from the left edge toward the mark
-    k.speed(150, 520, 660, n=6, gap=30)
-
-    # the mark — on paper the cutout is native: its black type needs the light
-    lg = logo('cutout')
-    lh = 405
-    lw, _ = k.paste(lg, 540, SAFE[1] + 10, h=lh)
-
-    # copy block, inside the phone-safe area
-    x = 540 + lw + 64
-    maxw = SAFE[2] - 20 - x
-    y = 538
-    k.pill(x, y, Brand.coverage + '  •  ಕನ್ನಡ', KNV(32, 650), INK, C.paper_0, h=52)
+    x = mx + d / 2 + 84
+    maxw = SAFE[2] - 24 - x
     head = 'ಕರಾವಳಿಯ ಊರಿನ ಸುದ್ದಿ'
-    hs = 100
+    hs = 104
     while K.width(head, KN(hs)) > maxw and hs > 60:
         hs -= 2
     rise, drop = K.ink(head, KN(hs))
-    k.text(head, x - 4, y + 52 + 28 + rise, KN(hs), INK)
-    base2 = y + 52 + 28 + rise + drop + 58
-    topics = 'ಹಬ್ಬ  •  ಜಾತ್ರೆ  •  ಕಂಬಳ  •  ಯಕ್ಷಗಾನ  •  ಊರಿನ ಆಗುಹೋಗು'
-    ts = 42
-    while K.width(topics, KNV(ts, 560)) > maxw and ts > 28:
-        ts -= 1
-    k.text(topics, x, base2, KNV(ts, 560), INK2)
-    # subscribe: gold is the brand's fill, so the call to action wears it
-    by = base2 + 30
-    bh = 68
-    sub = 'ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ'
-    bw = K.width(sub, KN(36)) + 116
-    k.shadow((x, by, x + bw, by + bh), bh / 2, blur=14, alpha=55, dy=6)
-    k.rrect((x, by, x + bw, by + bh), bh / 2, GOLD)
-    k.circle(x + 40, by + bh / 2, 22, INK)
-    play_icon(k, x + 33, by + bh / 2, 20, GOLD)
-    r, dp = K.ink(sub, KN(36))
-    k.text(sub, x + 78, by + bh / 2 + (r - dp) / 2, KN(36), INK)
-    k.text(Brand.handle, x + bw + 28, by + bh / 2 + 13, LAT(36, 600), INK2)
-    k.grain(1.6)
-    img = k.finish()
-    save(img, 'banner_2560x1440.jpg', q=94)
+    ph, bh, gap = 54, 74, 40
+    block = ph + gap + rise + drop + gap + bh
+    y = cy - block / 2
+    k.pill(x, y, Brand.coverage + '  •  ಕನ್ನಡ', KNV(31, 640), ph, TEXT,
+           fill=(255, 255, 255, 26))
+    hb = y + ph + gap + rise
+    k.text(head, x - 4, hb, KN(hs), TEXT, shadow=(0, 8, 18, (*INK_DEEP, 200)))
+    bcy = hb + drop + gap + bh / 2
+    right = subscribe_button(k, x, bcy, bh, 36)
+    k.text(Brand.handle, right + 32, K.centre_base(bcy, 'x', LAT(36, 560)),
+           LAT(36, 560), TEXT_2)
+    img = k.finish(grain_sigma=1.6)
+    save(img, 'banner_2560x1440.jpg')
     if guides:
         g = img.copy().convert('RGBA')
-        lay = Image.new('RGBA', g.size, (0, 0, 0, 0))
-        dr = ImageDraw.Draw(lay)
-        dr.rectangle([0, 508, W, 931], outline=(30, 120, 255, 255), width=4)
-        dr.rectangle(SAFE, outline=(255, 30, 120, 255), width=5)
-        dr.rectangle([0, 0, W - 1, H - 1], outline=(0, 0, 0, 255), width=4)
-        g.alpha_composite(lay)
+        dr = ImageDraw.Draw(g)
+        dr.rectangle([0, 508, W, 931], outline=(80, 160, 255), width=4)
+        dr.rectangle(SAFE, outline=(255, 60, 140), width=5)
         f = font('latin', 34, 700)
-        d = ImageDraw.Draw(g)
-        d.text((20, 470), 'DESKTOP 2560x423', font=f, fill=(30, 120, 255))
-        d.text((SAFE[0] + 10, SAFE[3] + 12), 'PHONE / SAFE 1546x423', font=f, fill=(255, 30, 120))
-        d.text((20, 20), 'TV 2560x1440', font=f, fill=(0, 0, 0))
+        dr.text((20, 466), 'DESKTOP 2560x423', font=f, fill=(80, 160, 255))
+        dr.text((SAFE[0] + 10, SAFE[3] + 12), 'PHONE / SAFE 1546x423', font=f, fill=(255, 60, 140))
+        dr.text((20, 20), 'TV 2560x1440', font=f, fill=(255, 255, 255))
         save(g.convert('RGB'), '_check_banner_safe_areas.jpg', q=85)
 
 
@@ -353,7 +394,7 @@ def banner(guides=False):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def watermark():
-    k = K(150, 150, (0, 0, 0, 0))
+    k = K(150, 150)
     k.paste(logo('circle'), 0, 0, 150, 150)
     save(k.finish('RGBA'), 'watermark_150.png')
 
@@ -365,65 +406,77 @@ def watermark():
 def thumbnail(photo, title, place, tag=None, focal=(0.5, 0.35), out=None,
               highlight_last=True):
     W, H = 1280, 720
-    k = K(W, H, INK)
-    px = 455                                            # photo starts here
+    px = 455                                           # the photograph starts here
+    bg = ink_scene(W, H, light=(170, 380, 620, 520))
+    k = K(W, H, bg)
     ph = Image.open(photo).convert('RGB')
-    ph = house_grade(cover(ph, (W - px) * S, H * S, focal), strength=0.8)
-    k.img.alpha_composite(ph.convert('RGBA'), (px * S, 0))
-    # dissolve the picture into the ink panel, and settle the floor
-    k.hscrim(px, px + 300, INK, 1.0, 0.0)
-    lay = K(W, H, (0, 0, 0, 0))
-    lay.vgrad(H - 200, H, INK, INK, 0.0, 0.55)
-    k.img.alpha_composite(lay.img)
-    k.glow(140, 330, 520, GOLD, 0.10)
+    ph = house_grade(cover(ph, (W - px) * S, H * S, focal), strength=0.85)
+    ph = vignette(ph.convert('RGBA'), 0.30)
+    # dissolve the photograph into the ink — smoothstep, the join cannot be found
+    u = np.linspace(0, 1, 320 * S)
+    t = u * u * (3 - 2 * u)
+    al = np.ones((ph.height, ph.width), np.float32)
+    al[:, :320 * S] = t[None, :]
+    ph.putalpha(Image.fromarray((al * 255).astype(np.uint8), 'L'))
+    k.img.alpha_composite(ph, (px * S, 0))
 
-    x, top = 52, 52
-    xe = k.pill(x, top, place, KN(34), RED, C.paper_0, h=60)
+    x, top = 56, 56
+    ph_h = 62
+    xe = k.pill(x, top, place, KN(34), ph_h, C.paper_0, stops=RED_METAL, padx=24)
     if tag:
-        k.pill(xe + 14, top, tag, KN(34), C.paper_0, RED, h=60, dot=RED)
+        k.pill(xe + 14, top, tag, KN(34), ph_h, RED, fill=C.paper_0, dot=RED, padx=22)
 
-    # title: 2–3 lines, as large as fits; the last line on a gold fill
+    # title: 1–3 lines, as large as fits, centred on the real ink between
+    # the place pill and the mark, the last line on metallic gold
     words = title.split()
-    maxw, area = 640, (top + 60 + 40, H - 190)
-    best = None
-    for size in range(132, 70, -4):
+    pad, gap, maxw = 20, 36, 640
+    area = (top + ph_h + gap, H - 168 - gap)
+
+    def plan(size):
         f = KN(size)
         lines, cur = [], ''
         for w in words:
-            t = (cur + ' ' + w).strip()
-            if K.width(t, f) <= maxw or not cur:
-                cur = t
+            t_ = (cur + ' ' + w).strip()
+            if K.width(t_, f) <= maxw or not cur:
+                cur = t_
             else:
                 lines.append(cur)
                 cur = w
         lines.append(cur)
-        lh = size * 1.30
+        lh = size * 1.22
+        boxed = highlight_last and len(lines) > 1
+        top_ = -K.ink(lines[0], f)[0]
+        bot_ = (len(lines) - 1) * lh + K.ink(lines[-1], f)[1] + (pad if boxed else 0)
+        return f, lines, lh, boxed, top_, bot_
+
+    for size in range(136, 60, -4):
+        f, lines, lh, boxed, top_, bot_ = plan(size)
         if len(lines) <= 3 and max(K.width(l, f) for l in lines) <= maxw + 40 \
-                and lh * len(lines) <= area[1] - area[0]:
-            best = (size, lines, lh)
+                and bot_ - top_ <= area[1] - area[0]:
             break
-    size, lines, lh = best or (72, [title], 94)
-    f = KN(size)
-    block = lh * len(lines)
-    y = area[0] + (area[1] - area[0] - block) / 2
+    y0 = (area[0] + area[1]) / 2 - (top_ + bot_) / 2
+    k.light(x + 260, y0 + (top_ + bot_) / 2, 420, 260, GOLD, 0.10)
     for i, line in enumerate(lines):
         rise, drop = K.ink(line, f)
-        base = y + i * lh + size * 0.98
-        if highlight_last and i == len(lines) - 1 and len(lines) > 1:
+        base = y0 + i * lh
+        if boxed and i == len(lines) - 1:
             lw_ = K.width(line, f)
-            k.rrect((x - 14, base - size * 0.86, x + lw_ + 18, base + size * 0.30), 10, GOLD)
-            k.text(line, x, base, f, INK)
+            box = (x, base - rise - pad, x + lw_ + 2 * pad, base + drop + pad)
+            k.shadow(box, 14, blur=16, alpha=160, dy=10)
+            k.fill(box, 14, stops=GOLD_METAL, sheen=True)
+            k.text(line, x + pad, base, f, INK)
         else:
-            k.text(line, x, base, f, C.paper_0, stroke=3, stroke_fill=INK,
-                   shadow=(0, 6, 10, (*C.ink_950, 200)))
+            k.text(line, x, base, f, C.paper_0, shadow=(0, 6, 14, (*INK_DEEP, 230)))
 
     # the mark, bottom-left — bottom-right is YouTube's duration badge
-    k.paste(logo('circle'), x - 6, H - 160, 128, 128)
-    k.text(Brand.handle, x + 136, H - 82, LAT(30, 650), C.paper_100)
-    img = k.finish()
+    d = 116
+    place_medallion(k, x + d / 2, H - 56 - d / 2, d)
+    k.text(Brand.handle, x + d + 20, K.centre_base(H - 56 - d / 2, 'x', LAT(30, 600)),
+           LAT(30, 600), C.paper_100)
+    img = k.finish(grain_sigma=1.2)
     out = out or os.path.join(OUT, 'thumbnail.jpg')
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
-    q = 92
+    q = 93
     while True:
         img.save(out, 'JPEG', quality=q, subsampling=0, optimize=True)
         if os.path.getsize(out) < 1_900_000 or q < 60:
@@ -434,44 +487,52 @@ def thumbnail(photo, title, place, tag=None, focal=(0.5, 0.35), out=None,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  5 · end screen  1920x1080 — the last 5–20 s of every long video
+#  5 · end screen  1920x1080 — the last 20 s of every long video
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Where to drop the elements in Studio > End screen (delivery pixels).
-END_SLOTS = {'video_1': (150, 300, 900, 722), 'video_2': (1020, 300, 1770, 722),
-             'subscribe': (960, 880, 118)}
+END_SLOTS = {'video_1': (150, 292, 900, 714), 'video_2': (1020, 292, 1770, 714),
+             'subscribe': (960, 880, 112)}
+END_HEAD = 'ಮುಂದೆ ಇದನ್ನೂ ನೋಡಿ'
 
 
-def _paper_scene(k, hz):
-    W, H = k.w, k.h
-    k.vgrad(0, hz, PAPER, (250, 236, 204))
-    k.glow(W / 2, hz, W * 0.62, GOLD_HI, 0.45)
-    k.vgrad(hz, H, (232, 238, 238), (214, 226, 230))
-    k.sea(hz + 3, H, a=0.28, n=12)
-    k.rrect((0, hz - 1, W, hz + 1), 0, (*INK, 80))
+def end_scene():
+    W, H = 1920, 1080
+    return ink_scene(W, H, light=(W / 2, 940, 1100, 520), sea=(W * 0.05, 0, 900, 700))
+
+
+def end_layers():
+    """The end screen as separate layers, so the still and the motion piece
+    are the same picture: (background, heading, [card, card], medallion+labels)."""
+    W, H = 1920, 1080
+    head = K(W, H)
+    head.text(END_HEAD, W / 2, 196, KN(72), TEXT, anchor='ms',
+              shadow=(0, 6, 16, (*INK_DEEP, 220)))
+    cards = []
+    for key in ('video_1', 'video_2'):
+        x0, y0, x1, y1 = END_SLOTS[key]
+        c = K(W, H)
+        c.shadow((x0, y0, x1, y1), 22, blur=30, alpha=190, dy=18)
+        # a raised panel, lit from above — no rim, no outline
+        c.fill((x0, y0, x1, y1), 22, stops=[(0, C.ink_700), (1, C.ink_850)])
+        play_icon(c, (x0 + x1) / 2 - 24, (y0 + y1) / 2, 56, (*C.paper_0, 60))
+        cards.append(c)
+    cx, cy, r = END_SLOTS['subscribe']
+    m = K(W, H)
+    place_medallion(m, cx, cy, 2 * r / 0.9)            # the logo disc ≈ the element
+    lab = 'ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ'
+    m.text(lab, cx - r - 58, K.centre_base(cy, lab, KN(44)), KN(44), TEXT, anchor='rs')
+    m.text(Brand.handle, cx + r + 58, K.centre_base(cy, 'ಕ', KN(44)), LAT(38, 600), TEXT_2,
+           anchor='ls')
+    return end_scene(), head, cards, m
 
 
 def end_screen(guides=False):
-    W, H = 1920, 1080
-    k = K(W, H, PAPER)
-    _paper_scene(k, 760)
-    k.reflection(W / 2, 772, 1040, GOLD, 0.6, 9, 640)
-    head = 'ಮುಂದೆ ಇದನ್ನೂ ನೋಡಿ'
-    k.text(head, W / 2, 200, KN(76), INK, anchor='ms')
-    k.rrect((W / 2 - 60, 228, W / 2 + 60, 236), 4, GOLD)
-    for key in ('video_1', 'video_2'):
-        x0, y0, x1, y1 = END_SLOTS[key]
-        k.shadow((x0, y0, x1, y1), 18, blur=22, alpha=70, dy=12)
-        k.rrect((x0 - 8, y0 - 8, x1 + 8, y1 + 8), 24, C.paper_0)
-        k.rrect((x0, y0, x1, y1), 16, C.ink_800)
-        play_icon(k, (x0 + x1) / 2 - 26, (y0 + y1) / 2, 60, (*C.paper_0, 90))
-    cx, cy, r = END_SLOTS['subscribe']
-    k.circle(cx, cy, r + 12, GOLD)
-    k.circle(cx, cy, r + 4, C.paper_0)
-    k.paste(logo('circle'), cx - r, cy - r, 2 * r, 2 * r)
-    k.text('ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ', cx - r - 40, cy + 16, KN(46), INK, anchor='rs')
-    k.text(Brand.handle, cx + r + 40, cy + 14, LAT(40, 650), INK2, anchor='ls')
-    img = k.finish()
+    bg, head, cards, m = end_layers()
+    k = K(1920, 1080, bg)
+    for lay in (head, *cards, m):
+        k.img.alpha_composite(lay.img)
+    img = k.finish(grain_sigma=1.2)
     save(img, 'endscreen_1920x1080.png')
     if guides:
         g = img.copy()
@@ -479,43 +540,258 @@ def end_screen(guides=False):
         f = font('latin', 30, 700)
         for key, v in END_SLOTS.items():
             if len(v) == 4:
-                d.rectangle(v, outline=(255, 30, 120), width=4)
-                d.text((v[0] + 14, v[1] + 10), key.upper() + ' element', font=f, fill=(255, 30, 120))
+                d.rectangle(v, outline=(255, 60, 140), width=4)
+                d.text((v[0] + 14, v[1] + 10), key.upper() + ' element', font=f, fill=(255, 60, 140))
             else:
                 d.ellipse([v[0] - v[2], v[1] - v[2], v[0] + v[2], v[1] + v[2]],
-                          outline=(255, 30, 120), width=4)
+                          outline=(255, 60, 140), width=4)
         save(g, '_check_endscreen_slots.jpg', q=85)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  6 · live-stream cards  1920x1080 and an overlay for OBS / Streamyard
+#  6 · live-stream cards  1920x1080, and an overlay for the streaming app
 # ─────────────────────────────────────────────────────────────────────────────
 
-def live_card(name, line1, line2):
+LIVE = 'ನೇರಪ್ರಸಾರ'
+LIVE_CARDS = {
+    'live_starting_soon': ('ನೇರಪ್ರಸಾರ ಸ್ವಲ್ಪ ಹೊತ್ತಿನಲ್ಲೇ ಆರಂಭ', Brand.tagline),
+    'live_be_right_back': ('ಸ್ವಲ್ಪ ಹೊತ್ತಿನಲ್ಲೇ ಮರಳುತ್ತೇವೆ', Brand.tagline),
+    'live_thank_you': ('ವೀಕ್ಷಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದ', 'ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ  •  ' + Brand.handle),
+}
+CARD_MED = (960, 425, 470)                             # cx, cy, d
+
+
+def card_scene():
+    return ink_scene(1920, 1080, light=(960, 400, 1000, 700), sea=(1920, 1080, 1000, 700))
+
+
+def card_text_layer(line1, line2, with_pill=True):
     W, H = 1920, 1080
-    k = K(W, H, PAPER)
-    _paper_scene(k, 820)
-    k.reflection(W / 2, 832, 1060, GOLD, 0.7, 8, 560)
-    k.glow(W / 2, 400, 420, GOLD_HI, 0.35)
-    k.paste(logo('cutout'), W / 2 - 245, 110, h=450)
-    k.text(line1, W / 2, 692, KN(82), INK, anchor='ms')
-    w = K.width(line2, KNV(42, 560))
-    k.text(line2, W / 2, 776, KNV(42, 560), INK2, anchor='ms')
-    k.rrect((W / 2 - w / 2, 802, W / 2 + w / 2, 806), 2, (*GOLD, 255))
-    k.pill(W - 52 - K.width('ನೇರಪ್ರಸಾರ', KN(34)) - 44 - 25, 52, 'ನೇರಪ್ರಸಾರ',
-           KN(34), RED, C.paper_0, h=60, dot=C.paper_0)
-    save(k.finish(), name)
+    k = K(W, H)
+    k.text(line1, W / 2, 822, KN(80), TEXT, anchor='ms', shadow=(0, 8, 18, (*INK_DEEP, 220)))
+    f2 = KNV(40, 560) if any('ಀ' <= ch <= '೿' for ch in line2) else LAT(38, 560)
+    k.text(line2, W / 2, 898, f2, TEXT_2, anchor='ms')
+    if with_pill:
+        w = K.width(LIVE, KN(32)) + 2 * 24 + 60 * 0.40
+        k.pill(W - 56 - w, 56, LIVE, KN(32), 60, C.paper_0, stops=RED_METAL, padx=24,
+               dot=C.paper_0)
+    return k
+
+
+def live_card(name, line1, line2):
+    k = K(1920, 1080, card_scene())
+    place_medallion(k, *CARD_MED)
+    k.img.alpha_composite(card_text_layer(line1, line2).img)
+    save(k.finish(grain_sigma=1.2), name + '_1920x1080.png')
 
 
 def live_overlay():
-    """Transparent 1920x1080 for the streaming app: the mark and the live pill,
-    top-left, clear of everything YouTube draws over a stream."""
-    W, H = 1920, 1080
-    k = K(W, H, (0, 0, 0, 0))
-    k.shadow((44, 44, 44 + 132, 44 + 132), 66, blur=10, alpha=90, dy=4)
-    k.paste(logo('circle'), 44, 44, 132, 132)
-    k.pill(196, 80, 'ನೇರಪ್ರಸಾರ', KN(32), RED, C.paper_0, h=58, dot=C.paper_0)
+    """Transparent 1920x1080: the medallion and the live pill, top-left, clear
+    of everything YouTube draws over a stream."""
+    k = K(1920, 1080)
+    d = 132
+    place_medallion(k, 48 + d / 2, 48 + d / 2, d)
+    k.pill(48 + d + 18, 48 + d / 2 - 30, LIVE, KN(32), 60, C.paper_0, stops=RED_METAL,
+           padx=22, dot=C.paper_0)
     save(k.finish('RGBA'), 'live_overlay_1920x1080.png')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  7 · motion — channel intro, end screen, live loop  (1920x1080, 30 fps)
+# ─────────────────────────────────────────────────────────────────────────────
+
+FPS = 30
+
+
+def ease_out(t, p=4):
+    t = min(1.0, max(0.0, t))
+    return 1 - (1 - t) ** p
+
+
+def ease_in_out(t):
+    t = min(1.0, max(0.0, t))
+    return t * t * t * (t * (t * 6 - 15) + 10)            # smootherstep
+
+
+def span(t, a, b):
+    return min(1.0, max(0.0, (t - a) / (b - a)))
+
+
+def put(frame, layer, cx, cy, scale=1.0, alpha=1.0, dy=0.0):
+    """Composite `layer` centred on (cx, cy + dy) at `scale`, sub-pixel exact."""
+    if alpha <= 0.002:
+        return
+    w, h = layer.size
+    sw, sh = w * scale, h * scale
+    x0, y0 = math.floor(cx - sw / 2), math.floor(cy + dy - sh / 2)
+    ow, oh = int(math.ceil(sw)) + 2, int(math.ceil(sh)) + 2
+    inv = 1 / scale
+    ox = (x0 - (cx - sw / 2)) * inv
+    oy = (y0 - (cy + dy - sh / 2)) * inv
+    t = layer.transform((ow, oh), Image.Transform.AFFINE, (inv, 0, ox, 0, inv, oy),
+                        resample=Image.Resampling.BICUBIC)
+    if alpha < 0.998:
+        a = t.getchannel('A').point(lambda v: int(v * alpha))
+        t.putalpha(a)
+    frame.alpha_composite(t, (x0, y0))
+
+
+def sheen(mask, phase, width=0.16, strength=0.85):
+    """A band of light travelling diagonally across `mask` — a glint on metal.
+    phase 0..1 carries it from top-left to bottom-right."""
+    w, h = mask.size
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    u = (xx / w + yy / h) / 2                              # 0 top-left .. 1 bottom-right
+    centre = -0.2 + 1.4 * phase
+    band = np.exp(-((u - centre) / width) ** 2) * strength
+    al = band * np.asarray(mask, np.float32)
+    lay = Image.new('RGBA', (w, h), (255, 244, 214, 0))
+    lay.putalpha(Image.fromarray(np.clip(al, 0, 255).astype(np.uint8), 'L'))
+    return lay
+
+
+class Encoder:
+    def __init__(self, path, w=1920, h=1080, audio=None, dur=None):
+        self.path = path
+        cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
+               '-s', f'{w}x{h}', '-r', str(FPS), '-i', '-']
+        if audio:
+            cmd += audio
+        cmd += ['-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-pix_fmt', 'yuv420p',
+                '-profile:v', 'high', '-movflags', '+faststart']
+        if audio:
+            cmd += ['-c:a', 'aac', '-b:a', '192k', '-ar', '48000']
+        if dur:
+            cmd += ['-t', f'{dur:.3f}']
+        cmd += [path]
+        self.p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+
+    def write(self, img):
+        # grain that moves, as film does — a fixed pattern reads as a dirty screen
+        self.n = getattr(self, 'n', 0) + 1
+        self.p.stdin.write(grain(img.convert('RGB'), 1.1, seed=self.n).tobytes())
+
+    def close(self):
+        self.p.stdin.close()
+        self.p.wait()
+        print(f'  {os.path.relpath(self.path, ROOT)}  {os.path.getsize(self.path) // 1024} KB')
+
+
+def sfx(*cues):
+    """ffmpeg audio inputs + mix for (file, start_s, gain_db) cues — the
+    house's own sound effects, cleared in assets/LICENCES.json."""
+    args, labels = [], []
+    for i, (f, at, db) in enumerate(cues):
+        args += ['-i', os.path.join(ROOT, 'assets', 'sfx', f)]
+        ms = int(at * 1000)
+        labels.append(f'[{i + 1}:a]adelay={ms}|{ms},volume={db}dB[a{i}]')
+    mix = ';'.join(labels) + ';' + ''.join(f'[a{i}]' for i in range(len(cues))) + \
+        f'amix=inputs={len(cues)}:normalize=0,alimiter=limit=0.89[aout]'
+    return args + ['-filter_complex', mix, '-map', '0:v', '-map', '[aout]']
+
+
+def intro():
+    """4 s channel intro: light rises, the medallion arrives, a glint runs
+    round the ring, the name settles, a breath, out."""
+    W, H, dur = 1920, 1080, 4.0
+    bg = ink_scene(W, H, light=(W / 2, 470, 1000, 720), sea=(W, H, 1100, 760)).convert('RGBA')
+    dark = Image.new('RGBA', (W, H), (*INK_DEEP, 255))
+    d = 440
+    med = medallion(d)
+    mask = ring_mask(d).resize(med.size, Image.Resampling.LANCZOS)
+    name = K(W, H)
+    name.text(Brand.name, W / 2, 0 + 128, KN(112), TEXT, anchor='ms',
+              shadow=(0, 8, 20, (*INK_DEEP, 230)))
+    name_l = name.finish('RGBA').crop((0, 0, W, 190))
+    tag = K(W, 120)
+    tag.text(Brand.tagline, W / 2, 70, KNV(44, 560), TEXT_2, anchor='ms')
+    tag_l = tag.finish('RGBA')
+    cy_med = 430
+    enc = Encoder(os.path.join(OUT, 'motion_intro_1920x1080.mp4'),
+                  audio=sfx(('whoosh.wav', 0.15, -6), ('open.wav', 0.85, -4)), dur=dur)
+    for i in range(int(dur * FPS)):
+        t = i / FPS
+        fr = Image.blend(dark, bg, ease_in_out(span(t, 0.0, 0.9)))
+        a_m = ease_out(span(t, 0.25, 1.15), 3)
+        put(fr, med, W / 2, cy_med, 0.86 + 0.14 * ease_out(span(t, 0.25, 1.45), 4), a_m)
+        g = span(t, 1.05, 2.05)
+        if 0 < g < 1:
+            gl = sheen(mask, ease_in_out(g))
+            put(fr, gl, W / 2, cy_med, 1.0, math.sin(math.pi * g))
+        put(fr, name_l, W / 2, 790 - 128 + name_l.height / 2,
+            1.0, ease_out(span(t, 1.15, 1.95), 3), dy=26 * (1 - ease_out(span(t, 1.15, 2.1), 4)))
+        put(fr, tag_l, W / 2, 870, 1.0, ease_out(span(t, 1.5, 2.3), 3),
+            dy=18 * (1 - ease_out(span(t, 1.5, 2.45), 4)))
+        out = span(t, 3.45, 4.0)
+        if out > 0:
+            fr = Image.blend(fr, dark, ease_in_out(out))
+        enc.write(fr)
+    enc.close()
+
+
+def end_motion():
+    """20 s end screen: the same picture as the still, built in over the first
+    second, then a slow breathing light so it never looks frozen. Every element
+    is in its final place by 1.2 s — YouTube's end-screen boxes sit on top."""
+    W, H, dur = 1920, 1080, 20.0
+    bg, head, cards, m = end_layers()
+    bg = bg.convert('RGBA')
+    lit = bg.copy()
+    lit.alpha_composite(glow_layer(W, H, W / 2, 940, 900, 420, GOLD, 0.10, 1.8))
+    head_l = head.finish('RGBA')
+    card_l = [c.finish('RGBA') for c in cards]
+    m_l = m.finish('RGBA')
+    enc = Encoder(os.path.join(OUT, 'motion_endscreen_1920x1080.mp4'),
+                  audio=sfx(('whoosh.wav', 0.0, -12)), dur=dur)
+    for i in range(int(dur * FPS)):
+        t = i / FPS
+        breath = 0.5 - 0.5 * math.cos(2 * math.pi * t / 8.0)
+        fr = Image.blend(bg, lit, breath)
+        put(fr, head_l, W / 2, H / 2, 1.0, ease_out(span(t, 0.0, 0.6), 3),
+            dy=-14 * (1 - ease_out(span(t, 0.0, 0.7), 4)))
+        for j, cl in enumerate(card_l):
+            a0 = 0.12 + j * 0.12
+            put(fr, cl, W / 2, H / 2, 1.0, ease_out(span(t, a0, a0 + 0.6), 3),
+                dy=30 * (1 - ease_out(span(t, a0, a0 + 0.8), 4)))
+        put(fr, m_l, W / 2, H / 2, 1.0, ease_out(span(t, 0.4, 1.0), 3),
+            dy=22 * (1 - ease_out(span(t, 0.4, 1.2), 4)))
+        enc.write(fr)
+    enc.close()
+
+
+def live_loop():
+    """10 s seamless loop for before a stream: the light breathes, a glint
+    runs round the ring once, the live dot pulses. Frame 0 = frame 300."""
+    W, H, dur = 1920, 1080, 10.0
+    line1, line2 = LIVE_CARDS['live_starting_soon']
+    bg = card_scene().convert('RGBA')
+    lit = bg.copy()
+    lit.alpha_composite(glow_layer(W, H, 960, 400, 760, 560, GOLD, 0.12, 1.8))
+    cx, cy, d = CARD_MED
+    med = medallion(d)
+    mask = ring_mask(d).resize(med.size, Image.Resampling.LANCZOS)
+    txt = card_text_layer(line1, line2).finish('RGBA')
+    w_p = K.width(LIVE, KN(32)) + 2 * 24 + 60 * 0.40
+    dot_x, dot_y, dot_r = W - 56 - w_p + 24 + 60 * 0.12, 56 + 30, 60 * 0.12
+    red_dot = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+    ImageDraw.Draw(red_dot).ellipse([2, 2, 61, 61], fill=(*C.red_500, 255))
+    red_dot = red_dot.resize((int(dot_r * 2 + 3), int(dot_r * 2 + 3)), Image.Resampling.LANCZOS)
+    enc = Encoder(os.path.join(OUT, 'motion_live_starting_soon_loop_1920x1080.mp4'), dur=dur)
+    for i in range(int(dur * FPS)):
+        t = i / FPS
+        breath = 0.5 - 0.5 * math.cos(2 * math.pi * t / dur)
+        fr = Image.blend(bg, lit, breath)
+        put(fr, med, cx, cy, 1.0 + 0.012 * breath)
+        g = span(t, 3.0, 4.6)
+        if 0 < g < 1:
+            put(fr, sheen(mask, ease_in_out(g)), cx, cy, 1.0 + 0.012 * breath,
+                math.sin(math.pi * g))
+        fr.alpha_composite(txt)
+        # the live dot breathes: covered by the pill's red, then uncovered
+        pulse = 0.5 - 0.5 * math.cos(2 * math.pi * t / 1.25)
+        put(fr, red_dot, dot_x + dot_r, dot_y, 1.0, 0.9 * pulse)
+        enc.write(fr)
+    enc.close()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -524,28 +800,28 @@ SAMPLE = os.path.join(ROOT, 'Ganapathi Video', 'output',
                       'Ganapathi_Seneshwara_Photo_Retouched.jpg')
 
 
-def build_all():
+def build_all(still=False):
     print('ಊರ್ಮನಿ ಸುದ್ದಿ YouTube kit ->', os.path.relpath(OUT, ROOT))
     profile()
     banner(guides=True)
     watermark()
     end_screen(guides=True)
-    live_card('live_starting_soon_1920x1080.png',
-              'ನೇರಪ್ರಸಾರ ಸ್ವಲ್ಪ ಹೊತ್ತಿನಲ್ಲೇ ಆರಂಭ', Brand.tagline)
-    live_card('live_be_right_back_1920x1080.png',
-              'ಸ್ವಲ್ಪ ಹೊತ್ತಿನಲ್ಲೇ ಮರಳುತ್ತೇವೆ', Brand.tagline)
-    live_card('live_thank_you_1920x1080.png',
-              'ವೀಕ್ಷಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದ', 'ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ  •  ' + Brand.handle)
+    for name, (l1, l2) in LIVE_CARDS.items():
+        live_card(name, l1, l2)
     live_overlay()
     if os.path.exists(SAMPLE):
-        thumbnail(SAMPLE, 'ಸೇನೇಶ್ವರ ಗಣಪತಿ ಪ್ರತಿಷ್ಠಾಪನೆ', 'ಬೈಂದೂರು',
-                  focal=(0.45, 0.30),
+        thumbnail(SAMPLE, 'ಸೇನೇಶ್ವರ ಗಣಪತಿ ಪ್ರತಿಷ್ಠಾಪನೆ', 'ಬೈಂದೂರು', focal=(0.45, 0.30),
                   out=os.path.join(OUT, 'thumbnail_sample_seneshwara.jpg'))
+    if not still:
+        intro()
+        end_motion()
+        live_loop()
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--still', action='store_true', help='skip the motion pieces')
     sub = ap.add_subparsers(dest='cmd')
     t = sub.add_parser('thumb', help='one video thumbnail from a real frame')
     t.add_argument('--photo', required=True)
@@ -561,7 +837,7 @@ def main(argv=None):
         thumbnail(a.photo, a.title, a.place, a.tag, tuple(a.focal), a.out,
                   highlight_last=not a.no_highlight)
     else:
-        build_all()
+        build_all(a.still)
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **90/127** decisions are named by at least one test
+- **91/128** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -576,4 +576,9 @@ those carry a reason rather than a test.
 ## D127 · render --out stays inside the workspace
 
 - **Tested by:** `tests/test_animate.py`, `tests/test_dispatch.py`, `tests/test_render_cli.py`
+
+## D128 · Luxury: paper to read, ink to watch, and no lines anywhere
+
+- **Tested by:** `tests/test_animate.py`, `tests/test_luxury.py`
+- Enforced in: `brand/animate.py`, `brand/legibility.py`, `brand/ornament.py`, `brand/paper.py`, `brand/reel_news.py`, `brand/speednews.py`, `brand/surface.py`, `scripts/youtube_kit.py`, `templates/greeting.py`, `templates/mukhya.py`, `templates/saara.py`
 

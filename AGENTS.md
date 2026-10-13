@@ -129,13 +129,17 @@ already exist (`python3 render.py --describe`).
      banners or number plates; never an identifiable face standing in for a
      real, named person. `nature: "ai"`.
    - There is no stock library. Do not scrape pictures off the web.
-3. **Paper & Red (D92, [`STANDARDS.md`](STANDARDS.md)).** Light paper, ink
-   type, the logo's exact colours from `tokens.C`. Red is the news — kicker,
-   ಬ್ರೇಕಿಂಗ್, the half of a headline after its colon. Sunset gold is the brand —
-   a fill or a rule, never small type (`gold_800` when gold must be text).
-   Crime and death headlines are ink only. Left-aligned, square corners. A
-   festival **greeting** is its own genre with its own look
-   (`templates/greeting.py`, D54).
+3. **Paper & Red, made luxury (D92, D128, [`STANDARDS.md`](STANDARDS.md)).**
+   Paper to read, ink to watch: the carousels are warm paper with ink type;
+   ಸ್ಪೀಡ್ ನ್ಯೂಸ್, footage reels and YouTube are deep ink with paper type and
+   warm gold light. The logo's exact colours from `tokens.C`. Red is the
+   news — kicker, ಬ್ರೇಕಿಂಗ್, the half of a headline after its colon
+   (`red_400` on ink). Sunset gold is the brand — a fill, never small type on
+   paper (`gold_800` when gold must be text there). The house mark is the gold
+   medallion (`surface.medallion`). **No decorative lines, anywhere** — no
+   rules, hairlines, stripes, streaks or underlines. Crime and death headlines
+   are ink only (paper only, on ink). Left-aligned. A festival **greeting** is
+   its own genre with its own look (`templates/greeting.py`, D54).
 4. **Crime copy states allegations, never verdicts.** Enforced by
    `Story.validate()` (D29–D30), in every category (D109). The `headline` and `reel_line` are checked
    **on their own** — each travels without the rest of the story, so each

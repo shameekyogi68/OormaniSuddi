@@ -215,6 +215,52 @@ def _tag(text: str, f_size: int, bg, fg, pad_x: int = 18, h: int | None = None,
     return _tile(w, h, draw)
 
 
+_GROUND: dict = {}
+
+
+def ink_ground(W: int, H: int) -> Image.Image:
+    """The reel's page (D128): ink deepening toward the foot, a little warm
+    gold light low in the frame behind the type. A reel is watched, and
+    Instagram sets its own caption, name and audio in white over the bottom
+    of it — on paper that white is lost; on ink it reads."""
+    key = (W, H)
+    if key not in _GROUND:
+        t = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
+        a = np.array(C.ink_850, np.float32) * (1 - t) + np.array(C.ink_950, np.float32) * t
+        a = np.repeat(a, W, axis=1)
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        d = np.sqrt(((xx - W * 0.3) / (W * 0.9)) ** 2 + ((yy - H * 0.78) / (H * 0.32)) ** 2)
+        g = np.clip(1 - d, 0, 1) ** 1.8 * 0.13
+        a = a * (1 - g[..., None]) + np.array(C.gold_600, np.float32) * g[..., None]
+        a += np.random.default_rng(7).uniform(-.6, .6, (H, W))[..., None]
+        _GROUND[key] = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGB').convert('RGBA')
+    return _GROUND[key].copy()
+
+
+def _pill(text: str, f_size: int, fill, fg, pad_x: int = 36, h: int = 88,
+          weight: int = 720) -> Image.Image:
+    """A rounded label on a flat fill."""
+    f = typo.font('kn_var', f_size, weight)
+    w = int(typo.text_width(text, f) + pad_x * 2)
+
+    def draw(im):
+        s = S2
+        ImageDraw.Draw(im).rounded_rectangle((0, 0, w * s - 1, h * s - 1), h * s // 2, fill=fill)
+        fs = typo.font('kn_var', f_size * s, weight)
+        rise, drop = typo.ink_extents('ಕ', fs)
+        typo.draw_text(im, text, pad_x * s, h * s / 2 + (rise - drop) / 2, fs, fg)
+    return _tile(w, h, draw)
+
+
+def _band_fade(W: int, h: int, colour) -> Image.Image:
+    """The foot of the picture band settling into the ink — a fade, never a
+    rule (D128)."""
+    a = (np.linspace(0, 1, h, dtype=np.float32) ** 1.6 * 255).astype(np.uint8)
+    lay = Image.new('RGBA', (W, h), (*colour[:3], 255))
+    lay.putalpha(Image.fromarray(np.repeat(a[:, None], W, axis=1), 'L'))
+    return lay
+
+
 class Layout:
     """Where everything goes (D81, D83, D92).
 
@@ -263,21 +309,20 @@ def _disclosure_tag(photo, max_w: int) -> Image.Image | None:
 
 
 def _type_band(st: Story, W: int, H: int) -> Image.Image:
-    """The band for a story with no picture: the place, set large, on a
-    darker paper. Honest about having no photograph, and still a frame."""
+    """The band for a story with no picture: the place, set large, in paper
+    on deep ink under a warm light. Honest about having no photograph, and
+    still a frame (D128)."""
     place = (st.location or '').strip() or Brand.coverage
-
-    def draw(sf):
-        pp._rect(sf, (0, 0, W, H), C.paper_100)
-        b = typo.fit(place, 'kn', sf.s(190), sf.s(110), sf.s(W - 2 * PP.margin),
-                     sf.s(H * 0.4), 1.1, max_lines=2)
-        typo.draw_block(sf.img, b, sf.s(PP.margin),
-                        sf.s(H - 150) - b.height, C.ink_950)
-        cat = category(st.category)['kn']
-        typo.draw_text(sf.img, cat, sf.s(PP.margin), sf.s(H - 84),
-                       typo.font('kn_var', sf.s(44), weight=720), C.red_500)
-    sf = Surface(W, H, S2, bg=(*C.paper_100, 255))
-    draw(sf)
+    from .surface import radial_glow
+    sf = Surface(W, H, S2, bg=(*C.ink_900, 255))
+    radial_glow(sf, W * 0.72, H * 0.30, W * 0.75, C.gold_500, 0.20)
+    radial_glow(sf, W * 0.10, H * 0.95, W * 0.60, C.sea_600, 0.35)
+    b = typo.fit(place, 'kn', sf.s(190), sf.s(110), sf.s(W - 2 * PP.margin),
+                 sf.s(H * 0.4), 1.1, max_lines=2)
+    typo.draw_block(sf.img, b, sf.s(PP.margin), sf.s(H - 150) - b.height, C.paper_50)
+    cat = category(st.category)['kn']
+    typo.draw_text(sf.img, cat, sf.s(PP.margin), sf.s(H - 84),
+                   typo.font('kn_var', sf.s(44), weight=720), C.red_400)
     return sf.img.resize((W, H), Image.Resampling.LANCZOS)
 
 
@@ -298,19 +343,19 @@ class StorySlate:
         n, i = self.n, self.i
 
         def row(sf):
-            x = pp.chip(sf, 0, 4, i + 1, 38, of=n)
+            x = pp.chip(sf, 0, 4, i + 1, 38, of=n, of_fill=C.paper_300)
             f = typo.font('kn_var', sf.s(34), weight=720)
             base = 44
             x += 28
-            typo.draw_text(sf.img, cat['kn'], sf.s(x), sf.s(base), f, C.red_500)
+            typo.draw_text(sf.img, cat['kn'], sf.s(x), sf.s(base), f, C.red_400)
             x += typo.text_width(cat['kn'], f) / sf.ss + 14
             if pp.leads_with_place(st):
                 return                      # the headline already says where
-            typo.draw_text(sf.img, '/', sf.s(x), sf.s(base), f, C.paper_200)
+            typo.draw_text(sf.img, '/', sf.s(x), sf.s(base), f, C.ink_500)
             x += typo.text_width('/', f) / sf.ss + 14
             typo.draw_text(sf.img, self.it.place, sf.s(x), sf.s(base),
                            typo.font_for(self.it.place, 'kn_var', sf.s(34),
-                                         weight=640), C.ink_500)
+                                         weight=640), C.paper_300)
         self.row = _paper_tile(L.cw, 64, row)
         # Row (96) + headline + gap (18) + source (44), all above the caption
         # overlay; the tile adds 16 below the ink.
@@ -319,7 +364,7 @@ class StorySlate:
 
         def head(sf):
             box['b'] = pp.headline(sf, 0, 0, L.cw, self.it.line, max_h,
-                                   hi=92, lo=58, ink_only=pp.ink_only(st))
+                                   hi=92, lo=58, ink_only=pp.ink_only(st), dark=True)
         tall = _paper_tile(L.cw, int(max_h) + 40, head)
         self.hh = int(box['b']) + 16
         self.head = tall.crop((0, 0, L.cw, self.hh))
@@ -327,7 +372,7 @@ class StorySlate:
                              typo.font('kn_var', 28, 520), L.cw)
         self.src = _tile(L.cw, 44, lambda im: typo.draw_text(
             im, src, 0, 32 * S2, typo.font('kn_var', 28 * S2, 520),
-            (*C.ink_500, 255)))
+            (*C.paper_300, 255)))
         self.row_y = L.text_top
         self.head_y = L.text_top + 96
         self.src_y = self.head_y + self.hh + 18
@@ -355,10 +400,9 @@ class StorySlate:
             self.win_w, self.win_h, self.win_x, self.win_y = L.W, room, 0, 0
             self.band = _type_band(st, L.W, room)
             self._synthetic = False
-        base = Image.new('RGBA', (L.W, L.H), (*C.paper_50, 255))
-        ImageDraw.Draw(base).rectangle((0, room, L.W, room + PP.sunline + 2),
-                                       fill=(*C.gold_500, 255))
-        self.base = base
+        self.base = ink_ground(L.W, L.H)
+        # the picture band settles into the ink: no gold rule under it (D128)
+        self.fade = _band_fade(L.W, 120, self.base.getpixel((L.W // 2, room + 4)))
 
     def picture(self, t: float) -> Image.Image:
         f = self.base.copy()
@@ -370,6 +414,7 @@ class StorySlate:
                 im = ImageEnhance.Color(im).enhance(PP.ai_saturation)
                 im = ImageEnhance.Contrast(im).enhance(PP.ai_contrast)
             band.alpha_composite(im.convert('RGBA'), (self.win_x, self.win_y))
+        band.alpha_composite(self.fade, (0, band.height - self.fade.height))
         f.alpha_composite(band, (0, 0))
         return f
 
@@ -412,24 +457,26 @@ class EndSlate:
     def __init__(self, L: Layout, dur: float, sources: list[str] | None = None):
         self.L, self.dur = L, dur
         W, H = L.W, L.H
-        self.base = Image.new('RGBA', (W, H), (*C.paper_50, 255))
-        self.logo = logo(360, 'circle')
+        self.base = ink_ground(W, H)
+        from .surface import medallion
+        m = medallion(400 * S2, halo=0.35, shadow=0.6, bezel=C.ink_950)
+        self.logo = m.resize((m.width // S2, m.height // S2), Image.Resampling.LANCZOS)
         self.cy = 380
         tag = Brand.tagline.replace('  •  ', ' · ')
         name = _tile(W, 110, lambda im: typo.draw_text(
             im, tag, W * S2 / 2, 84 * S2, typo.font('kn', 72 * S2),
-            (*C.ink_950, 255), anchor_x='c'))
+            (*C.paper_50, 255), anchor_x='c'))
         sub = _tile(W, 60, lambda im: typo.draw_text(
             im, 'ಕರಾವಳಿಯ ಸುದ್ದಿ, ಪ್ರತಿದಿನ', W * S2 / 2, 44 * S2,
-            typo.font('kn_var', 40 * S2, 520), (*C.ink_500, 255), anchor_x='c'))
-        follow = _tag(f'ಫಾಲೋ ಮಾಡಿ  {Brand.handle}', 44, (*C.gold_500, 255),
-                      (*C.ink_950, 255), pad_x=36, h=88, weight=720)
+            typo.font('kn_var', 40 * S2, 520), (*C.paper_300, 255), anchor_x='c'))
+        follow = _pill(f'ಫಾಲೋ ಮಾಡಿ  {Brand.handle}', 44, (*C.gold_500, 255),
+                       (*C.ink_950, 255), pad_x=40, h=88, weight=720)
         src = ('ಮೂಲಗಳು: ' + ', '.join(sources)) if sources else ''
         tail = _tile(W, 50, lambda im: typo.draw_text(
             im, typo.ellipsize(src, typo.font('kn_var', 28 * S2, 520),
                                (W - 2 * PP.margin) * S2),
             W * S2 / 2, 36 * S2, typo.font('kn_var', 28 * S2, 520),
-            (*C.ink_500, 255), anchor_x='c'))
+            (*C.paper_300, 255), anchor_x='c'))
         y = self.cy + 400
         self.rows = [(name, (0, y), 0.18), (sub, (0, y + 108), 0.26),
                      (follow, ((W - follow.width) // 2, y + 200), 0.36),
@@ -437,10 +484,11 @@ class EndSlate:
 
     def picture(self, t: float) -> Image.Image:
         f = self.base.copy()
-        s = 0.62 + 0.38 * _ease_back(t / 0.42)
-        lg = self.logo.resize((max(1, int(360 * s)),) * 2, Image.Resampling.LANCZOS)
-        f.alpha_composite(_fade(lg, min(1.0, t / 0.18)),
-                          ((self.L.W - lg.width) // 2, self.cy + (360 - lg.height) // 2))
+        s = 0.82 + 0.18 * _ease_out(t / 0.55)
+        sz = max(1, int(self.logo.width * s))
+        lg = self.logo.resize((sz, sz), Image.Resampling.LANCZOS)
+        f.alpha_composite(_fade(lg, min(1.0, t / 0.3)),
+                          ((self.L.W - sz) // 2, self.cy + 180 - sz // 2))
         for img, (x, y), t0 in self.rows:
             e = _ease_out((t - t0) / 0.3)
             if e > 0.002:
@@ -454,7 +502,8 @@ class Chrome:
 
     def __init__(self, L: Layout, n: int, date_kn: str):
         self.L, self.n = L, n
-        self.bug = _paper_tile(420, 90, lambda sf: pp.bug(sf, 0, 0, PP.bug_reel))
+        self.bug = _paper_tile(460, 110, lambda sf: pp.bug(sf, 4, 4, PP.bug_reel,
+                                                           on_photo=True))
 
     def progress(self, frame: Image.Image, idx: int, p: float, end: bool):
         """Segments, one per story — filled, filling, or still to come."""
@@ -577,7 +626,8 @@ def render_cover(items: list[Item], date_kn: str, seconds: float, path: str,
     """Draw the cover and return where each element landed (for the tests)."""
     top, bot = cover_safe(W, H)
     m = PP.margin
-    sf = Surface(W, H, S2, bg=(*C.paper_50, 255))
+    sf = Surface(W, H, S2, bg=(0, 0, 0, 0))
+    sf.img.alpha_composite(ink_ground(W * S2, H * S2))
     band = 1000
     pics = [it.story.photo for it in items
             if it.story.photo and os.path.exists(it.story.photo.path)]
@@ -593,24 +643,25 @@ def render_cover(items: list[Item], date_kn: str, seconds: float, path: str,
         for ph, box in zip(pics, cells):
             pp.photo(sf, ph, box)
     else:
-        pp._rect(sf, (0, 0, W, band), C.paper_100)
-    pp.sunline(sf, band, h=10)
+        from .surface import radial_glow
+        pp._rect(sf, (0, 0, W, band), C.ink_900)
+        radial_glow(sf, W * 0.7, band * 0.35, W * 0.8, C.gold_500, 0.18)
+    fade = _band_fade(W * S2, 120 * S2, sf.img.getpixel((W, (band + 6) * S2)))
+    sf.img.alpha_composite(fade, (0, (band - 120) * S2))
     boxes = {}
-    pp.bug(sf, m, top + 40, PP.bug_reel)
+    pp.bug(sf, m, top + 40, PP.bug_reel, on_photo=True)
     boxes['brand'] = (m, top + 40, m + 420, top + 40 + 72)
 
     y = band + 70
     pp.meta(sf, m, y + 30, f'{date_kn}  ·  ಇಂದಿನ {len(items)} ಸುದ್ದಿ  ·  '
-            f'{int(round(seconds))} ಸೆಕೆಂಡ್', size=36, weight=620)
+            f'{int(round(seconds))} ಸೆಕೆಂಡ್', C.paper_300, size=36, weight=620)
     y += 60
     title = typo.fit('ಸ್ಪೀಡ್ ನ್ಯೂಸ್', 'kn', sf.s(170), sf.s(120), sf.s(W - 2 * m),
                      sf.s(210), 1.1, max_lines=1)
     th = title.height / sf.ss
-    typo.draw_block(sf.img, title, sf.s(m), sf.s(y), C.ink_950)
+    typo.draw_block(sf.img, title, sf.s(m), sf.s(y), C.paper_50)
     boxes['title'] = (m, y, W - m, y + th)
-    y += th + 30
-    pp.accent(sf, m, y, 140, 10)
-    y += 50
+    y += th + 80
 
     places: list[str] = []
     for it in items:
@@ -619,7 +670,7 @@ def render_cover(items: list[Item], date_kn: str, seconds: float, path: str,
     y0 = y
     for i, p in enumerate(places[:4], 1):
         pp.chip(sf, m, y, i, 34)
-        pp.meta(sf, m + 96, y + 38, p, C.ink_950, size=42, weight=680)
+        pp.meta(sf, m + 96, y + 38, p, C.paper_50, size=42, weight=680)
         y += 66
     boxes['places'] = (m, y0, W - m, y)
     sf.finish().save(path, quality=93, subsampling=0, optimize=True)

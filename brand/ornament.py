@@ -199,14 +199,14 @@ def foil_text(sf: Surface, text: str, f, cx: float, baseline: float, *,
 
 def ornate_divider(sf: Surface, cx: float, y: float, half: float,
                    color=C.gold_400, weight: float = 1.3, a: float = 0.9):
-    """A lotus between two tapering gold hairlines.
+    """A lotus with a bead either side.
 
     The one mark every festival design in this region reaches for, drawn as
-    carving rather than as an icon: three pointed petals on a slim seat, and
-    a bead either side where the rules begin."""
+    carving rather than as an icon: three pointed petals on a slim seat. The
+    tapering hairlines that once ran out from it are gone (D128): the owner
+    wants no lines, and the lotus carries the pause on its own. `half` is
+    kept for callers."""
     gap = 30
-    fade_line(sf, cx - half, cx - gap, y, color, weight, 0.0, a * 0.85, 0.9)
-    fade_line(sf, cx + gap, cx + half, y, color, weight, a * 0.85, 0.0, 1.1)
     ss = sf.ss
     R = int(28 * ss)
     lay = Image.new('RGBA', (2 * R, 2 * R), (0, 0, 0, 0))

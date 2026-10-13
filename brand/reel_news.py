@@ -143,7 +143,7 @@ def top_band(n: News, W: int = 1080, H: int = 1920) -> tuple[Image.Image, dict]:
     m = P.margin * f
     sf = _sf(W, H)
     y = (RC.top + 10) * f
-    right = pp.bug(sf, m, y, int(P.bug_reel * f))
+    right = pp.bug(sf, m, y, int(P.bug_reel * f), on_photo=True)
     line = '  ·  '.join(x for x in (n.place, n.date) if x)
     boxes = {'bug': (m, y, right, y + P.bug_reel * 1.9 * f)}
     if line:
@@ -159,7 +159,8 @@ def top_band(n: News, W: int = 1080, H: int = 1920) -> tuple[Image.Image, dict]:
 
 def story(n: News, fact: int | None = None, W: int = 1080, H: int = 1920
           ) -> tuple[Image.Image, dict]:
-    """The paper card, sized to its copy and pinned just above the caption."""
+    """The ink glass card, sized to its copy and pinned just above the
+    caption (D128: a reel is ink — no paper card, no gold bar, no rule)."""
     f = W / 1080
     m = P.margin * f
     x0, x1 = m, (RC.rail_x - 24) * f
@@ -169,13 +170,12 @@ def story(n: News, fact: int | None = None, W: int = 1080, H: int = 1920
     def lay(sf_):
         y = 96 * f
         y = pp.headline(sf_, x0 + pad, y, w - 2 * pad, n.headline, 280 * f,
-                        hi=int(58 * f), lo=int(44 * f), ink_only=n.ink_only)
+                        hi=int(58 * f), lo=int(44 * f), ink_only=n.ink_only, dark=True)
         if text:
-            y += 18 * f
-            pp._rect(sf_, (x0 + pad, y, x1 - pad, y + 2 * f), C.paper_200)
-            pp._rect(sf_, (x0 + pad, y + 24 * f, x0 + pad + 12 * f, y + 36 * f), C.gold_600)
+            y += 30 * f
+            pp.dot(sf_, x0 + pad + 6 * f, y + 30 * f, 6 * f, C.gold_500)
             y = pp.body(sf_, x0 + pad + 28 * f, y + 12 * f, w - 2 * pad - 28 * f,
-                        text, size=int(38 * f), weight=600, fill=C.ink_800,
+                        text, size=int(38 * f), weight=600, fill=C.paper_100,
                         max_h=150 * f, lo=int(MIN_TYPE * f))
         return y + 58 * f
 
@@ -183,8 +183,7 @@ def story(n: News, fact: int | None = None, W: int = 1080, H: int = 1920
     card_h = lay(probe)
     y0 = RC.bottom * f - 40 * f - card_h
     sf = _sf(W, H)
-    pp._rect(sf, (x0, y0, x1, y0 + card_h), C.paper_50)
-    pp._rect(sf, (x0, y0, x1, y0 + 8 * f), C.gold_500)
+    pp.panel(sf, (x0, y0, x1, y0 + card_h), (*C.ink_900, 232), radius=26 * f)
     kf = typo.font('kn', sf.s(32 * f), weight=pp.HEAD_WEIGHT)
     kw = typo.text_width(n.kicker, kf) / sf.ss + 36 * f
     pp._rect(sf, (x0 + pad, y0 + 26 * f, x0 + pad + kw, y0 + 76 * f), C.red_500)
@@ -192,14 +191,14 @@ def story(n: News, fact: int | None = None, W: int = 1080, H: int = 1920
     if n.place:
         pf = typo.font_for(n.place, 'kn_var', sf.s(30 * f), weight=680)
         typo.draw_text(sf.img, typo.ellipsize(n.place, pf, sf.s(w - kw - 3 * pad)),
-                       sf.s(x0 + pad + kw + 16 * f), sf.s(y0 + 62 * f), pf, C.ink_500)
+                       sf.s(x0 + pad + kw + 16 * f), sf.s(y0 + 62 * f), pf, C.paper_300)
     # the card, shifted into place
     body = _sf(W, H)
     lay(body)
     sf.img.alpha_composite(body.img, (0, int(sf.s(y0))))
     cf = typo.font_for(n.credit, 'kn_var', sf.s(MIN_TYPE * f), weight=560)
     typo.draw_text(sf.img, typo.ellipsize(n.credit, cf, sf.s(w - 2 * pad)),
-                   sf.s(x0 + pad), sf.s(y0 + card_h - 20 * f), cf, C.ink_500)
+                   sf.s(x0 + pad), sf.s(y0 + card_h - 20 * f), cf, C.paper_300)
     boxes = {'story card': (x0, y0, x1, y0 + card_h)}
     check(boxes, W, H)
     return _out(sf), boxes
@@ -211,22 +210,23 @@ def end_card(n: News, W: int = 1080, H: int = 1920) -> tuple[Image.Image, dict]:
     f = W / 1080
     m = P.margin * f
     right = (RC.rail_x - 40) * f
-    sf = _sf(W, H, bg=(*C.paper_50, 255))
-    pp.roundlogo(sf, (m + right) / 2 - 160 * f, 380 * f, 320 * f)
+    sf = _sf(W, H, bg=(*C.ink_900, 255))
+    from .surface import radial_glow, paste_medallion
+    radial_glow(sf, (m + right) / 2, 540 * f, 620 * f, C.gold_500, 0.22)
+    paste_medallion(sf, (m + right) / 2, 540 * f, 320 * f, halo=0.3, shadow=0.6,
+                    bezel=C.ink_950)
     tl = typo.layout(Brand.tagline.replace('  •  ', ' · '),
                      typo.font('kn', sf.s(68 * f), weight=pp.HEAD_WEIGHT),
                      sf.s(right - m), 1.2, align='center')
-    typo.draw_block(sf.img, tl, sf.s(m), sf.s(760 * f), C.ink_950, box_w=sf.s(right - m))
-    y = 930 * f
-    pp._rect(sf, (m + 40 * f, y, right, y + 3 * f), C.ink_950)
-    y += 64 * f
+    typo.draw_block(sf.img, tl, sf.s(m), sf.s(760 * f), C.paper_50, box_w=sf.s(right - m))
+    y = 994 * f                   # air under the tagline, not a rule (D128)
     rows = [('ಮೂಲ', n.source), ('ವೀಡಿಯೊ', n.credit.split(':', 1)[-1].strip()),
             ('ಪರಿಶೀಲನೆ', n.verified_by)]
     for k, v in rows:
         if not v:
             continue
-        pp.meta(sf, m + 40 * f, y, k, C.gold_800, size=int(34 * f), weight=760)
-        pp.meta(sf, m + 280 * f, y, v, C.ink_950, size=int(34 * f), weight=560,
+        pp.meta(sf, m + 40 * f, y, k, C.gold_400, size=int(34 * f), weight=760)
+        pp.meta(sf, m + 280 * f, y, v, C.paper_100, size=int(34 * f), weight=560,
                 max_w=right - m - 280 * f)
         y += 62 * f
     ff = typo.font('kn', sf.s(44 * f), weight=pp.HEAD_WEIGHT)
@@ -234,7 +234,7 @@ def end_card(n: News, W: int = 1080, H: int = 1920) -> tuple[Image.Image, dict]:
     tw = typo.text_width(txt, ff) / sf.ss + 80 * f
     cx = (m + right) / 2
     by = max(y + 40 * f, 1230 * f)
-    pp._rect(sf, (cx - tw / 2, by, cx + tw / 2, by + 90 * f), C.gold_500)
+    pp.panel(sf, (cx - tw / 2, by, cx + tw / 2, by + 90 * f), C.gold_500, radius=45 * f)
     typo.draw_text(sf.img, txt, sf.s(cx), sf.s(by + 60 * f), ff, C.ink_950, anchor_x='c')
     boxes = {'follow': (cx - tw / 2, by, cx + tw / 2, by + 90 * f),
              'rows': (m + 40 * f, 930 * f, right, y)}

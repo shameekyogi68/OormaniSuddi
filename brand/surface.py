@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import zlib
+from functools import lru_cache
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
@@ -427,6 +428,79 @@ def paste_logo(sf: Surface, x: float, y: float, size: float, variant='circle',
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  THE MEDALLION — the round logo in a metallic gold ring (D128)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Light catches the top-left of the ring, the body is the logo's sunset gold,
+# and it turns away into shadow and back — what reads as metal, not as paint.
+GOLD_RING = ((0.0, C.gold_300), (0.35, C.gold_500), (0.6, C.gold_700),
+             (0.8, C.gold_400), (1.0, C.gold_600))
+MEDALLION_PAD = 0.25          # of d, each side: room for the shadow and halo
+
+
+def _metal(w: int, h: int, stops, angle: float) -> Image.Image:
+    a = np.radians(angle)
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    t = xx * np.cos(a) + yy * np.sin(a)
+    t = (t - t.min()) / max(1e-6, float(t.max() - t.min()))
+    pos = np.array([p for p, _ in stops], np.float32)
+    out = np.stack([np.interp(t, pos, np.array([c[i] for _, c in stops], np.float32))
+                    for i in range(3)], axis=2)
+    return Image.fromarray(np.clip(_dither(out, 0.7), 0, 255).astype(np.uint8), 'RGB')
+
+
+@lru_cache(maxsize=32)
+def medallion(d: int, halo: float = 0.0, shadow: float = 0.55,
+              bezel: tuple = C.paper_0) -> Image.Image:
+    """The round logo set in a metallic gold ring: the one house mark on every
+    format (D128). `d` is the ring's diameter in device pixels. Returns an
+    RGBA square of d * (1 + 2 * MEDALLION_PAD) with the medallion centred, so
+    its soft shadow and optional warm `halo` have room. `bezel` is the narrow
+    band between ring and logo: paper on a light page, ink on a dark one."""
+    M = 3                                              # built big, shrunk once
+    D = d * M
+    pad = int(round(D * MEDALLION_PAD))
+    size = D + 2 * pad
+    c = size / 2
+    out = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    if halo:
+        yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
+        dd = np.sqrt((xx - c) ** 2 + (yy - c) ** 2) / (D * 0.75)
+        lay = np.zeros((size, size, 4), np.float32)
+        lay[..., :3] = C.gold_500
+        lay[..., 3] = np.clip(1 - dd, 0, 1) ** 2.2 * halo * 255
+        out.alpha_composite(Image.fromarray(lay.astype(np.uint8), 'RGBA'))
+    if shadow:
+        sh = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        ImageDraw.Draw(sh).ellipse([c - D / 2, c - D / 2 + D * 0.03,
+                                    c + D / 2, c + D / 2 + D * 0.03],
+                                   fill=(*C.ink_950, int(255 * shadow)))
+        out.alpha_composite(sh.filter(ImageFilter.GaussianBlur(D * 0.035)))
+    ring = D * 0.045
+    m = Image.new('L', (size, size), 0)
+    dm = ImageDraw.Draw(m)
+    dm.ellipse([c - D / 2, c - D / 2, c + D / 2, c + D / 2], fill=255)
+    dm.ellipse([c - D / 2 + ring, c - D / 2 + ring, c + D / 2 - ring, c + D / 2 - ring], fill=0)
+    metal = _metal(size, size, GOLD_RING, 125).convert('RGBA')
+    metal.putalpha(m)
+    out.alpha_composite(metal)
+    r_in = D / 2 - ring
+    ImageDraw.Draw(out).ellipse([c - r_in, c - r_in, c + r_in, c + r_in], fill=(*bezel[:3], 255))
+    r_logo = r_in - D * 0.022
+    lg = logo(int(r_logo * 2))
+    out.alpha_composite(lg, (int(round(c - r_logo)), int(round(c - r_logo))))
+    final = int(round(size / M))
+    return out.resize((final, final), Image.Resampling.LANCZOS)
+
+
+def paste_medallion(sf: Surface, cx: float, cy: float, d: float, **kw):
+    """The medallion centred on (cx, cy), `d` across the ring, in delivery px."""
+    im = medallion(int(round(d * sf.ss)), **kw)
+    sf.img.alpha_composite(im, (int(round(cx * sf.ss - im.width / 2)),
+                                int(round(cy * sf.ss - im.height / 2))))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  EDITORIAL PLATE — a designed visual for a story with no honest photograph
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -509,89 +583,50 @@ def editorial_plate(sf: Surface, box, cat: dict, seed: str = '',
     d = ImageDraw.Draw(im, 'RGBA')
     hy = int(horizon * H)
 
-    # ── the sky's weather ────────────────────────────────────────────────
-    # Ruled bands, in the same engraved language as the sea, so a cloud is
-    # drawn the way the water is drawn. Never soft, never photographic.
-    if mood in (1, 2):
-        n_band = int(rnd.integers(3, 6)) if mood == 1 else int(rnd.integers(5, 9))
-        for b in range(n_band):
-            # Bands crowd the lower sky. Spread evenly to the top they read as
-            # a ruled grid; gathered near the horizon they read as cloud lying
-            # over the sea, which is what a coastal evening actually looks
-            # like — and it leaves the upper sky clear for the headline.
-            t = (b + float(rnd.uniform(0.0, 0.6))) / n_band
-            by = int(hy * (0.34 + 0.60 * (t ** 0.75)))
-            bh = max(1, int(ss * (2.2 if mood == 1 else 1.3)))
-            # A band is a SEGMENT, never a full rule: it starts somewhere and
-            # ends somewhere, both varying, and never spans the whole frame.
-            bw = W * float(rnd.uniform(0.18, 0.56))
-            bx0 = float(rnd.uniform(-0.06, 1.06 - bw / W)) * W
-            # Alpha varies per band; a stack at one value is a diagram.
-            a_band = float(rnd.uniform(0.016, 0.034 if mood == 1 else 0.026))
-            d.rectangle([int(bx0), by, int(bx0 + bw), by + bh - 1],
-                        fill=alpha(C.paper_50, a_band))
-    elif mood == 3:
-        # Night: a scatter of single-pixel stars, thinning toward the horizon
-        # so the sky still reads as having depth.
+    # ── the sky's weather, as light (D128) ───────────────────────────────
+    # The plate used to be engraved: ruled cloud bands, a ruled sea, a dashed
+    # glint and a gold horizon rule. The owner's word for it was "those lines
+    # everywhere". Now every element is light or a solid shape — a tonal step
+    # where sky meets sea, a soft bloom round the sun, a soft column of its
+    # reflection. Still visibly a GRAPHIC: nothing in it pretends to be a photo.
+    if mood == 3:
+        # Night: a scatter of single-pixel stars, thinning toward the horizon.
         for _ in range(int(rnd.integers(26, 46))):
             sx = int(rnd.uniform(0, W))
-            t = float(rnd.uniform(0, 1)) ** 1.8      # crowd the top
+            t = float(rnd.uniform(0, 1)) ** 1.8
             sy = int(t * hy * 0.88)
             a_star = 0.30 * (1.0 - sy / max(1.0, hy)) + 0.06
             sr = max(1, int(ss * 0.7))
             d.rectangle([sx, sy, sx + sr - 1, sy + sr - 1],
                         fill=alpha(C.paper_50, a_star))
 
-    # ── ruled sea: subtle engraved horizon gradient ──────────────────────
-    # Calm water carries fewer, wider-spaced rules; a rough sea carries more.
-    rules_max = {0: 8, 1: 10, 2: 11, 3: 6}[mood]
-    y, gap, k = hy + int(H * 0.040), H * 0.024, 0
-    while y < H and k < rules_max:
-        w = max(1, int(ss * 0.6))
-        d.rectangle([0, y, W, y + w - 1],
-                    fill=alpha(C.paper_50, max(0.01, 0.05 / (1.0 + k * 0.4))))
-        gap *= 1.4 if mood != 2 else 1.28
-        y += int(gap)
-        k += 1
-
-    # ── the sun: a crisp disc sitting ON the horizon, small ──────────────
-    # Size and glow ride with the weather: a clear evening disc is larger and
-    # warmer, an overcast one is small and barely lit, a night one is a moon.
+    # ── the sun: a crisp disc ON the horizon, in its own warm bloom ──────
     base_r = 0.038 if landscape else 0.052
     r = max(2, int(W * base_r * {0: 1.14, 1: 1.0, 2: 0.82, 3: 0.72}[mood]
                    * float(rnd.uniform(0.92, 1.08))))
-    # The disc stays on its side of the frame — that placement counterweights
-    # the type and is not a thing to randomise — but not at the same pixel.
     cx = int(W * ((0.70 if landscape else 0.30) + float(rnd.uniform(-0.07, 0.07))))
     disc = C.gold_500 if mood != 3 else mix(C.gold_300, C.paper_50, 0.45)
-    glow_a = {0: 0.32, 1: 0.26, 2: 0.15, 3: 0.12}[mood]
-    glow = Image.new('RGBA', (r * 8, r * 8), (0, 0, 0, 0))
-    ImageDraw.Draw(glow).ellipse([r * 3, r * 3, r * 5, r * 5],
-                                 fill=alpha(disc, glow_a))
-    im.alpha_composite(glow.filter(ImageFilter.GaussianBlur(r * 1.2)),
-                       (cx - r * 4, hy - r * 4))
-    d.ellipse([cx - r, hy - r, cx + r, hy + r], fill=(*disc, 255))
-
-    # ── the sun's reflection: a broken gold glint down the sea ───────────
-    # Stippled dashes directly under the sun, narrowing and fading with
-    # distance — the one move that makes the plate read as a *scene*.
-    # A calm sea holds a long glint; a rough or overcast one breaks it up.
-    n_glint = {0: 8, 1: 7, 2: 5, 3: 6}[mood]
-    glint_a = {0: 0.38, 1: 0.34, 2: 0.20, 3: 0.22}[mood]
-    gy = hy + int(H * 0.022)
-    gw, step = r * 1.35, int(H * 0.016)
-    j = 0
-    while gy < H - 2 and j < n_glint:
-        fw = gw * (1.0 - 0.10 * j) * (0.55 + 0.45 * float(rnd.uniform(0, 1)))
-        fx = cx + float(rnd.uniform(-0.18, 0.18)) * gw
-        a_ref = max(0.0, glint_a - j * 0.052)
-        if fw >= 1 and a_ref > 0.02:
-            hh = max(1, int(ss * 0.8))
-            d.rectangle([int(fx - fw), gy, int(fx + fw), gy + hh - 1],
-                        fill=alpha(C.gold_400 if mood != 3 else C.gold_300,
-                                   a_ref))
-        gy += step
-        j += 1
+    glow_a = {0: 0.42, 1: 0.36, 2: 0.22, 3: 0.16}[mood]
+    yy_, xx_ = np.mgrid[0:H, 0:W].astype(np.float32)
+    dd = np.sqrt(((xx_ - cx) / (r * 9.0)) ** 2 + ((yy_ - hy) / (r * 5.5)) ** 2)
+    bloom = np.clip(1 - dd, 0, 1) ** 2.0 * glow_a
+    # the reflection: a soft column of light down the water, fading with depth
+    below = yy_ > hy
+    col = np.where(below, np.exp(-(yy_ - hy) / (H * 0.45))
+                   * np.exp(-((xx_ - cx) / (r * 1.5)) ** 2) * glow_a * 0.55, 0.0)
+    light = np.clip(bloom + col, 0, 1)[..., None]
+    arr = np.asarray(im).astype(np.float32)
+    arr[..., :3] = arr[..., :3] * (1 - light) + np.array(disc, np.float32) * light
+    im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
+    # the disc sits ON the horizon, half set: drawn whole, then cut at the
+    # waterline, so the sea in front of it is the sea itself and not a patch
+    sun = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    ImageDraw.Draw(sun).ellipse([cx - r, hy - r, cx + r, hy + r], fill=(*disc, 255))
+    cut = Image.new('L', im.size, 0)
+    ImageDraw.Draw(cut).rectangle([0, 0, W, hy], fill=255)
+    sun.putalpha(Image.composite(sun.getchannel('A'), cut, cut))
+    im.alpha_composite(sun)
+    d = ImageDraw.Draw(im, 'RGBA')
 
     # ── a headland, on the side the sun is not ───────────────────────────
     # A flat horizon from edge to edge reads as a diagram. One low silhouette
@@ -611,8 +646,6 @@ def editorial_plate(sf: Surface, box, cat: dict, seed: str = '',
                    (W - int(hw * 0.42), hy - peak), (W - hw, hy)]
         d.polygon(pts, fill=alpha(C.ink_950, 0.82))
 
-    # ── the horizon rule, drawn over the sun so it reads as a horizon ────
-    d.rectangle([0, hy, W, hy + max(1, ss)], fill=alpha(C.gold_400, 0.62))
 
     if radius:
         m = Image.new('L', (W, H), 0)

@@ -16,9 +16,16 @@ D92). Festival greetings are a separate genre with their own look (§9).
 ## 0 · The position
 
 **Premium comes from restraint and precision, not from adding.** Borders,
-outlined boxes, drop shadows and five accent colours are what cheap looks
-like. Authority looks like: a real grid, a strict division of colour, hairlines
-instead of borders, type set on a baseline, and generous space.
+outlined boxes, decorative lines and five accent colours are what cheap looks
+like. Authority looks like: a real grid, a strict division of colour, type set
+on a baseline, generous space — and light, never lines (D128).
+
+**Paper to read, Ink to watch (D128).** The carousels — ಸುದ್ದಿ ಸಾರ and ಮುಖ್ಯ
+ಸುದ್ದಿ — are read, often outdoors, by a local audience that trusts a
+newspaper: they stay on warm paper. Everything that is *watched* — ಸ್ಪೀಡ್
+ನ್ಯೂಸ್, footage reels, YouTube — is deep ink with warm gold light: Instagram
+prints its own white caption, name and audio over the bottom of every reel,
+and that white is lost on paper. One mark on both: the gold medallion.
 
 **Genuine is a design feature, not a constraint on one.** The credit under a
 photograph, the named source, the honest status, the Grievance Officer on the
@@ -36,6 +43,9 @@ the page look like a newspaper.
 7. Type below the legibility floor.
 8. A picture that does not say where it came from.
 9. Red on a person's name in a crime or death headline.
+10. **A decorative line** — a rule, hairline, stripe, streak, dashed glint or
+    underline (D128; the owner's words: "those lines everywhere"). Structure
+    is space, weight and a soft tonal panel. Light is a glow, never a line.
 
 ---
 
@@ -47,8 +57,8 @@ The logo's exact colours, from `brand/tokens.py :: C`. Nothing is invented.
 |---|---|---|
 | **Paper** — the page | `paper_50` … `paper_200` | every slide and frame ground |
 | **Ink** — the type | `ink_950` … `ink_300` | headlines, body, meta, hairlines |
-| **Red** — the news | `red_500` / `red_600` | the kicker, ಬ್ರೇಕಿಂಗ್, the half of a headline after its colon, the wordmark bug |
-| **Sunset gold** — the brand | `gold_500` | the line under every photograph, the stroke under the red wordmark, numeral chips, accent rules |
+| **Red** — the news | `red_500` / `red_600` (on ink: `red_400`) | the kicker, ಬ್ರೇಕಿಂಗ್, the half of a headline after its colon, the edge tab |
+| **Sunset gold** — the brand | `gold_500` | the medallion's ring, numeral chips, bullets, the follow button, warm light on ink |
 | gold as **text** | `gold_800` | only when gold must be read as type |
 
 **The division is the system.** Red means *this is the news*; gold means
@@ -143,7 +153,8 @@ seven-word and a twenty-word headline both look designed.
 `tokens.Grid`, `tokens.FORMATS`
 
 - Baseline unit and side margins from `tokens.Grid`.
-- **Square corners.** `Grid.radius = 0`.
+- **Square corners on chips and tabs.** Buttons are pills; a tonal panel
+  (`paper.panel`) has a soft radius. Never an outlined box.
 - **Left-aligned.** One left edge per slide.
 
 | Format | Used by |
@@ -173,8 +184,9 @@ under default 4:2:0 subsampling.
 | ಮುಖ್ಯ ಸುದ್ದಿ | **always** — the cover is the photograph (`IMG-04` without one) |
 | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | the story's picture if it has one; otherwise a type-only frame |
 
-A gold line sits under every photograph. The disclosure — credit, and the
-nature label when it is not the actual scene — is printed with it.
+No line sits under a photograph (D128): on paper it meets the page cleanly;
+on ink it settles into the dark. The disclosure — credit, and the nature label
+when it is not the actual scene — is printed inside the picture.
 
 Crop focal default is **(0.5, 0.42)**, not centre: in news photography the
 face and the action sit above centre.
@@ -218,7 +230,7 @@ use for figures; mixing the two is a preflight failure.
   the headline. The headline is never cut.
 - **Item gaps clearly exceed internal line gaps.** Get this backwards and a
   two-line fact reads as two facts.
-- **Hairlines, not borders.**
+- **No lines at all** — not hairlines, not borders. Space, weight and tone.
 - Type over photography carries a soft shadow; type on paper never does.
 
 ---
@@ -258,22 +270,21 @@ is also a short video, made from the finished slide.
   (`anim_order_*`), the type untouched, the lead never lit, in whole rounds
   so the loop comes round in step.
   A ಮುಖ್ಯ ಸುದ್ದಿ cover (D117, house rule 2026-10-09-01) is fully animated:
-  the photograph fades in, the sunline draws across, and headline and deck
+  the photograph fades in, and headline and deck
   reveal line by line with scan-wipe gold light before holding and nudging
   the swipe chevrons. Every other slide opens as paper, its chrome and a faint
   pencil outline of its own layout (`anim_ghost`), and the ink wipes in over
   that. **No frame of any slide is ever blank**, and from the end of the reveal
   to the loop dissolve every slide is finished — so whichever frame is picked
   as the thumbnail, it is safe on all of them.
-- **The chrome never moves**: the bug, date, rules, footer, the swipe tab.
+- **The chrome never moves**: the medallion bug, date, footer, the swipe tab.
 - **The hold is what gets read** — `read_rate`, between `anim_hold` and
   `anim_hold_max`. While it holds, the chevrons nudge right every
   `anim_nudge` s: the slide asks to be swiped.
 - **No seam.** The last `anim_out` s dissolve back to frame 0, so the loop
   restarts as if it were the first play.
 - **Never letter by letter** — a cut conjunct is a broken shape.
-- **A photograph is never wiped.** On a slide it fades in gently, and the gold
-  sunline under it draws across (`anim_sun`).
+- **A photograph is never wiped.** On a slide it fades in gently.
 
 ### The swipe — a carousel is one sheet of paper (D100)
 
@@ -282,12 +293,10 @@ is also a short video, made from the finished slide.
   together as ONE carousel. Never joined into one video: Instagram does the
   swipe, and the reader controls it.
 - **Every seam is continuous.** Mid-swipe, slide N's right edge sits against
-  slide N+1's left edge. The footer hairline runs out to every inner edge,
-  so it is one unbroken line from the first slide to the last; the red edge
-  tab (`paper.edge_tab`) meets a red landing mark (`paper.landing`) at the
-  same height on the next slide, and the two read as one pill across the
-  seam. The first slide's left edge and the last slide's right edge keep
-  their margins.
+  slide N+1's left edge: the red edge tab (`paper.edge_tab`) meets a red
+  landing mark (`paper.landing`) at the same height on the next slide, and
+  the two read as one pill across the seam. (The footer hairline that also
+  ran across every seam went with D128.)
 - **The reader swipes into frame 0** — paper, chrome, the landing mark — and
   the lines start to flow the moment the slide lands.
 
@@ -346,9 +355,10 @@ built to be felt and forwarded rather than believed, and is set by
 
 - Centred and symmetrical. Signed — "ಶುಭ ಕೋರುವವರು" and the brand — never mastheaded.
 - The festival name in the serif, in engraved gold foil. Never flat yellow.
-- Ornament is allowed here and only here, drawn in gold at hairline weight:
-  corner filigree, a lotus divider, an arch window, lamp-light bokeh. Never
-  clip-art, never a continuous border.
+- Ornament is allowed here and only here, and it is never a line (D128): the
+  lotus with a bead either side, gold beads, an arch-shaped window whose own
+  edge is the frame, lamp-light bokeh, the medallion in its own light. No
+  filigree, no arch outline, no mandala rings, no rules. Never clip-art.
 - A theme changes only the ground and the light. Gold stays the one accent.
 - A photograph declares `keep_clear`, and no type ever enters the deity's band.
 - AI imagery is labelled on the poster and in the caption.

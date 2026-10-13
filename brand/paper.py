@@ -1,6 +1,10 @@
 """
-ಊರ್ಮನಿ ಸುದ್ದಿ — Paper & Red, the news look (D92).
-=================================================
+ಊರ್ಮನಿ ಸುದ್ದಿ — Paper & Red, the news look (D92), made luxury (D128).
+=====================================================================
+Paper to read: the carousels are a page, and the page is quiet. No hairlines,
+no rules, no bars — structure comes from space, weight and the occasional
+soft tonal panel. The house mark is the gold medallion.
+
 The drawing kit shared by ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ and ಸ್ಪೀಡ್ ನ್ಯೂಸ್. Everything
 takes a `Surface` and delivery-pixel coordinates, like the rest of the engine.
 
@@ -22,7 +26,7 @@ from PIL import Image, ImageDraw, ImageEnhance
 
 from . import typo
 from .content import Story
-from .surface import Surface, cover, house_grade, logo
+from .surface import Surface, cover, house_grade, logo, paste_medallion
 from .tokens import C, Brand, Paper as P, category
 
 PAPER = C.paper_50
@@ -30,6 +34,7 @@ INK = C.ink_950
 BODY = C.ink_800
 GREY = C.ink_500
 RULE = C.paper_200
+PANEL = C.paper_100      # a soft tonal panel: structure without a line
 RED = C.red_500
 GOLD = C.gold_500
 GOLD_MARK = C.gold_600       # small gold marks, where the sunset gold vanishes
@@ -115,39 +120,60 @@ def sunline(sf: Surface, y: float, x0: float = 0, x1: float | None = None,
 #  BRAND
 # ─────────────────────────────────────────────────────────────────────────────
 
-def bug(sf: Surface, x: float, y: float, size: int = P.bug) -> float:
-    """The house mark: ಊರ್ಮನಿ ಸುದ್ದಿ in white on a flat red block, with the
-    logo's gold stroke beneath it — its red ಸುದ್ದಿ band over the gold tagline.
-    Returns the right edge."""
+def bug(sf: Surface, x: float, y: float, size: int = P.bug,
+        on_photo: bool = False) -> float:
+    """The house mark: the gold medallion and ಊರ್ಮನಿ ಸುದ್ದಿ beside it, the
+    name centred on the medallion by its letter body. `y` is the top. On a
+    photograph the name is paper with a soft shadow. Returns the right edge.
+
+    It replaced a flat red block (D128): red is the news, and a red box round
+    the channel's own name spent the news colour on branding."""
+    d = size * 2.15
+    cy = y + d / 2
+    paste_medallion(sf, x + d / 2, cy, d, shadow=0.45 if on_photo else 0.25)
     f = typo.font('kn', sf.s(size), weight=HEAD_WEIGHT)
-    w = typo.text_width(Brand.name, f) / sf.ss
-    pad, h = size * 0.55, size * 1.72
-    _rect(sf, (x, y, x + w + 2 * pad, y + h), RED)
-    _rect(sf, (x, y + h, x + w + 2 * pad, y + h + max(5, size // 6)), GOLD)
-    typo.draw_text(sf.img, Brand.name, sf.s(x + pad),
-                   sf.s(y + h * 0.5 + size * 0.36), f, WHITE)
-    return x + w + 2 * pad
+    rise, drop = typo.ink_extents('ಕ', f)
+    base = sf.s(cy) + (rise - drop) / 2
+    tx = x + d + size * 0.42
+    if on_photo:
+        typo.draw_text(sf.img, Brand.name, sf.s(tx), base, f, WHITE,
+                       shadow=(0, sf.s(2), sf.s(6), (*C.ink_950, 170)))
+    else:
+        typo.draw_text(sf.img, Brand.name, sf.s(tx), base, f, INK)
+    return tx + typo.text_width(Brand.name, f) / sf.ss
 
 
 def roundlogo(sf: Surface, x: float, y: float, size: float):
-    sf.img.alpha_composite(logo(int(sf.s(size))), (int(sf.s(x)), int(sf.s(y))))
+    """The medallion, `size` across, top-left at (x, y)."""
+    paste_medallion(sf, x + size / 2, y + size / 2, size, shadow=0.3)
+
+
+def panel(sf: Surface, box, fill=PANEL, radius: float = 22):
+    """A soft tonal panel — how a block is set apart now there are no rules."""
+    sf.draw.rounded_rectangle([sf.s(box[0]), sf.s(box[1]), sf.s(box[2]) - 1,
+                               sf.s(box[3]) - 1], radius=int(sf.s(radius)), fill=fill)
+
+
+def dot(sf: Surface, cx: float, cy: float, r: float, fill=GOLD):
+    sf.draw.ellipse([sf.s(cx - r), sf.s(cy - r), sf.s(cx + r) - 1, sf.s(cy + r) - 1],
+                    fill=fill)
 
 
 def chip(sf: Surface, x: float, y: float, n: int, size: int = 34,
-         of: int | None = None) -> float:
+         of: int | None = None, of_fill=None) -> float:
     """A numeral on a gold chip — the logo's sun, as a counter. Returns the
     right edge of what was drawn."""
     t = f'{n:02d}'
     f = typo.font('kn_var', sf.s(size), weight=800)
     w = typo.text_width(t, f) / sf.ss
     p = size * 0.34
-    _rect(sf, (x, y, x + w + 2 * p, y + size * 1.36), GOLD)
+    _rect(sf, (x, y, x + w + 2 * p, y + size * 1.36), GOLD)     # square: STANDARDS rule 3
     typo.draw_text(sf.img, t, sf.s(x + p), sf.s(y + size * 1.02), f, INK)
     x2 = x + w + 2 * p
     if of:
         g = typo.font('kn_var', sf.s(int(size * 0.8)), weight=600)
         typo.draw_text(sf.img, f'/ {of:02d}', sf.s(x2 + 12),
-                       sf.s(y + size * 1.02), g, GREY)
+                       sf.s(y + size * 1.02), g, of_fill or GREY)
         x2 += 12 + typo.text_width(f'/ {of:02d}', g) / sf.ss
     return x2
 
@@ -194,16 +220,13 @@ def landing(sf: Surface, cy: float | None = None):
 
 def footer(sf: Surface, page_label: str = '', next_label: str = '',
            seam: tuple[bool, bool] = (False, False)):
-    """Hairline, a gold mark, the handle; on the right, where the swipe
-    goes next — in red, with a chevron — and the page number.
-
-    `seam` = (a slide before, a slide after): the hairline runs out to that
-    edge, so across a swipe it is one unbroken line from the first slide to
-    the last (D100)."""
+    """A gold dot, the handle; on the right, where the swipe goes next — in
+    red, with a chevron — and the page number. No hairline (D128): the seam
+    between slides is carried by the edge tab and its landing mark alone.
+    `seam` is kept for callers; it no longer draws anything."""
     W, H, m = sf.w, sf.h, P.margin
     y = H - P.footer_h
-    _rect(sf, (0 if seam[0] else m, y, W if seam[1] else W - m, y + 2), RULE)
-    _rect(sf, (m, y + 32, m + 24, y + 56), GOLD)
+    dot(sf, m + 9, y + 44, 9, GOLD)
     f = typo.font('kn_var', sf.s(P.meta), weight=620)
     typo.draw_text(sf.img, Brand.handle, sf.s(m + 40), sf.s(y + 54), f, INK)
     x = W - m
@@ -260,7 +283,8 @@ def split_headline(text: str) -> tuple[str, str]:
 
 def headline(sf: Surface, x: float, y: float, w: float, text: str,
              max_h: float, hi: int = P.head_hi, lo: int = P.head_lo,
-             ink_only: bool = False, align: str = 'left') -> float:
+             ink_only: bool = False, align: str = 'left',
+             dark: bool = False) -> float:
     """The headline, largest size that fits `w` x `max_h`.
 
     A colon ends a line: the first half in ink, the second in red — the
@@ -293,8 +317,12 @@ def headline(sf: Surface, x: float, y: float, w: float, text: str,
         if one:
             size = one[0]
     ba, bb, gap, _h = set_at(size)
-    col_b = INK if ink_only else RED
-    bottom = typo.draw_block(sf.img, ba, sf.s(x), sf.s(y), INK,
+    # On the ink reel (D128) the type is paper and the news red is red_400:
+    # red_500 on ink is 3.3:1 — enough for display type, not for the body-size
+    # labels beside it, and one red on a frame reads as one signal.
+    col_a = C.paper_50 if dark else INK
+    col_b = col_a if ink_only else (C.red_400 if dark else RED)
+    bottom = typo.draw_block(sf.img, ba, sf.s(x), sf.s(y), col_a,
                              box_w=sf.s(w))
     if bb:
         bottom = typo.draw_block(sf.img, bb, sf.s(x), bottom + gap, col_b,

@@ -75,3 +75,6 @@ logs/
 .idea/
 .vscode/
 .backups/
+
+# YouTube motion pieces: 40+ MB, rebuilt exactly by scripts/youtube_kit.py
+assets/youtube/*.mp4

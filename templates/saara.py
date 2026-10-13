@@ -20,12 +20,9 @@ TITLE = 'ಸುದ್ದಿ ಸಾರ'
 def _header(sf, date_kn: str) -> float:
     """The running head on every inside slide. Returns its bottom."""
     m = P.margin
-    pp.bug(sf, m, 44, 28)
+    pp.bug(sf, m, 44, 26)
     pp.meta(sf, sf.w - m, 82, f'{TITLE}  ·  {date_kn}', anchor='r')
-    y = 124
-    pp._rect(sf, (m, y, sf.w - m, y + 3), pp.INK)
-    pp.accent(sf, m, y + 7, 160, 6)
-    return y + 13
+    return 137                    # no rule under it (D128): the space is the divider
 
 
 def _points_fit(sf, items: list[str], x: float, y: float, w: float,
@@ -46,14 +43,16 @@ BAR_H = 76
 
 
 def _swipe_bar(sf, y: float):
-    """The cover's call to swipe: a red bar across the foot of the slide.
-    The first covers had none, and readers stopped at slide one."""
+    """The cover's call to swipe: an ink pill across the foot of the slide,
+    with a gold chevron. The first covers had none, and readers stopped at
+    slide one. Ink, not red (D128): red is the news, and this is a button."""
     m = P.margin
-    pp._rect(sf, (m, y, sf.w - m, y + BAR_H), pp.RED)
+    pp.panel(sf, (m, y, sf.w - m, y + BAR_H), pp.INK, radius=BAR_H / 2)
     f = typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(34))
-    typo.draw_text(sf.img, SWIPE, sf.s(m + 28), sf.s(y + BAR_H / 2 + 12), f,
-                   pp.WHITE)
-    pp.chevron(sf, sf.w - m - 44, y + BAR_H / 2, 30, pp.WHITE, 5)
+    rise, drop = typo.ink_extents('ಕ', f)
+    typo.draw_text(sf.img, SWIPE, sf.s(m + 40), sf.s(y + BAR_H / 2) + (rise - drop) / 2,
+                   f, pp.WHITE)
+    pp.chevron(sf, sf.w - m - 52, y + BAR_H / 2, 28, pp.C.gold_400, 5)
 
 
 # The cover (D103).
@@ -114,8 +113,6 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     pp.meta(sf, W - m, 92, edition.date_kn, anchor='r')
     pp.meta(sf, m, 196, f'{TITLE}  ·  ಇಂದಿನ {len(stories)} ಸುದ್ದಿ', pp.RED,
             size=32, weight=760)
-    pp._rect(sf, (m, 222, W - m, 225), pp.INK)
-    pp.accent(sf, m, 229, 160, 6)
 
     lead, rest = stories[0], stories[1:]
     bottom = H - P.footer_h - 28 - BAR_H - 24
@@ -144,8 +141,7 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
         fp = typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(34))
         fr = typo.font('kn_var', weight=600, size=sf.s(32))
         for st in rest:
-            pp._rect(sf, (m, y, W - m, y + 2), pp.RULE)
-            y += TEASE_GAP
+            y += TEASE_GAP            # air, not a hairline (D128)
             place, line = _teaser(st)
             wp = typo.text_width(place, fp) / sf.ss
             typo.draw_text(sf.img, place, sf.s(m), sf.s(y + 38), fp, pp.RED)
@@ -173,15 +169,13 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
                 pp.GOLD_TYPE, size=30, weight=720, anchor='r')
         y = pp.headline(sf, m, y + 76, cw, st.headline, 380, hi=84, lo=60,
                         ink_only=pp.ink_only(st))
-        pp.accent(sf, m, y + 30)
         y += 30 + 8 + 40
         items = [p for p in st.points if p.strip()] or ([st.deck] if st.deck else [])
         src_base = H - P.footer_h - 30
         if items:
             size = _points_fit(sf, items, m + 36, y, cw - 36, src_base - 40 - y)
             for t in items:
-                pp._rect(sf, (m, y + size * 0.5, m + 14, y + size * 0.5 + 14),
-                         pp.GOLD_MARK)
+                pp.dot(sf, m + 7, y + size * 0.5 + 7, 7, pp.GOLD_MARK)
                 y = pp.body(sf, m + 36, y, cw - 36, t, size=size, weight=520,
                             fill=pp.BODY) + 26
         pp.meta(sf, m, src_base, st.source_line, max_w=cw * 0.55)
@@ -208,16 +202,17 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     if pp.join_line():
         pp.meta(sf, W / 2, yb + 104, pp.join_line(), pp.GOLD_TYPE, size=28,
                 weight=640, anchor='c', max_w=cw)
-    y = yb + 140
-    pp._rect(sf, (m, y, W - m, y + 3), pp.INK)
-    pp.meta(sf, m, y + 56, Brand.sources_kn, pp.GOLD_TYPE, size=30, weight=720)
+    y = yb + 150
+    # The sources sit on one soft panel — a block set apart, no rules (D128).
+    pp.panel(sf, (m, y, W - m, y + 96 + 50 * len(stories)))
+    pp.meta(sf, m + 32, y + 56, Brand.sources_kn, pp.GOLD_TYPE, size=30, weight=720)
     y += 110
     for i, st in enumerate(stories, 1):
         url = next((u for u in st.source_urls if u), '')
         where = url_host(url)
         line = ' · '.join(x for x in (' / '.join(st.sources), where) if x)
-        pp.meta(sf, m, y, f'{i:02d}', pp.GREY, size=28, weight=720)
-        pp.meta(sf, m + 64, y, line, pp.BODY, size=28, max_w=cw - 64)
+        pp.meta(sf, m + 32, y, f'{i:02d}', pp.GREY, size=28, weight=720)
+        pp.meta(sf, m + 96, y, line, pp.BODY, size=28, max_w=cw - 128)
         y += 50
     pp.grievance(sf, H - P.footer_h - 30)
     pp.landing(sf)

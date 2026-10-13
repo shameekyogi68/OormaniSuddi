@@ -44,7 +44,7 @@ from brand import typo
 from brand import ornament as orn
 from brand.content import Photo, ContentError
 from brand.copy import CORE_TAGS
-from brand.surface import Surface, scrim, vgradient, radial_glow, grain, paste_logo
+from brand.surface import Surface, scrim, vgradient, radial_glow, grain, paste_medallion
 from brand.tokens import C, Grade, Brand, fmt, mix, rgb
 
 
@@ -364,9 +364,8 @@ def _draw_bleed(sf, g, th, sol, W, H, top, text_top):
 
 def _draw_window(sf, g, th, win, W, H, text_top):
     ss = sf.ss
-    radial_glow(sf, W * 0.5, win.y + win.h * 0.45, W * 0.74, th.glow, 0.22)
-    orn.mandala(sf, W * 0.5, win.y + win.h * 0.50,
-                min(W * 0.48, win.h * 0.74), C.gold_400, 0.20)
+    # Light behind the window, no drawn rings (D128).
+    radial_glow(sf, W * 0.5, win.y + win.h * 0.45, W * 0.74, th.glow, 0.26)
 
     with Image.open(g.photo.path) as src:
         im = src.convert('RGB')
@@ -386,8 +385,8 @@ def _draw_window(sf, g, th, win, W, H, text_top):
     arch = np.asarray(orn.arch_mask(ww, wh, win.rise * ss), np.float32)
     im = im.convert('RGBA')
     im.putalpha(Image.fromarray((arch * foot[:, None]).astype(np.uint8), 'L'))
+    # The arch is the picture's own edge, softened — no gold outline (D128).
     orn._paste(sf, im, win.x * ss, win.y * ss)
-    orn.arch_frame(sf, win.x, win.y, win.w, win.h, win.rise)
     return [(0, 0, W, win.y - 30),
             (0, win.y, win.x - 24, text_top - 10),
             (win.x + win.w + 24, win.y, W, text_top - 10)]
@@ -396,9 +395,10 @@ def _draw_window(sf, g, th, win, W, H, text_top):
 def _draw_plate(sf, th, W, top, text_top):
     cy = top + (text_top - top) * 0.48
     r = min(W * 0.42, (text_top - top) * 0.46)
-    radial_glow(sf, W * 0.5, cy, r * 1.7, th.glow, 0.22)
-    orn.mandala(sf, W * 0.5, cy, r, C.gold_400, 0.34)
-    radial_glow(sf, W * 0.5, cy, r * 0.45, th.glow, 0.20)
+    # No picture: the medallion, in its own light — not a ring of drawn lines.
+    radial_glow(sf, W * 0.5, cy, r * 1.7, th.glow, 0.24)
+    radial_glow(sf, W * 0.5, cy, r * 0.9, C.gold_500, 0.16)
+    paste_medallion(sf, W * 0.5, cy, r * 1.15, halo=0.25, shadow=0.6, bezel=C.ink_950)
     return [(0, 0, W, text_top - 20)]
 
 
@@ -415,11 +415,7 @@ def _draw_salutation(sf, g, S, W, th):
     typo.draw_text(sf.img, g.salutation, W * ss / 2, base, f, C.gold_300,
                    anchor_x='c', shadow=(0, ss * 2, ss * 10, (0, 0, 0, 220)))
     yl = (base - rise * 0.40) / ss
-    gap, L = 22, 84
-    orn.fade_line(sf, W / 2 - tw / 2 - gap - L, W / 2 - tw / 2 - gap, yl,
-                  C.gold_400, 1.2, 0.0, 0.9, 0.9)
-    orn.fade_line(sf, W / 2 + tw / 2 + gap, W / 2 + tw / 2 + gap + L, yl,
-                  C.gold_400, 1.2, 0.9, 0.0, 1.1)
+    gap = 22                      # a gold bead each side; no rules (D128)
     orn.diamond(sf, W / 2 - tw / 2 - gap + 2, yl, 3.4, C.gold_400, 0.95)
     orn.diamond(sf, W / 2 + tw / 2 + gap - 2, yl, 3.4, C.gold_400, 0.95)
     if g.date:
@@ -489,7 +485,7 @@ def _draw_wish(sf, g, S, b, th, W, text_top):
     L, gp = S['logo'], 14
     gx = W / 2 - (L + gp + nw) / 2
     ly = y / ss
-    paste_logo(sf, gx, ly, L)
+    paste_medallion(sf, gx + L / 2, ly + L / 2, L, shadow=0.5, bezel=C.ink_950)
     rn, dn = typo.ink_extents(Brand.name, fn)
     typo.draw_text(sf.img, Brand.name, (gx + L + gp) * ss,
                    (ly + L / 2) * ss + (rn - dn) / 2, fn, C.paper_0,
@@ -600,7 +596,6 @@ def _compose(g: Greeting, format_key: str = 'story'):
 
     orn.bokeh(sf, th.glow, f'{g.slug}|{g.occasion}|{format_key}', regions,
               n=S['bokeh'], twinkles=S['twinkles'])
-    orn.corner_filigree(sf, *S['corner'])
     _draw_salutation(sf, g, S, W, th)
     _draw_wish(sf, g, S, b, th, W, text_top)
     grain(sf, Grade.grain * 0.8, Grade.grain_shadow_bias)

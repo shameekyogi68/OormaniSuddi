@@ -121,12 +121,13 @@ class TheScanWipe(unittest.TestCase):
                 self.assertGreater(ink_f, ink_s * 0.9, f'{name} at {t:.1f}s, y={b.y0}')
 
     def test_mukhya_cover_animates_photo_and_text(self):
-        """D117 — the ಮುಖ್ಯ ಸುದ್ದಿ cover: photo fades in, sunline draws, and headline/deck wipe in."""
+        """D117 — the ಮುಖ್ಯ ಸುದ್ದಿ cover: photo fades in and headline/deck wipe in.
+        D128 took the gold sunline away: there is no line to draw."""
         name = 'mukhya_1_01_cover'
         _info, tl = self.info(name)
         self.assertGreater(len(tl['bands']), 0, 'mukhya cover text bands must animate')
         self.assertIsNotNone(tl['photo'], 'mukhya cover photo must fade in')
-        self.assertIsNotNone(tl['sun'], 'mukhya cover sun line must draw')
+        self.assertIsNone(tl['sun'], 'no line under the photograph (D128)')
         mp4 = self.path(name + '.mp4')
         still = np.asarray(Image.open(self.path(name + '.jpg')).convert('RGB')).astype(int)
         f0 = np.asarray(frame_at(mp4, 0.1)).astype(int)
@@ -250,7 +251,7 @@ class TheScanWipe(unittest.TestCase):
     def test_a_photograph_stays_out_of_the_wipe(self):
         info, tl = self.info('mukhya_1_01_cover')
         self.assertGreater(info['photo_end'], 600)
-        self.assertIsNotNone(info['sun'])          # the gold sunline draws itself
+        self.assertIsNone(info['sun'])             # no gold rule under it any more (D128)
         self.assertLess(len(info['bands']), 8)     # the text below it, not the photo
 
     def test_the_reveal_is_quick_and_the_hold_reads(self):

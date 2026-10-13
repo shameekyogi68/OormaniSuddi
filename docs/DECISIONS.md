@@ -3575,3 +3575,47 @@ guard; outside the workspace is a refused run, not a silent write elsewhere.
 
 `render.py :: main` · `brand/content.py :: path_inside` ·
 `tests/test_render_cli.py`
+
+## D128 · Luxury: paper to read, ink to watch, and no lines anywhere
+
+**Decided (2026-10-13), by the owner.** "Make everything visual premium and
+luxury … nothing less than 10/10, even in animations", after "why those lines
+everywhere" on the YouTube kit, and "which is best based on the products,
+content and target audience" when asked light or dark.
+
+**The split.** The carousels (ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ) are *read*: dense
+Kannada, often outdoors on the coast, by an older local audience for whom a
+newspaper is what trustworthy news looks like. They stay on warm paper.
+Everything *watched* — ಸ್ಪೀಡ್ ನ್ಯೂಸ್, the footage reels (`reel_news`), YouTube —
+goes to deep ink with warm gold light: Instagram sets its own white caption,
+name and audio over the bottom of every reel, and white on paper is lost.
+On ink the news red is `red_400`, 5.0:1: `red_500` measures 3.3:1 there,
+which clears the display floor but not the body floor the reel's red category
+labels need, and one red per frame reads as one signal. The pairs are in
+`legibility.PAIRS`.
+
+**No lines.** Every hairline, rule, accent bar, sunline under a photograph,
+footer hairline, ruled sea, dashed glint, striped cloud, horizon rule, corner
+filigree, arch outline, mandala ring and the rules either side of the
+greeting lotus are gone. Structure is space, weight and a soft tonal panel
+(`paper.panel`); light is a glow. The animator found the ಸುದ್ದಿ ಸಾರ cover's
+teasers by their hairlines; it now finds them as the red-led lines below the
+lead headline (`animate.analyse`).
+
+**One mark.** The red block round the channel's name spent the news colour on
+branding. The house mark is now the gold medallion — the round logo in a
+metallic gold ring (`surface.medallion`) — on posts, reels, greetings and
+YouTube alike.
+
+**Replaced.** D92's "a gold line under every photograph", "hairlines, not
+borders" and the red wordmark bug; D100's continuous footer hairline (the
+edge tab and landing mark still carry the seam); D66's engraved plate (now a
+sun half-set in its own bloom over a tonal sea); D54's filigree and arch
+frame. Kept: square counter chips (STANDARDS rule 3 — rounded pills were
+rejected once already), the scan-wipe choreography (D98–D104), every
+legibility floor and safe zone.
+
+`brand/paper.py` · `brand/surface.py :: medallion, editorial_plate` ·
+`brand/speednews.py` · `brand/reel_news.py` · `brand/animate.py :: analyse` ·
+`templates/saara.py, mukhya.py, greeting.py` · `brand/ornament.py` ·
+`scripts/youtube_kit.py` · `tests/test_animate.py`

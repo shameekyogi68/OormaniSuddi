@@ -147,27 +147,23 @@ def analyse(im: Image.Image, cover: bool = False) -> dict:
     # here, so the running order follows however many stories the day has.
     teasers: list[tuple[int, int, int]] = []
     if cover:
-        # Hairlines are the light rule colour across most of the measure —
-        # the black rule under the header is not one, so the lead's kicker
-        # (red, small, under that black rule) is never taken for a teaser.
-        x0m, x1m = P.margin, W - P.margin
-        rule_c = np.array(C.paper_200, np.int16)
-        near = np.abs(a[:foot, x0m:x1m].astype(np.int16) - rule_c).sum(axis=2) < 25
-        hair = np.nonzero(near.mean(axis=1) > 0.8)[0]
+        # A teaser is a small line that opens with a red place name, BELOW the
+        # lead headline — so the red label and the lead's kicker above the
+        # headline are never taken for one. There are no hairlines between
+        # teasers any more (D128); each row's light is the air around it.
+        big = [i for i, b in enumerate(bands) if b.big]
+        # the swipe pill is big too: teasers sit between the lead and it
+        lead_end = max((i for i in big if bands[i].y1 < foot - 160), default=-1)
+        after = lead_end + 1
         red_px = np.abs(a.astype(np.int16) - np.array(C.red_500, np.int16)).sum(axis=2) < 120
         for k, b in enumerate(bands):
-            if b.rule or b.big:
+            if k < after or b.rule or b.big:
                 continue
             if red_px[b.y0:b.y1, b.x0:b.x0 + 60].mean() < 0.08:
                 continue
-            above = hair[(hair < b.y0) & (hair >= b.y0 - 40)]
-            if not above.size:
-                continue
-            top_ = int(above.max()) + 3
-            below = hair[hair > b.y1]
-            nxt = min([int(below.min()) - 1] if below.size else [foot]
-                      + ([bands[k + 1].y0 - 3] if k + 1 < len(bands) else []))
-            bot = min(nxt, b.y1 + (b.y0 - top_))
+            top_ = max(b.y0 - 14, (bands[k - 1].y1 + 3) if k else b.y0 - 14)
+            nxt = bands[k + 1].y0 - 3 if k + 1 < len(bands) else foot
+            bot = min(nxt, b.y1 + 14)
             teasers.append((top_, bot, b.x0))
 
     # The swipe chevrons: white on the red edge tab, red in the footer.

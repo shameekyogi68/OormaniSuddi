@@ -44,8 +44,7 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
     sf = pp.page(W, H)
     ph = P.photo_4x5
     pp.photo(sf, story.photo, (0, 0, W, ph))
-    pp.sunline(sf, ph)
-    pp.bug(sf, m, 52)
+    pp.bug(sf, m, 48, on_photo=True)
     y = pp.kicker(sf, m, ph + 52, story, breaking=breaking)
     bottom = H - P.footer_h - 64
     y = pp.headline(sf, m, y + 28, cw, story.headline, bottom - y - 28,
@@ -59,14 +58,13 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
 
     # ── ಏನಾಗಿದೆ? ───────────────────────────────────────────────────────────
     sf = pp.page(W, H)
-    pp.bug(sf, m, 44, 28)
+    pp.bug(sf, m, 44, 26)
     place = (story.location or '').strip() or Brand.coverage
     pp.meta(sf, W - m, 82, category(story.category)['kn']
             if pp.leads_with_place(story)
             else f'{category(story.category)["kn"]}  /  {place}', anchor='r')
     t = typo.layout('ಏನಾಗಿದೆ?', typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(80)), sf.s(cw), 1.2)
     yb = typo.draw_block(sf.img, t, sf.s(m), sf.s(176), pp.INK) / sf.ss
-    pp.accent(sf, m, yb + 26)
     y = yb + 26 + 8 + 56
     items = [p for p in story.points if p.strip()] or (
         [story.deck] if story.deck else [])
@@ -77,13 +75,15 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
         pp.chip(sf, m, y + 2, i, 30)
         y = pp.body(sf, m + 96, y, cw - 96, text, size=size, weight=600) + 30
         if i < len(items):
-            pp._rect(sf, (m + 96, y, W - m, y + 2), pp.RULE)
-            y += 32
+            y += 32                   # air between facts, not a rule (D128)
     if tail:
+        # The takeaway on a soft panel: set apart by tone, not by a bar (D128).
         y += 20
-        pp._rect(sf, (m, y, m + 6, y + 96), pp.GOLD)
-        pp.body(sf, m + 28, y, cw - 28, tail, size=36, weight=700,
-                fill=pp.BODY, max_h=110, lo=28)
+        b = typo.fit(tail, 'kn_var', sf.s(36), sf.s(28), sf.s(cw - 72),
+                     sf.s(110), P.body_lead, weight=700)
+        pp.panel(sf, (m, y, W - m, y + b.height / sf.ss + 56))
+        typo.draw_block(sf.img, b, sf.s(m + 36), sf.s(y + 28), pp.BODY,
+                        box_w=sf.s(cw - 72))
     pp.landing(sf, P.photo_4x5 / 2)          # the cover's tab sits on its photo
     pp.edge_tab(sf)
     pp.footer(sf, '2/3', 'ಮೂಲ', seam=(True, True))
@@ -99,9 +99,7 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
                          box_w=sf.s(cw)) / sf.ss
     pp.meta(sf, W / 2, yb + 58, f'{Brand.follow_kn} — {Brand.handle}',
             size=32, anchor='c', max_w=cw)
-    y = yb + 120
-    pp._rect(sf, (m, y, W - m, y + 3), pp.INK)
-    y += 60
+    y = yb + 110
     url = next((u for u in story.source_urls if u), '')
     rows = [('ಮೂಲ', ' · '.join(story.sources)),
             ('ಲಿಂಕ್', url_host(url) or 'ಸ್ವಂತ ವರದಿ'),
@@ -109,11 +107,13 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
             ('ತಿದ್ದುಪಡಿ', 'ತಪ್ಪು ಕಂಡರೆ ತಿಳಿಸಿ — ಪರಿಶೀಲಿಸಿ ಸರಿಪಡಿಸುತ್ತೇವೆ')]
     if Brand.whatsapp_url:
         rows.append(('ವಾಟ್ಸ್‌ಆ್ಯಪ್', Brand.whatsapp_url.replace('https://', '')))
+    # One soft panel holds the record; the rows are set apart by air (D128).
+    pp.panel(sf, (m, y, W - m, y + 36 + 64 * len(rows)))
+    y += 66
     for key, val in rows:
-        pp.meta(sf, m, y, key, pp.GOLD_TYPE, size=30, weight=720)
-        pp.meta(sf, m + 200, y, val, pp.INK, size=30, max_w=cw - 200)
-        pp._rect(sf, (m, y + 24, W - m, y + 25), pp.RULE)
-        y += 68
+        pp.meta(sf, m + 32, y, key, pp.GOLD_TYPE, size=30, weight=720)
+        pp.meta(sf, m + 232, y, val, pp.INK, size=30, max_w=cw - 264)
+        y += 64
     pp.grievance(sf, H - P.footer_h - 30)
     pp.landing(sf)
     pp.footer(sf, '3/3', seam=(True, False))

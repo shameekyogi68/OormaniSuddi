@@ -1,27 +1,29 @@
 # ಊರ್ಮನಿ ಸುದ್ದಿ — YouTube channel kit
 
-Everything here is made from the logo and the house colours by
-`scripts/youtube_kit.py`. To rebuild after changing the logo:
+Everything here is drawn from the logo by `scripts/youtube_kit.py`: deep ink,
+warm gold light, the round logo set in a metallic gold medallion. To rebuild:
 
 ```bash
-python3 scripts/youtube_kit.py
+python3 scripts/youtube_kit.py            # stills + motion
+python3 scripts/youtube_kit.py --still    # stills only (10 s)
 ```
 
 Files starting with `_check_` show the safe areas. They are only for checking, so never upload them.
 
 ## Where each file goes
 
-| File | Where to upload it | Notes |
+| File | Where | Notes |
 |---|---|---|
-| `profile_800.png` | Studio → Customisation → Branding → **Picture** | YouTube crops it to a circle |
-| `banner_2560x1440.jpg` | Studio → Customisation → Branding → **Banner image** | All the text and the logo stay inside the 1546×423 area that phones show |
-| `watermark_150.png` | Studio → Customisation → Branding → **Video watermark**, display time "Entire video" | This is YouTube's clickable subscribe button. Nothing is burned into the video |
-| `thumbnail_sample_seneshwara.jpg` | Studio → the video → **Thumbnail** | A sample made from a real frame of the Seneshwara Ganapathi video |
-| `endscreen_1920x1080.png` | Put it in the last 20 s of every long video, then Studio → **End screen** | Place two Video elements on the dark boxes and the Subscribe element on the round logo. `_check_endscreen_slots.jpg` shows where |
-| `live_starting_soon_1920x1080.png` | The first scene in the streaming app before a live stream | |
-| `live_be_right_back_1920x1080.png` | For a break during the stream | |
-| `live_thank_you_1920x1080.png` | For the last minute of the stream | |
-| `live_overlay_1920x1080.png` | Transparent overlay placed over the camera during the live stream | Logo and ನೇರಪ್ರಸಾರ pill in the top-left |
+| `profile_800.png` | Studio → Customisation → Branding → **Picture** | The round logo; YouTube crops a circle |
+| `banner_2560x1440.jpg` | Branding → **Banner image** | Logo, name line and subscribe button sit inside the 1546×423 strip that phones show |
+| `watermark_150.png` | Branding → **Video watermark**, display time **Entire video** | YouTube's clickable subscribe button; nothing is burned into the video |
+| `thumbnail_sample_seneshwara.jpg` | the video → **Thumbnail** | Sample from a real frame of the Seneshwara Ganapathi video |
+| `motion_intro_1920x1080.mp4` | First 4 s of a long video | Light rises, the medallion arrives, a glint runs round the gold ring, the name settles. House sound effects |
+| `motion_endscreen_1920x1080.mp4` | Last 20 s of every long video, then Studio → **End screen** | Everything is in place by 1.2 s. Put two Video elements on the dark panels and the Subscribe element on the medallion (`_check_endscreen_slots.jpg`) |
+| `endscreen_1920x1080.png` | The same end screen as a still | For editors that want an image |
+| `motion_live_starting_soon_loop_1920x1080.mp4` | Before a live stream, set to loop | 10 s seamless loop: breathing light, a glint on the ring, the live dot pulses |
+| `live_starting_soon / be_right_back / thank_you _1920x1080.png` | Scenes in the streaming app | |
+| `live_overlay_1920x1080.png` | Transparent overlay on the camera during a stream | Medallion and ನೇರಪ್ರಸಾರ pill, top-left |
 
 ## A thumbnail for every video
 
@@ -31,41 +33,73 @@ Start from a real frame of that video, with the deity, a face or the moment larg
 python3 scripts/youtube_kit.py thumb --photo frame.jpg --title "ಸೇನೇಶ್ವರ ಗಣಪತಿ ಪ್ರತಿಷ್ಠಾಪನೆ" --place "ಬೈಂದೂರು" --out out/thumb.jpg
 ```
 
-* `--title`: 2–4 Kannada words. The last line goes on gold.
+* `--title`: 2–4 Kannada words. The last line goes on metallic gold.
 * `--place`: the town, shown in the red pill.
 * `--tag "ನೇರಪ್ರಸಾರ"` for a live stream.
 * `--focal 0.45 0.30`: where the subject is in the photo, so the crop keeps it.
 * The bottom-right is kept empty because YouTube puts the video length there.
 * Never use a close-up of a child as the thumbnail (youtube-longform-edit rule).
 
-## Channel text (Studio → Customisation → Basic info)
+## Channel text — as set on YouTube (Studio → Customisation → Basic info)
 
-**Name:** ಊರ್ಮನಿ ಸುದ್ದಿ | Oormani Suddi
-**Handle:** @oormanisuddi
+**Handle:** @OormaniSuddi · **Language:** Kannada · **Contact email:** oormanisuddi@gmail.com
 
-**Description:**
+**Kannada** — name `ಊರ್ಮನಿ ಸುದ್ದಿ | Oormani Suddi`:
 
 ```
 ಊರ್ಮನಿ ಸುದ್ದಿ — ನಮ್ಮ ಊರು • ನಮ್ಮ ಧ್ವನಿ
 
-ಕರಾವಳಿಯ ಊರಿನ ಸುದ್ದಿ, ಕನ್ನಡದಲ್ಲಿ. ಹಬ್ಬ, ಜಾತ್ರೆ, ಕಂಬಳ, ಯಕ್ಷಗಾನ, ದೇವಸ್ಥಾನದ ಉತ್ಸವಗಳು ಮತ್ತು ಊರಿನ ಆಗುಹೋಗುಗಳು — ನಮ್ಮ ವರದಿಗಾರರು ಸ್ಥಳದಲ್ಲೇ ಚಿತ್ರೀಕರಿಸಿದ ದೃಶ್ಯಗಳೊಂದಿಗೆ.
+ಕರಾವಳಿಯ ಊರಿನ ಸುದ್ದಿ, ಕನ್ನಡದಲ್ಲಿ.
 
-Local news from coastal Karnataka (Karavali), in Kannada — festivals, jatres, Kambala, Yakshagana, temple events and civic news, filmed on the ground.
+Local news from coastal Karnataka (Karavali), in Kannada.
 
 📸 Instagram: https://www.instagram.com/oormanisuddi
 💬 WhatsApp: https://chat.whatsapp.com/KZieCRqqaCaDjGADvbVYzg
 
-ತಿದ್ದುಪಡಿ / ದೂರು (Grievance Officer): Gautam Paduvari · +91 96117 56514
+ತಿದ್ದುಪಡಿ / ದೂರು : Gautam Paduvari · +91 96117 56514 · oormanisuddi@gmail.com
 
 ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ, ಬೆಲ್ 🔔 ಒತ್ತಿ — ನಿಮ್ಮ ಊರಿನ ಸುದ್ದಿ ತಪ್ಪಿಸಿಕೊಳ್ಳಬೇಡಿ.
 ```
 
-**Links (shown on the banner):** Instagram and WhatsApp, the same two links as above.
+**English** (translation) — name `Oormani Suddi`:
+
+```
+Oormani Suddi — Namma Ooru • Namma Dhwani (Our town • Our voice)
+
+Local news from coastal Karnataka (Karavali), in Kannada.
+
+📸 Instagram: https://www.instagram.com/oormanisuddi
+💬 WhatsApp: https://chat.whatsapp.com/KZieCRqqaCaDjGADvbVYzg
+
+Corrections / complaints: Gautam Paduvari · +91 96117 56514 · oormanisuddi@gmail.com
+
+Subscribe and press the bell 🔔 so you never miss news from your town.
+```
+
+**Links:** Instagram and WhatsApp. **Watermark display time:** Entire video.
 
 **Channel keywords (Studio → Settings → Channel):**
 
 ```
-ಊರ್ಮನಿ ಸುದ್ದಿ, Oormani Suddi, ಕರಾವಳಿ, Karavali, ಕನ್ನಡ ಸುದ್ದಿ, Kannada News, ಉಡುಪಿ, Udupi, ಬೈಂದೂರು, Byndoor, ಕುಂದಾಪುರ, Kundapura, ಕಂಬಳ, Kambala, ಯಕ್ಷಗಾನ, Yakshagana, ಜಾತ್ರೆ, Coastal Karnataka
+ಊರ್ಮನಿ ಸುದ್ದಿ, Oormani Suddi, ಕರಾವಳಿ, Karavali, ಕನ್ನಡ ಸುದ್ದಿ, Kannada News, ಬೈಂದೂರು, Byndoor, Coastal Karnataka
 ```
 
-**Country:** India. **Default upload language:** Kannada.
+## Instagram (@oormanisuddi)
+
+Name `ಊರ್ಮನಿ ಸುದ್ದಿ | Oormani Suddi` · picture `profile_800.png` · category "News & media website" (label shown).
+
+```
+ಕರಾವಳಿಯ ಊರಿನ ಸುದ್ದಿ • Karavali local news
+ನಮ್ಮ ಊರು • ನಮ್ಮ ಧ್ವನಿ
+DM for Live Broadcast or Contact 9611756514
+```
+
+Links: WhatsApp community and YouTube (`https://www.youtube.com/@OormaniSuddi`).
+Contact: email oormanisuddi@gmail.com, phone +91 9611756514 (Call), both displayed.
+WhatsApp Business number left blank, since it is only for ads.
+
+## Rules for anything added here
+
+* Only what the owner has stated goes in channel text or on artwork: no topic lists, no claims about who films what, no superlatives.
+* No decorative lines: no stripes, rules, streaks or underlines. Use light and fills only.
+* Gold is a fill, never type. Red only on news elements (place, live).
