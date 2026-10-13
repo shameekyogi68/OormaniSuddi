@@ -260,6 +260,14 @@ Files over 30 MB cannot be sent to the phone, so say so. Send a comparison image
   3–5 hashtags; last line exactly: `ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಮೆಂಟ್ ಮಾಡಿ.` (AGENTS.md rule 7).
 - **Settings** — category News & Politics or People & Blogs; Made for Kids: No; add chapters;
   pinned comment asking viewers which moment they liked.
+- **Playlist** — the taluk's playlist (`ಬೈಂದೂರು`, `ಕುಂದಾಪುರ`, `ಉಡುಪಿ`, …) and, for culture, the
+  season's (`ಕಂಬಳ 2026`, `ಯಕ್ಷಗಾನ`). Playlists keep a viewer watching our next video, and watch
+  hours are the Partner Programme line (D119).
+- **End screen** — the most-watched long video from the same taluk or season, plus subscribe.
+- **Altered or synthetic content** — "No" for real footage that is only upscaled, graded or
+  cleaned. "Yes" only if a realistic AI-generated element is in the video (YouTube policy).
+- **Facebook** — the same master uploaded natively to the Page (never a YouTube link in the post;
+  any link goes in the first comment): house rule, D119.
 - Upload the 1440p master, not the preview.
 
 ---

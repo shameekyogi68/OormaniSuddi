@@ -70,7 +70,7 @@ class TheScanWipe(unittest.TestCase):
             self.assertIn(j[:-4] + '.mp4', self.files, j)
 
     def info(self, name):
-        cover = '_cover' in name
+        cover = '_cover' in name and not name.startswith('mukhya_')
         i = A.analyse(Image.open(self.path(name + '.jpg')), cover=cover)
         return i, A.plan(i, cover=cover)
 
@@ -96,28 +96,41 @@ class TheScanWipe(unittest.TestCase):
             self.assertLess((diff > 200).mean(), 0.02, f'ink already at y={b.y0}')
             self.assertGreater((diff > 12).mean(), 0.005, f'no pencil outline at y={b.y0}')
 
-    def test_a_cover_is_the_finished_slide_from_the_first_frame(self):
+    def test_saara_cover_is_the_finished_slide_with_running_order(self):
         """Instagram takes the post's thumbnail from the first video, so the
-        cover must be whole at frame 0 — and from then on nothing passes over
+        saara cover must be whole at frame 0 — and from then on nothing passes over
         it but the running order behind its teasers (D104)."""
-        for name in ('saara_01_cover', 'mukhya_1_01_cover'):
-            info, tl = self.info(name)
-            mp4 = self.path(name + '.mp4')
-            still = np.asarray(frame_at(mp4, 0.5)).astype(int)
-            lit = np.zeros(still.shape[:2], bool)
-            for y0, y1, x0 in info['teasers']:
-                lit[y0:y1, max(0, x0 - 22):] = True
-            for t in (0.0, 1.0, 1.8, 3.0, 5.0):
-                f = np.asarray(frame_at(mp4, t)).astype(int)
-                d = np.abs(f - still).sum(axis=2)
-                self.assertLess(d[~lit].mean(), 1.5, f'{name} at {t:.1f}s: something passed over it')
-                # and no line of text is thinner than it should be
-                for b in info['bands']:
-                    if b.rule:
-                        continue
-                    ink_f = (np.abs(f[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
-                    ink_s = (np.abs(still[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
-                    self.assertGreater(ink_f, ink_s * 0.9, f'{name} at {t:.1f}s, y={b.y0}')
+        name = 'saara_01_cover'
+        info, tl = self.info(name)
+        mp4 = self.path(name + '.mp4')
+        still = np.asarray(frame_at(mp4, 0.5)).astype(int)
+        lit = np.zeros(still.shape[:2], bool)
+        for y0, y1, x0 in info['teasers']:
+            lit[y0:y1, max(0, x0 - 22):] = True
+        for t in (0.0, 1.0, 1.8, 3.0, 5.0):
+            f = np.asarray(frame_at(mp4, t)).astype(int)
+            d = np.abs(f - still).sum(axis=2)
+            self.assertLess(d[~lit].mean(), 1.5, f'{name} at {t:.1f}s: something passed over it')
+            # and no line of text is thinner than it should be
+            for b in info['bands']:
+                if b.rule:
+                    continue
+                ink_f = (np.abs(f[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
+                ink_s = (np.abs(still[b.y0:b.y1, b.x0:b.x1] - np.array(info['paper'])).sum(axis=2) > 200).mean()
+                self.assertGreater(ink_f, ink_s * 0.9, f'{name} at {t:.1f}s, y={b.y0}')
+
+    def test_mukhya_cover_animates_photo_and_text(self):
+        """D117 — the ಮುಖ್ಯ ಸುದ್ದಿ cover: photo fades in, sunline draws, and headline/deck wipe in."""
+        name = 'mukhya_1_01_cover'
+        _info, tl = self.info(name)
+        self.assertGreater(len(tl['bands']), 0, 'mukhya cover text bands must animate')
+        self.assertIsNotNone(tl['photo'], 'mukhya cover photo must fade in')
+        self.assertIsNotNone(tl['sun'], 'mukhya cover sun line must draw')
+        mp4 = self.path(name + '.mp4')
+        still = np.asarray(Image.open(self.path(name + '.jpg')).convert('RGB')).astype(int)
+        f0 = np.asarray(frame_at(mp4, 0.1)).astype(int)
+        # At start, not yet finished: ink and photo are revealing
+        self.assertGreater(np.abs(still - f0).mean(), 10.0)
 
     def test_the_running_order_lights_one_teaser_at_a_time(self):
         """D104 — the ಸುದ್ದಿ ಸಾರ cover: a gold underlay and a red tick step down

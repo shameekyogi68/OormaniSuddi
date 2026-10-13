@@ -23,6 +23,10 @@ that in Karnataka is old and specific:
     from a family or an institution has always been signed on a festival
     banner. No dateline, no category, no "ವಿಶೇಷ".
   * DISCLOSED.  An AI image carries its label on the poster itself (D49).
+  * SPONSORED, OPENLY (D118).  A business may pay to wish the town: its name
+    is signed under "ಶುಭ ಕೋರುವವರು", ಪ್ರಾಯೋಜಿತ is set on the poster and leads
+    the caption, and nothing renders unless a person cleared the deal in
+    `business/deals.json`. Our name stays as the publisher, below.
 
 See DECISIONS.md D54.
 """
@@ -97,7 +101,11 @@ SCALE = {
 WISH_INK = mix(C.paper_0, C.gold_300, 0.10)
 
 LIMITS = dict(occasion=30, wish=26, salutation=34, blessing=96,
-              sign_label=24, date=30)
+              sign_label=24, date=30, sponsor=40)
+
+# What a paid greeting says about itself, on the poster and first in the
+# caption (docs/ADVERTISING.md §2).
+SPONSORED = 'ಪ್ರಾಯೋಜಿತ'
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -120,6 +128,11 @@ class Greeting:
     date: str = ''
     tags: list[str] = field(default_factory=list)
     slug: str = ''
+    # D118: a paid greeting. `sponsor` is the business wishing the town, as
+    # it should appear on the poster; `deal` is its id in business/deals.json,
+    # which a person must have cleared.
+    sponsor: str = ''
+    deal: str = ''
 
     def validate(self) -> 'Greeting':
         if not (self.occasion or '').strip():
@@ -145,7 +158,10 @@ class Greeting:
                     'holds the deity or subject — so the wish is never set across '
                     'it. For a seated pair of idols filling the middle of a '
                     'portrait photo that is typically about [0.3, 0.66].')
-        for k in ('occasion', 'wish', 'salutation', 'blessing', 'sign_label', 'date'):
+        if self.sponsor or self.deal:
+            check_sponsorship(self)
+        for k in ('occasion', 'wish', 'salutation', 'blessing', 'sign_label',
+                  'date', 'sponsor'):
             v = getattr(self, k) or ''
             if not v:
                 continue
@@ -155,6 +171,14 @@ class Greeting:
                 raise ContentError(f'{k} contains characters no house font can '
                                    f'set: {" ".join(gone)}')
         return self
+
+    @property
+    def sign_text(self) -> str:
+        """The gold line above the signer. A paid wish says so HERE, right
+        above the sponsor's name, not in the small print (ASCI: upfront)."""
+        if self.sponsor and self.sign_label:
+            return f'{SPONSORED} · {self.sign_label}'
+        return self.sign_label
 
     @classmethod
     def from_dict(cls, d: dict) -> 'Greeting':
@@ -174,6 +198,40 @@ class Greeting:
     def load(cls, path: str) -> 'Greeting':
         with open(path, encoding='utf-8') as f:
             return cls.from_dict(json.load(f))
+
+
+def check_sponsorship(g: Greeting) -> None:
+    """A sponsored greeting is rendered only for a deal a person cleared
+    (D118). The firewall in brand/business.py decides what may be sold; this
+    makes sure the poster is the thing that was sold, to the one who bought it."""
+    from brand import business as B
+    if not (g.sponsor or '').strip() or not (g.deal or '').strip():
+        raise ContentError('a sponsored greeting needs both `sponsor` (the name '
+                           'on the poster) and `deal` (its id in '
+                           'business/deals.json)')
+    if not (g.sign_label or '').strip():
+        raise ContentError('a sponsored greeting keeps its sign_label — the '
+                           'sponsor signs under "ಶುಭ ಕೋರುವವರು"')
+    if not B.ready():
+        raise ContentError('no business books on this machine — a sponsored '
+                           'greeting is checked against business/deals.json')
+    d = next((x for x in B.deals() if x.get('id') == g.deal), None)
+    if d is None:
+        raise ContentError(f'AD-10: no deal {g.deal} in business/deals.json')
+    if d.get('product') != 'greeting_sponsor':
+        raise ContentError(f'AD-10: deal {g.deal} sold {d.get("product")!r}, '
+                           f'not a sponsored greeting')
+    if d.get('stage') not in ('agreed', 'live', 'paid'):
+        raise ContentError(f'AD-10: deal {g.deal} is at {d.get("stage")!r}; it '
+                           f'must be agreed before its poster is made')
+    if not d.get('cleared_by'):
+        raise ContentError(f'AD-08: deal {g.deal} has not been cleared by a '
+                           f'person — python3 scripts/business.py deal clear '
+                           f'{g.deal} --by NAME')
+    names = [n.strip().lower() for n in d.get('names') or []]
+    if g.sponsor.strip().lower() not in names:
+        raise ContentError(f'AD-10: "{g.sponsor}" is not one of the names on '
+                           f'deal {g.deal} ({", ".join(d.get("names") or [])})')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -209,6 +267,7 @@ def _blocks(g: Greeting, S: dict, W: int, ss: int, k: float = 1.0):
     b.g_div = 22 * k
     b.g_bless = 40 * k
     b.sig = (((S['label'] * 1.35 + 12) if g.sign_label else 0)
+             + ((S['name'] * 1.3 + 16) if g.sponsor else 0)
              + S['logo'] + 14 + S['handle'] * 1.4)
     b.disc = (14 + S['disc'] * 1.4) if g.photo else 0
     b.total = (occ.height / ss + b.g_occ
@@ -405,11 +464,25 @@ def _draw_wish(sf, g, S, b, th, W, text_top):
 
     if g.sign_label:
         fl = typo.font('kn_var', int(ss * S['label']), weight=520)
-        rl, _ = typo.ink_extents(g.sign_label, fl)
-        typo.draw_text(sf.img, g.sign_label, cx, y + rl, fl,
+        rl, _ = typo.ink_extents(g.sign_text, fl)
+        typo.draw_text(sf.img, g.sign_text, cx, y + rl, fl,
                        mix(C.gold_300, C.paper_200, 0.35), anchor_x='c',
                        shadow=(0, ss, ss * 8, (0, 0, 0, 200)))
         y += (S['label'] * 1.35 + 12) * ss
+
+    if g.sponsor:
+        # The sponsor signs the wish, at the size of our own name; we stay
+        # below as the publisher.
+        cw = (W - 2 * S['pad']) * ss
+        size = int(ss * S['name'])
+        fs = typo.font_for(g.sponsor, 'kn', size)
+        while typo.text_width(g.sponsor, fs) > cw and size > ss * S['name'] * 0.6:
+            size = int(size * 0.94)
+            fs = typo.font_for(g.sponsor, 'kn', size)
+        rs, _ = typo.ink_extents(g.sponsor, fs)
+        typo.draw_text(sf.img, g.sponsor, cx, y + rs, fs, C.paper_0,
+                       anchor_x='c', shadow=(0, ss * 2, ss * 10, (0, 0, 0, 210)))
+        y += (S['name'] * 1.3 + 16) * ss
 
     fn = typo.font('kn', int(ss * S['name']))
     nw = typo.text_width(Brand.name, fn) / ss
@@ -555,19 +628,26 @@ def greeting_copy(g: Greeting) -> dict:
     """Caption and forward text. The AI label travels with the post as well
     as sitting on the picture, because a forward strips the picture's context."""
     head = ' '.join(x for x in (g.salutation, g.occasion, g.wish) if x).strip()
-    body = [head if head.endswith(('.', '!')) else head + '.']
+    body = [f'{SPONSORED} · {g.sponsor}'] if g.sponsor else []
+    body.append(head if head.endswith(('.', '!')) else head + '.')
     if g.blessing:
         body.append(g.blessing.rstrip('.') + '.')
-    body.append(f'— {Brand.name} ಬಳಗ')
+    body.append(f'{g.sign_label}: {g.sponsor}' if g.sponsor
+                else f'— {Brand.name} ಬಳಗ')
     if g.photo is not None and g.photo.label:
         body.append(g.photo.label)
     tags: list[str] = []
     for t in list(g.tags) + CORE_TAGS:
         t = t.lstrip('#').replace(' ', '')
+        # A paid post never wears a news tag (docs/ADVERTISING.md §1).
+        if g.sponsor and ('ಸುದ್ದಿ' in t or 'news' in t.lower()):
+            continue
         if t and t not in tags:
             tags.append(t)
     hashtags = ['#' + t for t in tags[:10]]
     alt = f'{g.occasion} {g.wish} — {Brand.name} ಶುಭಾಶಯ ಪೋಸ್ಟರ್'
+    if g.sponsor:
+        alt = f'{SPONSORED}: {g.sponsor} — {alt}'
     if g.photo is not None:
         alt += f'. {disclosure_label(g.photo)}'
         if g.photo.caption:
@@ -578,6 +658,10 @@ def greeting_copy(g: Greeting) -> dict:
         'whatsapp': '\n\n'.join(body) + f'\n\n{Brand.handle}',
         'hashtags': hashtags,
         'alt_text': alt,
+        # D118: the platform's own label as well as ours.
+        'paid_partnership': (f'Turn on Paid partnership (Instagram/Facebook) '
+                             f'and tag {g.sponsor}; deal {g.deal}'
+                             if g.sponsor else ''),
     }
 
 
@@ -605,6 +689,9 @@ def package(g: Greeting, outdir: str, formats=None) -> list[tuple[str, str]]:
         f.write('═══ WHATSAPP — STATUS & FORWARD ' + '═' * 37 + '\n\n')
         f.write(c['whatsapp'] + '\n\n')
         f.write('═══ ALT TEXT ' + '═' * 56 + '\n\n' + c['alt_text'] + '\n')
+        if c['paid_partnership']:
+            f.write('\n═══ PAID — BEFORE YOU POST ' + '═' * 42 + '\n\n'
+                    + c['paid_partnership'] + '\n')
     # The caption on its own, same as every other post (house rule
     # 2026-09-17-06): one file, nothing in it but what you paste.
     with open(os.path.join(outdir, 'wish_caption.txt'), 'w',

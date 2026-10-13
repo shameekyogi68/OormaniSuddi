@@ -120,7 +120,9 @@ AGENTS.md rule 7: the rule restricts AI-card reels on YouTube, and these are rea
 credit, source, the correction-contact line from `brand/tokens.py`, hashtags), the first comment,
 a YouTube Shorts title under 60 characters — **bilingual**: the Kannada line, then `|`, then the
 place and topic in English so people searching in either script find it
-(`ಕುಂದಾಪುರ ಶಾಸ್ತ್ರಿ ಸರ್ಕಲ್ ಕಾಮಗಾರಿ | Kundapura Traffic`, D94) — and a Shorts description whose
+(`ಕುಂದಾಪುರ ಶಾಸ್ತ್ರಿ ಸರ್ಕಲ್ ಕಾಮಗಾರಿ | Kundapura Traffic`, D94). When a long video of the same
+event exists, set it as the Short's **Related video** in YouTube Studio — Shorts views do not count
+toward watch hours; the long video they lead to does (D119). Then a Shorts description whose
 first three lines carry what happened and the towns, and that ends with
 `ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಮೆಂಟ್ ಮಾಡಿ.` (AGENTS.md rule 7) plus `#Shorts`.
 

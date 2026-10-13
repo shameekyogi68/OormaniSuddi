@@ -25,6 +25,12 @@ archive/
 inbox/*
 !inbox/README.md
 
+# The company's books (D118): money, clients, prices, goals. Private — this
+# remote is public. Carried by scripts/backup.sh. business/README.md is
+# tracked so the folder's purpose survives.
+business/*
+!business/README.md
+
 # ── Rendered deliverables ────────────────────────────────────────────────────
 # out/ is regenerated from editions/*.json by render.py. The inputs are the
 # source of truth; the artwork is not.

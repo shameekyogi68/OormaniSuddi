@@ -13,6 +13,7 @@ Then, depending on the job:
 | pick a format for a story | [`docs/DECISIONS.md`](docs/DECISIONS.md) D92, then `python3 render.py --describe` |
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
 | write or judge anything for Instagram (formats, hooks, captions, timing) | [`docs/INSTAGRAM.md`](docs/INSTAGRAM.md) — labelled by how reliable each line is |
+| run the company — money, sponsors, YouTube/Facebook growth, goals | [`docs/BUSINESS.md`](docs/BUSINESS.md), then [`docs/ADVERTISING.md`](docs/ADVERTISING.md); `python3 scripts/business.py status` |
 | know which agents to run | `python3 scripts/dispatch.py` — agents in `.claude/agents/`, in waves (D87, D89) |
 | look after the machine — updates, disk, backups, a new Mac | [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) |
 | edit raw clips into a long-format YouTube video | [`.claude/skills/youtube-longform-edit/SKILL.md`](.claude/skills/youtube-longform-edit/SKILL.md) |
@@ -65,6 +66,11 @@ That is not automatically a bug — but do not re-bless it without looking at
 * **One story, one format.** Every story carries `segment` (`speed` / `saara` /
   `mukhya`); a source already published is refused (`DUP-01`) unless it is a
   real follow-up. D92.
+* **Money never buys news.** A sponsor buys a labelled product from
+  `brand/business.py :: PRODUCTS`, never a story, a slot or a removal, and a
+  person clears every deal (`scripts/business.py deal clear --by`) — the same
+  rule as `verified_by`: never with a name the owner did not give. The books
+  in `business/` are private (the repo is public). D118.
 * **Numbers live in `tokens.Limits`, once.** Durations, character budgets,
   loudness, slots, contrast floors, stories per format. Skills and docs quote
   those names; they do not restate the values. See D56.

@@ -1,7 +1,7 @@
 """
 ಊರ್ಮನಿ ಸುದ್ದಿ — who should be working right now, and why. D89, D92.
 ====================================================================
-Ten specialist agents live in `.claude/agents/` (their shared rules are in
+The specialist agents live in `.claude/agents/` (their shared rules are in
 `.claude/agents/_CONVENTIONS.md`, which is not an agent). An agent nobody
 remembers to call is an agent that does not exist, so this module reads the
 state of the newsroom — editions, kept sources, receipts, gate reports, the
@@ -25,6 +25,12 @@ The production path, in waves (tasks in one wave run in parallel):
 **Ops** — planning-editor (weekly review, or on request) and systems-steward
 (weekly, or health red) — are listed separately and never mixed into the
 production waves.
+
+**Business** (D118) — the company's desks: general-manager, revenue-manager,
+youtube-strategist, facebook-strategist and finance-controller on their
+weekly / monthly rhythm, ad-standards for every deal on its way to agreed.
+They write dated files in `business/reports/`; the file existing is how the
+plan knows they ran. Listed on their own, never mixed into production.
 
 **Person** tasks are what no agent may do: verify a story (`verified_by`),
 answer "real photo, or generate?" (`photo_plan`), send the photograph, sign
@@ -70,6 +76,23 @@ ROSTER: dict[str, dict] = {
     'corrections-officer': {'kind': 'reactive', 'stage': 'after'},
     'planning-editor':     {'kind': 'ops',      'stage': 'planning'},
     'systems-steward':     {'kind': 'ops',      'stage': 'operations'},
+    # The company (D118) — never on the production path.
+    'general-manager':     {'kind': 'business', 'stage': 'company'},
+    'revenue-manager':     {'kind': 'business', 'stage': 'revenue'},
+    'youtube-strategist':  {'kind': 'business', 'stage': 'growth'},
+    'facebook-strategist': {'kind': 'business', 'stage': 'growth'},
+    'ad-standards':        {'kind': 'business', 'stage': 'revenue'},
+    'finance-controller':  {'kind': 'business', 'stage': 'finance'},
+}
+
+# The business desks' rhythm (D118): the report each writes, and how often.
+# The general manager runs last in its week — it reads the others' reports.
+BUSINESS_RHYTHM = {
+    'revenue-manager':     ('revenue', 'week'),
+    'youtube-strategist':  ('youtube', 'week'),
+    'facebook-strategist': ('facebook', 'week'),
+    'finance-controller':  ('finance', 'month'),
+    'general-manager':     ('gm', 'week'),
 }
 
 # Desks that work story by story and may read several in one run (D97).
@@ -138,12 +161,14 @@ class Plan:
     day: str
     tasks: list[Task] = field(default_factory=list)
     ops: list[Task] = field(default_factory=list)     # never production waves
+    business: list[Task] = field(default_factory=list)  # the company (D118)
     person: list[str] = field(default_factory=list)   # only a human can do these
 
     def add(self, *a, **kw):
         t = Task(*a, **kw)
-        into = self.ops if ROSTER.get(t.agent, {}).get('kind') == 'ops' \
-            else self.tasks
+        kind = ROSTER.get(t.agent, {}).get('kind')
+        into = self.ops if kind == 'ops' else \
+            self.business if kind == 'business' else self.tasks
         key = (t.agent, t.target, t.story, t.part)
         if key not in {(x.agent, x.target, x.story, x.part) for x in into}:
             into.append(t)
@@ -188,7 +213,9 @@ class Plan:
 
     def to_dict(self) -> dict:
         return {'day': self.day, 'tasks': [asdict(t) for t in self.tasks],
-                'ops': [asdict(t) for t in self.ops], 'person': self.person}
+                'ops': [asdict(t) for t in self.ops],
+                'business': [asdict(t) for t in self.business],
+                'person': self.person}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -688,7 +715,79 @@ def plan(day: str | None = None, include_ops: bool = True) -> Plan:
         _corrections_tasks(p)
         _ops_tasks(p, today)
         _insights_task(p, today)
+        try:
+            _business_tasks(p, today, eds)
+        except Exception as e:              # the books never stop the newsroom
+            p.person.append(f'business plan unavailable: {type(e).__name__}: {e}')
     return p
+
+
+def business_report(agent: str, today: date) -> str:
+    """The file a business desk writes for the current period. The finance
+    desk closes the month that has just ended."""
+    prefix, every = BUSINESS_RHYTHM[agent]
+    if every == 'month':
+        first = today.replace(day=1)
+        prev = date.fromordinal(first.toordinal() - 1)
+        period = prev.strftime('%Y-%m')
+    else:
+        y, w, _ = today.isocalendar()
+        period = f'{y}-W{w:02d}'
+    return os.path.join(ROOT, 'business', 'reports', f'{prefix}_{period}.md')
+
+
+def _business_tasks(p: Plan, today: date, editions: list[str]) -> None:
+    """The company's desks and the company's person-tasks (D118)."""
+    from . import business as B
+    rel = lambda x: os.path.relpath(x, ROOT)              # noqa: E731
+    if not B.ready():
+        p.person.append('start the company\'s books once: python3 '
+                        'scripts/business.py init — the business desks decide '
+                        'from what is logged there')
+    for agent in BUSINESS_RHYTHM:
+        f = business_report(agent, today)
+        if not os.path.exists(f):
+            why = {'week': 'weekly', 'month': 'monthly close'}[BUSINESS_RHYTHM[agent][1]]
+            p.add(agent, 'business', 1 if agent == 'general-manager' else 0,
+                  f'{why} report due', rel(f))
+    if not B.ready():
+        return
+    for d in B.deals():
+        if d.get('stage') in ('pitched', 'agreed') and \
+                not os.path.exists(B.ad_report_path(d['id'])):
+            p.add('ad-standards', 'business', 0,
+                  f'deal {d["id"]} ({d.get("client", "")}, {d.get("category")}) '
+                  f'is {d["stage"]} and nobody has read it against the firewall',
+                  rel(B.ad_report_path(d['id'])),
+                  urgent=d.get('stage') == 'agreed')
+        elif d.get('stage') == 'agreed' and not d.get('cleared_by'):
+            p.person.append(f'read business/reports/ad_{d["id"]}.md, then clear '
+                            f'deal {d["id"]} ({d.get("client", "")}) yourself: '
+                            f'python3 scripts/business.py deal clear {d["id"]} '
+                            f'--by "<your name>"')
+    for d in B.follow_ups(today):
+        p.person.append(f'follow up {d.get("client", "")} (deal {d["id"]}): '
+                        f'{d.get("next_action") or "next step"} — due '
+                        f'{d["next_date"]}; any draft is in business/drafts/')
+    s = B.status(today)
+    if s.audience_age is None or s.audience_age > B.AUDIENCE_STALE_DAYS:
+        since = f'{s.audience_age} days old' if s.audience_age is not None \
+            else 'none logged yet'
+        p.person.append(f'log this week\'s YouTube / Facebook / Instagram numbers '
+                        f'({since}): python3 scripts/business.py audience '
+                        f'--platform youtube --followers … --watch-hours … — '
+                        f'what the monetisation progress is measured from')
+    if s.gst['warn']:
+        p.person.append(f'GST: FY {s.gst["fy"]} turnover is {s.gst["share"]:.0%} '
+                        f'of the registration line — see a CA this month')
+    for path in editions:
+        try:
+            with open(path, encoding='utf-8') as fh:
+                ed = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        for c in B.conflicts(ed, today):
+            p.person.append(f'{rel(path)}: {c}')
 
 
 INSIGHTS_STALE_DAYS = 8
@@ -743,7 +842,7 @@ def _line(t: Task) -> str:
 
 def brief(p: Plan, limit: int = 30) -> str:
     """The plan as the team lead reads it: waves, parallel within a wave."""
-    if not p.tasks and not p.person and not p.ops:
+    if not p.tasks and not p.person and not p.ops and not p.business:
         return f'Team plan {p.day}: nothing due. Every receipt is current.'
     launches = p.launches()
     n_runs = sum(len(v) for v in launches.values())
@@ -766,6 +865,12 @@ def brief(p: Plan, limit: int = 30) -> str:
     if p.ops:
         lines.append('  ops (not on the production path — run when convenient):')
         lines += [_line(t) for t in p.ops]
+    if p.business:
+        lines.append('  business (the company — run when convenient; '
+                     'general-manager last, it reads the others):')
+        lines += [_line(t) for t in sorted(p.business,
+                                           key=lambda t: (t.wave, not t.urgent,
+                                                          t.agent))]
     if p.person:
         lines.append('  needs a person (no agent may do these):')
         lines += [f'    · {x}' for x in dict.fromkeys(p.person)][:16]

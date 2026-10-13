@@ -2,7 +2,7 @@
 
 Not an agent. Every agent in this folder says "Read
 `.claude/agents/_CONVENTIONS.md` first"; this is that file. A rule written
-once here cannot drift between twelve copies.
+once here cannot drift between eighteen copies.
 
 ## Workspace jail
 Work only inside `/Users/shameekyogi/My Apps/Oormani Suddi`. Never read,
@@ -58,9 +58,22 @@ flags, published_at, reel_line): assigning a segment or adding a photo does
 not make them due again; a copy edit does. A BLOCK is surfaced to a person —
 no agent clears another agent's block.
 
+## The business desks (D118)
+`general-manager`, `revenue-manager`, `youtube-strategist`,
+`facebook-strategist`, `ad-standards` and `finance-controller` run the
+company, not the newsroom. They never touch an edition or news copy. They
+read `docs/BUSINESS.md` and `docs/ADVERTISING.md`, and the private books in
+`business/` (`python3 scripts/business.py status`). They write only inside
+`business/` — their report in `business/reports/` (the file existing is
+their receipt) and drafts in `business/drafts/`. A client's or a person's
+details never leave `business/`. Money never buys news: a desk that is asked
+to sell a story, a slot or a removal says no.
+
 ## What no agent ever does
 - write `verified_by` / `verified_at` — a person opened the source (D59)
 - sign off, publish, upload or post anything
+- send a message, sign or accept a deal, invoice, pay or receive money, or
+  clear a deal (`scripts/business.py deal clear --by`) — a person does (D118)
 - invent a fact, figure, name, place or quote that is not in the kept source
 - add an override, weaken a check, or edit engine code to make a code go away
 - decide a story's `segment` or `photo_plan` for the editor — propose; the

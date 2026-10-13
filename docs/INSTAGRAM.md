@@ -28,11 +28,19 @@ kept current by the editor: paste Instagram's own announcements into
 5. **Original beats re-posted.** Aggregated or watermarked content from other
    apps is shown less. [Official] Our copy is written from our own reading of
    the source, in our own design — never paste a source's text or image.
+   An account that reposts others' content 10+ times in 30 days is dropped
+   from recommendations, and the original replaces the repost. [Official,
+   Apr 2024 — re-check] Our own footage and our own reading of a source are
+   exactly what this rewards.
 6. **Words in the caption are search terms.** Place, topic and what happened,
    in plain Kannada and in English — hashtags matter less than they did. [Reported]
 7. **Five hashtags at most**, only true to the story (D86, `PUB-09`). [House, D86]
 8. **No engagement bait.** "Like if…", "tag three friends" and giveaways-for-follows
    are demoted. A real question about the reader's own town is fine. [Official]
+9. **Trial reels** go only to non-followers first — a way to test a hook
+   without tiring the people who follow us. **Collabs** publish one post to
+   two accounts' followers — with a public body or an event organiser only,
+   never a business on news (house rule 2026-10-12-02). [Official, 2024–25]
 
 ## 2 · What a person does with a post (psychology)
 

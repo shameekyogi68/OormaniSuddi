@@ -3340,6 +3340,73 @@ clear them failed.
 
 `scripts/correction.py` · `brand/corrections.py` · `tests/test_corrections_cli.py`
 
+## D117 · ಮುಖ್ಯ ಸುದ್ದಿ cover animates: photo fade, sunline, and scan-wipe
+
+**Decided (2026-10-09).** The owner: slide 1 of a ಮುಖ್ಯ ಸುದ್ದಿ carousel must
+never be static. In D104, because a mukhya cover carries no teasers, it was
+reduced to a motionless holding frame with only the chevron nudge. The owner
+rejected this static appearance on 2026-10-09 and directed that all future
+ಮುಖ್ಯ ಸುದ್ದಿ covers must be fully animated.
+
+* **Photo & sunline**: The cover opens as paper, the photo fades in gently
+  over `anim_photo` seconds, and the gold sunline draws across to close it.
+* **Scan-wipe lines**: Headline, kicker, and deck reveal line by line with
+  the soft gold light wipe and settle into ink.
+* **Chevron nudge**: At the end of the reveal, the swipe chevrons nudge right
+  to invite swiping to slide 2.
+* **ಸುದ್ದಿ ಸಾರ cover is unchanged**: It keeps the running order teaser
+  animation from D104.
+
+`brand/animate.py :: animate` · `tests/test_animate.py` · `house rule 2026-10-09-01`
+
+## D118 · The company: business desks, private books, and the firewall
+
+**Decided (2026-10-12).** The owner: ಊರ್ಮನಿ ಸುದ್ದಿ is a startup and must be
+run as a business — earning from YouTube, Instagram and Facebook and from
+local sponsors — with AI desks that work from what the business is.
+
+The newsroom already had twelve desks and no way to know whether it earned
+a rupee. Six business desks join them, kind `business` in
+`brand/dispatch.py :: ROSTER`, on their own rhythm (`BUSINESS_RHYTHM`) and
+never on the production path: **general-manager** (weekly business review —
+scorecard, three decisions, owners; runs last, it reads the others),
+**revenue-manager** (platform monetisation, sponsor pipeline, festival
+sales calendar, drafts), **youtube-strategist** and **facebook-strategist**
+(growth toward each platform's monetisation line), **ad-standards** (every
+deal read against the firewall before a person clears it) and
+**finance-controller** (monthly close, GST line, tax dates). Each writes a
+dated report in `business/reports/`; the file is its receipt.
+
+* **The books are private.** `business/` holds the ledger, platform numbers,
+  deals, goals and prices; it is gitignored (the remote is public) and
+  carried by `scripts/backup.sh`. Typed by the owner through
+  `scripts/business.py`, as `metrics.py` is — no platform API, no web.
+* **Money never buys news.** A deal buys one of `PRODUCTS`, labelled on the
+  work (ಪ್ರಾಯೋಜಿತ / ಜಾಹೀರಾತು). `check_deal` refuses a product outside the
+  list, a deal that asks for news or a removal, a prohibited advertiser, a
+  political ad without its MCMC certificate, a missing label, and a deal
+  going live that no person cleared — or, for a sensitive category, that the
+  ad-standards desk has not read. There is no override flag, for D29's
+  reason. A news Story has no field for money; that absence is the design.
+* **A person clears a deal** (`business.py deal clear --by`), as a person
+  verifies a story (D59). No agent sends, signs, invoices, pays or clears.
+* **Conflicts are surfaced.** A story naming a current sponsor is put to
+  the editor by the dispatcher: disclose it, or have someone with no stake
+  judge it.
+* **Platform thresholds live once**, in `PLATFORM_RULES`, each with the date
+  a person last checked it; health and the status screen flag any older
+  than `RULES_STALE_DAYS`. Tax lines are labelled [Rule — confirm with CA]
+  in `docs/BUSINESS.md`, never presented as advice.
+
+Considered and refused: giving the business desks web access to research
+clients and trends (D92's paste-only rule holds — a scraped phone number is
+a privacy problem and a scraped trend is a guess); a `sponsored` flag on
+Story (it would make a paid story possible to express, which is the thing
+being prevented).
+
+`brand/business.py` · `scripts/business.py` · `brand/dispatch.py :: _business_tasks` ·
+`docs/BUSINESS.md` · `docs/ADVERTISING.md` · `tests/test_business.py`
+
 ---
 
 ## Changing something here
@@ -3351,3 +3418,44 @@ If you are about to change a value in `brand/tokens.py`:
    design genuinely changes — look at the diff images before accepting them.
 3. Re-render the reference set and look at it: `python3 examples/make_examples.py`.
 4. Update [`../STANDARDS.md`](../STANDARDS.md) if the rule changed, not just the value.
+
+## D119 · The October research, applied: a sponsor can be sold, never seated in the news
+
+**Decided (2026-10-12).** The owner commissioned a deep-research report on
+growth and money for regional news channels, then asked for it to be
+applied by the system's own judgement, with one condition: **content
+floats** — what is filmed depends on events and people, so nothing may be a
+quota. The claim-by-claim verdicts and the full decision table are in the
+private `business/decisions_2026-10.md`.
+
+* **The first product renders.** `templates/greeting.py` takes `sponsor` and
+  `deal`. The sponsor signs under "ಪ್ರಾಯೋಜಿತ · ಶುಭ ಕೋರುವವರು" — the label
+  sits in the gold line directly above the name, not in the small print
+  (ASCI: upfront) — the caption leads with ಪ್ರಾಯೋಜಿತ, news hashtags are
+  dropped, and the copy reminds the poster to switch on Paid partnership.
+  `check_sponsorship()` refuses to render unless the deal exists, is a
+  `greeting_sponsor`, is at least agreed, was cleared by a person, and lists
+  the name on the poster (`AD-08`, `AD-10`). A greeting with no sponsor is
+  unchanged to the pixel.
+* **The firewall learned the report's own ideas.** It proposed a sponsored
+  WhatsApp news bulletin, a sponsor bumper inside the roundups, a sponsor
+  footer on breaking cards, and labels like "ಪ್ರಾಯೋಜಿತ ಸುದ್ದಿ" and
+  "ವಿಶೇಷ ವರದಿ". `NEWS_WORDS` now refuses bulletin, digest, breaking and
+  ವರದಿ in a deal; house rules 2026-10-12-01/-02 say the same for people.
+* **Packaging that earns watch hours** went into the footage skills, not a
+  schedule: taluk and season playlists, end screens, the Related-video link
+  from every Short, the synthetic-content answer, native Facebook upload
+  (house rule 2026-10-12-03).
+* **No quotas anywhere.** The YouTube strategist proposes what is worth
+  filming *if someone can go*, and makes what was filmed earn the most.
+* Prices and goals were set in the private books from the owner's numbers
+  (136 subscribers, 102 watch hours on 2026-10-12).
+
+Refused from the report: a long video every day (its own burnout section
+says why); sales copy promising reach we have not logged; any change to
+ಸುದ್ದಿ ಸಾರ (no pictures, D92) on the strength of a "test" the report
+invented. Unverified and not acted on: YouTube doubling the ad line to 8,000
+hours from February 2027 — one secondary source; YouTube Studio is the check.
+
+`templates/greeting.py :: check_sponsorship` · `brand/business.py :: NEWS_WORDS` ·
+`tests/test_business.py :: SponsoredGreeting` · house rules 2026-10-12-01..03

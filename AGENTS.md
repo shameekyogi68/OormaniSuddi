@@ -195,7 +195,9 @@ DATE`. Never delete the edition JSON.
 Agents live in `.claude/agents/` — intake-editor, fact-checker,
 legal-standards, instagram-strategist, kannada-editor, picture-editor,
 social-writer, package-inspector, gate-doctor, corrections-officer,
-systems-steward, planning-editor. Do not decide from memory which to call:
+systems-steward, planning-editor; and the company's desks (D118) —
+general-manager, revenue-manager, youtube-strategist, facebook-strategist,
+ad-standards, finance-controller. Do not decide from memory which to call:
 `python3 scripts/dispatch.py` lists who is due, in waves, as the agent RUNS to
 launch. Launch each wave as ONE message of parallel Agent calls, one per line:
 a per-story desk reads several stories in one run (`Limits.agent_batch_max`)
@@ -208,6 +210,29 @@ complaint. D87, D89, D97.
 whole — `grep -n "^## D<number>"` and read that entry. Read `docs/RUNBOOK.md`
 "Chat workflow" and `docs/AI_BRIEF.md` once per session, and agents read only
 their own file and `_CONVENTIONS.md`.
+
+---
+
+## The company (D118)
+
+ಊರ್ಮನಿ ಸುದ್ದಿ is a business as well as a newsroom. The strategy, the revenue
+streams, who decides what and the weekly rhythm are in
+[`docs/BUSINESS.md`](docs/BUSINESS.md); the books are private, in `business/`
+(`python3 scripts/business.py status`). The business desks propose; the
+owner decides; only a person sends, signs, clears a deal or touches money.
+
+**Money never buys news** ([`docs/ADVERTISING.md`](docs/ADVERTISING.md)).
+A sponsor buys a labelled product (ಪ್ರಾಯೋಜಿತ / ಜಾಹೀರಾತು) — never a story,
+a slot in the three formats, softer coverage or a removal. Enforced by
+`brand/business.py :: check_deal`; there is no override flag.
+
+```bash
+python3 scripts/business.py status                 # the company on one screen
+python3 scripts/business.py money …                # every rupee in and out
+python3 scripts/business.py audience …             # weekly platform numbers
+python3 scripts/business.py deal add|move|list …   # sponsors, lead → paid
+python3 scripts/business.py conflicts editions/DATE.json   # a story names a sponsor
+```
 
 ---
 

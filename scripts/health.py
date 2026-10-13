@@ -146,6 +146,29 @@ def check_house() -> list[str]:
             '      docs/HOUSE_RULES.md']
 
 
+def check_business() -> list[str]:
+    """The company's books (D118): set up, clean, and platform rules recent."""
+    from brand import business as B
+    if not B.ready():
+        return [f'{WARN} business books — not set up',
+                '      python3 scripts/business.py init']
+    out = []
+    problems = B.validate_books()
+    out.append(f'{OK} business books — clean' if not problems else
+               f'{BAD} business books — {len(problems)} problem(s): '
+               f'{problems[0][:110]}  (python3 scripts/business.py check)')
+    stale = B.stale_rules()
+    if stale:
+        out.append(f'{WARN} platform rules — not checked in '
+                   f'{B.RULES_STALE_DAYS} days: {", ".join(stale)} '
+                   f'(brand/business.py PLATFORM_RULES)')
+    g = B.gst_watch(B.ledger())
+    if g['warn']:
+        out.append(f'{BAD if g["over"] else WARN} GST — FY {g["fy"]} turnover at '
+                   f'{g["share"]:.0%} of the registration line; see a CA')
+    return out
+
+
 def check_music() -> list[str]:
     """The quarterly licence audit, as something that runs."""
     try:
@@ -258,7 +281,7 @@ def main() -> int:
     print(f'\n  ಊರ್ಮನಿ ಸುದ್ದಿ — health   {datetime.now():%Y-%m-%d %H:%M}\n')
     lines: list[str] = []
     for fn in (check_edition, check_clocks, check_reviews,
-               check_house, check_music, check_disk, check_tools,
+               check_house, check_business, check_music, check_disk, check_tools,
                check_backups, check_git, check_tests):
         try:
             lines += fn()

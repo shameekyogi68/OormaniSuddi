@@ -112,9 +112,26 @@ class TheRosterIsTheTeam(unittest.TestCase):
                          {'planning-editor', 'systems-steward'})
 
     def test_an_agent_the_dispatcher_waits_on_files_a_receipt(self):
-        """planning-editor and systems-steward write their own dated file."""
-        for name in set(D.ROSTER) - {'planning-editor', 'systems-steward'}:
+        """planning-editor, systems-steward and the business desks write
+        their own dated file instead."""
+        for name, r in D.ROSTER.items():
+            if r['kind'] in ('ops', 'business'):
+                continue
             self.assertIn('dispatch.py receipt', body_of(name), name)
+
+    def test_business_desks_write_where_the_dispatcher_looks(self):
+        """D118: the report file is the receipt, so each desk must name it."""
+        biz = {n for n, r in D.ROSTER.items() if r['kind'] == 'business'}
+        self.assertEqual(biz, set(D.BUSINESS_RHYTHM) | {'ad-standards'})
+        for name in biz:
+            body = body_of(name)
+            self.assertIn('business/reports/', body, name)
+            self.assertIn('docs/ADVERTISING.md', body, name)
+            # a person clears a deal (D118), as a person verifies (D59)
+            self.assertIsNone(re.search(r'deal clear \S+ --by', body), name)
+        for name in D.BUSINESS_RHYTHM:
+            prefix = D.BUSINESS_RHYTHM[name][0]
+            self.assertIn(f'business/reports/{prefix}_', body_of(name), name)
 
     def test_every_gate_code_family_has_an_agent(self):
         families = {c.split('-')[0] for c in codes.CODES}

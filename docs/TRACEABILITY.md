@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **79/116** decisions are named by at least one test
+- **82/119** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -130,7 +130,7 @@ those carry a reason rather than a test.
 
 ## D29 · Legal guards are validation rules, not guidance
 
-- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_house.py`, `tests/test_legal_corpus.py`
+- **Tested by:** `tests/test_business.py`, `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_house.py`, `tests/test_legal_corpus.py`
 - Enforced in: `brand/content.py`, `brand/house.py`, `brand/reel_news.py`, `scripts/house_rule.py`
 
 ## D30 · A credit is not a licence
@@ -262,8 +262,8 @@ those carry a reason rather than a test.
 
 ## D59 · No human verification, no publication
 
-- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_verify.py`
-- Enforced in: `brand/codes.py`, `brand/content.py`, `brand/factcheck.py`, `brand/review.py`, `scripts/verify.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_contract.py`, `tests/test_dispatch.py`, `tests/test_verify.py`
+- Enforced in: `brand/business.py`, `brand/codes.py`, `brand/content.py`, `brand/factcheck.py`, `brand/review.py`, `scripts/business.py`, `scripts/verify.py`
 
 ## D60 · Legibility is arithmetic, and arithmetic is testable
 
@@ -530,4 +530,18 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_corrections_cli.py`
 - Enforced in: `scripts/correction.py`
+
+## D117 · ಮುಖ್ಯ ಸುದ್ದಿ cover animates: photo fade, sunline, and scan-wipe
+
+- **Tested by:** `tests/test_animate.py`
+- Enforced in: `brand/animate.py`
+
+## D118 · The company: business desks, private books, and the firewall
+
+- **Tested by:** `tests/test_business.py`, `tests/test_dispatch.py`
+- Enforced in: `brand/business.py`, `brand/dispatch.py`, `scripts/business.py`, `scripts/health.py`, `templates/greeting.py`
+
+## D119 · The October research, applied: a sponsor can be sold, never seated in the news
+
+- **Tested by:** `tests/test_business.py`
 

@@ -63,6 +63,21 @@ the things that are genuinely house style rather than contract.
   - _asked by:_ Shameek Yogi
 - **2026-10-04-01** — Carousels (ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ) are fixed in this format: every slide is its own animated scan-wipe .mp4 (D99), posted together as ONE carousel post in slide order, never joined into one video; seams drawn as one sheet across the swipe (D100). Do not change the motion or the seam design without the owner asking.
   - _why:_ The owner approved the D99/D100 carousel videos on 2026-10-04 and asked that it stay fixed from now on.
+- **2026-10-09-01** — ಮುಖ್ಯ ಸುದ್ದಿ (mukhya) cover slide must always be dynamically animated with photo fade-in, gold sunline draw, and scan-wipe text reveals on headline and deck, followed by swipe chevron nudge. Never deliver it as a static holding frame.
+  - _why:_ Owner instruction on 2026-10-09: Slide 1 cover must not be static; full dynamic scan-wipe and photo animation is mandatory for all future editions.
+  - _asked by:_ Gautam Paduvari
+
+## footage
+
+- **2026-10-12-03** — Every long real-footage YouTube video is also uploaded natively to the Facebook Page with a Kannada caption; an outside link goes in the first comment, never in the post.
+  - _why:_ Native video earns Facebook minutes toward monetisation; posts with outside links are shown less (decisions_2026-10.md A5).
+
+## always
+
+- **2026-10-12-01** — Paid work is labelled only ಪ್ರಾಯೋಜಿತ or ಜಾಹೀರಾತು — never ಪ್ರಾಯೋಜಿತ ಸುದ್ದಿ, ವರದಿ, ವಿಶೇಷ ವರದಿ or any news word. No sponsor name, logo, bumper or footer appears inside ಸ್ಪೀಡ್ ನ್ಯೂಸ್, ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ, a WhatsApp digest or a breaking card.
+  - _why:_ The October 2026 research proposed all of these; a sponsor beside the news is the one thing that spends the readers' trust (docs/ADVERTISING.md, D118–D119).
+- **2026-10-12-02** — An Instagram or Facebook collab on a news post is only with a public body or an event organiser, never with a business or an advertiser. Access to a Facebook group is never paid for with coverage.
+  - _why:_ Co-authoring news with a business blurs who is speaking; coverage is never currency (decisions_2026-10.md A4).
 
 ## Retired
 

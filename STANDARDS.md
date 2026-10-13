@@ -252,18 +252,19 @@ is also a short video, made from the finished slide.
   which also settle up `anim_rise` px), with an `anim_beat` where a block
   ends. Easing: a gentle start and a long, slow settle — never linear,
   never a bounce.
-- **A cover is the finished slide from frame 0** (D101) — Instagram takes
-  the post's thumbnail from the first video, so nothing on it is revealed
-  and nothing passes over it. On the ಸುದ್ದಿ ಸಾರ cover a **running order**
-  steps down the teasers (D104): a soft gold underlay and a red tick light
-  one teaser at a time (`anim_order_*`), the type untouched, the lead never
-  lit, in whole rounds so the loop comes round in step. A cover with no
-  teasers keeps only the chevron nudge. Every other slide opens as paper,
-  its chrome and a faint pencil outline of its own layout
-  (`anim_ghost`), and the ink wipes in over that. **No frame of any slide is
-  ever blank**, and from the end of the reveal to the loop dissolve every
-  slide is finished — so whichever frame is picked as the thumbnail, it is
-  safe on all of them.
+- **Covers** — Instagram takes the post's thumbnail from the first video.
+  On the ಸುದ್ದಿ ಸಾರ cover a **running order** steps down the teasers (D104):
+  a soft gold underlay and a red tick light one teaser at a time
+  (`anim_order_*`), the type untouched, the lead never lit, in whole rounds
+  so the loop comes round in step.
+  A ಮುಖ್ಯ ಸುದ್ದಿ cover (D117, house rule 2026-10-09-01) is fully animated:
+  the photograph fades in, the sunline draws across, and headline and deck
+  reveal line by line with scan-wipe gold light before holding and nudging
+  the swipe chevrons. Every other slide opens as paper, its chrome and a faint
+  pencil outline of its own layout (`anim_ghost`), and the ink wipes in over
+  that. **No frame of any slide is ever blank**, and from the end of the reveal
+  to the loop dissolve every slide is finished — so whichever frame is picked
+  as the thumbnail, it is safe on all of them.
 - **The chrome never moves**: the bug, date, rules, footer, the swipe tab.
 - **The hold is what gets read** — `read_rate`, between `anim_hold` and
   `anim_hold_max`. While it holds, the chevrons nudge right every
@@ -271,8 +272,8 @@ is also a short video, made from the finished slide.
 - **No seam.** The last `anim_out` s dissolve back to frame 0, so the loop
   restarts as if it were the first play.
 - **Never letter by letter** — a cut conjunct is a broken shape.
-- **A photograph is never wiped.** On a cover it is there at frame 0; on
-  another slide it fades. The gold sunline under it draws across (`anim_sun`).
+- **A photograph is never wiped.** On a slide it fades in gently, and the gold
+  sunline under it draws across (`anim_sun`).
 
 ### The swipe — a carousel is one sheet of paper (D100)
 

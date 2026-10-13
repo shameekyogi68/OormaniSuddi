@@ -271,6 +271,42 @@
       "added": "2026-10-07",
       "retired": "",
       "by": "Shameek Yogi"
+    },
+    {
+      "id": "2026-10-09-01",
+      "said": "ಮುಖ್ಯ ಸುದ್ದಿ (mukhya) cover slide must always be dynamically animated with photo fade-in, gold sunline draw, and scan-wipe text reveals on headline and deck, followed by swipe chevron nudge. Never deliver it as a static holding frame.",
+      "scope": "package",
+      "why": "Owner instruction on 2026-10-09: Slide 1 cover must not be static; full dynamic scan-wipe and photo animation is mandatory for all future editions.",
+      "added": "2026-10-09",
+      "retired": "",
+      "by": "Gautam Paduvari"
+    },
+    {
+      "id": "2026-10-12-01",
+      "said": "Paid work is labelled only ಪ್ರಾಯೋಜಿತ or ಜಾಹೀರಾತು — never ಪ್ರಾಯೋಜಿತ ಸುದ್ದಿ, ವರದಿ, ವಿಶೇಷ ವರದಿ or any news word. No sponsor name, logo, bumper or footer appears inside ಸ್ಪೀಡ್ ನ್ಯೂಸ್, ಸುದ್ದಿ ಸಾರ, ಮುಖ್ಯ ಸುದ್ದಿ, a WhatsApp digest or a breaking card.",
+      "scope": "always",
+      "why": "The October 2026 research proposed all of these; a sponsor beside the news is the one thing that spends the readers' trust (docs/ADVERTISING.md, D118–D119).",
+      "added": "2026-10-12",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-10-12-02",
+      "said": "An Instagram or Facebook collab on a news post is only with a public body or an event organiser, never with a business or an advertiser. Access to a Facebook group is never paid for with coverage.",
+      "scope": "always",
+      "why": "Co-authoring news with a business blurs who is speaking; coverage is never currency (decisions_2026-10.md A4).",
+      "added": "2026-10-12",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-10-12-03",
+      "said": "Every long real-footage YouTube video is also uploaded natively to the Facebook Page with a Kannada caption; an outside link goes in the first comment, never in the post.",
+      "scope": "footage",
+      "why": "Native video earns Facebook minutes toward monetisation; posts with outside links are shown less (decisions_2026-10.md A5).",
+      "added": "2026-10-12",
+      "retired": "",
+      "by": ""
     }
   ]
 }

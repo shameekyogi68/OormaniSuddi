@@ -474,7 +474,10 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None,
     """Write `dst` (.mp4, 4:5, silent AAC track for platform compatibility).
     `cover` defaults to the file name: a slide called *_cover is a cover."""
     if cover is None:
-        cover = '_cover' in os.path.basename(src)
+        # A saara cover has teasers and moves as a running order (D104).
+        # A mukhya cover has a photo and headline/deck: it animates with photo
+        # fade-in, sunline, and scan wipe on lines (D117, house rule 2026-10-09-01).
+        cover = '_cover' in os.path.basename(src) and not os.path.basename(src).startswith('mukhya_')
     im = Image.open(src).convert('RGB')
     info = analyse(im, cover=cover)
     W, H = info['size']
