@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **92/129** decisions are named by at least one test
+- **93/130** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -443,7 +443,7 @@ those carry a reason rather than a test.
 ## D98 · Every carousel slide has an animated twin: the scan wipe
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/paper.py`, `brand/tokens.py`, `templates/__init__.py`, `templates/registry.json`
+- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/codes.py`, `brand/paper.py`, `brand/tokens.py`, `templates/__init__.py`, `templates/registry.json`
 
 ## D99 · The scan wipe, refined to a premium standard — and on by default
 
@@ -453,7 +453,7 @@ those carry a reason rather than a test.
 ## D100 · A carousel is separate slides, drawn as one sheet across the swipe
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/copy.py`, `brand/paper.py`, `templates/__init__.py`, `templates/registry.json`
+- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/codes.py`, `brand/copy.py`, `brand/paper.py`, `templates/__init__.py`, `templates/registry.json`
 
 ## D101 · Every frame is a safe thumbnail: a whole cover, and pencil before ink
 
@@ -585,5 +585,9 @@ those carry a reason rather than a test.
 ## D129 · The logo as it is, one motion signature, and grain that did not survive video
 
 - **Tested by:** `tests/test_luxury.py`
-- Enforced in: `brand/paper.py`, `brand/speednews.py`, `brand/surface.py`
+- Enforced in: `brand/codes.py`, `brand/paper.py`, `brand/provenance.py`, `brand/review.py`, `brand/speednews.py`, `brand/surface.py`
+
+## D130 · A carousel that is not animated is held; panels belong to the page
+
+- **Tested by:** `tests/test_contract.py`, `tests/test_luxury.py`
 

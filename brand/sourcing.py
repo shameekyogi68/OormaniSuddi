@@ -119,10 +119,10 @@ def url_problem(url: str) -> str:
     has_id = bool(re.search(r'\d{4,}', u)) or 'newsid=' in p.query.lower()
     # A one-word path (/karavali) is a section; a slug of words
     # (/udupi-rain-warning) is an article.
-    if not segs or (len(segs) == 1 and not has_id and segs[0].isalpha()
+    if (not segs and not has_id) or (len(segs) == 1 and not has_id and segs[0].isalpha()
                     and len(segs[0]) >= 3):
         return 'is a home or section page, not an article'
-    if segs[-1].lower() in SECTIONS and not has_id:
+    if segs and segs[-1].lower() in SECTIONS and not has_id:
         return 'is a section page, not an article'
     return ''
 

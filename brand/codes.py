@@ -69,6 +69,8 @@ CODES: dict[str, str] = {
     'VID-02': 'a reel would be refused or cropped by the platform',
     'VID-03': 'a reel is too short to be watched',
     'VID-04': 'a video peaks above the true-peak ceiling',
+    'VID-05': 'a carousel slide has no animated .mp4 — carousels post as animated video only (rule 11, D98–D100)',
+    'VID-06': 'a carousel video does not move — it is a still picture in a video wrapper (D129)',
     # ── PKG ───────────────────────────────────────────────────────────────
     'PKG-01': 'the copy points at a file that was not rendered',
     'PKG-02': 'the folder contains nothing publishable',

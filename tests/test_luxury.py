@@ -99,6 +99,74 @@ class TheLogoAsItIs(unittest.TestCase):
         self.assertGreater(done.mean(), 250)
 
 
+class AnimationIsGuaranteed(unittest.TestCase):
+    """D130 — a carousel that is not animated, or only pretends to be, is held.
+    The pipeline animates by default; nothing used to CHECK, so a failed encode
+    or a --still folder looked finished and static pictures got posted."""
+
+    @staticmethod
+    def _video(path, moving: bool):
+        import subprocess
+        src = ('testsrc2=s=216x270:r=30:d=3' if moving
+               else 'color=c=white:s=216x270:r=30:d=3')
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 'lavfi', '-i', src,
+                        '-pix_fmt', 'yuv420p', path], check=True)
+
+    def _folder(self, files):
+        import tempfile
+        d = tempfile.mkdtemp()
+        for name, moving in files:
+            path = os.path.join(d, name)
+            if name.endswith('.mp4'):
+                self._video(path, moving)
+            else:
+                with open(path, 'wb') as fh:
+                    fh.write(b'x')
+        return d
+
+    def _codes(self, d, draft=False):
+        from brand.review import review
+        rep = review(d, draft=draft)
+        return ([f.code for f in rep.findings if f.severity == 'fail'],
+                [f.code for f in rep.findings if f.severity != 'fail'])
+
+    def test_a_slide_with_no_video_is_held(self):
+        d = self._folder([('saara_01_cover.jpg', 0)])
+        fails, _ = self._codes(d)
+        self.assertIn('VID-05', fails)
+
+    def test_a_still_draft_warns_instead_of_holding(self):
+        d = self._folder([('saara_01_cover.jpg', 0)])
+        fails, warns = self._codes(d, draft=True)
+        self.assertNotIn('VID-05', fails)
+        self.assertIn('VID-05', warns)
+
+    def test_a_video_that_does_not_move_is_held(self):
+        d = self._folder([('saara_01_cover.mp4', False)])
+        fails, _ = self._codes(d)
+        self.assertIn('VID-06', fails)
+
+    def test_a_video_that_moves_passes_both(self):
+        d = self._folder([('saara_01_cover.mp4', True)])
+        fails, _ = self._codes(d)
+        self.assertNotIn('VID-05', fails)
+        self.assertNotIn('VID-06', fails)
+
+    def test_an_animated_slide_whose_still_moved_to_review_is_fine(self):
+        d = self._folder([('saara_01_cover.mp4', True)])
+        os.makedirs(os.path.join(d, '_review'))
+        with open(os.path.join(d, '_review', 'saara_01_cover.jpg'), 'wb') as fh:
+            fh.write(b'x')
+        fails, _ = self._codes(d)
+        self.assertNotIn('VID-05', fails)
+
+    def test_every_render_says_which_design_made_it(self):
+        from brand.provenance import design_stamp
+        st = design_stamp()
+        self.assertRegex(st['decision'], r'^D\d+$')
+        self.assertIn('dirty', st)
+
+
 class InkPairsPass(unittest.TestCase):
 
     def test_the_news_red_on_ink_is_red_400(self):

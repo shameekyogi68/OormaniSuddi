@@ -3649,3 +3649,35 @@ making".
 `scripts/youtube_kit.py :: Dust, focus_stack, push` · `brand/paper.py :: page` ·
 `tests/test_luxury.py` · `tests/test_animate.py`
 
+## D130 · A carousel that is not animated is held; panels belong to the page
+
+**Decided (2026-10-13), after the owner rendered a breaking story and reported
+"no animations are working there … make sure things work without my commands".**
+
+The videos in that folder did animate — every slide, in the latest design —
+but the owner's report exposed that **nothing in the pipeline checked it**.
+Carousels post as animated video only (AGENTS rule 11), the render makes the
+videos by default, and the gate said nothing either way: a slide whose encode
+failed, or a folder rendered with `--still`, passed as finished, and a static
+picture could go out as the carousel.
+
+* **VID-05** (held): a carousel slide's `.jpg` is still in the folder, so it
+  has no `.mp4` twin (a still moves to `_review/` only when its twin exists).
+  In a `--still` draft this is a warning, not a hold: drafts are drafts.
+* **VID-06** (held): a carousel `.mp4` does not move — largest mean pixel
+  change from frame one, sampled twice a second, under `MOTION_FLOOR`. Real
+  slides score 11–68; a chevron-only nudge about 0.1; a still wrapped in a
+  video 0.0. Run on today's package and the earlier ones: no false alarms.
+* **Every render stamps which design made it** — `PROVENANCE.json`
+  `design: {decision, commit, dirty}`. All rendering reads the code as it
+  stands, so a new render is always the latest design; the stamp says which.
+* **Soft panels are part of the page** (`animate._panels`). D128's tonal
+  panels were not in any text line, so the animation drew them only behind
+  each line as it arrived and the whole panel then flashed on when the reveal
+  ended. They are now on the page from frame 0 and the text writes onto them;
+  the fade back to frame 0 no longer flashes either.
+
+`brand/review.py :: _motion, review(draft=)` · `brand/codes.py` ·
+`brand/animate.py :: _panels` · `brand/provenance.py :: design_stamp` ·
+`render.py :: _finish` · `tests/test_luxury.py`
+

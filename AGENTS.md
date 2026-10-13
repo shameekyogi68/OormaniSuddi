@@ -188,6 +188,8 @@ already exist (`python3 render.py --describe`).
     — never joined into one video. Static `.jpg` files are only internal raster
     rendering intermediates and inspector review fallbacks; they are NEVER
     presented or handed over to the editor as the carousel to post.
+    The gate enforces it: a slide with no `.mp4` is `VID-05`, an `.mp4` that
+    does not move is `VID-06` (D130) — both hold the package.
 
 **Stop means one thing:** archive with `python3 scripts/archive_edition.py
 DATE`. Never delete the edition JSON.

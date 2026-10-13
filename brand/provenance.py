@@ -105,6 +105,32 @@ def engines() -> dict[str, str]:
     }
 
 
+def design_stamp() -> dict:
+    """Which design made this folder: the latest design decision in
+    docs/DECISIONS.md and the git commit the code was at (D129). Every render
+    uses the code as it stands, so a new render is always the latest design;
+    the stamp is how a folder says which one that was. `dirty` is true when
+    the drawing code has uncommitted edits at render time."""
+    import re
+    import subprocess
+    out = {'decision': '', 'commit': '', 'dirty': False}
+    try:
+        with open(os.path.join(ROOT, 'docs', 'DECISIONS.md'), encoding='utf-8') as fh:
+            nums = re.findall(r'^## (D\d+) ', fh.read(), re.M)
+        out['decision'] = max(nums, key=lambda d: int(d[1:])) if nums else ''
+    except OSError:
+        pass
+    try:
+        g = lambda *a: subprocess.run(['git', '-C', ROOT, *a], capture_output=True,
+                                      text=True, timeout=10).stdout.strip()
+        out['commit'] = g('rev-parse', '--short', 'HEAD')
+        out['dirty'] = bool(g('status', '--porcelain', '--', 'brand', 'templates',
+                              'render.py', 'fonts', 'assets'))
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return out
+
+
 def snapshot(edition=None, outdir: str = '') -> dict:
     """The full record for one render."""
     from .content import now, SCHEMA_VERSION
@@ -112,6 +138,7 @@ def snapshot(edition=None, outdir: str = '') -> dict:
     rec = {
         'kind': 'render_provenance',
         'at': now().isoformat(),
+        'design': design_stamp(),
         'schema_version': SCHEMA_VERSION,
         'outdir': outdir,
         'libraries': library_versions(),

@@ -670,7 +670,7 @@ def main() -> int:
         provenance.write(outdir, ed)
         log.done('provenance')
         print('  ✓ PROVENANCE.json')
-        return _finish(outdir, ed, made, log, t0)
+        return _finish(outdir, ed, made, log, t0, draft=args.still)
     finally:
         release()
 
@@ -680,7 +680,7 @@ def stills_dir(outdir: str) -> str:
     return os.path.join(outdir, '_review')
 
 
-def _finish(outdir, ed, made, log, t0) -> int:
+def _finish(outdir, ed, made, log, t0, draft: bool = False) -> int:
     # ── the Chief Editor's desk ───────────────────────────────────────────
     # The last gate before a human is told the package is postable. It
     # establishes the facts a machine can establish — the handle, the file
@@ -703,7 +703,7 @@ def _finish(outdir, ed, made, log, t0) -> int:
     except Exception as e:                       # ffmpeg missing, etc.
         log.warn('evidence', str(e))
 
-    rep = review(outdir, ed).show()
+    rep = review(outdir, ed, draft=draft).show()
     for f in rep.findings:
         (log.fail if f.severity == 'fail' else log.warn)(
             'gate', f.message, code=f.code, where=f.where or '-')

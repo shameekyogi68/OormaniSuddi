@@ -188,6 +188,26 @@ def analyse(im: Image.Image, cover: bool = False) -> dict:
             'chars': round(chars), 'top': top, 'foot': foot, 'size': (W, H)}
 
 
+def _panels(im: Image.Image, foot: int) -> np.ndarray:
+    """Boolean mask of the slide's soft tonal panels (paper.panel, D128): flat
+    areas of the panel colour, found from the picture like everything here.
+    Opened first, so the one-pixel edges of anti-aliased type that happen to
+    pass through the panel colour are not mistaken for it; then closed, so the
+    letters standing on a panel do not leave holes in it."""
+    from PIL import ImageFilter
+    a = np.asarray(im.convert('RGB')).astype(np.int16)
+    near = np.abs(a - np.array(C.paper_100, np.int16)).sum(axis=2) <= 14
+    near[:TOP_STATIC] = False
+    near[foot:] = False
+    m = Image.fromarray((near * 255).astype(np.uint8), 'L')
+    m = m.filter(ImageFilter.MinFilter(9)).filter(ImageFilter.MaxFilter(9))
+    m = m.filter(ImageFilter.MaxFilter(31)).filter(ImageFilter.MinFilter(31))
+    out = np.asarray(m) > 127
+    out[:TOP_STATIC] = False
+    out[foot:] = False
+    return out
+
+
 def _split(ink: np.ndarray, y0: int, y1: int) -> list[tuple[int, int]]:
     """Cut a band that is really several lines at the quietest row between
     them. Big Kannada headlines have ascenders that touch the line above."""
@@ -497,10 +517,17 @@ def animate(src: str, dst: str, fps: int = FPS, cover: bool | None = None,
     if cover:
         base[:] = full
     else:
+        # The soft tonal panels (D128) are part of the PAGE, not of any line:
+        # they are there from frame 0 and the text writes onto them. Without
+        # this the panel showed only behind each line as it arrived, then the
+        # whole panel flashed on the moment the reveal ended.
+        if not photo_end:
+            base[_panels(im, foot)] = np.array(C.paper_100, np.float32)
         for b in bands:
             ya, yb = max(0, b.y0 - PAD[0]), min(foot, b.y1 + PAD[1])
             c0, c1 = max(0, b.x0 - 6), min(W - TAB_W, b.x1 + 6)
-            base[ya:yb, c0:c1] = paper + M.anim_ghost * (full[ya:yb, c0:c1] - paper)
+            ground = base[ya:yb, c0:c1].copy()
+            base[ya:yb, c0:c1] = ground + M.anim_ghost * (full[ya:yb, c0:c1] - ground)
     if info['tab']:
         x0, y0, x1, y1 = info['tab']
         base[y0:y1, x0:x1] = full[y0:y1, x0:x1]

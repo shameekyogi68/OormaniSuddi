@@ -269,8 +269,33 @@ def carousel_sequence_problems(files) -> list[str]:
     return out
 
 
-def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
-    """Establish every fact about a finished package that a machine can."""
+def _motion(path: str) -> float:
+    """How much a video moves: the largest mean pixel change, on a 0–255
+    scale, between its first frame and any later one, sampled twice a second.
+    A still picture wrapped in a video file scores 0.0; a slide whose only
+    motion is the swipe chevron nudging scores about 0.1; a real reveal scores
+    in the tens. -1.0 when it cannot be read."""
+    import numpy as np
+    w, h = 216, 270
+    p = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-an', '-vf',
+                        f'fps=2,scale={w}:{h},format=gray', '-f', 'rawvideo', '-'],
+                       capture_output=True)
+    if p.returncode != 0 or len(p.stdout) < 2 * w * h:
+        return -1.0
+    fr = np.frombuffer(p.stdout, np.uint8)
+    fr = fr[:len(fr) // (w * h) * w * h].reshape(-1, h, w).astype(np.int16)
+    return float(max(np.abs(f - fr[0]).mean() for f in fr[1:]))
+
+
+MOTION_FLOOR = 0.03        # below this a "video" is a still picture (VID-06)
+
+
+def review(outdir: str, edition: Edition | None = None, draft: bool = False
+           ) -> ReviewReport:
+    """Establish every fact about a finished package that a machine can.
+
+    `draft` is a `--still` render: carousels without their animated twins are
+    expected, and are warned about rather than held."""
     r = ReviewReport()
 
     if not os.path.isdir(outdir):
@@ -331,6 +356,31 @@ def review(outdir: str, edition: Edition | None = None) -> ReviewReport:
     r.checked.append('every carousel runs cover → … → sources with no gap or leftover')
     for problem in carousel_sequence_problems(files):
         r.add_fail('PKG-06', problem)
+
+    # ── every carousel slide is animated, and the animation moves (D129) ──
+    # Carousels post as animated video only (rule 11). The pipeline makes the
+    # videos by default, but nothing ever CHECKED: a slide whose encode failed,
+    # or a folder rendered with --still, passed the gate looking finished —
+    # and a static picture got posted as the carousel. A slide's .jpg stays in
+    # the folder only while it has no .mp4 twin (it moves to _review/ when the
+    # twin exists), so a .jpg left here IS a slide with no animation.
+    r.checked.append('every carousel slide is an animated .mp4 that moves')
+    mp4s = {f[:-4] for f in files if _SLIDE.fullmatch(f) and f.endswith('.mp4')}
+    for f in files:
+        m = _SLIDE.fullmatch(f)
+        if m and f.endswith('.jpg') and f[:-4] not in mp4s:
+            msg = (f'{f} has no animated .mp4 twin — a carousel posts as animated '
+                   'video only. Re-render without --still.')
+            if draft:
+                r.add_warn('VID-05', f'draft: {msg}', where=f)
+            else:
+                r.add_fail('VID-05', msg, where=f)
+    for f in sorted(mp4s):
+        v = f + '.mp4'
+        mv = _motion(os.path.join(outdir, v))
+        if 0 <= mv < MOTION_FLOOR:
+            r.add_fail('VID-06', f'{v} does not move (change {mv:.3f}): it is a '
+                       'still picture in a video file.', where=v)
 
     # ── the reels ─────────────────────────────────────────────────────────
     for f in reels:

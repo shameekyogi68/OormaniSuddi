@@ -831,6 +831,16 @@ class TheChiefEditorsGate(unittest.TestCase):
         import shutil
         shutil.rmtree(self.dir, ignore_errors=True)
 
+    def _publishable_slide(self):
+        """A real animated carousel slide. These tests once used an empty
+        .jpg as 'something publishable'; since D130 a lone picture is not a
+        carousel — it is a slide with no animation, and the gate holds it."""
+        import os
+        import subprocess
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 'lavfi', '-i',
+                        'testsrc2=s=216x270:r=30:d=2', '-pix_fmt', 'yuv420p',
+                        os.path.join(self.dir, 'saara_01_cover.mp4')], check=True)
+
     def _write(self, name, body):
         import os
         with open(os.path.join(self.dir, name), 'w', encoding='utf-8') as f:
@@ -885,7 +895,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         from brand.tokens import Brand
         good = os.path.join(self.dir, 'reel_copy.txt')
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
+        self._publishable_slide()
         rep = self.R.review(self.dir)
         self.assertTrue(rep.clean, rep.fail)
         path = self.R.approve(self.dir, rep)
@@ -961,7 +971,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         import os
         from brand.tokens import Brand
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
+        self._publishable_slide()
         rep = self.R.review(self.dir)
         path = self.R.approve(self.dir, rep)
         with open(path, encoding='utf-8') as fh:
@@ -978,7 +988,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         import os
         from brand.tokens import Brand
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
+        self._publishable_slide()
         rep = self.R.review(self.dir)
         path = self.R.approve(self.dir, rep)
         self.R.sign(self.dir, 'Gautam Paduvari')
@@ -992,7 +1002,7 @@ class TheChiefEditorsGate(unittest.TestCase):
         import os
         from brand.tokens import Brand
         self._write('reel_copy.txt', Brand.handle)
-        open(os.path.join(self.dir, 'saara_01_cover.jpg'), 'wb').close()
+        self._publishable_slide()
         self.R.approve(self.dir, self.R.review(self.dir))
         self.R.sign(self.dir, 'Shameek', ('culture',))
         self.assertFalse(self.R.is_signed(self.dir))
