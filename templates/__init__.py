@@ -52,6 +52,35 @@ class Spec:
 
 _COMMON = ['headline', 'category', 'sources', 'status', 'published_at']
 
+
+def _limits(key: str) -> dict:
+    """A news format's limits dict, built FROM tokens.Limits (D56).
+
+    The registry must never hold a second home for a number tokens.Limits
+    already owns — that is how two "sources of truth" drift apart. The
+    import is function-local: brand/__init__ mentions templates only in a
+    docstring today, but a module-level import here would close a cycle the
+    day anything in brand starts importing this registry.
+    """
+    from brand.tokens import Limits
+    if key == 'saara':
+        return {'stories_min': Limits.saara_min_stories,
+                'stories_max': Limits.saara_max_stories,
+                'points': Limits.points_max}
+    if key == 'mukhya':
+        return {'per_day': Limits.mukhya_max_per_day,
+                'points': Limits.points_max}
+    if key == 'roundup':
+        # reel_target_max is a float (45.0); the registry has always said 45
+        # and a whole-second cap reads as a whole second. int() keeps the
+        # dumped registry.json value-identical.
+        return {'stories_min': Limits.roundup_min_stories,
+                'reel_line_chars': Limits.reel_line_chars,
+                'target_seconds_max': int(Limits.reel_target_max)}
+    raise ValueError(f'{key!r} has no Limits-backed limits; '
+                     f'greeting limits are not in tokens.Limits')
+
+
 TEMPLATES: dict[str, Spec] = {t.key: t for t in [
     # The three news formats (D92). A story runs in exactly one of them, named
     # by its `segment`: speed → roundup, saara → saara, mukhya → mukhya.
@@ -64,7 +93,7 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
               'Limits.saara_max_stories stories.',
          requires=['stories', 'date', 'segment: "saara"'],
          accepts=['deck', 'points', 'location', 'category'],
-         limits={'stories_min': 2, 'stories_max': 6, 'points': 3},
+         limits=_limits('saara'),
          notes='Paper & Red (D92). A photograph on a saara story is ignored. '
                'Writes animated scan-wipe video slides saara_01_cover.mp4, saara_02.mp4 … saara_NN_sources.mp4 '
                '(D98–D100) to post as a video carousel, with saara_copy.txt and saara_caption.txt.'),
@@ -78,7 +107,7 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
               '(photo_plan "ai", photo.approved_by).',
          requires=_COMMON + ['photo', 'segment: "mukhya"'],
          accepts=['deck', 'points', 'location', 'takeaway'],
-         limits={'per_day': 2, 'points': 3},
+         limits=_limits('mukhya'),
          notes='Paper & Red (D92). A breaking story\'s kicker is the red '
                'ಬ್ರೇಕಿಂಗ್ block, computed from published_at, never asserted. '
                'Writes animated scan-wipe video slides mukhya_<k>_01_cover.mp4, _02_points.mp4, _03_source.mp4 '
@@ -91,8 +120,7 @@ TEMPLATES: dict[str, Spec] = {t.key: t for t in [
               'while it is on screen. A story without a picture gets a '
               'type-only frame.',
          requires=['stories', 'date', 'edition_no', 'strapline'],
-         limits={'stories_min': 3, 'reel_line_chars': 46,
-                 'target_seconds_max': 45},
+         limits=_limits('roundup'),
          notes='Each story is cut to its own measured narration (2.8–6.0s), '
                'with a counter and one progress segment per story. The wipe '
                'moves pictures only: story text is gone before it starts and '
