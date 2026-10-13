@@ -37,6 +37,7 @@ from dataclasses import dataclass, field
 from .content import Edition, Story
 from .tokens import Brand, fmt, Limits, Grid, T, C
 from . import typo
+from .atomic import write_json
 
 
 # What each platform will actually accept, and what it does to what it accepts.
@@ -1018,9 +1019,9 @@ def sign(outdir: str, by: str, seats: tuple[str, ...] = (), notes: str = '') -> 
     state['package'] = package_fingerprint(outdir)
     if notes:
         state['notes'] = notes
-    with open(os.path.join(outdir, SIGN_FILE), 'w', encoding='utf-8') as fh:
-        json.dump(state, fh, indent=2, ensure_ascii=False)
-        fh.write('\n')
+    # Atomic: the sign-off is the one file standing between this package and
+    # publication — it must never exist half-written.
+    write_json(os.path.join(outdir, SIGN_FILE), state)
     # Re-stamp the approval so the folder never disagrees with itself.
     prev = os.path.join(outdir, 'APPROVAL.md')
     if os.path.exists(prev):
@@ -1104,10 +1105,8 @@ def approve(outdir: str, report: ReviewReport, notes: str = '') -> str | None:
     path = os.path.join(outdir, 'APPROVAL.md')
     # The machine-readable twin, written pass or fail.
     try:
-        with open(os.path.join(outdir, 'review_report.json'), 'w',
-                  encoding='utf-8') as fh:
-            json.dump(report.to_dict(), fh, indent=2, ensure_ascii=False)
-            fh.write('\n')
+        write_json(os.path.join(outdir, 'review_report.json'),
+                   report.to_dict())
     except OSError:
         pass
     if not report.clean:

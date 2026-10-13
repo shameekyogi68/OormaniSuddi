@@ -34,6 +34,8 @@ from datetime import date, datetime, timedelta
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+from brand.atomic import write_json  # noqa: E402
+
 CAL = os.path.join(ROOT, 'editions', 'greetings', 'calendar.json')
 STATE = os.path.join(ROOT, 'archive', 'calendar_state.json')
 
@@ -171,9 +173,9 @@ def _state() -> dict:
 
 def _save_state(d: dict) -> None:
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
-    with open(STATE, 'w', encoding='utf-8') as fh:
-        json.dump(d, fh, indent=2, ensure_ascii=False)
-        fh.write('\n')
+    # Atomic: this ledger is what decides a review is "done" — a torn write
+    # would either lose a done-mark or fake one.
+    write_json(STATE, d)
 
 
 def reviews(mark: str = '') -> int:

@@ -131,7 +131,11 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     # down to the house floor on a full one.
     y = pp.headline(sf, m, y + 18, cw, lead.headline, head_room, hi=LEAD_HI,
                     lo=60, ink_only=pp.ink_only(lead))
-    assert y + 44 <= teasers_top + 1, f'the lead overran the teasers by {y + 44 - teasers_top:.0f}px'
+    # ContentError, not assert: a layout guard that fires in production must
+    # fail loud with the story's context, not vanish under `python -O`.
+    if not y + 44 <= teasers_top + 1:
+        raise ContentError(
+            f'the lead overran the teasers by {y + 44 - teasers_top:.0f}px')
 
     if rest:
         y = teasers_top
@@ -150,7 +154,9 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
                 typo.draw_text(sf.img, line, sf.s(m + wp + 20), sf.s(y + 38),
                                fr, pp.BODY)
             y += TEASE_H
-        assert y <= bottom + 1, f'the teasers overran the footer by {y - bottom:.0f}px'
+        if not y <= bottom + 1:
+            raise ContentError(
+                f'the teasers overran the footer by {y - bottom:.0f}px')
     _swipe_bar(sf, H - P.footer_h - 28 - BAR_H)
     pp.edge_tab(sf)
     pp.footer(sf, f'1/{n}', seam=(False, True))

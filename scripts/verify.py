@@ -22,6 +22,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+from brand.atomic import write_json  # noqa: E402
 from brand.content import Edition, ContentError, now  # noqa: E402
 
 
@@ -31,9 +32,8 @@ def _load(path: str) -> dict:
 
 
 def _save(path: str, data: dict) -> None:
-    with open(path, 'w', encoding='utf-8') as fh:
-        json.dump(data, fh, indent=2, ensure_ascii=False)
-        fh.write('\n')
+    # Atomic: a half-written edition JSON must never stand in for a verified one.
+    write_json(path, data)
 
 
 def cmd_status(path: str) -> int:
@@ -54,7 +54,10 @@ def cmd_status(path: str) -> int:
 
 
 def cmd_verify(path: str, by: str, index: int | None) -> int:
-    by = (by or '').strip()
+    # One clean name per verifier: a name pasted with runs of whitespace comes
+    # from a hurried editor, not a second person, and it must not fork the
+    # accountability record into 'goutham  paduvari' vs 'goutham paduvari'.
+    by = ' '.join((by or '').split())
     if not by:
         print('✗ --by needs a real name — that is the whole point', file=sys.stderr)
         return 1

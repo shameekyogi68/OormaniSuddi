@@ -10,16 +10,23 @@ pins the two ways that could quietly stop being true:
     easily as a real name would, so the refusal has to happen here.
   * verifying one story must never touch another story's `verified_by`.
 """
+
+# Enforces D126 — see docs/DECISIONS.md.
 from __future__ import annotations
 
 import contextlib
 import io
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 
 from scripts import verify as v
+
+VERIFY_CLI = os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'scripts', 'verify.py')
 
 
 def edition(*headlines):
@@ -117,6 +124,33 @@ class StatusNeverWrites(WithAnEditionFile):
         with open(self.path, encoding='utf-8') as fh:
             after = fh.read()
         self.assertEqual(before, after)
+
+
+class TheCliNormalisesTheByName(WithAnEditionFile):
+    """Pinned through the command line, not cmd_verify — the contract is
+    what a desk actually types. A name pasted with stray whitespace comes
+    from a hurried editor, not a second person; it collapses to one clean
+    name so every edition carries the same spelling of the same verifier.
+    """
+
+    def cli(self, *args):
+        return subprocess.run(
+            [sys.executable, VERIFY_CLI, self.path, *args],
+            capture_output=True, text=True)
+
+    def test_runs_of_whitespace_in_by_collapse_when_written(self):
+        self.write(edition('ಸುದ್ದಿ ಒಂದು'))
+        res = self.cli('--all', '--by', '  goutham   paduvari  ')
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.read()['stories'][0]['verified_by'],
+                         'goutham paduvari')
+
+    def test_a_clean_name_is_written_verbatim(self):
+        self.write(edition('ಸುದ್ದಿ ಒಂದು'))
+        res = self.cli('--all', '--by', 'Gautam Paduvari')
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(self.read()['stories'][0]['verified_by'],
+                         'Gautam Paduvari')
 
 
 if __name__ == '__main__':
