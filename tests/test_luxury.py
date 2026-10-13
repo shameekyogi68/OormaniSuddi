@@ -167,6 +167,22 @@ class AnimationIsGuaranteed(unittest.TestCase):
         self.assertIn('dirty', st)
 
 
+class TypeOnAPhotographHolds(unittest.TestCase):
+    """D131 — the disclosure sits on a solid ink pill, so it reads over a
+    white wall or white clothes, not only over a dark picture."""
+
+    def test_the_credit_reads_on_a_white_picture(self):
+        sf = Surface(1080, 720, 2, bg=(255, 255, 255, 255))
+        pp.credit(sf, 'ಕೃಪೆ: ಊರ್ಮನಿ ಸುದ್ದಿ', (0, 0, 1080, 720))
+        a = np.asarray(sf.finish()).astype(int)
+        ys, xs = np.nonzero(a.mean(axis=2) < 80)
+        self.assertTrue(len(ys), 'no solid label under the credit')
+        pill = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+        self.assertGreater((pill.mean(axis=2) < 80).mean(), 0.5, 'the label is not solid')
+        self.assertGreater(ys.min(), 600, 'the label left the foot of the picture')
+        self.assertGreater(xs.min(), 540, 'the label left the right-hand corner')
+
+
 class InkPairsPass(unittest.TestCase):
 
     def test_the_news_red_on_ink_is_red_400(self):

@@ -3681,3 +3681,19 @@ picture could go out as the carousel.
 `brand/animate.py :: _panels` · `brand/provenance.py :: design_stamp` ·
 `render.py :: _finish` · `tests/test_luxury.py`
 
+## D131 · Type on a photograph has to hold on a bright one
+
+**Decided (2026-10-13)** in the final quality pass the owner asked for ("if it
+can increase quality much more, do it — this is final"), from looking at the
+day's real ಮುಖ್ಯ ಸುದ್ದಿ cover at feed size rather than at the test fixture,
+whose picture is a dark sunset.
+
+* The disclosure under a photograph sat on a soft dark fade; over that day's
+  picture — men in white dhotis — the white type went under. It now sits on a
+  solid ink pill, the label the reels already used (`paper.credit`).
+* The ಊರ್ಮನಿ ಸುದ್ದಿ name over a photograph had a thin shadow and lost
+  itself on a bright tent roof. It now has a soft dark halo under a tight
+  shadow (`paper.bug(on_photo=True)`).
+
+`brand/paper.py :: credit, bug` · `tests/test_luxury.py`
+

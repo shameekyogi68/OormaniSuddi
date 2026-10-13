@@ -95,22 +95,27 @@ def photo(sf: Surface, ph, box) -> bool:
 
 
 def credit(sf: Surface, text: str, box):
-    """The disclosure, bottom-right INSIDE the picture it describes, on a soft
-    scrim — the label has to travel with the image (IT Rules, D57)."""
+    """The disclosure, bottom-right INSIDE the picture it describes — the label
+    has to travel with the image (IT Rules, D57) — on a solid ink pill, the
+    same label the reels use. It sat on a soft fade before, and over a bright
+    picture (white clothes, a sunlit wall) the white type went under (D131)."""
     if not text:
         return
     x0, y0, x1, y1 = box
-    h = 110
-    ramp = Image.linear_gradient('L').resize((int((x1 - x0) * sf.ss),
-                                              int(h * sf.ss)))
-    ramp = ramp.point(lambda v: int(v * 0.62))
-    shade = Image.new('RGBA', ramp.size, (0, 0, 0, 255))
-    shade.putalpha(ramp)
-    sf.img.alpha_composite(shade, (int(x0 * sf.ss), int((y1 - h) * sf.ss)))
-    f = typo.font_for(text, 'kn_var', sf.s(P.credit), weight=560)
-    text = typo.ellipsize(text, f, sf.s(x1 - x0 - 2 * P.margin), sep='  •  ')
-    typo.draw_text(sf.img, text, sf.s(x1 - P.margin), sf.s(y1 - 22),
-                   f, (*WHITE, 238), anchor_x='r')
+    f = typo.font_for(text, 'kn_var', sf.s(P.credit), weight=600)
+    text = typo.ellipsize(text, f, sf.s(x1 - x0 - 2 * P.margin - 40), sep='  •  ')
+    tw = typo.text_width(text, f) / sf.ss
+    h, pad, inset = P.credit * 1.75, 18, 18
+    bx1, by1 = x1 - inset, y1 - inset
+    bx0, by0 = bx1 - tw - 2 * pad, by1 - h
+    lay = Image.new('RGBA', sf.img.size, (0, 0, 0, 0))
+    ImageDraw.Draw(lay).rounded_rectangle(
+        [sf.s(bx0), sf.s(by0), sf.s(bx1), sf.s(by1)], radius=int(sf.s(h / 2)),
+        fill=(*C.ink_950, 196))
+    sf.img.alpha_composite(lay)
+    rise, drop = typo.ink_extents('ಕ', f)
+    typo.draw_text(sf.img, text, sf.s(bx0 + pad), sf.s(by0 + h / 2) + (rise - drop) / 2,
+                   f, (*WHITE, 245))
 
 
 def sunline(sf: Surface, y: float, x0: float = 0, x1: float | None = None,
@@ -139,8 +144,12 @@ def bug(sf: Surface, x: float, y: float, size: int = P.bug,
     base = sf.s(cy) + (rise - drop) / 2
     tx = x + d + size * 0.42
     if on_photo:
+        # A soft dark halo first, then the name with a tight shadow: it has to
+        # hold over a bright tent roof or a white wall, not only a dark sky (D131).
+        typo.draw_text(sf.img, Brand.name, sf.s(tx), base, f, (0, 0, 0, 0),
+                       shadow=(0, 0, sf.s(16), (*C.ink_950, 165)))
         typo.draw_text(sf.img, Brand.name, sf.s(tx), base, f, WHITE,
-                       shadow=(0, sf.s(2), sf.s(6), (*C.ink_950, 170)))
+                       shadow=(0, sf.s(2), sf.s(5), (*C.ink_950, 200)))
     else:
         typo.draw_text(sf.img, Brand.name, sf.s(tx), base, f, INK)
     return tx + typo.text_width(Brand.name, f) / sf.ss
