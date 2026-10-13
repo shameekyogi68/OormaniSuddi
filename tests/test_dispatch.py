@@ -556,6 +556,7 @@ class ARenderNeverOverwritesAnotherEdition(unittest.TestCase):
     out/2026-09-25 and replaced that day's news carousel. D90."""
 
     def test_a_folder_stamped_for_another_edition_is_refused(self):
+        import shutil as _shutil
         import subprocess
         with tempfile.TemporaryDirectory() as tmp:
             ed = os.path.join(tmp, 'ed.json')
@@ -565,16 +566,22 @@ class ARenderNeverOverwritesAnotherEdition(unittest.TestCase):
                            'stories': [dict(story(verified_by='Test Editor'),
                                             segment='saara')] * 2},
                           fh, ensure_ascii=False)
-            out = os.path.join(tmp, 'out')
-            os.makedirs(out)
-            with open(os.path.join(out, '.edition'), 'w') as fh:
-                fh.write('editions/some_other_edition.json\n')
-            r = subprocess.run(
-                [sys.executable, 'render.py', ed, '--out', out, '--still'],
-                cwd=D.ROOT, capture_output=True, text=True, timeout=120)
-            self.assertEqual(r.returncode, 1, r.stdout[-400:] + r.stderr[-400:])
-            self.assertIn('would overwrite', r.stderr)
-            self.assertFalse(any(f.endswith(('.jpg', '.mp4')) for f in os.listdir(out)))
+            # In-workspace: the --out guard (D127) refuses temp paths, which
+            # is correct — rule 10 applies to renders however they are run.
+            out = os.path.join(D.ROOT, 'out', '_test_overwrite')
+            try:
+                _shutil.rmtree(out, ignore_errors=True)
+                os.makedirs(out)
+                with open(os.path.join(out, '.edition'), 'w') as fh:
+                    fh.write('editions/some_other_edition.json\n')
+                r = subprocess.run(
+                    [sys.executable, 'render.py', ed, '--out', out, '--still'],
+                    cwd=D.ROOT, capture_output=True, text=True, timeout=120)
+                self.assertEqual(r.returncode, 1, r.stdout[-400:] + r.stderr[-400:])
+                self.assertIn('would overwrite', r.stderr)
+                self.assertFalse(any(f.endswith(('.jpg', '.mp4')) for f in os.listdir(out)))
+            finally:
+                _shutil.rmtree(out, ignore_errors=True)
 
     def test_the_dispatcher_does_not_inspect_a_foreign_folder(self):
         with tempfile.TemporaryDirectory() as tmp:

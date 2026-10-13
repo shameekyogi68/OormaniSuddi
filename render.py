@@ -37,9 +37,11 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import templates as TP
 import brand.copy as copywriter
-from brand.content import Story, Edition, ContentError, freeze
+from brand.content import Story, Edition, ContentError, freeze, path_inside
 from brand.qa import preflight, inspect, compliance
 from brand.tokens import Limits
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
 
 SCHEMAS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'schemas')
 
@@ -504,6 +506,16 @@ def main() -> int:
         return 1
     if args.at:
         freeze(args.at)
+
+    if args.out:
+        try:
+            # --out is used verbatim, so it goes through the same guard as
+            # every other path a script writes to: renders can only land
+            # inside the workspace (rule 10, D106, D127).
+            args.out = path_inside(ROOT, args.out)
+        except ContentError as e:
+            print(f'✗ {e}', file=sys.stderr)
+            return 1
 
     try:
         loaded = load(args.input)

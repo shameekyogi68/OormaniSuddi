@@ -7,6 +7,7 @@ is revealed, the held frame is the slide itself, the chrome never moves, the
 held slide asks to be swiped, and the loop has no seam.
 """
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -336,7 +337,10 @@ class TheDeliveryFolder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
-        cls.out = os.path.join(cls.tmp.name, 'out')
+        # The --out guard (D127) refuses paths outside the workspace, so the
+        # render lands under out/ like a real one, in a clearly-test folder.
+        cls.out = os.path.join(_ROOT, 'out', '_test_delivery')
+        shutil.rmtree(cls.out, ignore_errors=True)
         ed = Edition.load(FIXTURE)
         cls.ed = os.path.join(cls.tmp.name, 'ed.json')
         with open(FIXTURE, encoding='utf-8') as fh:
@@ -352,6 +356,7 @@ class TheDeliveryFolder(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.tmp.cleanup()
+        shutil.rmtree(cls.out, ignore_errors=True)
 
     def test_the_folder_holds_the_videos_to_post_not_the_stills(self):
         files = os.listdir(self.out)
