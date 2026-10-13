@@ -57,6 +57,16 @@ def cmd_archive_yesterday(args) -> int:
     print(f"Archiving previous edition: {target_date}...")
     cmd = [sys.executable, os.path.join(ROOT, 'scripts', 'archive_edition.py'), target_date]
     res = subprocess.run(cmd)
+    if res.returncode != 0:
+        # archive_edition refuses to delete an unsigned out/ unless --force is
+        # given by hand. This flow is mechanical, so it never passes --force;
+        # the refusal (and any failure) is surfaced, not swallowed.
+        print(f'✗ archive_edition.py exited {res.returncode} for {target_date} '
+              f'— see its message above. Nothing was deleted without an '
+              f'explicit step; if the refusal is an unsigned out/ and a '
+              f'person has looked at it, run by hand:\n'
+              f'    python3 scripts/archive_edition.py {target_date} --force',
+              file=sys.stderr)
     return res.returncode
 
 

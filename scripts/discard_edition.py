@@ -3,10 +3,12 @@
 ಊರ್ಮನಿ ಸುದ್ದಿ — undo a day that never got posted.
 ====================================================
 The mirror of archive_edition.py: that one keeps the edition JSON and the
-published record, and deletes only throwaway media. This one is for a day
+published record, and deletes only throwaway media. This one undoes a day
 that was drafted, maybe rendered, and then abandoned before anyone signed it
-off — "Stop" in the Start / approve / Stop chat workflow (see AGENTS.md).
-Everything about the day is undone: the edition JSON and the render.
+off — never published, never approved. It is not the script for "Stop":
+Stop means archive only, never delete (AGENTS.md), and that is
+archive_edition.py's job. Everything about the abandoned day is undone here:
+the edition JSON and the render.
 A day that was actually signed off is never touched by this script; it
 refuses and points at archive_edition.py instead.
 

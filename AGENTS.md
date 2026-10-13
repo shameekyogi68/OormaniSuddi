@@ -209,7 +209,9 @@ complaint. D87, D89, D97.
 **Reading cost.** `docs/DECISIONS.md` is ~140 KB of history: never read it
 whole — `grep -n "^## D<number>"` and read that entry. Read `docs/RUNBOOK.md`
 "Chat workflow" and `docs/AI_BRIEF.md` once per session, and agents read only
-their own file and `_CONVENTIONS.md`.
+their own file and `_CONVENTIONS.md`. Running the desks fast and
+token-cheaply — waves, batching, what never parallelizes — is written down in
+[`docs/AGENTS_PARALLEL.md`](docs/AGENTS_PARALLEL.md).
 
 ---
 

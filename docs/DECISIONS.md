@@ -3459,3 +3459,119 @@ hours from February 2027 — one secondary source; YouTube Studio is the check.
 
 `templates/greeting.py :: check_sponsorship` · `brand/business.py :: NEWS_WORDS` ·
 `tests/test_business.py :: SponsoredGreeting` · house rules 2026-10-12-01..03
+
+## D120 · An unsigned render is never deleted silently
+
+**Decided (2026-10-13).** `scripts/archive_edition.py` deletes `out/{date}/`
+after archiving the record. Until now it did that even when the day had no
+SIGNOFF.json — a drafted, rendered day that a person never cleared could
+vanish on a mechanical "archive yesterday", and its renders were the only
+copy of that work. Now: the edition JSON, `_review/` copies and kept files
+are archived exactly as before; only the *deletion* refuses when SIGNOFF.json
+is absent, naming what is missing and the `--force` that deletes after a
+person has actually looked. `daily_flow.py archive-yesterday` never passes
+`--force` — it surfaces the refusal instead. `discard_edition.py`'s
+docstring no longer calls itself the "'Stop' in the Start / approve / Stop
+workflow"; Stop means archive only, never delete (AGENTS.md), and a script
+that deletes the edition JSON must never describe itself as what Stop runs.
+
+`scripts/archive_edition.py :: main` · `scripts/daily_flow.py :: cmd_archive_yesterday` ·
+`scripts/discard_edition.py` (docstring) · `tests/test_archive_edition.py`
+
+## D121 · Limits has one home; the registry is built from it
+
+**Decided (2026-10-13).** `templates/__init__.py` hard-coded story counts in
+each `Spec.limits` — a second home for numbers `tokens.Limits` already owns,
+the exact drift D56 exists to prevent (change one and the machine gate and
+the published contract disagree). `Spec.limits` for the three news formats is
+now built from `Limits` at import; `registry.json` dumps value-identical.
+`tests/test_limits.py` pins every registry limit to its `Limits` namesake so
+the two homes cannot drift apart again. The import stays function-local: the
+day anything in `brand/` imports this registry, a module-level import would
+close a cycle.
+
+`templates/__init__.py :: _limits` · `tests/test_limits.py`
+
+## D122 · A JSON the system writes is written atomically
+
+**Decided (2026-10-13).** `scripts/verify.py`, `scripts/sign_off.py`,
+`scripts/whats_on.py` and `brand/review.py :: sign` rewrote their JSON with
+a bare `open(path, 'w')` — a crash or a kill mid-write left a truncated
+file in place of a good one, and a truncated edition JSON fails as content,
+not as what it was: a machine that lost power. The pattern `backup.sh`
+already used (temp + move) now lives in `brand/atomic.py :: write_json` and
+is adopted at all four sites, byte-for-byte formatting preserved. A failed
+write removes its `.part` and leaves the original untouched.
+
+`brand/atomic.py` · `scripts/verify.py :: _save` ·
+`scripts/whats_on.py :: _save_state` ·
+`brand/review.py :: sign, approve` (the JSON `scripts/sign_off.py` delegates to) ·
+`tests/test_atomic_write.py`
+
+## D123 · The test run names its interpreter, and the room is checked
+
+**Decided (2026-10-13).** The documented command `python3 -m unittest
+discover tests` failed on this Mac with 30 import errors, because bare
+`python3` is the system 3.9 without numpy or Pillow — a catastrophically
+wrong signal for the one command every newcomer runs first. The tests now
+fail once, at `tests/__init__.py`, with the fix in the message. Separately:
+Pillow without raqm shapes Kannada differently from the blessed design, and
+the only symptom was a cryptic golden mismatch in an unrelated commit.
+`tests/test_environment.py` now fails named and actionable the moment raqm
+is missing; `health.py` already reported it for the daily sit-down.
+
+`tests/__init__.py` · `tests/test_environment.py` · `scripts/health.py :: check_tools`
+
+## D124 · A backup that did not happen must say so
+
+**Decided (2026-10-13).** `scripts/backup.sh` always exited 0 — even when a
+tar or copy failed — so launchd and a skimmed log both believed in a backup
+that had silently stopped. It now exits 1 unless every attempted copy
+succeeded and the three-copies goal actually holds. The second-medium
+dedupe compared file SIZE; two different files can weigh the same, so a
+same-size stale copy read as fresh. It compares bytes (`cmp -s`) now. The
+nightly registers tarball also gained the `.part` + `mv` atomicity the
+record loop already had.
+
+`scripts/backup.sh` · `tests/test_backup.py :: FailureIsAnExitCodeNotAFootnote`
+
+## D125 · Every human-critical script carries a CLI test
+
+**Decided (2026-10-13).** Six scripts existed precisely because deadline
+pressure makes manual checking unreliable — and had no tests at all:
+`sign_off.py` (the signature gate, D62), `fact_check.py` (D84),
+`house_rule.py` (the entry point for "everything else", D73), `metrics.py`,
+`verify_narration.py`, `whats_on.py`. Each now has a CLI suite driving it
+through `sys.argv` against temp fixtures: exit codes, refusal paths, and the
+one behaviour each exists for. Mocking is at the seam the script itself
+imports; the real logic stays tested where it lives.
+
+`tests/test_sign_off_cli.py` · `tests/test_fact_check_cli.py` ·
+`tests/test_house_rule_cli.py` · `tests/test_metrics_cli.py` ·
+`tests/test_verify_narration_cli.py` · `tests/test_whats_on_cli.py`
+
+## D126 · One verifier, one spelling
+
+**Decided (2026-10-13).** `verified_by` is the load-bearing accountability
+field (D59), and the October editions forked it: `gouatham`, `goutham
+paduvari`, `Gautam Paduvari`. `scripts/verify.py` now collapses pasted
+whitespace runs in `--by` before writing, so a hurried paste cannot fork the
+record, and the two drifted editions were normalised to the canonical
+spelling. What it does not do is validate the name against a roster — the
+field means "a person answered for this", and a roster would let a script
+declare that.
+
+`scripts/verify.py :: cmd_verify` · `editions/2026-10-07.json` ·
+`editions/2026-10-08.json` · `tests/test_verify.py :: TheCliNormalisesTheByName`
+
+## D127 · render --out stays inside the workspace
+
+**Decided (2026-10-13).** Every path-taking script guarded its writes with
+`path_inside` except the one that writes the most bytes: `render.py --out`
+was used verbatim, so a mistyped or model-proposed output path could land
+anywhere on disk (rule 10, workspace isolation, was convention-enforced
+there and code-enforced everywhere else). `--out` now goes through the same
+guard; outside the workspace is a refused run, not a silent write elsewhere.
+
+`render.py :: main` · `brand/content.py :: path_inside` ·
+`tests/test_render_cli.py`

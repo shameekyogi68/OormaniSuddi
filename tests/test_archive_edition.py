@@ -4,7 +4,13 @@ D106. `archive_edition.py` deletes the heavy renders. The town forwards,
 the Facebook posts and REACH.md are the circulation record — they used to
 be deleted with the mp4s. A date that is not YYYY-MM-DD is refused before
 any directory is created.
+
+An out/ folder without SIGNOFF.json was never signed off — its renders are
+not the published record, so deleting them refuses without --force (the
+edition JSON, _review copies and kept files are archived regardless).
 """
+
+# Enforces D120 — see docs/DECISIONS.md.
 from __future__ import annotations
 
 import contextlib
@@ -45,7 +51,7 @@ class ArchiveKeepsTheCirculationFiles(unittest.TestCase):
         os.makedirs(self.out, exist_ok=True)
         for name in ('facebook_group_1.txt', 'forward_kundapura.txt',
                      'REACH.md', 'saara_caption.txt', 'MASTER_COPY.md',
-                     'throwaway.mp4'):
+                     'SIGNOFF.json', 'throwaway.mp4'):
             with open(os.path.join(self.out, name), 'w', encoding='utf-8') as fh:
                 fh.write(name + '\n')
 
@@ -84,6 +90,42 @@ class ArchiveKeepsTheCirculationFiles(unittest.TestCase):
         self.assertIn('<name>', hint)
         self.assertNotIn('Editor', hint)
         self.assertIn('Gautam', sign_off_hint(FAKE_DATE, 'Gautam'))
+
+
+class AnUnsignedOutRefusesDeletion(unittest.TestCase):
+    """out/{date} without SIGNOFF.json was never cleared by a person (D62).
+    The renders are kept unless --force is given; the archive of the record
+    happens either way."""
+
+    def setUp(self):
+        self.out = os.path.join(ROOT, 'out', FAKE_DATE)
+        self.dest = os.path.join(ROOT, 'archive', FAKE_DATE)
+        self._cleanup()
+        os.makedirs(self.out, exist_ok=True)
+        with open(os.path.join(self.out, 'saara_caption.txt'), 'w',
+                  encoding='utf-8') as fh:
+            fh.write('caption\n')
+
+    def tearDown(self):
+        self._cleanup()
+
+    def _cleanup(self):
+        for d in (self.out, self.dest):
+            if os.path.isdir(d):
+                shutil.rmtree(d)
+
+    def test_unsigned_out_survives_and_the_record_is_still_archived(self):
+        rc = run(FAKE_DATE)
+        self.assertEqual(rc, 1)
+        self.assertTrue(os.path.isdir(self.out),
+                        'an unsigned render must survive the refusal')
+        self.assertIn('saara_caption.txt', os.listdir(self.dest))
+
+    def test_force_deletes_the_unsigned_out(self):
+        rc = run(FAKE_DATE, '--force')
+        self.assertEqual(rc, 0)
+        self.assertFalse(os.path.isdir(self.out))
+        self.assertIn('saara_caption.txt', os.listdir(self.dest))
 
 
 if __name__ == '__main__':

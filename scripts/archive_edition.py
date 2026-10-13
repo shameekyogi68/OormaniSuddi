@@ -11,6 +11,10 @@ Deletes: out/{date}/ renders and leftover assets/daily/{date}/ frames.
     python3 scripts/archive_edition.py 2026-09-16
     python3 scripts/archive_edition.py 2026-09-16 --snapshot
 
+`--force` is also needed to delete out/{date} when that folder has no
+SIGNOFF.json — an unsigned package was never cleared for publication, so its
+renders are not throwaway media and are kept unless a person says otherwise.
+
 `--snapshot` asks the Wayback Machine to keep a copy of every source URL the
 edition cited, and records what came back in sources.json. Web pages change and
 disappear; a story disputed in March rests on a page that may not say in March
@@ -122,6 +126,10 @@ def main() -> int:
     ap.add_argument('--snapshot', action='store_true',
                     help='ask the Wayback Machine to keep a copy of every '
                          'source URL this edition cited')
+    ap.add_argument('--force', action='store_true',
+                    help='also delete out/{date} when it has no SIGNOFF.json '
+                         '— the day was never signed off, so its renders are '
+                         'not the published record and are kept by default')
     args = ap.parse_args()
     from brand.content import ContentError, edition_day, path_inside
     try:
@@ -141,6 +149,7 @@ def main() -> int:
     else:
         print(f'  ! no {edition} — nothing to archive as the editorial record')
 
+    refused = False
     if os.path.isdir(out):
         review = os.path.join(out, '_review')
         if os.path.isdir(review):
@@ -148,9 +157,26 @@ def main() -> int:
         for name in os.listdir(out):
             if _keep(name):
                 shutil.copy2(os.path.join(out, name), os.path.join(dest, name))
-        shutil.rmtree(out, ignore_errors=True)
-        print(f'  archived copy/approval/review → {dest}')
-        print(f'  deleted {out}')
+        signoff = os.path.join(out, 'SIGNOFF.json')
+        if not os.path.exists(signoff) and not args.force:
+            # An unsigned package was never cleared by a person (D62). Its
+            # renders may be the only copy of a drafted day — deleting them
+            # silently is how a finished-but-unsigned day disappears. The
+            # record above is archived either way; only the deletion refuses.
+            refused = True
+            print(f'✗ {out} has no SIGNOFF.json — this day was never signed '
+                  f'off, so these renders were never cleared for publication. '
+                  f'The edition JSON, _review/ copies and kept files WERE '
+                  f'archived to {dest} as usual; only the deletion is '
+                  f'refused. To also delete {out}/ — only once a person has '
+                  f'looked at it — run:',
+                  file=sys.stderr)
+            print(f'    python3 scripts/archive_edition.py {date} --force',
+                  file=sys.stderr)
+        else:
+            shutil.rmtree(out, ignore_errors=True)
+            print(f'  archived copy/approval/review → {dest}')
+            print(f'  deleted {out}')
     else:
         print(f'  · no {out}')
 
@@ -169,6 +195,11 @@ def main() -> int:
               'Machine to keep a copy, which is worth it on anything '
               'contentious.')
 
+    if refused:
+        print('✗ out/ deletion refused — the day was never signed off. '
+              'See the warning above; --force deletes it after a person '
+              'has looked. The archive itself is complete.', file=sys.stderr)
+        return 1
     print(f'✓ archive/{date}/ holds the published record. Edition JSON is kept.')
     return 0
 

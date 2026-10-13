@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **82/119** decisions are named by at least one test
+- **90/127** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -237,7 +237,7 @@ those carry a reason rather than a test.
 
 ## D54 · A festival greeting is its own genre, not a news card with a festive photo
 
-- **Tested by:** `tests/test_contract.py`, `tests/test_greeting.py`
+- **Tested by:** `tests/test_contract.py`, `tests/test_greeting.py`, `tests/test_limits.py`
 - Enforced in: `brand/ornament.py`, `brand/review.py`, `templates/__init__.py`, `templates/greeting.py`, `templates/registry.json`
 
 ## D55 · No source, no claim. No approval, no upload
@@ -247,8 +247,8 @@ those carry a reason rather than a test.
 
 ## D56 · Numeric policy lives in `tokens.Limits`
 
-- **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/codes.py`, `brand/house.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/house_rule.py`
+- **Tested by:** `tests/test_contract.py`, `tests/test_limits.py`
+- Enforced in: `brand/codes.py`, `brand/house.py`, `brand/speednews.py`, `brand/tokens.py`, `scripts/house_rule.py`, `templates/__init__.py`
 
 ## D57 · Generated images, including stock, are `nature: 'ai'`
 
@@ -277,8 +277,8 @@ those carry a reason rather than a test.
 
 ## D62 · The gate records what a machine established, and names who judged the rest
 
-- **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/__init__.py`, `brand/review.py`
+- **Tested by:** `tests/test_archive_edition.py`, `tests/test_contract.py`, `tests/test_sign_off_cli.py`
+- Enforced in: `brand/__init__.py`, `brand/review.py`, `scripts/archive_edition.py`
 
 ## D63 · The intake retrieves; it never supplies what the source lacks
 
@@ -326,7 +326,7 @@ those carry a reason rather than a test.
 
 ## D73 · The newsroom answers in one shape, argues with itself, and remembers
 
-- **Tested by:** `tests/test_house.py`
+- **Tested by:** `tests/test_house.py`, `tests/test_house_rule_cli.py`
 
 ## D74 · A licence you cannot point at is one you cannot produce
 
@@ -375,7 +375,7 @@ those carry a reason rather than a test.
 
 ## D84 · The fact desk checks every published line, before and after writing
 
-- **Tested by:** `tests/test_grounding.py`, `tests/test_reach_copy.py`
+- **Tested by:** `tests/test_fact_check_cli.py`, `tests/test_grounding.py`, `tests/test_reach_copy.py`
 - Enforced in: `brand/codes.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/review.py`, `scripts/fact_check.py`
 
 ## D85 · A stock frame is earned by the story's words, scored — never by category
@@ -413,7 +413,7 @@ those carry a reason rather than a test.
 
 ## D92 · Three formats, one story in one of them, pasted news, real pictures first
 
-- **Tested by:** `tests/test_calendar.py`, `tests/test_captions.py`, `tests/test_contract.py`, `tests/test_discard_edition.py`, `tests/test_dispatch.py`, `tests/test_formats.py`, `tests/test_golden.py`, `tests/test_grounding.py`, `tests/test_intake.py`, `tests/test_pick_formats.py`, `tests/test_reach.py`, `tests/test_reach_copy.py`, `tests/test_speednews.py`
+- **Tested by:** `tests/test_calendar.py`, `tests/test_captions.py`, `tests/test_contract.py`, `tests/test_discard_edition.py`, `tests/test_dispatch.py`, `tests/test_formats.py`, `tests/test_golden.py`, `tests/test_grounding.py`, `tests/test_intake.py`, `tests/test_pick_formats.py`, `tests/test_reach.py`, `tests/test_reach_copy.py`, `tests/test_speednews.py`, `tests/test_whats_on_cli.py`
 - Enforced in: `brand/__init__.py`, `brand/codes.py`, `brand/content.py`, `brand/copy.py`, `brand/dispatch.py`, `brand/factcheck.py`, `brand/grounding.py`, `brand/intake.py`, `brand/motion.py`, `brand/paper.py`, `brand/provenance.py`, `brand/qa.py`, `brand/reach.py`, `brand/reel_news.py`, `brand/review.py`, `brand/sourcing.py`, `brand/speednews.py`, `brand/tokens.py`, `brand/trends.py`, `brand/typo.py`, `scripts/archive_edition.py`, `scripts/dispatch.py`, `scripts/fact_check.py`, `scripts/health.py`, `scripts/intake.py`, `scripts/pick_formats.py`, `templates/__init__.py`, `templates/mukhya.py`, `templates/registry.json`, `templates/saara.py`
 
 ## D93 · Universal Carousel Visibility Contract: Zero Phantom Fields & Special Segment Branding
@@ -427,7 +427,7 @@ those carry a reason rather than a test.
 
 ## D95 · The desks are not optional
 
-- **Tested by:** `tests/test_dispatch.py`
+- **Tested by:** `tests/test_dispatch.py`, `tests/test_sign_off_cli.py`
 - Enforced in: `brand/__init__.py`, `brand/codes.py`, `brand/dispatch.py`, `brand/review.py`, `scripts/daily_flow.py`, `scripts/sign_off.py`
 
 ## D96 · A footage reel's news layer is laid out around Instagram, not over it
@@ -491,7 +491,7 @@ those carry a reason rather than a test.
 
 ## D108 · A signature covers the package it was given for
 
-- **Tested by:** `tests/test_package_integrity.py`
+- **Tested by:** `tests/test_package_integrity.py`, `tests/test_sign_off_cli.py`
 - Enforced in: `brand/__init__.py`, `brand/review.py`, `scripts/sign_off.py`
 
 ## D109 · The guilt guard follows the words, not the category
@@ -514,7 +514,7 @@ those carry a reason rather than a test.
 
 ## D113 · Health says when the Mac itself is the problem
 
-- **Tested by:** `tests/test_health.py`
+- **Tested by:** `tests/test_health.py`, `tests/test_whats_on_cli.py`
 - Enforced in: `brand/tokens.py`, `scripts/health.py`
 
 ## D114 · fontTools is a dependency, because the glyph guard depends on it
@@ -544,4 +544,36 @@ those carry a reason rather than a test.
 ## D119 · The October research, applied: a sponsor can be sold, never seated in the news
 
 - **Tested by:** `tests/test_business.py`
+
+## D120 · An unsigned render is never deleted silently
+
+- **Tested by:** `tests/test_archive_edition.py`
+
+## D121 · Limits has one home; the registry is built from it
+
+- **Tested by:** `tests/test_limits.py`
+
+## D122 · A JSON the system writes is written atomically
+
+- **Tested by:** `tests/test_atomic_write.py`
+
+## D123 · The test run names its interpreter, and the room is checked
+
+- **Tested by:** `tests/test_environment.py`
+
+## D124 · A backup that did not happen must say so
+
+- **Tested by:** `tests/test_backup.py`
+
+## D125 · Every human-critical script carries a CLI test
+
+- **Tested by:** `tests/test_fact_check_cli.py`, `tests/test_house_rule_cli.py`, `tests/test_metrics_cli.py`, `tests/test_sign_off_cli.py`, `tests/test_verify_narration_cli.py`, `tests/test_whats_on_cli.py`
+
+## D126 · One verifier, one spelling
+
+- **Tested by:** `tests/test_verify.py`
+
+## D127 · render --out stays inside the workspace
+
+- **Tested by:** `tests/test_animate.py`, `tests/test_dispatch.py`, `tests/test_render_cli.py`
 
