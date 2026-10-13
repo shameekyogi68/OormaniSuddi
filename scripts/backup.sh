@@ -48,6 +48,10 @@
 # Restore the registers: tar -xzf "$(ls -t .backups/oormani-2*.tar.gz | head -1)"
 #
 # Deliberately dumb: tar and cp. Nothing to keep alive, no account, no service.
+#
+# Exit status: 0 only when every copy it attempted succeeded and the three-
+# copies goal actually holds. A backup job that always exits 0 is a backup
+# job that has silently stopped — launchd and a skimmed log both believe it.
 
 set -uo pipefail
 
@@ -168,6 +172,7 @@ prune() {
 
 FULL=0
 [ "${1:-}" = "--full" ] && FULL=1
+FAIL=0                    # any failed copy flips this; the exit code reads it
 
 echo "$(date '+%Y-%m-%d %H:%M:%S')  backup ($([ "$FULL" = "1" ] && echo full || echo daily))"
 
@@ -185,8 +190,18 @@ if [ -d "$ROOT/archive" ]; then
     if [ -f "$tgt" ] && [ -z "$(find "$item" -newer "$tgt" -print -quit)" ]; then
       continue                      # already held, and unchanged since
     fi
-    tar -czf "$tgt.part" -C "$ROOT" "archive/$name" 2>/dev/null \
-      && mv -f "$tgt.part" "$tgt" && RECORD_NEW=$((RECORD_NEW + 1))
+    if tar -czf "$tgt.part" -C "$ROOT" "archive/$name" 2>/dev/null; then
+      if mv -f "$tgt.part" "$tgt"; then
+        RECORD_NEW=$((RECORD_NEW + 1))
+      else
+        echo "  ! record: $name tarred but the move in place failed"
+        FAIL=1
+      fi
+    else
+      rm -f "$tgt.part"
+      echo "  ! record: could not tar archive/$name"
+      FAIL=1
+    fi
   done
 fi
 echo "  record    $(ls "$LOCAL"/record/*.tar.gz 2>/dev/null | wc -l | tr -d ' ') item(s), $RECORD_NEW new or changed  ($(du -sh "$LOCAL/record" | cut -f1))"
@@ -216,8 +231,17 @@ for d in "${CANDIDATES[@]}"; do
 done
 
 if [ ${#TARGETS[@]} -gt 0 ]; then
-  tar -czf "$ARCHIVE" -C "$ROOT" "${TARGETS[@]}" 2>/dev/null
-  echo "  local     $(basename "$ARCHIVE")  ($(du -h "$ARCHIVE" | cut -f1))"
+  # .part + mv, same as the record loop: the previous nightly must never be
+  # clobbered by a tarball that died halfway through writing.
+  if tar -czf "$ARCHIVE.part" -C "$ROOT" "${TARGETS[@]}" 2>/dev/null; then
+    mv -f "$ARCHIVE.part" "$ARCHIVE" \
+      && echo "  local     $(basename "$ARCHIVE")  ($(du -h "$ARCHIVE" | cut -f1))" \
+      || { echo "  ! local     $(basename "$ARCHIVE") tarred but the move in place failed"; FAIL=1; }
+  else
+    rm -f "$ARCHIVE.part"
+    echo "  ! local     could not tar the nightly registers"
+    FAIL=1
+  fi
 else
   ARCHIVE=""
   echo "  local     nothing outside the record to keep yet"
@@ -236,7 +260,10 @@ if [ -n "$EXTERNAL" ] && [ -d "$EXTERNAL" ]; then
   for f in "$LOCAL"/record/*.tar.gz; do
     [ -e "$f" ] || continue
     g="$EXTERNAL/record/$(basename "$f")"
-    if [ ! -f "$g" ] || [ "$(wc -c < "$f")" != "$(wc -c < "$g")" ]; then
+    # Byte-for-byte (cmp), not size: two different tarballs can weigh the
+    # same, and a same-size-but-different file skipped here is a stale copy
+    # believed fresh.
+    if [ ! -f "$g" ] || ! cmp -s "$f" "$g"; then
       cp -f "$f" "$g" || COPIED=0
     fi
   done
@@ -273,9 +300,10 @@ else
   GIT_OK=0
 fi
 
-if [ "$EXT_OK" = "1" ] && [ "$GIT_OK" = "1" ]; then
+if [ "$FAIL" = "0" ] && [ "$EXT_OK" = "1" ] && [ "$GIT_OK" = "1" ]; then
   echo "  ✓ three copies, two media, one offsite"
-else
-  echo "  ! this is fewer than three copies. See --status."
-  notify "Backup incomplete" "Local copy written. See scripts/backup.sh --status"
+  exit 0
 fi
+echo "  ! this is fewer than three copies. See --status."
+notify "Backup incomplete" "Local copy written. See scripts/backup.sh --status"
+exit 1

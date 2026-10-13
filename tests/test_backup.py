@@ -8,6 +8,8 @@ have needed many times the disk this Mac has, locally and in iCloud.
 
 These run the real script in a scratch root whose path has a space in it.
 """
+
+# Enforces D124 — see docs/DECISIONS.md.
 from __future__ import annotations
 
 import os
@@ -86,6 +88,71 @@ class TheBackupPrunesAndKeepsTheRecordOnce(unittest.TestCase):
                                text=True).stdout.split()
         self.assertIn('archive/ledger.json', names)
         self.assertFalse([n for n in names if n.startswith('archive/2026-10-01')])
+
+
+class FailureIsAnExitCodeNotAFootnote(unittest.TestCase):
+    """A backup job that always exits 0 is a job that has silently stopped.
+    The script must say so in its exit status: a failed copy, a missing
+    second medium, or an unpushed offsite all mean fewer than three copies,
+    and fewer than three copies is a failure of the thing the script exists
+    to do. (The scratch root is not a git repo, so its offsite check reads
+    'no upstream' — exit 1 — even when every copy succeeded; that is pinned
+    here as the rule, not worked around.)
+    """
+
+    def setUp(self):
+        self.base = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.base)
+        self.root = os.path.join(self.base, 'My Apps', 'Oormani Suddi')
+        os.makedirs(os.path.join(self.root, 'scripts'))
+        shutil.copy(SCRIPT, os.path.join(self.root, 'scripts', 'backup.sh'))
+        os.makedirs(os.path.join(self.root, 'archive', '2026-10-01'))
+        self.local = os.path.join(self.root, '.backups')
+        self.ext = os.path.join(self.base, 'Second Copy')
+        os.makedirs(self.local)
+        os.makedirs(self.ext)
+
+    def run_backup(self):
+        env = dict(os.environ, OORMANI_BACKUP_DIR=self.ext,
+                   OORMANI_BACKUP_QUIET='1', HOME=self.base)
+        p = subprocess.run(['bash', os.path.join(self.root, 'scripts', 'backup.sh')],
+                           cwd=self.root, env=env, capture_output=True, text=True)
+        return p.returncode, p.stdout + p.stderr
+
+    def test_a_failed_second_copy_exits_1(self):
+        os.chmod(self.ext, 0o500)          # cp into it cannot succeed
+        self.addCleanup(os.chmod, self.ext, 0o700)
+        rc, out = self.run_backup()
+        self.assertEqual(rc, 1, out)
+        self.assertIn('could not write everything', out)
+
+    def test_every_copy_ok_but_offsite_unknown_is_still_a_failure(self):
+        # The scratch root is not a git repo: 'no upstream' → fewer than
+        # three copies → exit 1 even though local and second both worked.
+        rc, out = self.run_backup()
+        self.assertEqual(rc, 1, out)
+        self.assertIn('fewer than three copies', out)
+
+    def test_same_size_different_content_in_the_second_medium_is_copied(self):
+        # The old dedupe compared byte SIZE. Seed the second copy with a
+        # same-length but different file; a correct run copies over it.
+        rc, _ = self.run_backup()          # both copies now exist and agree
+        self.assertEqual(rc, 1)            # git unknown in scratch — fine
+        day = os.path.join(self.root, 'archive', '2026-10-01')
+        with open(os.path.join(day, 'SIGNOFF.json'), 'w') as fh:
+            fh.write('{}')                 # the day changed → re-tar
+        rc, _ = self.run_backup()
+        local_rec = os.path.join(self.local, 'record', '2026-10-01.tar.gz')
+        ext_rec = os.path.join(self.ext, 'record', '2026-10-01.tar.gz')
+        size = os.path.getsize(local_rec)
+        stale = os.urandom(size)           # same size, different bytes
+        with open(ext_rec, 'wb') as fh:
+            fh.write(stale)
+        self.assertNotEqual(stale, open(local_rec, 'rb').read())
+        rc, out = self.run_backup()
+        self.assertEqual(open(ext_rec, 'rb').read(),
+                         open(local_rec, 'rb').read(),
+                         'same-size stale copy was not refreshed')
 
 
 if __name__ == '__main__':
