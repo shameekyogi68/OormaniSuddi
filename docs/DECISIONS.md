@@ -3619,3 +3619,33 @@ legibility floor and safe zone.
 `brand/speednews.py` · `brand/reel_news.py` · `brand/animate.py :: analyse` ·
 `templates/saara.py, mukhya.py, greeting.py` · `brand/ornament.py` ·
 `scripts/youtube_kit.py` · `tests/test_animate.py`
+
+## D129 · The logo as it is, one motion signature, and grain that did not survive video
+
+**Decided (2026-10-13), by the owner.** "Let the logo be round and as it is"
+— after a small ಊ crest was proposed and rejected ("1/10"), and a crop of the
+logo's own lettering was found impossible (the ಿ of ನಿ runs under the
+microphone tag). Then: "do anything to make it 9/10, but show me what you are
+making".
+
+* **The house mark is the round logo, untouched** — `surface.medallion` now
+  draws only the logo, a soft shadow and an optional warm halo. The metallic
+  ring D128 put round it is gone. Never redrawn, cropped, re-lettered or ringed.
+* **One motion signature.** The ಸ್ಪೀಡ್ ನ್ಯೂಸ್ headline no longer just fades
+  up: each line wipes in left to right through a soft edge with a gold light
+  riding on the letters (`speednews._scan`) — the move the carousels already
+  make (D98), so the brand moves one way on every format. The first story
+  stays whole at frame 0.
+* **YouTube motion.** The intro, end screen and live loop gain drifting gold
+  dust (`youtube_kit.Dust`, seamless on the loop), the logo arriving out of
+  focus and sharpening, and a slow push-in on the intro.
+* **Tried and taken out: print grain on the paper.** It looked right on a
+  still, but every carousel slide ships as video, and the encoder re-draws
+  grain differently each frame — the held page shimmered
+  (`test_the_held_slide_asks_to_be_swiped` measured 0.77 against a 0.5
+  stillness floor). Flat paper stays.
+
+`brand/surface.py :: medallion` · `brand/speednews.py :: _scan, _line_bands` ·
+`scripts/youtube_kit.py :: Dust, focus_stack, push` · `brand/paper.py :: page` ·
+`tests/test_luxury.py` · `tests/test_animate.py`
+

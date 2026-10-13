@@ -25,7 +25,7 @@ on a baseline, generous space — and light, never lines (D128).
 newspaper: they stay on warm paper. Everything that is *watched* — ಸ್ಪೀಡ್
 ನ್ಯೂಸ್, footage reels, YouTube — is deep ink with warm gold light: Instagram
 prints its own white caption, name and audio over the bottom of every reel,
-and that white is lost on paper. One mark on both: the gold medallion.
+and that white is lost on paper. One mark on both: the round logo, exactly as it is (D129).
 
 **Genuine is a design feature, not a constraint on one.** The credit under a
 photograph, the named source, the honest status, the Grievance Officer on the
@@ -58,7 +58,7 @@ The logo's exact colours, from `brand/tokens.py :: C`. Nothing is invented.
 | **Paper** — the page | `paper_50` … `paper_200` | every slide and frame ground |
 | **Ink** — the type | `ink_950` … `ink_300` | headlines, body, meta, hairlines |
 | **Red** — the news | `red_500` / `red_600` (on ink: `red_400`) | the kicker, ಬ್ರೇಕಿಂಗ್, the half of a headline after its colon, the edge tab |
-| **Sunset gold** — the brand | `gold_500` | the medallion's ring, numeral chips, bullets, the follow button, warm light on ink |
+| **Sunset gold** — the brand | `gold_500` | numeral chips, bullets, the follow button, warm light on ink |
 | gold as **text** | `gold_800` | only when gold must be read as type |
 
 **The division is the system.** Red means *this is the news*; gold means

@@ -326,6 +326,53 @@ def _type_band(st: Story, W: int, H: int) -> Image.Image:
     return sf.img.resize((W, H), Image.Resampling.LANCZOS)
 
 
+SCAN_START = 0.06        # s after the wipe lands before the first line moves
+SCAN_LINE = 0.46         # one line's reveal
+SCAN_STAGGER = 0.09      # the next line starts this much later — a wave, not a queue
+SCAN_FEATHER = 120       # px of soft edge
+
+
+def _line_bands(tile: Image.Image) -> list[tuple[int, int]]:
+    """The rows each line of a headline tile occupies, found from its ink."""
+    a = np.asarray(tile.getchannel('A'))
+    rows = (a > 40).sum(axis=1) >= 2
+    bands, y = [], 0
+    while y < len(rows):
+        if rows[y]:
+            y0, gap = y, 0
+            while y < len(rows) and (rows[y] or gap < 6):
+                gap = 0 if rows[y] else gap + 1
+                y += 1
+            bands.append((max(0, y0 - 6), min(len(rows), y - gap + 6)))
+        y += 1
+    return bands or [(0, tile.height)]
+
+
+def _scan(tile: Image.Image, lines, k: float) -> Image.Image:
+    """`tile` with its lines revealed as at `k` s into the reveal."""
+    W_, H_ = tile.size
+    rgba = np.asarray(tile).astype(np.float32)
+    xs = np.arange(W_, dtype=np.float32)
+    mask = np.zeros((H_, W_), np.float32)
+    light = np.zeros((H_, W_), np.float32)
+    for i, (y0, y1) in enumerate(lines):
+        u = (k - SCAN_START - i * SCAN_STAGGER) / SCAN_LINE
+        if u <= 0:
+            continue
+        e = _ease_out(u)
+        edge = -SCAN_FEATHER + e * (W_ + 2 * SCAN_FEATHER)
+        m = np.clip((edge - xs) / SCAN_FEATHER + 0.5, 0, 1)
+        m = m * m * (3 - 2 * m)
+        mask[y0:y1] = np.maximum(mask[y0:y1], m[None, :])
+        if u < 1:
+            g = np.exp(-((xs - edge + SCAN_FEATHER * 0.5) / (SCAN_FEATHER * 0.45)) ** 2)
+            light[y0:y1] = np.maximum(light[y0:y1], (g * np.sin(np.pi * min(1.0, u)))[None, :])
+    lt = (light * 0.8)[..., None]
+    rgba[..., :3] = rgba[..., :3] * (1 - lt) + np.array(C.gold_300, np.float32) * lt
+    rgba[..., 3] *= mask
+    return Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), 'RGBA')
+
+
 class StorySlate:
     """One story: the WHOLE picture in the band, and the story on paper
     beneath it, which is only on screen while no wipe is (D81, D83)."""
@@ -368,6 +415,7 @@ class StorySlate:
         tall = _paper_tile(L.cw, int(max_h) + 40, head)
         self.hh = int(box['b']) + 16
         self.head = tall.crop((0, 0, L.cw, self.hh))
+        self.lines = _line_bands(self.head)
         src = typo.ellipsize('ಮೂಲ: ' + ' · '.join(st.sources[:2]),
                              typo.font('kn_var', 28, 520), L.cw)
         self.src = _tile(L.cw, 44, lambda im: typo.draw_text(
@@ -443,9 +491,17 @@ class StorySlate:
             dy = int(14 * (1 - min(1.0, tag)))
             f.alpha_composite(_fade(self.row, min(1.0, tag) * out),
                               (L.x0, self.row_y - dy))
-        a, rise = self.text_alpha(t, is_first)
-        if a > 0.002:
-            f.alpha_composite(_fade(self.head, a), (L.x0, int(self.head_y + rise)))
+        if is_first:
+            a, rise = self.text_alpha(t, is_first)
+            if a > 0.002:
+                f.alpha_composite(_fade(self.head, a), (L.x0, int(self.head_y + rise)))
+        elif out > 0.002 and k > SCAN_START:
+            # The house signature (D129): each line wipes in left to right
+            # through a soft edge with a gold light riding on the letters —
+            # the same move the carousels make, so the brand moves one way.
+            rise = 12 * (1 - _ease_out((k - SCAN_START) / 0.5))
+            f.alpha_composite(_fade(_scan(self.head, self.lines, k), out),
+                              (L.x0, int(self.head_y + rise)))
         s = _ease_out((k - 0.24) / 0.2) * out
         if s > 0.002:
             f.alpha_composite(_fade(self.src, s), (L.x0, self.src_y))

@@ -78,6 +78,27 @@ class TheMedallion(unittest.TestCase):
         self.assertEqual(m.getpixel((0, 0))[3], 0, 'the corners are clear')
 
 
+class TheLogoAsItIs(unittest.TestCase):
+    """D129 — "let the logo be round and as it is": nothing drawn round it."""
+
+    def test_nothing_is_drawn_outside_the_logo(self):
+        d = 300
+        m = np.asarray(medallion(d, shadow=0.0))[..., 3]
+        ys, xs = np.nonzero(m > 200)
+        self.assertLessEqual(xs.max() - xs.min() + 1, d + 2, 'a ring round the logo is back')
+
+    def test_the_reel_headline_reveals_left_to_right(self):
+        """D129 — the one motion signature: lines wipe in from the left."""
+        from PIL import Image
+        from brand.speednews import _scan, SCAN_START, SCAN_LINE
+        tile = Image.new('RGBA', (600, 80), (255, 255, 255, 255))
+        mid = np.asarray(_scan(tile, [(0, 80)], SCAN_START + SCAN_LINE * 0.35))[..., 3]
+        self.assertGreater(mid[:, 20].mean(), 200)     # the left is in
+        self.assertLess(mid[:, 580].mean(), 20)        # the right is still to come
+        done = np.asarray(_scan(tile, [(0, 80)], SCAN_START + SCAN_LINE * 1.1))[..., 3]
+        self.assertGreater(done.mean(), 250)
+
+
 class InkPairsPass(unittest.TestCase):
 
     def test_the_news_red_on_ink_is_red_400(self):

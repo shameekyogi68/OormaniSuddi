@@ -1,7 +1,7 @@
 # ಊರ್ಮನಿ ಸುದ್ದಿ — YouTube channel kit
 
 Everything here is drawn from the logo by `scripts/youtube_kit.py`: deep ink,
-warm gold light, the round logo set in a metallic gold medallion. To rebuild:
+warm gold light, and the round logo exactly as it is. To rebuild:
 
 ```bash
 python3 scripts/youtube_kit.py            # stills + motion
@@ -18,7 +18,7 @@ Files starting with `_check_` show the safe areas. They are only for checking, s
 | `banner_2560x1440.jpg` | Branding → **Banner image** | Logo, name line and subscribe button sit inside the 1546×423 strip that phones show |
 | `watermark_150.png` | Branding → **Video watermark**, display time **Entire video** | YouTube's clickable subscribe button; nothing is burned into the video |
 | `thumbnail_sample_seneshwara.jpg` | the video → **Thumbnail** | Sample from a real frame of the Seneshwara Ganapathi video |
-| `motion_intro_1920x1080.mp4` | First 4 s of a long video | Light rises, the medallion arrives, a glint runs round the gold ring, the name settles. House sound effects |
+| `motion_intro_1920x1080.mp4` | First 4 s of a long video | Gold dust drifts, the round logo comes into focus, a glint runs round its rim, the name settles, the camera pushes in slowly. House sound effects |
 | `motion_endscreen_1920x1080.mp4` | Last 20 s of every long video, then Studio → **End screen** | Everything is in place by 1.2 s. Put two Video elements on the dark panels and the Subscribe element on the medallion (`_check_endscreen_slots.jpg`) |
 | `endscreen_1920x1080.png` | The same end screen as a still | For editors that want an image |
 | `motion_live_starting_soon_loop_1920x1080.mp4` | Before a live stream, set to loop | 10 s seamless loop: breathing light, a glint on the ring, the live dot pulses |

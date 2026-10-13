@@ -56,6 +56,9 @@ COLONS = (':', '：')
 
 
 def page(W: int, H: int) -> Surface:
+    """A sheet of the house paper. Flat, on purpose: every carousel slide
+    ships as a video (D98–D100), and grain on it re-encodes differently every
+    frame — the held page shimmers. Tried and taken out (D129)."""
     return Surface(W, H, 2, bg=(*PAPER, 255))
 
 

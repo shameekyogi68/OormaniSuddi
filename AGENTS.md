@@ -135,8 +135,8 @@ already exist (`python3 render.py --describe`).
    warm gold light. The logo's exact colours from `tokens.C`. Red is the
    news — kicker, ಬ್ರೇಕಿಂಗ್, the half of a headline after its colon
    (`red_400` on ink). Sunset gold is the brand — a fill, never small type on
-   paper (`gold_800` when gold must be text there). The house mark is the gold
-   medallion (`surface.medallion`). **No decorative lines, anywhere** — no
+   paper (`gold_800` when gold must be text there). The house mark is the round
+   logo exactly as it is (`surface.medallion`, D129) — never redrawn, cropped or ringed. **No decorative lines, anywhere** — no
    rules, hairlines, stripes, streaks or underlines. Crime and death headlines
    are ink only (paper only, on ink). Left-aligned. A festival **greeting** is
    its own genre with its own look (`templates/greeting.py`, D54).

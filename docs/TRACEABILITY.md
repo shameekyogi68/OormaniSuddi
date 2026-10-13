@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **91/128** decisions are named by at least one test
+- **92/129** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -443,7 +443,7 @@ those carry a reason rather than a test.
 ## D98 · Every carousel slide has an animated twin: the scan wipe
 
 - **Tested by:** `tests/test_animate.py`
-- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/tokens.py`, `templates/__init__.py`, `templates/registry.json`
+- Enforced in: `brand/__init__.py`, `brand/animate.py`, `brand/paper.py`, `brand/tokens.py`, `templates/__init__.py`, `templates/registry.json`
 
 ## D99 · The scan wipe, refined to a premium standard — and on by default
 
@@ -581,4 +581,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_animate.py`, `tests/test_luxury.py`
 - Enforced in: `brand/animate.py`, `brand/legibility.py`, `brand/ornament.py`, `brand/paper.py`, `brand/reel_news.py`, `brand/speednews.py`, `brand/surface.py`, `scripts/youtube_kit.py`, `templates/greeting.py`, `templates/mukhya.py`, `templates/saara.py`
+
+## D129 · The logo as it is, one motion signature, and grain that did not survive video
+
+- **Tested by:** `tests/test_luxury.py`
+- Enforced in: `brand/paper.py`, `brand/speednews.py`, `brand/surface.py`
 

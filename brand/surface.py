@@ -428,35 +428,21 @@ def paste_logo(sf: Surface, x: float, y: float, size: float, variant='circle',
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  THE MEDALLION — the round logo in a metallic gold ring (D128)
+#  THE MEDALLION — the round logo, as it is (D128, D129)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Light catches the top-left of the ring, the body is the logo's sunset gold,
-# and it turns away into shadow and back — what reads as metal, not as paint.
-GOLD_RING = ((0.0, C.gold_300), (0.35, C.gold_500), (0.6, C.gold_700),
-             (0.8, C.gold_400), (1.0, C.gold_600))
 MEDALLION_PAD = 0.25          # of d, each side: room for the shadow and halo
-
-
-def _metal(w: int, h: int, stops, angle: float) -> Image.Image:
-    a = np.radians(angle)
-    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-    t = xx * np.cos(a) + yy * np.sin(a)
-    t = (t - t.min()) / max(1e-6, float(t.max() - t.min()))
-    pos = np.array([p for p, _ in stops], np.float32)
-    out = np.stack([np.interp(t, pos, np.array([c[i] for _, c in stops], np.float32))
-                    for i in range(3)], axis=2)
-    return Image.fromarray(np.clip(_dither(out, 0.7), 0, 255).astype(np.uint8), 'RGB')
 
 
 @lru_cache(maxsize=32)
 def medallion(d: int, halo: float = 0.0, shadow: float = 0.55,
               bezel: tuple = C.paper_0) -> Image.Image:
-    """The round logo set in a metallic gold ring: the one house mark on every
-    format (D128). `d` is the ring's diameter in device pixels. Returns an
-    RGBA square of d * (1 + 2 * MEDALLION_PAD) with the medallion centred, so
-    its soft shadow and optional warm `halo` have room. `bezel` is the narrow
-    band between ring and logo: paper on a light page, ink on a dark one."""
+    """The round logo, exactly as it is, with a soft shadow under it and an
+    optional warm `halo`: the one house mark on every format (D128). The owner:
+    "let the logo be round and as it is" — so nothing is drawn round it (D129
+    took off the gold ring D128 added). `d` is the logo's diameter in device
+    pixels. Returns an RGBA square of d * (1 + 2 * MEDALLION_PAD) with the logo
+    centred, so the shadow and halo have room. `bezel` is kept for callers."""
     M = 3                                              # built big, shrunk once
     D = d * M
     pad = int(round(D * MEDALLION_PAD))
@@ -476,19 +462,8 @@ def medallion(d: int, halo: float = 0.0, shadow: float = 0.55,
                                     c + D / 2, c + D / 2 + D * 0.03],
                                    fill=(*C.ink_950, int(255 * shadow)))
         out.alpha_composite(sh.filter(ImageFilter.GaussianBlur(D * 0.035)))
-    ring = D * 0.045
-    m = Image.new('L', (size, size), 0)
-    dm = ImageDraw.Draw(m)
-    dm.ellipse([c - D / 2, c - D / 2, c + D / 2, c + D / 2], fill=255)
-    dm.ellipse([c - D / 2 + ring, c - D / 2 + ring, c + D / 2 - ring, c + D / 2 - ring], fill=0)
-    metal = _metal(size, size, GOLD_RING, 125).convert('RGBA')
-    metal.putalpha(m)
-    out.alpha_composite(metal)
-    r_in = D / 2 - ring
-    ImageDraw.Draw(out).ellipse([c - r_in, c - r_in, c + r_in, c + r_in], fill=(*bezel[:3], 255))
-    r_logo = r_in - D * 0.022
-    lg = logo(int(r_logo * 2))
-    out.alpha_composite(lg, (int(round(c - r_logo)), int(round(c - r_logo))))
+    lg = logo(int(D))
+    out.alpha_composite(lg, (int(round(c - D / 2)), int(round(c - D / 2))))
     final = int(round(size / M))
     return out.resize((final, final), Image.Resampling.LANCZOS)
 

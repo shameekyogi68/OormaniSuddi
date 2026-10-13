@@ -690,6 +690,64 @@ def sfx(*cues):
     return args + ['-filter_complex', mix, '-map', '0:v', '-map', '[aout]']
 
 
+class Dust:
+    """Soft gold motes of light drifting slowly upward — lamp-light in the air,
+    never a line. With `loop` set, every mote completes whole laps in that
+    many seconds, so the last frame meets the first with no jump."""
+
+    def __init__(self, W, H, n=46, seed=7, loop=None, region=None):
+        rng = np.random.default_rng(seed)
+        self.W, self.H, self.loop = W, H, loop
+        x0, y0, x1, y1 = region or (0, 0, W, H)
+        self.motes = []
+        for _ in range(n):
+            r = float(rng.uniform(2.5, 9.0)) ** 1.1
+            depth = r / 11.0                              # near motes: bigger, faster, softer
+            speed = 14 + 46 * depth                       # px/s
+            if loop:
+                laps = max(1, round(speed * loop / (H + 60)))
+                speed = laps * (H + 60) / loop
+            self.motes.append(dict(x=float(rng.uniform(x0, x1)), y=float(rng.uniform(y0, y1)),
+                                   r=r, v=speed, a=float(rng.uniform(0.10, 0.34)) * (1.15 - depth * 0.5),
+                                   sway=float(rng.uniform(6, 18)), ph=float(rng.uniform(0, 6.28)),
+                                   blur=0.6 + depth * 2.2))
+        self._sprites = {}
+
+    def _sprite(self, r, blur):
+        key = (round(r, 1), round(blur, 1))
+        if key not in self._sprites:
+            R = int(math.ceil(r * 3 + blur * 4))
+            im = Image.new('RGBA', (2 * R, 2 * R), (0, 0, 0, 0))
+            ImageDraw.Draw(im).ellipse([R - r, R - r, R + r, R + r], fill=(*C.gold_300, 255))
+            self._sprites[key] = im.filter(ImageFilter.GaussianBlur(blur))
+        return self._sprites[key]
+
+    def draw(self, fr, t, alpha=1.0):
+        for m in self.motes:
+            y = (m['y'] - m['v'] * t) % (self.H + 60) - 30
+            x = m['x'] + m['sway'] * math.sin(m['ph'] + 2 * math.pi * t / (self.loop or 9.0))
+            tw = 0.75 + 0.25 * math.sin(m['ph'] * 3 + 2 * math.pi * t / (self.loop or 5.0) * 2)
+            sp = self._sprite(m['r'], m['blur'])
+            put(fr, sp, x, y, 1.0, m['a'] * tw * alpha)
+
+
+def focus_stack(img, max_blur, steps=10):
+    """The same layer at falling blur radii — a focus pull, picked per frame."""
+    return [img.filter(ImageFilter.GaussianBlur(max_blur * (1 - k / (steps - 1)) ** 1.5))
+            if k < steps - 1 else img for k in range(steps)]
+
+
+def push(fr, s):
+    """A slow camera push-in: the frame scaled about its centre by `s`."""
+    if s <= 1.0005:
+        return fr
+    W, H = fr.size
+    w, h = W / s, H / s
+    return fr.transform((W, H), Image.Transform.EXTENT,
+                        ((W - w) / 2, (H - h) / 2, (W + w) / 2, (H + h) / 2),
+                        resample=Image.Resampling.BICUBIC)
+
+
 def intro():
     """4 s channel intro: light rises, the medallion arrives, a glint runs
     round the ring, the name settles, a breath, out."""
@@ -707,13 +765,19 @@ def intro():
     tag.text(Brand.tagline, W / 2, 70, KNV(44, 560), TEXT_2, anchor='ms')
     tag_l = tag.finish('RGBA')
     cy_med = 430
+    focus = focus_stack(med, 18)
+    dust = Dust(W, H, n=54, seed=11)
     enc = Encoder(os.path.join(OUT, 'motion_intro_1920x1080.mp4'),
                   audio=sfx(('whoosh.wav', 0.15, -6), ('open.wav', 0.85, -4)), dur=dur)
     for i in range(int(dur * FPS)):
         t = i / FPS
         fr = Image.blend(dark, bg, ease_in_out(span(t, 0.0, 0.9)))
+        dust.draw(fr, t, ease_in_out(span(t, 0.1, 1.2)))
+        # the logo arrives out of focus and sharpens as it settles
         a_m = ease_out(span(t, 0.25, 1.15), 3)
-        put(fr, med, W / 2, cy_med, 0.86 + 0.14 * ease_out(span(t, 0.25, 1.45), 4), a_m)
+        f_k = ease_out(span(t, 0.25, 1.35), 3)
+        lay = focus[min(len(focus) - 1, int(round(f_k * (len(focus) - 1))))]
+        put(fr, lay, W / 2, cy_med, 0.86 + 0.14 * ease_out(span(t, 0.25, 1.45), 4), a_m)
         g = span(t, 1.05, 2.05)
         if 0 < g < 1:
             gl = sheen(mask, ease_in_out(g))
@@ -722,6 +786,7 @@ def intro():
             1.0, ease_out(span(t, 1.15, 1.95), 3), dy=26 * (1 - ease_out(span(t, 1.15, 2.1), 4)))
         put(fr, tag_l, W / 2, 870, 1.0, ease_out(span(t, 1.5, 2.3), 3),
             dy=18 * (1 - ease_out(span(t, 1.5, 2.45), 4)))
+        fr = push(fr, 1.0 + 0.035 * ease_in_out(t / dur))    # the camera breathes in
         out = span(t, 3.45, 4.0)
         if out > 0:
             fr = Image.blend(fr, dark, ease_in_out(out))
@@ -743,10 +808,12 @@ def end_motion():
     m_l = m.finish('RGBA')
     enc = Encoder(os.path.join(OUT, 'motion_endscreen_1920x1080.mp4'),
                   audio=sfx(('whoosh.wav', 0.0, -12)), dur=dur)
+    dust = Dust(W, H, n=34, seed=21)
     for i in range(int(dur * FPS)):
         t = i / FPS
         breath = 0.5 - 0.5 * math.cos(2 * math.pi * t / 8.0)
         fr = Image.blend(bg, lit, breath)
+        dust.draw(fr, t, 0.8 * ease_in_out(span(t, 0.0, 1.0)))
         put(fr, head_l, W / 2, H / 2, 1.0, ease_out(span(t, 0.0, 0.6), 3),
             dy=-14 * (1 - ease_out(span(t, 0.0, 0.7), 4)))
         for j, cl in enumerate(card_l):
@@ -777,10 +844,12 @@ def live_loop():
     ImageDraw.Draw(red_dot).ellipse([2, 2, 61, 61], fill=(*C.red_500, 255))
     red_dot = red_dot.resize((int(dot_r * 2 + 3), int(dot_r * 2 + 3)), Image.Resampling.LANCZOS)
     enc = Encoder(os.path.join(OUT, 'motion_live_starting_soon_loop_1920x1080.mp4'), dur=dur)
+    dust = Dust(W, H, n=44, seed=31, loop=dur)
     for i in range(int(dur * FPS)):
         t = i / FPS
         breath = 0.5 - 0.5 * math.cos(2 * math.pi * t / dur)
         fr = Image.blend(bg, lit, breath)
+        dust.draw(fr, t)
         put(fr, med, cx, cy, 1.0 + 0.012 * breath)
         g = span(t, 3.0, 4.6)
         if 0 < g < 1:
