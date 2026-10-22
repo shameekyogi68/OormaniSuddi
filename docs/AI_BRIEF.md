@@ -120,6 +120,13 @@ Never invent a URL, and never fold one story's source under another's.
 is in `render.py --describe`). A print headline needs far more screen time
 than a ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frame has.
 
+**Give every saara story a `reel_line` and a `reel_support` too** — they make
+the ಸುದ್ದಿ ಸಾರ reel (D132). `reel_line` is the reel's headline: aim for
+`Limits.saara_reel_line_chars` so it sits in two big lines. `reel_support` is
+ONE complete sentence of 12–16 words, taken only from the source, that the
+voice reads and the gold card shows whole. Without it the reel reads the long
+`deck` and has to roll it in pieces.
+
 **Set `location` on every story.** It drives the hashtags, the per-town
 forward, and whether a reader can tell the story is theirs (`PUB-08`). Put the
 town early: the caption is cut at about 125 characters (`PUB-05`).

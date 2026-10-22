@@ -1,0 +1,523 @@
+<!doctype html>
+<!-- ಸುದ್ದಿ ಸಾರ reel — Ink & Gold (D132). Driven frame by frame by brand/saara_reel.py:
+     boot() lays everything out once, render(t) poses every element for time t. Nothing here
+     animates on its own clock, so every frame is exact and repeatable. -->
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Kn; src: url('{{KN}}'); }
+@font-face { font-family: KnSerif; src: url('{{KNSERIF}}'); }
+@font-face { font-family: Anek; src: url('{{ANEK}}'); font-weight:100 800; font-stretch:75% 125%; }
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:1080px; height:1920px; overflow:hidden; background:#070B17; }
+.a { position:absolute; }
+#gl { left:0; top:0; width:1080px; height:1920px; }
+#bg { left:0; top:0; }
+
+/* every text edge starts at x=64; Instagram's chrome is never written under (tokens.ReelsChrome) */
+#mast { left:64px; top:262px; display:flex; align-items:center; gap:24px; }
+#mast img { width:112px; height:112px; filter:drop-shadow(0 10px 24px rgba(0,0,0,.4)); }
+#mast .n { font-family:Kn; font-size:50px; line-height:1.12; color:#FFFFFF; }
+#mast .s { font-family:Anek; font-weight:600; font-size:33px; margin-top:2px; color:#C9CFDC; white-space:nowrap; }
+#mast .s b { font-weight:800; color:#FF4D45; }
+#counter { right:64px; top:262px; height:120px; display:flex; align-items:flex-end; font-family:Anek; font-stretch:75%; }
+#counter .win { height:120px; overflow:hidden; }
+#counter .strip div { height:120px; line-height:120px; font-weight:800; font-size:120px; color:#FFFFFF; }
+#counter .of { font-weight:500; font-size:46px; color:#A9B2C7; margin:0 0 14px 8px; }
+
+.chip { left:64px; top:440px; font-family:Kn; font-size:52px; line-height:1; height:92px; padding:0 30px; display:flex; align-items:center; border-radius:14px;
+  color:#0B0F1A; background:linear-gradient(180deg,#FFFFFF,#F1ECE0); box-shadow:0 14px 36px rgba(0,0,0,.35); white-space:nowrap; }
+.head { left:64px; top:568px; width:850px; font-family:KnSerif; font-size:116px; line-height:1.24; color:#FFFFFF; text-wrap:balance; }
+.line { position:relative; white-space:nowrap; width:max-content; }
+.line .base { display:inline-block; padding:40px 70px; margin:-40px -70px; }
+.line .glint { position:absolute; left:-70px; top:-40px; padding:40px 70px; color:#FFE9A8;
+  text-shadow:0 0 26px rgba(245,179,1,.9), 0 0 70px rgba(245,179,1,.45); }
+
+#card { left:64px; top:1080px; width:848px; border-radius:40px; overflow:hidden;
+  background:linear-gradient(160deg,#FFD24A 0%,#F5B000 55%,#E39400 100%); box-shadow:0 34px 80px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,244,200,.0); }
+.cc { position:absolute; left:40px; top:44px; width:768px; }
+.cap { font-family:Anek; font-weight:700; font-size:62px; line-height:1.38; color:#0B0F1A; }
+.cap span { position:relative; z-index:1; }
+.hl { position:absolute; z-index:0; background:#0B0F1A; border-radius:14px; }
+.row { display:flex; align-items:baseline; gap:30px; font-family:Anek; font-size:46px; line-height:1.3; padding:12px 0; white-space:nowrap; overflow:hidden; }
+.row .i { font-stretch:75%; font-weight:800; font-size:54px; width:62px; flex:none; color:#C81E1E; }
+.row .t { font-weight:800; color:#0B0F1A; flex:none; }
+.row .d { font-weight:600; color:rgba(11,15,26,.80); }
+#under { left:64px; display:flex; align-items:center; gap:26px; }
+#under .dots { display:none; }
+#under .dots i { width:20px; height:20px; border-radius:50%; display:block; background:rgba(255,255,255,.22); }
+#under .hint { font-family:Anek; font-weight:700; font-size:38px; color:#FFFFFF; white-space:nowrap; }
+
+#coverWords div { position:absolute; left:0; line-height:1; white-space:nowrap; font-family:KnSerif; color:#FFFFFF; }
+#coverWords .l1 { font-size:78px; }
+#coverWords .l3 { font-size:126px; }
+#coverWords .bl { display:inline-block; width:0; height:0; }
+
+.num { right:40px; font-family:Anek; font-stretch:75%; font-weight:800; font-size:600px; line-height:.74; color:#0F172C; }
+#logo { left:380px; top:392px; width:320px; height:320px; }
+.oc { position:absolute; left:0; top:0; width:640px; height:136px; padding-top:16px; display:flex; align-items:center; justify-content:center;
+  font-family:Kn; font-size:60px; color:#0B0F1A; white-space:nowrap; }
+.oc b { font-family:Anek; font-weight:800; font-size:70px; margin:-6px 18px 0 0; }
+.ofl { left:160px; width:760px; text-align:center; white-space:nowrap; }
+#ofName { top:736px; font-family:KnSerif; font-size:80px; line-height:1.1; color:#FFFFFF; }
+#ofHandle { top:866px; font-family:-apple-system, Helvetica, Arial; font-weight:700; font-size:40px; color:#FFC93C; }
+#ofWhy { top:930px; font-family:Anek; font-weight:600; font-size:40px; color:rgba(255,255,255,.86); }
+#ofYt { top:1192px; font-family:Anek; font-weight:700; font-size:44px; color:#FFFFFF; }
+#ofYt i { font-style:normal; color:#FF4D45; }
+</style></head>
+<body>
+<canvas id="gl" class="a" width="540" height="960"></canvas>
+<canvas id="bg" class="a" width="1080" height="1920"></canvas>
+<div id="mast" class="a"><img src="{{LOGO}}"><div><div class="n">{{BRAND}}</div><div class="s"><b>ಸುದ್ದಿ ಸಾರ</b> · <span id="date"></span></div></div></div>
+<div id="counter" class="a"><div class="win"><div class="strip"></div></div><div class="of"></div></div>
+<canvas id="five" class="a"></canvas>
+<div id="coverWords" class="a"><div class="l1">ಇಂದಿನ<span class="bl"></span></div><div class="l1">ಪ್ರಮುಖ<span class="bl"></span></div><div class="l3">ಸುದ್ದಿ<span class="bl"></span></div></div>
+<div id="stories"></div>
+<img id="logo" class="a" src="{{LOGO}}">
+<div id="ofName" class="a ofl">{{BRAND}}</div><div id="ofHandle" class="a ofl"></div><div id="ofWhy" class="a ofl">ಪ್ರತಿದಿನದ ಕರಾವಳಿ ಸುದ್ದಿಗಾಗಿ</div><div id="ofYt" class="a ofl"><i>▶</i> YouTube ನಲ್ಲಿ ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ</div>
+<div id="card" class="a"></div>
+<div id="under" class="a"><div class="dots"></div><div class="hint">ಪೂರ್ಣ ವರದಿ ಕ್ಯಾಪ್ಶನ್‌ನಲ್ಲಿ ↓</div></div>
+<script>
+const D = /*DATA*/null;
+const W = 1080, H = 1920, X0 = 64, SAFE_BOTTOM = 1480, STORY_CARD_TOP = 1080;
+const $ = s => document.querySelector(s);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, d) => clamp((t - a) / d);
+const lerp = (a, b, x) => a + (b - a) * x;
+const smooth = x => x * x * (3 - 2 * x);
+const smoother = x => x * x * x * (x * (x * 6 - 15) + 10);
+const expoOut = x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x);
+const expoInOut = x => x <= 0 ? 0 : x >= 1 ? 1 : x < .5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2;
+const cubicIn = x => x * x * x;
+const cubicInOut = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const spring = x => x >= 1 ? 1 : 1 - Math.exp(-6.5 * x) * Math.cos(8.5 * x);
+
+function pose(el, o = 1, y = 0, s = 1, blur = 0) {
+  el.style.opacity = o.toFixed(4);
+  el.style.visibility = o < 0.002 ? 'hidden' : 'visible';
+  el.style.transform = `translate3d(0,${y.toFixed(2)}px,0) scale(${s.toFixed(5)})`;
+  el.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : 'none';
+}
+// an entrance and an exit, each 0..1 → [opacity, y, blur]
+function io(inn, out, dy = 26, dyOut = -34, bl = 10) {
+  const a = expoOut(inn), b = cubicIn(out);
+  return [Math.min(clamp(inn * 2.2), 1 - b), lerp(dy, 0, a) + dyOut * b, bl * (1 - a) + bl * b];
+}
+
+/* the house scan (D98, D129): a soft edge sweeps left to right with gold light riding the letters */
+const SOFT = 150, PADX = 70;
+function scan(line, p) {
+  const X = lerp(-40, line._w + SOFT + 260, p) + PADX;
+  line._base.style.webkitMaskImage = `linear-gradient(90deg,#000 0,#000 ${X - SOFT}px,rgba(0,0,0,0) ${X}px)`;
+  line._glint.style.opacity = p <= 0 || p >= 1 ? 0 : 1;
+  line._glint.style.webkitMaskImage =
+    `linear-gradient(90deg,rgba(0,0,0,0) ${X - SOFT - 230}px,#000 ${X - SOFT - 60}px,#000 ${X - SOFT + 20}px,rgba(0,0,0,0) ${X - 10}px)`;
+}
+
+// Lines are found by layout, never by counting characters, and a Kannada word is never cut.
+function buildLines(el, text, sizes, maxLines, maxH) {
+  sizes = sizes.map(x => Array.isArray(x) ? x : [x, maxLines, null]);
+  const words = text.replace(/\|/g, ' ').split(' ').filter(Boolean);
+  let groups;
+  if (text.includes('|')) { el.style.fontSize = sizes[0][0] + 'px'; groups = text.split('|').map(x => x.split(' ')); }
+  else for (const [size, lines, width] of sizes) {
+    el.style.fontSize = size + 'px';
+    if (width) el.style.width = width + 'px';
+    el.innerHTML = words.map(w => `<span>${w}</span>`).join(' ');
+    groups = []; let top = null;
+    for (const sp of el.children) {
+      if (top === null || Math.abs(sp.offsetTop - top) > 4) { groups.push([]); top = sp.offsetTop; }
+      groups[groups.length - 1].push(sp.textContent);
+    }
+    if (groups.length <= lines && (!maxH || el.offsetHeight <= maxH)) break;
+  }
+  el.innerHTML = '';
+  return groups.map(g => {
+    const line = document.createElement('div'); line.className = 'line';
+    const base = document.createElement('span'); base.className = 'base'; base.textContent = g.join(' ');
+    const glint = document.createElement('span'); glint.className = 'glint'; glint.textContent = g.join(' ');
+    line.append(base, glint); el.append(line);
+    line._base = base; line._glint = glint; line._w = base.offsetWidth - 2 * PADX;
+    return line;
+  });
+}
+
+let bgx, five, ink, S = [], cover = {}, outro = {}, N = 0;
+window.boot = async function () {
+  await document.fonts.load('116px Kn'); await document.fonts.load('116px KnSerif'); await document.fonts.load('700 62px Anek'); await document.fonts.load('800 120px Anek');
+  await document.fonts.ready;
+  N = D.stories.length;
+  $('#date').textContent = D.date;
+  $('#counter .strip').innerHTML = D.stories.map((_, i) => `<div>${String(i + 1).padStart(2, '0')}</div>`).join('');
+  $('#counter .of').textContent = '/ ' + String(N).padStart(2, '0');
+  $('#under .dots').innerHTML = D.stories.map(() => '<i></i>').join('');
+  bgx = $('#bg').getContext('2d');
+  if (!initGL()) throw new Error('WebGL is not available to the reel');
+
+  // the count, drawn so its ink — not its box — sits on the grid
+  five = $('#five'); const fc = five.getContext('2d');
+  fc.font = '800 610px Anek'; fc.fontStretch = 'ultra-condensed';
+  const m = fc.measureText(String(N));
+  ink = { l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent, P: 80 };
+  five.width = Math.ceil(ink.l + ink.r + 2 * ink.P); five.height = Math.ceil(ink.a + ink.d + 2 * ink.P);
+  const inkTop = 424;
+  five.style.left = (X0 - ink.P) + 'px'; five.style.top = (inkTop - ink.P) + 'px';
+  const cw = $('#coverWords');
+  cw.style.left = (X0 + ink.l + ink.r + 22) + 'px';
+  cw.style.top = '0px';
+  {
+    // ಸುದ್ದಿ on the count's baseline; the lines above it stacked at one tight gap of ink
+    const mc = document.createElement('canvas').getContext('2d');
+    const [a, b, c] = [...cw.children].map(el => {
+      mc.font = `${getComputedStyle(el).fontSize} KnSerif`;
+      const m = mc.measureText(el.firstChild.textContent);
+      return { el, asc: m.actualBoundingBoxAscent, desc: m.actualBoundingBoxDescent,
+               bo: el.querySelector('.bl').offsetTop - el.offsetTop };
+    });
+    const G = 20, bc = inkTop + ink.a;
+    const bb = bc - c.asc - G - b.desc;
+    const ba = bb - b.asc - G - a.desc;
+    [[a, ba], [b, bb], [c, bc]].forEach(([l, y]) => { l.el.style.top = (y - l.bo) + 'px'; });
+  }
+  cover.words = cw;
+
+  const card = $('#card');
+  // cover: the running order, each teaser cut at a word to fit its row
+  const cv = document.createElement('div'); cv.className = 'cc'; cv.style.left = '40px'; cv.style.top = '30px'; cv.style.width = '768px';
+  card.append(cv);
+  D.stories.forEach((s, i) => {
+    const r = document.createElement('div'); r.className = 'row';
+    r.innerHTML = `<span class="i">${String(i + 1).padStart(2, '0')}</span><span class="t">${s.place_short}</span><span class="d"></span>`;
+    cv.append(r);
+    const d = r.querySelector('.d'), words = s.teaser.split(' ').filter(Boolean);
+    r._d = d; r._words = words;
+    for (let n = Math.max(0, words.length - 3); n < words.length; n++) {
+      d.textContent = words.slice(n).join(' ').replace(/^[,;:\s]+|[,;:]$/g, '');
+      if (r.scrollWidth <= 768) break;
+    }
+  });
+  cover.card = cv; cover.rows = [...cv.children];
+  const tw = Math.max(...cover.rows.map(r => r.querySelector('.t').offsetWidth));
+  cover.rows.forEach(r => {
+    r.querySelector('.t').style.width = tw + 'px';
+    // re-fit to the narrower column; a teaser never opens on a word that ends in a comma
+    for (let n = Math.max(0, r._words.length - 3); n < r._words.length; n++) {
+      if (/[,;:]$/.test(r._words[n]) && n < r._words.length - 1) continue;
+      r._d.textContent = r._words.slice(n).join(' ').replace(/[,;:]$/, '');
+      if (r.scrollWidth <= 768) break;
+    }
+  });
+  cover.h = cv.offsetHeight + 60;
+  cover.top = Math.min(1040, SAFE_BOTTOM - cover.h);
+
+  // stories
+  const host = $('#stories');
+  const meas = document.createElement('div'); meas.className = 'cap'; meas.style.cssText = 'position:absolute;visibility:hidden;width:768px';
+  document.body.append(meas);
+  const twoLines = 2 * 62 * 1.38 + 4, threeLines = 3 * 62 * 1.38 + 4;
+  D.stories.forEach((s, k) => {
+    const o = Object.assign({}, D.timeline.stories[k]);
+    o.num = document.createElement('div'); o.num.className = 'num a'; o.num.textContent = String(k + 1).padStart(2, '0');
+    host.append(o.num); o.num.style.top = (1850 - o.num.offsetHeight) + 'px';   // low, clear of the read-on line
+    o.chip = document.createElement('div'); o.chip.className = 'chip a';
+    o.chip.innerHTML = `<span style="position:relative">${s.place}<i style="display:inline-block;width:0;height:0"></i></span>`;
+    host.append(o.chip);
+    {   // centre the town on the ink of its own letters, not on the font's box
+      const sp = o.chip.firstChild, mc = document.createElement('canvas').getContext('2d');
+      mc.font = '52px Kn'; const m = mc.measureText(s.place);
+      const base = sp.offsetTop + sp.querySelector('i').offsetTop;   // the baseline, measured inside the tag
+      const inkMid = base - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+      sp.style.top = (46 - inkMid).toFixed(1) + 'px';
+    }
+    o.head = document.createElement('div'); o.head.className = 'head a'; host.append(o.head);
+    // two lines end above y=860, so they may use the full width; a third line must clear the rail
+    o.lines = buildLines(o.head, s.head, [[118, 2, 952], [110, 2, 952], [102, 2, 952], [96, 2, 952], [90, 2, 952],
+                                          [110, 3, 848], [100, 3, 848], [92, 3, 848], [84, 3, 848], [78, 3, 848]], 3, STORY_CARD_TOP - 60 - 568);
+    // the read line, cut into two-line captions that roll as the voice speaks
+    const words = s.body.split(' ').filter(Boolean);
+    const wt = words.map(w => [...w].length + 2 + (/[,.]$/.test(w) ? 4 : 0));
+    const tot = wt.reduce((a, b) => a + b, 0); let acc = 0;
+    o.wt = wt.map(x => { const a = acc / tot; acc += x; return [a * o.bodyDur, (acc / tot) * o.bodyDur]; });
+    o.chunks = []; let cur = [];
+    meas.textContent = s.body; o.capLines = 2;
+    if (meas.offsetHeight <= threeLines) { o.chunks = [words]; o.capLines = Math.max(1, Math.round((meas.offsetHeight - 4) / (62 * 1.38))); }
+    else for (let i = 0; i < words.length; i++) {
+      meas.textContent = cur.concat(words[i]).map(j => j).join(' ');
+      if (cur.length && meas.offsetHeight > twoLines) { o.chunks.push(cur); cur = []; }
+      cur.push(words[i]);
+      if (cur.length >= 3 && /,$/.test(words[i]) && i < words.length - 2) { o.chunks.push(cur); cur = []; }
+      cur._i = cur._i ?? i;
+    }
+    if (cur.length) o.chunks.push(cur);
+    let wi = 0;
+    o.chunkEls = o.chunks.map(c => {
+      const el = document.createElement('div'); el.className = 'cc cap';
+      el.innerHTML = '<div class="hl"></div>' + c.map(w => `<span>${w}</span>`).join(' ');
+      el._hl = el.firstChild; el._first = wi; el._words = [...el.querySelectorAll('span')]; wi += c.length;
+      el._t0 = o.wt[el._first][0]; card.append(el);
+      // the pill hugs the letters' body, not the font's whole box
+      el._rects = el._words.map(w => ({ x: w.offsetLeft - 9, y: w.offsetTop + w.offsetHeight * 0.08,
+                                        w: w.offsetWidth + 18, h: w.offsetHeight * 0.72 }));
+      return el;
+    });
+    o.h = 44 + 46 + Math.ceil(o.capLines * 62 * 1.38 + 4);
+    o.cardTop = Math.round(clamp(568 + o.head.offsetHeight + 104, 920, STORY_CARD_TOP));
+    S.push(o);
+  });
+  meas.remove();
+
+  const oc = document.createElement('div'); oc.className = 'oc';
+  oc.innerHTML = '<b>＋</b>ಫಾಲೋ ಮಾಡಿ';
+  card.append(oc);
+  $('#ofHandle').textContent = D.handle;
+  outro.box = oc; outro.logo = $('#logo'); outro.h = 136;
+  outro.parts = ['#ofName', '#ofHandle', '#ofWhy', '#ofYt'].map(q => $(q));
+  return { stories: N, chunks: S.map(o => o.chunks.length), lines: S.map(o => o.lines.length) };
+};
+
+function camAt(t) {
+  const TL = D.timeline;
+  let c = lerp(1.05, 1.0, expoOut(prog(t, 0, 2.6)));
+  S.forEach((s, k) => {
+    const end = k < N - 1 ? S[k + 1].B : TL.outro;
+    if (t >= s.B - 0.35) c = lerp(c, 1 + 0.03 * smooth(prog(t, s.B, end - s.B)), smoother(prog(t, s.B - 0.35, 0.7)));
+    if (t >= end - 0.35) c = lerp(c, 1.0, smoother(prog(t, end - 0.35, 0.7)));
+  });
+  return lerp(c, 1.05, smoother(prog(t, TL.T - 0.6, 0.6)));
+}
+
+function drawBg(t) {
+  const c = bgx, cam = camAt(t), TL = D.timeline, loopW = smoother(prog(t, TL.T - 0.6, 0.6));
+  const tt = lerp(t, 0, loopW);                 // the light drifts, and is home again for the loop
+  drawGL(tt, cam, toneAt(t));
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over';
+  c.clearRect(0, 0, W, H);
+  let g;
+  const marks = S.map(s => s.B).concat([TL.outro]);
+  for (const B of marks) {                     // a broad wash of gold light on every change
+    const p = prog(t, B - 0.4, 0.9);
+    if (p <= 0 || p >= 1) continue;
+    const x = lerp(-700, W + 700, cubicInOut(p)), a = .10 * Math.sin(Math.PI * p);
+    g = c.createLinearGradient(x - 520, 300, x + 520, 1100);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.5, `rgba(255,205,90,${a})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.fillRect(-100, -100, W + 200, H + 200);
+  }
+  c.globalCompositeOperation = 'source-over';
+}
+
+
+/* ── the living background: light flowing over the navy, tinted by the kind of story ── */
+const FRAG = `precision highp float;
+uniform vec2 R; uniform float T; uniform float Z; uniform vec3 A; uniform vec3 B;
+float h(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float n(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3. - 2. * f);
+  return mix(mix(h(i), h(i + vec2(1, 0)), u.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), u.x), u.y); }
+float fbm(vec2 p){ float v = 0., a = .5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+  for (int i = 0; i < 5; i++) { v += a * n(p); p = m * p; a *= .5; } return v; }
+void main(){
+  vec2 uv = gl_FragCoord.xy / R; uv.y = 1. - uv.y;
+  vec2 c = (uv - .5) / Z + .5;
+  vec2 p = vec2(c.x * R.x / R.y, c.y) * 1.7;
+  float t = T * .045;
+  vec2 q = vec2(fbm(p + vec2(0., t)), fbm(p + vec2(5.2, 1.3) - t * .8));
+  vec2 r = vec2(fbm(p + 2.8 * q + vec2(1.7, 9.2) + t * 1.2), fbm(p + 2.8 * q + vec2(8.3, 2.8) - t));
+  float f = fbm(p + 2.2 * r);
+  vec3 col = mix(vec3(.027, .043, .090), vec3(.085, .12, .23), smoothstep(.25, .85, f));
+  float glow = smoothstep(.42, .92, f * f * 1.5 + .38 * r.x);
+  float w = mix(.20, .78, smoothstep(.42, .97, uv.y)) * mix(.75, 1., smoothstep(.15, 1., uv.x));
+  col += A * glow * .48 * w;
+  col += B * pow(glow, 3.) * .40 * w;
+  float v = smoothstep(1.3, .3, length((uv - vec2(.5, .42)) * vec2(1., .72)));
+  col *= mix(.5, 1., v);
+  gl_FragColor = vec4(col, 1.);
+}`;
+let gl, glU = {};
+function initGL() {
+  gl = $('#gl').getContext('webgl', { preserveDrawingBuffer: true, antialias: false });
+  if (!gl) return false;
+  const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o);
+    if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+  const pr = gl.createProgram();
+  gl.attachShader(pr, sh(gl.VERTEX_SHADER, 'attribute vec2 P; void main(){ gl_Position = vec4(P, 0., 1.); }'));
+  gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(pr); gl.useProgram(pr);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'P'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  for (const k of ['R', 'T', 'Z', 'A', 'B']) glU[k] = gl.getUniformLocation(pr, k);
+  gl.uniform2f(glU.R, 540, 960);
+  return true;
+}
+function drawGL(t, cam, tone) {
+  gl.uniform1f(glU.T, t); gl.uniform1f(glU.Z, cam);
+  gl.uniform3fv(glU.A, tone[0]); gl.uniform3fv(glU.B, tone[1]);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+// each story's tint, blended across its change; cover and close are gold
+const GOLD = [[.96, .66, .04], [.95, .42, .06]];
+function toneAt(t) {
+  const TL = D.timeline, mix3 = (a, b, w) => a.map((x, i) => x + (b[i] - x) * w);
+  let tone = GOLD;
+  S.forEach((o, k) => { const w = smoother(prog(t, o.B - 0.4, 1.0)); tone = [mix3(tone[0], D.stories[k].tone[0], w), mix3(tone[1], D.stories[k].tone[1], w)]; });
+  const wo = smoother(prog(t, TL.outro - 0.4, 1.0));
+  return [mix3(tone[0], GOLD[0], wo), mix3(tone[1], GOLD[1], wo)];
+}
+
+let lastSheen = -1;
+function drawFive(sheen) {
+  const c = five.getContext('2d');
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, five.width, five.height);
+  c.font = '800 610px Anek'; c.fontStretch = 'ultra-condensed';
+  const top = ink.P, bot = ink.P + ink.a + ink.d;
+  c.shadowColor = 'rgba(245,179,1,.30)'; c.shadowBlur = 60; c.shadowOffsetY = 16;
+  const g = c.createLinearGradient(0, top, 0, bot);
+  g.addColorStop(0, '#FFE27A'); g.addColorStop(.45, '#FFC93C'); g.addColorStop(1, '#F0A500');
+  c.fillStyle = g; c.fillText(String(N), ink.P + ink.l, ink.P + ink.a);
+  c.shadowColor = 'transparent';
+  if (sheen > 0 && sheen < 1) {                // one slow specular pass across the gold
+    c.globalCompositeOperation = 'source-atop';
+    const x = lerp(-260, five.width + 260, sheen);
+    const s = c.createLinearGradient(x - 170, 0, x + 170, five.height * .55);
+    s.addColorStop(0, 'rgba(255,255,255,0)'); s.addColorStop(.5, 'rgba(255,252,232,.85)'); s.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = s; c.fillRect(0, 0, five.width, five.height);
+    c.globalCompositeOperation = 'source-over';
+  }
+}
+
+window.render = function (t) {
+  const TL = D.timeline, B1 = S[0].B, OUT = TL.outro, T = TL.T;
+  const loopW = smoother(prog(t, T - 0.6, 0.6));   // the last 0.6s fold back into frame 0
+  const tc = loopW > 0 ? 0 : t;
+  drawBg(t);
+
+  // ── cover: whole at frame 0 — it is the thumbnail ──
+  const back = k => [loopW, lerp(30, 0, loopW), 10 * (1 - loopW)];
+  {
+    const [o, y, b] = loopW > 0 ? back() : io(1, prog(t, B1 - 0.42, 0.42), 0, -40, 12);
+    pose(five, o, y, 1, b);
+    const [o2, y2, b2] = loopW > 0 ? back() : io(1, prog(t, B1 - 0.36, 0.42), 0, -40, 12);
+    pose(cover.words, o2, y2, 1, b2);
+    const sh = prog(tc, 0.3, 1.3);
+    if (sh !== lastSheen) { drawFive(cubicInOut(sh)); lastSheen = sh; }
+    const [o3, y3, b3] = loopW > 0 ? [loopW, 0, 8 * (1 - loopW)] : io(1, prog(t, B1 - 0.40, 0.34), 0, -24, 8);
+    pose(cover.card, o3, y3, 1, b3);
+    cover.rows.forEach((r, i) => {              // lit row by row while the hook names the towns
+      const at = D.timeline.hookAt + D.timeline.hookDur * 0.7 * i / Math.max(1, N - 1);
+      const pulse = Math.sin(Math.PI * prog(tc, at, 0.55));
+      r.style.background = `rgba(255,255,255,${(0.28 * pulse).toFixed(3)})`; r.style.borderRadius = '14px';
+      r.style.margin = '0 -14px'; r.style.padding = '12px 14px';
+      r.style.transform = `translateX(${(12 * pulse).toFixed(2)}px)`;
+    });
+  }
+
+  // ── stories ──
+  S.forEach((o, k) => {
+    const end = k < N - 1 ? S[k + 1].B : OUT, u = t - o.B;
+    const on = t > o.B - 0.5 && t < end + 0.5 && loopW === 0;
+    if (!on) { pose(o.num, 0); pose(o.chip, 0); pose(o.head, 0); o.chunkEls.forEach(e => pose(e, 0)); return; }
+    const out = prog(t, end - 0.34, 0.36);
+    // chapter number: rises behind everything, slower than the type over it
+    const ni = prog(u, -0.1, 0.9);
+    pose(o.num, Math.min(clamp(ni * 2), 1 - cubicIn(out)), lerp(70, 0, expoOut(ni)) - 50 * cubicIn(out) - 14 * prog(u, 0, end - o.B), 1, 0);
+    // town: springs in as a block
+    const ci = prog(u, 0.02, 0.6);
+    pose(o.chip, Math.min(clamp(ci * 3), 1 - cubicIn(out)), -30 * cubicIn(out), lerp(.82, 1, spring(ci)), 10 * cubicIn(out));
+    o.chip.style.transformOrigin = 'left center';
+    // headline: each line scans in a beat after the last; leaves upward into blur
+    pose(o.head, 1);
+    o.lines.forEach((ln, i) => {
+      const p = prog(u, 0.04 + i * 0.26, 0.72);
+      scan(ln, cubicInOut(p));
+      const lo = prog(t, end - 0.34 + i * 0.045, 0.34);
+      ln.style.transform = `translateY(${(lerp(18, 0, expoOut(p)) - 40 * cubicIn(lo)).toFixed(2)}px)`;
+      ln.style.opacity = (1 - cubicIn(lo)).toFixed(4);
+      ln.style.filter = lo > 0.01 ? `blur(${(11 * cubicIn(lo)).toFixed(2)}px)` : 'none';
+    });
+    // read line: two-line captions that roll; the spoken word sits on an ink block
+    const bt = t - o.bodyAt;
+    o.chunkEls.forEach((el, c) => {
+      const t0 = c === 0 ? -99 : el._t0 - 0.12;
+      const t1 = c + 1 < o.chunkEls.length ? o.chunkEls[c + 1]._t0 - 0.12 : 1e9;
+      const enter = c === 0 ? prog(u, 0.25, 0.5) : prog(bt, t0, 0.32);
+      const leave = c + 1 < o.chunkEls.length ? prog(bt, t1 - 0.02, 0.24) : out;
+      if (bt < t0 - 0.01 || (leave >= 1)) { pose(el, 0); return; }
+      const [eo, ey, eb] = io(enter, leave, 26, -26, 8);
+      pose(el, eo, ey, 1, eb);
+      let cur = -1;
+      el._words.forEach((w, j) => {
+        const [ws, we] = o.wt[el._first + j];
+        const st = bt < ws ? 0 : bt < we ? 1 : 2;
+        if (st === 1) cur = j;
+        if (w._s === st) return; w._s = st;
+        w.style.color = st === 1 ? '#FFFFFF' : '#0B0F1A';      // one ink; the pill alone marks the voice
+      });
+      // one pill glides from word to word along a line, and appears in place on a new line
+      const hl = el._hl;
+      if (cur < 0) { hl.style.opacity = 0; return; }
+      const R2 = el._rects[cur], P2 = el._rects[Math.max(0, cur - 1)];
+      const g = cur === 0 ? 1 : expoOut(prog(bt, o.wt[el._first + cur][0], 0.16));
+      const q = Math.abs(P2.y - R2.y) < 4 ? g : 1;
+      hl.style.opacity = cur === 0 ? expoOut(prog(bt, o.wt[el._first][0], 0.12)) : 1;
+      hl.style.left = lerp(P2.x, R2.x, q).toFixed(1) + 'px'; hl.style.top = R2.y.toFixed(1) + 'px';
+      hl.style.width = lerp(P2.w, R2.w, q).toFixed(1) + 'px'; hl.style.height = R2.h.toFixed(1) + 'px';
+    });
+  });
+
+  // ── the gold card: one card that re-shapes from state to state ──
+  const states = [{ t: 0, x: 64, y: cover.top, w: 848, h: cover.h }];
+  S.forEach(o => states.push({ t: o.B, x: 64, y: o.cardTop, w: 848, h: o.h }));
+  states.push({ t: OUT + 0.05, x: 220, y: 1016, w: 640, h: outro.h });
+  const r = { ...states[0] };
+  for (let i = 1; i < states.length; i++) {
+    const w = expoInOut(prog(t, states[i].t - 0.38, 0.8));
+    for (const k of ['x', 'y', 'w', 'h']) r[k] = lerp(r[k], states[i][k], w);
+  }
+  if (loopW > 0) for (const k of ['x', 'y', 'w', 'h']) r[k] = lerp(r[k], states[0][k], expoInOut(loopW));
+  const card = $('#card');
+  card.style.left = r.x.toFixed(2) + 'px'; card.style.top = r.y.toFixed(2) + 'px';
+  card.style.width = r.w.toFixed(2) + 'px'; card.style.height = r.h.toFixed(2) + 'px';
+  const btn = expoInOut(prog(t, OUT + 0.05 - 0.38, 0.8)) * (1 - expoInOut(loopW));
+  card.style.borderRadius = lerp(40, 68, btn).toFixed(2) + 'px';
+
+  // ── under the card: where we are, and where the full story is ──
+  const ui = prog(t, B1 + 0.3, 0.5), uo = prog(t, OUT - 0.4, 0.35);
+  const [uO, uY, uB] = io(ui, uo, 16, 0, 6);
+  const under = $('#under');
+  pose(under, loopW > 0 ? 0 : uO, uY, 1, uB); under.style.top = (r.y + r.h + 30).toFixed(2) + 'px';
+  const dots = under.querySelectorAll('.dots i');
+  S.forEach((o, k) => {
+    const end = k < N - 1 ? S[k + 1].B : OUT, a = prog(t, o.B - 0.1, 0.4) * (1 - prog(t, end - 0.1, 0.4));
+    dots[k].style.background = a > 0.02 ? `rgba(255,201,60,${(0.22 + 0.78 * a).toFixed(3)})` : 'rgba(255,255,255,.22)';
+    dots[k].style.transform = `scale(${(1 + 0.25 * a).toFixed(3)})`;
+  });
+
+  // ── masthead and counter ──
+  const mo = prog(t, OUT - 0.1, 0.45);
+  const [mO, mY, mB] = loopW > 0 ? [loopW, 0, 8 * (1 - loopW)] : io(1, mo, 0, -20, 8);
+  pose($('#mast'), mO, mY, 1, mB);
+  const [cO, cY, cB] = io(prog(t, B1 - 0.15, 0.5), mo, 20, -20, 8);
+  pose($('#counter'), loopW > 0 ? 0 : cO, cY, 1, cB);
+  let idx = 0;
+  S.forEach((o, k) => { if (k > 0) idx = lerp(idx, k, expoInOut(prog(t, o.B - 0.12, 0.6))); });
+  $('#counter .strip').style.transform = `translateY(${(-120 * idx).toFixed(2)}px)`;
+
+  // ── close: the logo arrives out of focus and sharpens ──
+  const lu = t - OUT, lp = prog(lu, 0.05, 1.1);
+  pose(outro.logo, Math.min(clamp(lp * 3), 1 - loopW), lerp(30, 0, expoOut(lp)) - 20 * loopW,
+       lerp(.86, 1, spring(lp)), 26 * (1 - expoOut(lp)) + 12 * loopW);
+  outro.parts.forEach((el, i) => {
+    const [o, y, b] = io(prog(lu, 0.35 + i * 0.12, 0.6), loopW, 24, -16, 8);
+    pose(el, o, y, 1, b);
+  });
+  const [ob, oy, obb] = io(prog(lu, 0.45, 0.5), loopW, 16, -10, 8);
+  pose(outro.box, ob, oy, 1, obb);
+  // the button breathes, and is pressed once — the move we are asking for
+  const press = Math.sin(Math.PI * prog(lu, 1.7, 0.32)), breath = .5 + .5 * Math.sin((lu - 0.8) * 3.2);
+  card.style.transform = `scale(${(1 - 0.05 * press).toFixed(4)})`;
+  card.style.boxShadow = lu > 0.4 && loopW < 1
+    ? `0 34px 80px rgba(0,0,0,.5), 0 0 ${(30 + 50 * breath).toFixed(1)}px rgba(245,179,1,${(.25 + .3 * breath) * (1 - loopW)})`
+    : '0 34px 80px rgba(0,0,0,.5)';
+
+  return new Promise(res => requestAnimationFrame(() => requestAnimationFrame(() => res(true))));
+};
+</script>
+</body></html>

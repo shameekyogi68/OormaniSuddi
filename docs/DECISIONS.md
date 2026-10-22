@@ -3697,3 +3697,46 @@ whose picture is a dark sunset.
 
 `brand/paper.py :: credit, bug` · `tests/test_luxury.py`
 
+## D132 · ಸುದ್ದಿ ಸಾರ as a reel: Ink & Gold, cut from the voice
+
+**Decided (2026-10-22), by the owner.** Reels and Shorts bring the reach and the
+followers, and one 9:16 film serves Instagram Reels, Facebook Reels and YouTube
+Shorts. ಸುದ್ದಿ ಸಾರ has no pictures (D92), so it needed a text-only reel that does
+not look cheap. Rounds of stills: a sunset-glow v1/v2, then two bold directions;
+the owner chose **Ink & Gold** and asked for it "10/10, the last time".
+
+* **Made beside the carousel, not instead of it.** `render.py` writes
+  `reel_saara.mp4` from the same saara stories and caption; the carousel stays
+  until the owner decides the reel has won. Still one story, one format (D92).
+  `--still` skips it, as it skips the animated slides.
+* **The look.** Deep navy with light flowing over it (a WebGL field, never a line),
+  tinted by the story's category — gold culture, sea civic, ember sport, red harm.
+  White Noto Serif Kannada Black headlines; a cream-gold town tag; a rich gold
+  card carrying the read line; a big chapter number behind each story.
+* **The motion.** The house scan with gold light on the letters (D98, D129); the
+  card is one object that re-shapes between front page, stories and close; the
+  deck is read word by word in two-line captions, the spoken word on an ink block;
+  a broad wash of light on every change; the close turns the card into a
+  "＋ ಫಾಲೋ ಮಾಡಿ" button with a YouTube subscribe line, and folds back to frame 0.
+* **Front page whole at frame 0** (D101): the count, ಇಂದಿನ ಪ್ರಮುಖ ಸುದ್ದಿ and the
+  running order; the hook voice names up to three towns while their rows light.
+* **Cut from the voice.** Each beat is the measured Google-voice clip of the
+  story's reel_line, then its deck (`Motion.saara_reel_*`). No fixed lengths.
+* **Two lines.** A reel_line that needs three lines is warned
+  (`Limits.saara_reel_line_chars`), never cut.
+* **One complete sentence in the card.** Reviews of the stills (2026-10-22)
+  all read a rolling caption as "cut mid-sentence". A story's `reel_support` —
+  one sentence written for the reel — is shown whole (up to three lines) and
+  read; only without it does the deck roll in two-line captions. It also
+  brought today's reel from ~76s to ~56s. One ink in the card; the gliding pill
+  alone marks the spoken word. One progress marker (the counter); the faint
+  chapter number sits low, clear of the read-on line.
+* **Drawn by Chrome over DevTools**, one frame at a time from `render(t)`: Kannada
+  shapes correctly and the page is a pure function of time.
+* **Reviewed as stills.** The owner reviews designs from key frames, not test
+  renders (2026-10-22).
+
+`brand/saara_reel.py` · `brand/saara_reel.html` · `render.py :: _render_saara` ·
+`brand/tokens.py :: Motion.saara_reel_*, Limits.saara_reel_line_chars` ·
+`fonts/NotoSerifKannada-Black.ttf`
+

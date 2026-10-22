@@ -370,6 +370,9 @@ class Limits:
     """
     headline_chars = 78
     reel_line_chars = 46
+    # The ಸುದ್ದಿ ಸಾರ reel sets reel_line in two serif lines across the safe width;
+    # past this it needs a third and the frame crowds. A warning, never a cut. D132.
+    saara_reel_line_chars = 34
     hook_words = 7
     deck_chars = 190
     # The carousel slide shows headline + deck, nothing else. The deck gets
@@ -702,6 +705,18 @@ class Motion:
 
     kb_zoom     = 0.11    # Ken Burns total scale travel
     kb_drift    = 0.035   # lateral drift as a fraction of frame width
+
+    # ── the ಸುದ್ದಿ ಸಾರ reel (D132) — beats in seconds ───────────────────────
+    # The picture is cut from the measured voice: each story runs from its
+    # change to the end of its read line plus a tail, never to a fixed length.
+    saara_reel_intro = 2.9   # the front page, before the first change
+    saara_reel_hook_at = 0.25  # the town-name hook starts speaking
+    saara_reel_lead  = 0.30  # change → the voice reads the headline
+    saara_reel_gap   = 0.18  # headline voice → read-line voice
+    saara_reel_tail  = 0.45  # end of the read line → next change
+    saara_reel_close = 3.7   # follow card, the last 0.6s folding back to frame 0
+    saara_reel_tempo = 1.06  # on top of the house 1.15, as speed news
+    saara_reel_fps   = 30
 
 
 class Ease:

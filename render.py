@@ -164,7 +164,7 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None,
 # — derived from what is in the folder — told the editor to post all eight,
 # the cut story among them. D107.
 FORMAT_FILES = {
-    'saara':   re.compile(r'saara_'),
+    'saara':   re.compile(r'saara_|reel_saara\.mp4$'),
     'mukhya':  re.compile(r'mukhya_\d+_|facebook_group_\d+\.txt$'),
     'roundup': re.compile(r'roundup[._]'),
 }
@@ -238,6 +238,17 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
             prints.append(f'  ✓ {os.path.basename(p)}')
         write_copy(sub, outdir, 'saara_copy')
         prints.append('  ✓ saara_copy.txt')
+        # The same stories as ONE 9:16 reel for Reels and Shorts (D132). Video,
+        # so a --still draft skips it, the way it skips the animated slides.
+        if animate:
+            from brand import saara_reel
+            if saara_reel.available():
+                res = saara_reel.render(sub, os.path.join(outdir, 'reel_saara.mp4'))
+                prints.append(f'  ✓ reel_saara.mp4  ({res["seconds"]:.0f}s — Instagram/Facebook Reel and '
+                              'YouTube Short; caption: saara_caption.txt)')
+                prints.extend(f'  ⚠ ಸುದ್ದಿ ಸಾರ reel: {w}' for w in res['warnings'])
+            else:
+                prints.append('  ⚠ reel_saara.mp4 not made — Google Chrome not found (set OORMANI_CHROME)')
         log.done('saara', seconds=round(time.time() - _t, 1),
                  stories=len(saara))
         return segment_made, [], prints
