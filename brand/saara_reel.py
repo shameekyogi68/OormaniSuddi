@@ -216,7 +216,7 @@ async def _drive(page: Path, profile: Path, work):
 
 # ── sound ────────────────────────────────────────────────────────────────
 def _mix(tl: dict, clips: Path, out: Path) -> None:
-    sfx = BASE / 'assets/sfx'
+    sfx, T = BASE / 'assets/sfx', tl['T']
     args, chains, vo, fx = [], [], [], []
 
     def add(path: Path, at: float, vol: float, label: str, bus: list):
@@ -236,14 +236,14 @@ def _mix(tl: dict, clips: Path, out: Path) -> None:
     add(sfx / 'whoosh.wav', tl['outro'] - 0.32, 0.32, 'wz', fx)
     add(sfx / 'outro.wav', tl['outro'] + 0.1, 0.4, 'fz', fx)
     args.extend(['-stream_loop', '-1', '-i', str(BASE / 'assets/news_bgm.mp3')])
-    bed, T = args.count('-i') - 1, tl['T']
+    bed = args.count('-i') - 1
     g = ';'.join(chains)
-    g += f';{"".join(f"[{v}]" for v in vo)}amix=inputs={len(vo)}:normalize=0,asplit=2[vox][side]'
+    g += f';{"".join(f"[{v}]" for v in vo)}amix=inputs={len(vo)}:normalize=0,apad=whole_dur={T},asplit=2[vox][side]'
     g += (f';[{bed}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=0:{T},volume=0.42,'
           f'afade=t=in:d=0.4,afade=t=out:st={T - 1.4:.3f}:d=1.4[bed0]')
     g += ';[bed0][side]sidechaincompress=threshold=0.025:ratio=7:attack=25:release=420[bed]'
     g += (f';[vox][bed]{"".join(f"[{f}]" for f in fx)}amix=inputs={2 + len(fx)}:normalize=0,'
-          f'atrim=0:{T},loudnorm=I={Limits.lufs}:TP=-1.5:LRA=11[mix]')
+          f'apad=whole_dur={T},atrim=0:{T},loudnorm=I={Limits.lufs}:TP=-1.5:LRA=11[mix]')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', *args, '-filter_complex', g, '-map', '[mix]',
                     '-ar', '48000', '-c:a', 'pcm_s16le', str(out)], check=True)
 
