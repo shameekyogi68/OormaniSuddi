@@ -33,6 +33,12 @@ class CutFromTheVoice(unittest.TestCase):
         self.assertAlmostEqual(s1['B'], s0['bodyAt'] + 8.0 + M.saara_reel_tail, places=3)
         self.assertAlmostEqual(tl['T'], tl['outro'] + M.saara_reel_close, places=3)
 
+    def test_words_are_weighed_by_akshara_not_by_code_point(self):
+        # ಕ್ರ is one beat although it is three code points; a figure is read out
+        self.assertEqual(R._syllables('ಕ್ರಮ'), 2.0)
+        self.assertGreater(R._syllables('ಅನ್ನಸಂತರ್ಪಣೆ'), R._syllables('ಹಾಗೂ'))
+        self.assertGreater(R._syllables('33ನೇ'), 4)
+
     def test_a_third_headline_line_is_warned_never_cut(self):
         copies = [dict(place_short='ಬೈಂದೂರು', head='x' * 40), dict(place_short='ಕಳವಾಡಿ', head='y' * 20)]
         w = R._warnings(copies, {'lines': [3, 2]})

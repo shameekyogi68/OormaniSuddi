@@ -715,7 +715,7 @@ class Motion:
     saara_reel_gap   = 0.18  # headline voice → read-line voice
     saara_reel_tail  = 0.45  # end of the read line → next change
     saara_reel_close = 3.7   # follow card, the last 0.6s folding back to frame 0
-    saara_reel_tempo = 1.06  # on top of the house 1.15, as speed news
+    saara_reel_tempo = 1.00  # the house 1.15 only: 1.06 on top rushed the Kannada (owner, 2026-10-23)
     saara_reel_fps   = 30
 
 

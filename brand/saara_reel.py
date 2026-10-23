@@ -113,17 +113,115 @@ def _clip(text: str, wav: Path, engine: str) -> float:
     return round(voice.get_audio_duration(str(wav)), 3)
 
 
-def _timeline(durs: dict, n: int) -> dict:
+def _timeline(durs: dict, n: int, words: dict | None = None) -> dict:
     # the front page holds until the hook has been said
     stories, B = [], max(M.saara_reel_intro, M.saara_reel_hook_at + durs['intro'] + 0.45)
     for i in range(n):
         head_at = B + M.saara_reel_lead
         body_at = head_at + durs[f'h{i}'] + M.saara_reel_gap
         stories.append(dict(B=round(B, 3), headAt=round(head_at, 3), bodyAt=round(body_at, 3),
-                            bodyDur=durs[f'b{i}']))
+                            bodyDur=durs[f'b{i}'], words=(words or {}).get(f'b{i}')))
         B = body_at + durs[f'b{i}'] + M.saara_reel_tail
     return dict(stories=stories, outro=round(B, 3), T=round(B + M.saara_reel_close, 3),
-                hookAt=M.saara_reel_hook_at, hookDur=durs['intro'])
+                hookAt=M.saara_reel_hook_at, hookDur=durs['intro'],
+                hookWords=(words or {}).get('intro'), hookText=(words or {}).get('intro_text'))
+
+
+
+# ── where each word falls in its clip ────────────────────────────────────
+# Whisper cannot read Kannada (2026-10-23: a clean clip came back as noise), so
+# the words are placed from the audio itself: the real pauses anchor the
+# punctuation, the words between them share the voiced time by syllables
+# (aksharas, not code points — a conjunct is one beat), and each boundary is
+# snapped to the nearest dip in the voice.
+_LONG = set('ಾೀೂೇೋೈೌ')
+
+
+def _syllables(word: str) -> float:
+    n, after_virama = 0.0, False
+    for ch in word:
+        o = ord(ch)
+        if 0x0C95 <= o <= 0x0CB9 or o == 0x0CDE:
+            if not after_virama:
+                n += 1
+            after_virama = False
+        elif 0x0C85 <= o <= 0x0C94:
+            n += 1
+            after_virama = False
+        elif o == 0x0CCD:
+            after_virama = True
+        elif ch.isdigit():
+            n += 2.2                       # a figure is read out as a word
+            after_virama = False
+        else:
+            if ch in _LONG:
+                n += 0.25
+            elif o in (0x0C82, 0x0C83):
+                n += 0.3
+            after_virama = False
+    if word.rstrip('.,;:!?').endswith('\u0CCD'):
+        n += 0.4                           # a closing consonant still sounds
+    return max(n, 1.0)
+
+
+def _word_times(wav: Path, text: str) -> list[list[float]]:
+    import numpy as np
+    import soundfile as sf
+    x, sr = sf.read(str(wav))
+    if x.ndim > 1:
+        x = x.mean(axis=1)
+    hop = int(sr * 0.01)
+    fr = len(x) // hop
+    rms = np.sqrt(np.mean(x[:fr * hop].reshape(fr, hop) ** 2, axis=1) + 1e-12)
+    db = 20 * np.log10(rms)
+    voiced = db > db.max() - 32
+    words = text.split()
+    if not words or fr < 3:
+        return [[0.0, len(x) / sr]] * len(words)
+    # pauses: unvoiced runs of 90ms or more inside the clip
+    pauses, i = [], 0
+    while i < fr:
+        if not voiced[i]:
+            j = i
+            while j < fr and not voiced[j]:
+                j += 1
+            if i > 0 and j < fr and j - i >= 9:
+                pauses.append((i, j))
+            i = j
+        else:
+            i += 1
+    slots = [k for k, w in enumerate(words[:-1]) if w[-1] in ',;:.!?']
+    use = sorted(sorted(pauses, key=lambda p: p[1] - p[0], reverse=True)[:len(slots)])
+    cuts = [(0, None)] + [(s, p) for s, p in zip(slots[:len(use)], use)]
+    starts = [0.0] * len(words)
+    ends = [0.0] * len(words)
+    first_v = int(np.argmax(voiced))
+    last_v = fr - int(np.argmax(voiced[::-1]))
+    bounds = []                            # (first word, last word, frame from, frame to)
+    a_frame, a_word = first_v, 0
+    for slot, pause in cuts[1:]:
+        bounds.append((a_word, slot, a_frame, pause[0]))
+        a_frame, a_word = pause[1], slot + 1
+    bounds.append((a_word, len(words) - 1, a_frame, last_v))
+    for w0, w1, f0, f1 in bounds:
+        seg = voiced[f0:f1]
+        csum = np.concatenate([[0], np.cumsum(seg)])
+        wts = [_syllables(w) for w in words[w0:w1 + 1]]
+        tot, acc = sum(wts), 0.0
+        edges = [f0]
+        for wt in wts[:-1]:
+            acc += wt
+            target = csum[-1] * acc / tot
+            f = f0 + int(np.searchsorted(csum, target))
+            lo, hi = max(f0 + 1, f - 6), min(f1 - 1, f + 6)
+            if hi > lo:
+                f = lo + int(np.argmin(db[lo:hi]))        # the dip between two words
+            edges.append(f)
+        edges.append(f1)
+        for k in range(len(wts)):
+            starts[w0 + k] = edges[k] * 0.01
+            ends[w0 + k] = edges[k + 1] * 0.01
+    return [[round(s, 3), round(e, 3)] for s, e in zip(starts, ends)]
 
 
 # ── the page and the browser ─────────────────────────────────────────────
@@ -274,7 +372,9 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
         for i, c in enumerate(copies):
             durs[f'h{i}'] = _clip(c['say_head'], tmp / f'h{i}.wav', engine)
             durs[f'b{i}'] = _clip(c['body'], tmp / f'b{i}.wav', engine)
-        tl = _timeline(durs, len(stories))
+        words = {f'b{i}': _word_times(tmp / f'b{i}.wav', c['body']) for i, c in enumerate(copies)}
+        words['intro'], words['intro_text'] = _word_times(tmp / 'intro.wav', hook), hook.split()
+        tl = _timeline(durs, len(stories), words)
         page = _page(edition, copies, tl, tmp / 'reel.html')
 
         if stills:

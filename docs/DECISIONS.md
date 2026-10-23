@@ -3722,6 +3722,13 @@ the owner chose **Ink & Gold** and asked for it "10/10, the last time".
   running order; the hook voice names up to three towns while their rows light.
 * **Cut from the voice.** Each beat is the measured Google-voice clip of the
   story's reel_line, then its deck (`Motion.saara_reel_*`). No fixed lengths.
+* **Words timed from the voice, not guessed.** The first sample's pill drifted
+  from the speech (owner, 2026-10-23). Whisper cannot read Kannada, so each
+  word is placed from the clip's own audio: real pauses anchor the punctuation,
+  the words between share the voiced time by akshara count, and each boundary
+  snaps to the dip in the voice (`saara_reel._word_times`). The front page's
+  rows light as the hook says their town. The extra 1.06 speed-up was dropped —
+  it rushed the Kannada.
 * **Two lines.** A reel_line that needs three lines is warned
   (`Limits.saara_reel_line_chars`), never cut.
 * **One complete sentence in the card.** Reviews of the stills (2026-10-22)

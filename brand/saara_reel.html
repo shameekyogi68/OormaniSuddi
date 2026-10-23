@@ -237,6 +237,8 @@ window.boot = async function () {
     const wt = words.map(w => [...w].length + 2 + (/[,.]$/.test(w) ? 4 : 0));
     const tot = wt.reduce((a, b) => a + b, 0); let acc = 0;
     o.wt = wt.map(x => { const a = acc / tot; acc += x; return [a * o.bodyDur, (acc / tot) * o.bodyDur]; });
+    // measured from the voice itself when the engine could (D132); the estimate is only the fallback
+    if (o.words && o.words.length === words.length) o.wt = o.words;
     o.chunks = []; let cur = [];
     meas.textContent = s.body; o.capLines = 2;
     if (meas.offsetHeight <= threeLines) { o.chunks = [words]; o.capLines = Math.max(1, Math.round((meas.offsetHeight - 4) / (62 * 1.38))); }
@@ -401,7 +403,10 @@ window.render = function (t) {
     const [o3, y3, b3] = loopW > 0 ? [loopW, 0, 8 * (1 - loopW)] : io(1, prog(t, B1 - 0.40, 0.34), 0, -24, 8);
     pose(cover.card, o3, y3, 1, b3);
     cover.rows.forEach((r, i) => {              // lit row by row while the hook names the towns
-      const at = D.timeline.hookAt + D.timeline.hookDur * 0.7 * i / Math.max(1, N - 1);
+      let at = D.timeline.hookAt + D.timeline.hookDur * 0.7 * i / Math.max(1, N - 1);
+      const hw = D.timeline.hookWords, ht = D.timeline.hookText || [];
+      const k = ht.findIndex(w => w.replace(/[.,]/g, '') === D.stories[i].place_short);
+      if (hw && k >= 0) at = D.timeline.hookAt + hw[k][0];   // lit as its town is said
       const pulse = Math.sin(Math.PI * prog(tc, at, 0.55));
       r.style.background = `rgba(255,255,255,${(0.28 * pulse).toFixed(3)})`; r.style.borderRadius = '14px';
       r.style.margin = '0 -14px'; r.style.padding = '12px 14px';
