@@ -603,6 +603,6 @@ those carry a reason rather than a test.
 
 ## D133 · `/daily-saara` is the reel: no step asked, no copy left to luck
 
-- **Tested by:** `tests/test_animate.py`, `tests/test_saara_reel.py`, `tests/test_saara_reel_layout.py`
-- Enforced in: `brand/saara_reel.py`, `scripts/daily_flow.py`, `scripts/reel_say.py`
+- **Tested by:** `tests/test_animate.py`, `tests/test_factcheck_own.py`, `tests/test_saara_reel.py`, `tests/test_saara_reel_golden.py`, `tests/test_saara_reel_layout.py`
+- Enforced in: `brand/factcheck.py`, `brand/reel_audit.py`, `brand/saara_reel.py`, `scripts/daily_flow.py`, `scripts/reel_say.py`
 

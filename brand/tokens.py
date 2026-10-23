@@ -380,6 +380,10 @@ class Limits:
     # and is never warned for being longer than a speed-news reel: it carries
     # up to saara_max_stories stories.
     saara_reel_max_seconds = 59.0
+    # The voice, heard back by a speech model (brand/reel_audit.py). A right voice scores
+    # 0.96-1.00 on the phonetic skeleton and wrong audio 0.13-0.26, so these are not close calls.
+    saara_reel_voice_warn = 0.80
+    saara_reel_voice_fail = 0.50
     hook_words = 7
     deck_chars = 190
     # The carousel slide shows headline + deck, nothing else. The deck gets

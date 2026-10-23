@@ -239,8 +239,10 @@ def unsupported_tokens(lead: str, source_text: str) -> list[str]:
     """
     if not lead.strip() or not source_text.strip():
         return []
-    lead = unicodedata.normalize('NFC', lead)
-    source_text = unicodedata.normalize('NFC', source_text)
+    # ZWNJ/ZWJ sit between a stem and its suffix (ಪಂಚಾಯತ್‌ನಿಂದ); _TOKEN stops at them and would
+    # read the suffix as a word of its own. They carry no meaning for matching.
+    lead = unicodedata.normalize('NFC', lead).replace('\u200c', '').replace('\u200d', '')
+    source_text = unicodedata.normalize('NFC', source_text).replace('\u200c', '').replace('\u200d', '')
     figures = source_figures(_expand_abbreviations(source_text))
 
     # A Kannada line against an English source cannot be grounded word by

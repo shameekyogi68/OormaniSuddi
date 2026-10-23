@@ -29,6 +29,8 @@ edge-tts>=6.1           # the narration fallback when Google TTS is down (D53,
 # ── The ಸುದ್ದಿ ಸಾರ reel (D132): drawn by Google Chrome over its debugging port.
 websockets>=12.0        # talks to Chrome frame by frame
 soundfile>=0.12         # reads the voice clips to place each word inside them
+mlx-whisper>=0.4         # M-series Macs: hears the reel's voice back (brand/reel_audit.py, D133). The
+                        # model (whisper-large-v3-turbo, ~1.6 GB) downloads once, on the first render.
 # Google Chrome itself: /Applications/Google Chrome.app (or set OORMANI_CHROME).
 
 # ── Narration verification. Optional, local, no key. ─────────────────────────

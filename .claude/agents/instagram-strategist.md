@@ -41,7 +41,8 @@ posts), let them outrank every [House] line.
    it changes the outcome. Check the day's balance: `Limits.saara_*`,
    `roundup_*`, `mukhya_max_per_day`.
 3. **Hook.** For each story that will be a cover or a reel's first frame, give
-   the cover line (2–6 words, the town first) that is true to the story and
+   the cover line (2–6 words, the town first) — for the ಸುದ್ದಿ ಸಾರ reel (no cover slide: its first frame is the whole
+   front page) the hook is the caption's first line and the YouTube title, not an on-screen line that is true to the story and
    makes a stranger from that town stop. Return it as the story's `hook`
    (the engine guards it for guilt like a headline).
 4. **Text load.** For ಸುದ್ದಿ ಸಾರ — a 9:16 reel since D132, one beat per story: is each

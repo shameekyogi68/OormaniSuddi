@@ -107,12 +107,25 @@ carousels once `metrics.py` has enough posts.
 **Reels from footage:** the hook in the first two seconds, the news card clear of
 Instagram's own interface (D96).
 
+**The ಸುದ್ದಿ ಸಾರ reel** (D132, D133) — what the reach desk found does not carry over from the carousel. [House]
+- There is no cover slide and no swipe: the reel's first frame is the whole front page (the count, every
+  town, every teaser), so the "cover line" is the caption's first line and the YouTube title — town first,
+  one happening — and the thumbnail stays the platform default.
+- The unit is a story's `reel_line` (what a stranger gets in one look) plus ONE `reel_support` sentence.
+  There is no "three points a slide".
+- The reel's equivalents of saves and swipe-through are **watch time and completion**, then follows.
+- One file goes to Instagram Reels, Facebook Reels AND YouTube Shorts at the same slot
+  (`Limits.saara_reel_slot`); `saara_caption.txt` serves the first two, `reel_saara_youtube.txt` the Short.
+  Nothing here is yet measured for Facebook or Shorts — log its numbers (`metrics.py`) and let them decide.
+- A story that is only a past ceremony is the first to cut when the day runs long; one with a date in it needs
+  the date on the card (never invented — from the paste).
+
 ## 5 · The first hour, and the day after
 
 Posting is not the end. [House]
 
-1. Post at the slot in `schedule.txt` (`Limits.carousel_slot`, `mukhya_slot`,
-   `roundup_slot`) — or the moment a breaking story is signed.
+1. Post at the slot in `schedule.txt` (`Limits.saara_reel_slot`, `mukhya_slot`,
+   `roundup_slot`; `carousel_slot` only if the carousel was made) — or the moment a breaking story is signed.
 2. **Answer every comment in the first hour**, by name, in Kannada. A reply is
    a second chance for the post to be seen.
 3. **Put the post in the WhatsApp community** straight away (`whatsapp_<group>.txt`):

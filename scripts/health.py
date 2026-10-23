@@ -244,6 +244,14 @@ def check_reel() -> list[str]:
             if not os.path.exists(os.path.join(ROOT, p))]
     if gone:
         out.append(f'{BAD} reel — missing: {", ".join(gone)} (sounds rebuild with python3 -m brand.sfx)')
+    if importlib.util.find_spec('mlx_whisper') is None:
+        out.append(f'{WARN} reel — mlx-whisper is not installed: the voice is NOT heard back before posting, '
+                   'so only a person checks that it says its words. pip install mlx-whisper')
+    else:
+        cache = os.path.expanduser('~/.cache/huggingface/hub/models--mlx-community--whisper-large-v3-turbo')
+        if not os.path.isdir(cache):
+            out.append(f'{WARN} reel — the speech model (whisper-large-v3-turbo, ~1.6 GB) is not downloaded yet: '
+                       'the first render downloads it, then hears the voice back')
     if not out:
         try:
             from datetime import datetime as dt

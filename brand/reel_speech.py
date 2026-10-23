@@ -136,6 +136,16 @@ def _one_engine(engine: str):
             voice.FALLBACK_ORDER[engine] = old
 
 
+def forget(text: str, engine: str = 'google') -> None:
+    """Drop a cached recording, so asking again really asks again."""
+    import os
+    with contextlib.suppress(Exception):
+        key = voice._cache_key(spoken(text), engine, None)
+        cached = os.path.join(voice.TTS_CACHE, f'{key}.mp3')
+        if os.path.exists(cached):
+            os.remove(cached)
+
+
 def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
     """Synthesise `text` as `wav` (trimmed, 48k mono). Returns its seconds."""
     raw = wav.with_suffix('.mp3')
@@ -165,6 +175,36 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
                     os.remove(cached)
             time.sleep(1.5 * attempt)
     raise ReelError(f'the {engine} voice failed {tries} times for {said[:40]!r}: {last}')
+
+
+# ── hear the clips back ──────────────────────────────────────────────────
+def audit(items: list[dict], timeout: float = 600.0) -> dict:
+    """[{label, wav, text}] → {label: {similarity, suspects, heard}}, or {'unavailable': why}.
+
+    Run as a subprocess (brand/reel_audit.py): the speech model is ~1.6 GB and must be gone
+    before Chrome starts drawing. Never raises — a day is not held because the checker was away."""
+    import importlib.util
+    import json
+    import sys
+    import tempfile
+    from pathlib import Path
+    if importlib.util.find_spec('mlx_whisper') is None:
+        return {'unavailable': 'mlx-whisper is not installed (pip install mlx-whisper)'}
+    base = Path(__file__).resolve().parents[1]
+    with tempfile.TemporaryDirectory(dir=base / 'build') as tmp:
+        manifest = Path(tmp) / 'clips.json'
+        manifest.write_text(json.dumps(items, ensure_ascii=False), encoding='utf-8')
+        try:
+            r = subprocess.run([sys.executable, '-m', 'brand.reel_audit', str(manifest)], cwd=str(base),
+                               capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            return {'unavailable': f'the speech check ran past {timeout:.0f}s'}
+        if r.returncode != 0:
+            return {'unavailable': (r.stderr or 'the speech check failed').strip().splitlines()[-1][:200]}
+        try:
+            return json.loads(r.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            return {'unavailable': 'the speech check returned nothing readable'}
 
 
 # ── where each word falls in its clip ────────────────────────────────────

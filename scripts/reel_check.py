@@ -69,6 +69,8 @@ def main() -> int:
             print(f'\n ✗ DOES NOT FIT  {msg}')
         for msg in res['warnings']:
             print(f'\n ⚠ {msg}')
+        for msg in res.get('questions', []):
+            print(f'\n ? FOR THE EDITOR  {msg}')
         for who, toks in res['pronunciation'].items():
             print(f'\n ⚠ voice, {who}: {" ".join(toks)} — may be misread; respell it in assets/pronunciation.json')
         clean = not res['issues'] and not res['warnings'] and not res['pronunciation']

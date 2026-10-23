@@ -260,6 +260,11 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
                 prints.append(f'  ✓ reel_saara.mp4  ({res["seconds"]:.0f}s, {res.get("render_seconds", 0):.0f}s to make — '
                               'Instagram Reel + Facebook Reel + YouTube Short; captions: saara_caption.txt, '
                               'reel_saara_youtube.txt)')
+                heard = res.get('voice_audit') or {}
+                if heard and 'unavailable' not in heard:
+                    low = min(v['similarity'] for v in heard.values())
+                    prints.append(f'  ✓ voice heard back by a speech model: {len(heard)} clips, lowest {low:.2f} '
+                                  '(a right voice scores 0.96+) — it cannot hear a subtle slip, so listen once')
                 prints.extend(f'  ⚠ ಸುದ್ದಿ ಸಾರ reel: {w}' for w in res['warnings'])
                 for who, toks in res['pronunciation'].items():
                     prints.append(f'  ⚠ ಸುದ್ದಿ ಸಾರ reel voice, {who}: {" ".join(toks)} may be misread — '

@@ -319,6 +319,22 @@ def _check_saara_reel(outdir: str, r: 'ReviewReport') -> None:
     for who, toks in (rep.get('pronunciation') or {}).items():
         r.add_warn('SND-08', f'reel_saara.mp4, {who}: {" ".join(toks)} may be misread by the voice — '
                    'respell it in assets/pronunciation.json', where='reel_saara.mp4')
+    audit = rep.get('voice_audit') or {}
+    if 'unavailable' in audit:
+        r.add_warn('SND-06', f'reel_saara.mp4: the voice was not heard back ({audit["unavailable"]}) — '
+                   'nothing but a person has checked that it says its words', where='reel_saara.mp4')
+    for label, v in audit.items():
+        if label == 'unavailable':
+            continue
+        if v['similarity'] < Limits.saara_reel_voice_fail:
+            r.add_fail('SND-06', f'reel_saara.mp4, {label}: a speech model heard "{v.get("heard", "")[:60]}" — '
+                       f'score {v["similarity"]:.2f}; the voice does not say what it was given', where='reel_saara.mp4')
+        elif v['similarity'] < Limits.saara_reel_voice_warn:
+            r.add_warn('SND-06', f'reel_saara.mp4, {label}: heard back at {v["similarity"]:.2f} '
+                       f'(a right voice scores 0.96+): "{v.get("heard", "")[:60]}"', where='reel_saara.mp4')
+        elif v['suspects']:
+            r.add_warn('SND-06', f'reel_saara.mp4, {label}: listen for {" ".join(v["suspects"])} — '
+                       'a speech model could not match them', where='reel_saara.mp4')
     if any(h != 'measured' for h in rep.get('timing', [])):
         r.add_warn('VID-08', 'reel_saara.mp4: some word timing fell back to an even split — '
                    'the highlight may drift from the voice', where='reel_saara.mp4')

@@ -131,6 +131,7 @@ class FactResult:
     missing_sources: list[str] = field(default_factory=list)
     cross_script: bool = False
     proved: list[str] = field(default_factory=list)
+    kept_paste: str = ''     # an own-reporting story's kept paste, when one carries it (D133)
 
     @property
     def blocking(self) -> bool:
@@ -150,8 +151,8 @@ def _unsupported(line: str, text: str) -> list[str]:
     a tip sheet a person skims and wrong for a count, where the ninth missing
     word is exactly what says the page is not this story."""
     import unicodedata
-    line = unicodedata.normalize('NFC', line)
-    text = unicodedata.normalize('NFC', text)
+    line = unicodedata.normalize('NFC', line).replace('\u200c', '').replace('\u200d', '')
+    text = unicodedata.normalize('NFC', text).replace('\u200c', '').replace('\u200d', '')
     words, out = line.split(), []
     for i in range(0, len(words), 6):
         for t in unsupported_tokens(' '.join(words[i:i + 6]), text):
@@ -175,15 +176,49 @@ def carries(story: Story, text: str) -> bool:
     return len(miss) < max(3, MISMATCH_SHARE * len(toks))
 
 
+def kept_own_text(story: Story, newest: int = 80) -> tuple[str, str]:
+    """(path, text) of the kept paste that carries an OWN-REPORTING story, or ('', '').
+
+    An own-reporting story has no URL, so for months its figures were never compared with anything
+    — "the reporter is the source" — although the editor's paste sits in inbox/sources/own_*.txt
+    (found by the 2026-10-23 dress rehearsal, D133). It is matched by content: the kept paste that
+    carries the story's headline and deck with the fewest words missing. Not found → ('', '') and the
+    story stays 'own', as before."""
+    import glob
+    paths = sorted(glob.glob(os.path.join(SOURCES_DIR, 'own_*.txt')), key=os.path.getmtime, reverse=True)[:newest]
+    line = ' '.join(filter(None, [story.headline, story.deck]))
+    if len(set(_TOKEN.findall(line))) < 3:
+        return '', ''
+    best = ('', '', 10 ** 9)
+    for path in paths:
+        try:
+            with open(path, encoding='utf-8') as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        if not carries(story, text):
+            continue
+        miss = len(_unsupported(line, text))
+        if miss < best[2]:
+            best = (path, text, miss)
+    return best[0], best[1]
+
+
 def check(story: Story, claims: list[dict] | None = None,
           tips: dict[str, str] | None = None, index: int | None = None
           ) -> FactResult:
     """Every figure and name in every published line, against the source."""
     res = FactResult(story.headline, 'grounded')
+    own_text = ''
     if not [u for u in story.source_urls if (u or '').strip()]:
-        res.state = 'own' if OWN_REPORTING in story.sources else 'uncheckable'
-        return res
-    text, res.missing_sources = source_text(story, tips)
+        if OWN_REPORTING not in story.sources:
+            res.state = 'uncheckable'
+            return res
+        res.kept_paste, own_text = kept_own_text(story)
+        if not own_text:
+            res.state = 'own'
+            return res
+    text, res.missing_sources = (own_text, []) if own_text else source_text(story, tips)
     if not text.strip():
         res.state = 'uncheckable'
         return res
@@ -233,8 +268,8 @@ def report(results: list[FactResult]) -> str:
     for i, r in enumerate(results, 1):
         lines.append(f'{i}. {r.headline}')
         if r.state == 'own':
-            lines.append('   OWN REPORTING — the reporter is the source; '
-                         'verified_by carries it')
+            lines.append('   OWN REPORTING — no kept paste carries this story, so nothing was compared; '
+                         'the reporter is the source and verified_by carries it')
             continue
         if r.state == 'uncheckable':
             lines.append('   COULD NOT CHECK — no source text held for: '
@@ -254,6 +289,8 @@ def report(results: list[FactResult]) -> str:
             lines.append(f'   CHECK  "{tok}" in {fld} is not in the source')
         if r.proved:
             lines.append('   proved by quote: ' + ', '.join(r.proved))
+        if r.kept_paste:
+            lines.append(f'   own reporting, checked against the kept paste {os.path.basename(r.kept_paste)}')
         if r.state == 'grounded':
             lines.append('   PASS   every figure and name is in the source')
     return '\n'.join(lines)

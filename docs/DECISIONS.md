@@ -3786,6 +3786,16 @@ every time the sync differs." The carousel design is kept aside, not deleted.
   (`reel_speech.word_times`), weighed by what is SPOKEN; the front page's rows light
   as the hook says their town; the gate (`VID-08`) holds a film that is not the
   length it was cut for.
+* **The voice is heard back.** Nobody can listen to every reel and the model that builds it cannot hear, so a
+  speech model does (`brand/reel_audit.py`, Whisper large-v3-turbo, local, in its own process so Chrome has the
+  memory). Each clip is transcribed and compared with the words it was given on a phonetic skeleton (Whisper spells
+  Kannada its own way: ಪೂಜೆ → ಪೋಜೆ). Measured: a right voice scores 0.96–1.00, wrong audio 0.13–0.32
+  (`Limits.saara_reel_voice_warn/fail` 0.80/0.50). A clip under the fail floor is asked for again once, then the
+  render stops; the gate (SND-06) holds it; flagged words go to the editor as "listen for". What it cannot do is
+  hear a SUBTLE slip — the editor's one listen stays. `scripts/reel_say.py` fixes a word for every format.
+* **The design is pinned.** `tests/test_saara_reel_golden.py` compares seven frames of the same five stories with
+  the blessed ones (the page is deterministic: run-to-run difference 0.000; a colour change measures 4.7–7.8;
+  tolerance 1.2). A change is allowed — by looking, then `BLESS_REEL=1`.
 * **The browser can die; the film cannot.** On the first real day-shaped render Chrome was closed
   mid-film (`ConnectionClosedError: no close frame received or sent` — memory pressure on an 8 GB Mac), and
   the safety net caught it by making the carousel. That was right, and not good enough: every frame is a pure
@@ -3807,3 +3817,9 @@ every time the sync differs." The carousel design is kept aside, not deleted.
 _check_saara_reel` · `brand/tokens.py :: Limits.saara_*, Motion.saara_reel_*` ·
 `tests/test_saara_reel.py`
 
+* **Own reporting is compared too (found by the 2026-10-23 dress rehearsal).** A story with no URL used to
+  be marked `own` and its figures were never checked against anything, though the paste was kept in
+  `inbox/sources/own_*.txt`. `brand/factcheck.py :: kept_own_text` now matches the story to the kept paste that
+  carries it and checks every figure and name against that. No paste carries it → still `own`, as before.
+  A zero-width joiner between stem and suffix (ಪಂಚಾಯತ್‌ನಿಂದ) is ignored when matching, so the suffix is not
+  read as an invented word. `tests/test_factcheck_own.py` pins both.

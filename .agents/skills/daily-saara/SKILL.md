@@ -44,19 +44,23 @@ For each news item in the paste:
    `<today>T09:00:00+05:30`, `strapline` `ಕರಾವಳಿ ದಿನಪತ್ರಿಕೆ`), every field **only from the paste**:
    - `segment: "saara"`, `photo_plan: ""` — ಸುದ್ದಿ ಸಾರ never carries a picture
    - `headline` — print headline, `ಊರು: ವಿವರಣೆ`. Crime/dispute copy carries ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in it
-   - **`reel_line`** — the on-screen headline. **≤ `Limits.saara_reel_line_chars` (34) characters** so it
-     sets in two big lines. No town (the tag shows it). Crime copy keeps ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in it
+   - **`reel_line`** — the on-screen headline. **Aim ≤ `Limits.saara_reel_line_chars` (34) characters** so it
+     sets in two big lines; what is enforced is the two lines (`reel_check` says). No town (the tag shows
+     it; an event's own name, "ಮೈಸೂರು ಕಂಬಳ", is fine). Crime copy keeps ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in it
    - **`reel_support`** — **ONE complete sentence** from the paste, read aloud and shown whole on the
-     gold card. Short: about 7–9 Kannada words for five stories, 6 for six
-     (`python3 scripts/reel_check.py` prints the exact allowance). It must stand alone beside the
-     headline and, for crime, must not assert guilt
+     gold card. Short — UP TO about 9 Kannada words for five stories, 6 for six; a shorter sentence is
+     fine (`python3 scripts/reel_check.py` prints the day's allowance, in characters). It must stand alone beside the
+     headline and, for crime, must not assert guilt. **It keeps its own scope:** it is read alone, so
+     if the paste limits who or where a thing applies ("ಕುಂದಾಪುರ, ಗಂಗೊಳ್ಳಿ ಠಾಣಾ ವ್ಯಾಪ್ತಿ"), the sentence says it
+     too — and never turns the paste's promise into a stronger claim ("ಸೂಕ್ತ ಕ್ರಮದ ಭರವಸೆ" stays a promise).
+     Use the paste's own spelling (ಪೂಜಾ, not ಪೂಜೆ) — the fact desk compares words with the kept paste
    - `deck` (1–2 sentence lead), `points` (exactly 3), `takeaway` (1, if there is one) — full-length;
      the captions use them
    - `category` (what happened — never `civic` by default), `location` (coastal town, e.g.
      `ಕುಂದಾಪುರ`; two towns as `ಕುಂದಾಪುರ, ಗಂಗೊಳ್ಳಿ`), `sources`, `source_urls`, `status: "confirmed"`,
      `published_at`
-   - `verified_by: "Gautam Paduvari"`, `verified_at: <now ISO>` — the editor's standing instruction
-     in this skill; if the editor names someone else in chat that day, use that name. Never any other.
+   - leave `verified_by` / `verified_at` EMPTY here — the intake desk never signs (D59). Step 3's
+     `verify.py` writes them, with the name below.
 3. **Order lead-first** (the first story opens the reel's front page): the story most readers in the
    most towns need first. Five stories is ideal; **six is the most** (`Limits.saara_max_stories`).
    More than six: keep the best six in ಸುದ್ದಿ ಸಾರ and tell the editor which were held — never drop one silently.
@@ -69,7 +73,8 @@ as Kannada words. Never write a figure you cannot find in the paste.
 ## Step 3 · Verify, validate, and make the reel copy CLEAN
 
 ```bash
-python3 scripts/verify.py editions/<today>.json --all --by "Gautam Paduvari"
+python3 scripts/verify.py editions/<today>.json --all --by "Gautam Paduvari"   # the editor's standing instruction in this
+                                                                              # skill; another name only if the editor gives one in chat
 python3 render.py --check editions/<today>.json
 python3 scripts/reel_check.py editions/<today>.json --strict
 ```
@@ -113,6 +118,9 @@ About 4 minutes (the film is drawn frame by frame). It writes, in `out/<today>/`
   (The carousel was made meanwhile so the day is not empty — say so; the reel is still the goal.)
 - **Warnings** (`⚠ ಸುದ್ದಿ ಸಾರ reel: …`): word timing fell back to an even split, a headline on three
   lines, a voice word that may be misread. Fix what you can (Step 3), re-render if you changed copy.
+- **`the voice does not say what it was given`**: the speech model heard a clip that is not its words
+  (after one automatic retry). Re-render once; if it repeats, the Google voice is failing — say so, never
+  post it.
 
 ## Step 6 · After the render — inspect and gate
 
@@ -126,12 +134,20 @@ If the gate is HELD (`review_report.json`): launch `gate-doctor`, apply the mech
 
 ## Step 7 · Report — short, plain, in Kannada-friendly English
 
+0. **Questions for the editor** — things only they can settle; list them FIRST, never change the copy to hide
+   them: a weekday in the paste that does not match today's date ("ಮಂಗಳವಾರ" on a Thursday); a story that may
+   contradict or repeat an earlier day's edition (`intake.py seen` prints it); a place spelling you cannot
+   confirm from the paste (ಸೇಮೂರು); a town missing from `copy.PLACE_TAGS` (its hashtag is generic); a
+   `category` that could be argued either way.
+
 1. The file: `out/<today>/reel_saara.mp4` — duration, stories, size.
 2. What to post where, from `schedule.txt` (Instagram Reel + Facebook Reel + YouTube Short; the two
    caption files).
-3. **Anything the editor should listen for**: the words in "may be misread" warnings, and which
-   stories had to use their own sentence because `reel_support` was missing. You cannot hear the reel —
-   say so; the editor listens once.
+3. **The voice, honestly.** You cannot hear the reel — but a speech model heard every clip back (the
+   render prints `voice heard back … lowest 0.9x`; a right voice scores 0.96+, wrong audio 0.2–0.3). Say
+   the lowest score. It catches a dropped, garbled or wrong word; it cannot catch a subtle slip, so list
+   the words it flagged ("listen for …") and the "may be misread" words, and which stories used their
+   own sentence because `reel_support` was missing. The editor listens once.
 4. What the desks changed or blocked.
 5. The sign-off line, with the name only if the editor has given one:
    `python3 scripts/sign_off.py out/<today> --by "<name>"` — a person signs taste and news judgement

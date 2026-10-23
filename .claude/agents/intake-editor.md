@@ -54,8 +54,8 @@ editor — never look it up.
    - `reel_support` — ONE complete sentence, taken only from the paste, that the
      voice reads and the gold card shows whole. Length is the clock's, not yours:
      `python3 scripts/reel_check.py editions/<date>.json` prints how many characters
-     the day allows per story (about 7–9 Kannada words for five stories, about 6
-     for six). A sentence, not a fragment: it must stand alone with only the
+     the day allows a card sentence (about 7–9 Kannada words for five stories, about 6
+     for six) — UP TO that: shorter is fine. A sentence, not a fragment: it must stand alone with only the
      headline beside it — and, for crime, must not assert guilt.
    - Write figures as figures (33ನೇ, 22ರಂದು, ₹500): the voice says them as words.
    - `deck` and `points` stay full-length: the captions use them.

@@ -142,6 +142,20 @@ class WhatEachSlotSays(unittest.TestCase):
         self.assertEqual(R._place(Story(headline='ಸುದ್ದಿ ಮಾತ್ರ'))[1], 'ಕರಾವಳಿ')
 
 
+class TheEditorIsAsked(unittest.TestCase):
+    def test_a_weekday_that_is_not_the_editions_is_raised_never_rewritten(self):
+        import datetime
+        thursday = datetime.datetime(2026, 10, 22, 9, 0)          # a Thursday
+        old = Story(headline='ಕುಂದಾಪುರ: ಮಂಗಳವಾರದ ಮೆರವಣಿಗೆ', location='ಕುಂದಾಪುರ', segment='saara')
+        same = Story(headline='ಉಡುಪಿ: ಗುರುವಾರದ ಸಭೆ', location='ಉಡುಪಿ', segment='saara')
+        none = Story(headline='ಕೋಟ: ಸುದ್ದಿ', location='ಕೋಟ', segment='saara')
+        q = R.editor_questions(Edition(stories=[old, same, none], date=thursday))
+        self.assertEqual(len(q), 1)
+        self.assertIn('story 1', q[0])
+        self.assertIn('ಮಂಗಳವಾರ', q[0])
+        self.assertEqual(old.headline, 'ಕುಂದಾಪುರ: ಮಂಗಳವಾರದ ಮೆರವಣಿಗೆ')   # the copy is left exactly as the paste has it
+
+
 class SpokenRight(unittest.TestCase):
     TABLE = {1: 'ಒಂದು', 7: 'ಏಳು', 10: 'ಹತ್ತು', 11: 'ಹನ್ನೊಂದು', 19: 'ಹತ್ತೊಂಬತ್ತು', 20: 'ಇಪ್ಪತ್ತು',
              21: 'ಇಪ್ಪತ್ತೊಂದು', 22: 'ಇಪ್ಪತ್ತೆರಡು', 23: 'ಇಪ್ಪತ್ತಮೂರು', 25: 'ಇಪ್ಪತ್ತೈದು', 26: 'ಇಪ್ಪತ್ತಾರು',
@@ -176,6 +190,33 @@ class SpokenRight(unittest.TestCase):
         self.assertGreater(RS.syllables('ಅನ್ನಸಂತರ್ಪಣೆ'), RS.syllables('ಹಾಗೂ'))
         self.assertGreater(RS.weight('22ರಂದು'), RS.weight('ರಂದು'))     # printed short, said long
         self.assertGreater(RS.weight('ಎಚ್.ಸಿ.'), 2.5)                 # said as two letters
+
+
+class HearingTheVoiceBack(unittest.TestCase):
+    """brand/reel_audit.py — Whisper writes Kannada its own way, so the comparison is on a phonetic skeleton."""
+
+    def test_a_right_voice_scores_high_despite_the_transcribers_spelling(self):
+        from brand import reel_audit as A
+        said = 'ಮೂರು ದಿನ ಪೂಜೆ ಭಜನೆ ಹಾಗೂ ಅನ್ನಸಂತರ್ಪಣೆ ಶ್ರದ್ಧೆಯಿಂದ ನೆರವೇರಿತು'
+        heard = 'ಮೂರು ದಿನ ಪೋಜೆ ಭಜನೆ ಹಾಗು ಅನ್ನ ಸಂತರ್ಪಣೆ ಶ್ರದ್ಧಿ ಇಂದ ನಿರವೇರಿತು'      # as Whisper actually wrote it
+        r = A.compare(said, heard)
+        self.assertGreaterEqual(r['similarity'], Limits.saara_reel_voice_warn)
+        self.assertEqual(r['suspects'], [])
+
+    def test_the_wrong_audio_scores_far_below_the_floors(self):
+        from brand import reel_audit as A
+        r = A.compare('ಗಣೇಶ್ ಪೂಜಾರಿ ಅವರ ಕೋಣಗಳು ಚಿನ್ನ ಗೆದ್ದಿವೆ', 'ಮೂರು ದಿನ ಪೋಜೆ ಭಜನೆ')
+        self.assertLess(r['similarity'], Limits.saara_reel_voice_fail)
+        self.assertGreaterEqual(len(r['suspects']), 3)
+
+    def test_a_dropped_word_is_named(self):
+        from brand import reel_audit as A
+        r = A.compare('ಸಚಿವ ಬಾಲಕೃಷ್ಣ ಭರವಸೆ ನೀಡಿದ್ದಾರೆ', 'ಸಚಿವ ಭರವಸೆ ನೀಡಿದ್ದಾರೆ')
+        self.assertIn('ಬಾಲಕೃಷ್ಣ', r['suspects'])
+
+    def test_a_checker_that_is_away_never_holds_a_day(self):
+        with mock.patch('importlib.util.find_spec', return_value=None):
+            self.assertIn('unavailable', RS.audit([dict(label='x', wav='/nope.wav', text='ಅ')]))
 
 
 class WordTimes(unittest.TestCase):
@@ -447,6 +488,24 @@ class TheGate(unittest.TestCase):
     def test_a_reel_with_no_report_was_not_made_by_the_render(self):
         c = self.codes(self.folder(None))
         self.assertEqual(c['VID-08'].severity, 'warn')
+
+    def test_a_voice_that_does_not_say_its_words_holds_the_package(self):
+        bad = {'story 2 card': dict(similarity=0.2, suspects=['ಅ'], heard='ಏನೋ ಬೇರೆ')}
+        c = self.codes(self.folder(dict(seconds=8.0, issues=[], voice_audit=bad)))
+        self.assertEqual(c['SND-06'].severity, 'fail')
+
+    def test_a_middling_score_warns_and_a_good_score_only_names_words_to_listen_for(self):
+        mid = self.codes(self.folder(dict(seconds=8.0, issues=[], voice_audit={'hook': dict(similarity=0.7, suspects=[], heard='x')})))
+        self.assertEqual(mid['SND-06'].severity, 'warn')
+        ok = self.codes(self.folder(dict(seconds=8.0, issues=[], voice_audit={'hook': dict(similarity=0.97, suspects=['ಬೈಂದೂರು'], heard='x')})))
+        self.assertEqual(ok['SND-06'].severity, 'warn')
+        self.assertIn('listen for', ok['SND-06'].message)
+        clean = self.codes(self.folder(dict(seconds=8.0, issues=[], voice_audit={'hook': dict(similarity=0.99, suspects=[], heard='x')})))
+        self.assertNotIn('SND-06', clean)
+
+    def test_a_voice_that_could_not_be_heard_back_is_said(self):
+        c = self.codes(self.folder(dict(seconds=8.0, issues=[], voice_audit={'unavailable': 'mlx-whisper is not installed'})))
+        self.assertEqual(c['SND-06'].severity, 'warn')
 
     def test_a_silent_reel_is_held(self):
         c = self.codes(self.folder(dict(seconds=8.0, issues=[]), talk=False))

@@ -166,6 +166,24 @@ def _copies(stories: list[Story]) -> list[dict]:
     return copies
 
 
+_WEEKDAYS = {'ಸೋಮವಾರ': 0, 'ಮಂಗಳವಾರ': 1, 'ಬುಧವಾರ': 2, 'ಗುರುವಾರ': 3, 'ಶುಕ್ರವಾರ': 4, 'ಶನಿವಾರ': 5, 'ಭಾನುವಾರ': 6}
+
+
+def editor_questions(edition: Edition) -> list[str]:
+    """What only the editor can settle — raised, never "fixed". The dress rehearsal found one: a story
+    about "ಮಂಗಳವಾರದ" procession in an edition dated a Thursday is either stale or about next week."""
+    out = []
+    day = edition.date.weekday()
+    for i, st in enumerate(edition.stories, 1):
+        text = ' '.join([st.headline, st.deck, st.reel_line, st.reel_support, *st.points])
+        named = sorted({w for w in _WEEKDAYS if w in text and _WEEKDAYS[w] != day})
+        if named:
+            out.append(f'story {i} ({_place(st)[1]}) names {" / ".join(named)}, but this edition is dated '
+                       f'{WEEKDAY_KN[day]} {edition.date.day} {MONTH_KN[edition.date.month - 1]} — is it already '
+                       'past, or next week? Leave the copy as the paste has it and ask')
+    return out
+
+
 # ── the budget, before a word is spoken ──────────────────────────────────
 def _est(text: str) -> float:
     return max(1.0, len(RS.spoken(text)) * M.saara_reel_sec_per_char)
@@ -213,6 +231,15 @@ def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[
     for i, how in enumerate(info.get('timing') or []):
         if how != 'measured':
             out.append(f'story {i + 1}: word timing fell back to an even split — the highlight may drift a little')
+    voice = info.get('voice') or {}
+    if 'unavailable' in voice:
+        out.append(f'the voice was NOT heard back ({voice["unavailable"]}) — listen to it once')
+    else:
+        listen, weak = _voice_findings(voice)
+        out.extend(f'voice check — {w}' for w in weak)
+        if listen:
+            out.append('voice check — a speech model could not match these words, so listen for them: '
+                       + ' · '.join(listen))
     if info.get('compress'):
         out.append(f'the voice would run {info["natural"]:.1f}s; beats were tightened to fit '
                    f'{Limits.saara_reel_max_seconds:.0f}s (speech untouched)')
@@ -400,16 +427,51 @@ def _mix(tl: dict, clips: Path, out: Path) -> None:
 
 
 # ── the clips, the timeline, the page ────────────────────────────────────
+def _voice_findings(voice: dict) -> tuple[list[str], list[str]]:
+    """(the words to listen for, the clips that did not sound like their words)."""
+    if 'unavailable' in voice:
+        return [], []
+    listen, weak = [], []
+    for label, v in voice.items():
+        if v['similarity'] < Limits.saara_reel_voice_warn:
+            weak.append(f'{label}: heard back at {v["similarity"]:.2f} (a right voice scores 0.96+); '
+                        f'it said "{v.get("heard", "")[:70]}"')
+        elif v['suspects']:
+            listen.append(f'{label}: {" ".join(v["suspects"])}')
+    return listen, weak
+
+
 def _build(edition: Edition, tmp: Path, engine: str) -> dict:
     stories = edition.stories
     copies = _copies(stories)
     hook = _hook_text(copies)
-    durs = {'intro': RS.clip(hook, tmp / 'intro.wav', engine),
-            'outro': RS.clip(OUTRO_SAY, tmp / 'outro.wav', engine)}
+    plan = [('intro', hook, 'the hook'), ('outro', OUTRO_SAY, 'the follow card')]
+    for i, c in enumerate(copies):
+        plan += [(f'h{i}', c['say_head'], f'story {i + 1} headline'), (f'b{i}', c['body'], f'story {i + 1} card')]
+    durs = {k: RS.clip(text, tmp / f'{k}.wav', engine) for k, text, _ in plan}
+
+    # Hear the clips back (a speech model, in its own process). A clip that does not sound like its
+    # words — noise, silence, the wrong thing — is asked for once more; if it is still wrong the
+    # render stops and says which, rather than post a reel that talks nonsense (D133).
+    def items(rows):
+        return [dict(label=label, wav=str(tmp / f'{k}.wav'), text=RS.spoken(text)) for k, text, label in rows]
+    voice = RS.audit(items(plan))
+    if 'unavailable' not in voice:
+        bad = [row for row in plan if voice[row[2]]['similarity'] < Limits.saara_reel_voice_fail]
+        for k, text, label in bad:
+            RS.forget(text, engine)
+            durs[k] = RS.clip(text, tmp / f'{k}.wav', engine)
+        if bad:
+            again = RS.audit(items(bad))
+            if 'unavailable' not in again:
+                voice.update(again)
+                still = [r for r in bad if voice[r[2]]['similarity'] < Limits.saara_reel_voice_fail]
+                if still:
+                    raise ReelError('the voice does not say what it was given — '
+                                    + '; '.join(f'{lab} (heard back at {voice[lab]["similarity"]:.2f}: '
+                                                f'"{voice[lab].get("heard", "")[:60]}")' for _k, _t, lab in still))
     words, timing = {}, []
     for i, c in enumerate(copies):
-        durs[f'h{i}'] = RS.clip(c['say_head'], tmp / f'h{i}.wav', engine)
-        durs[f'b{i}'] = RS.clip(c['body'], tmp / f'b{i}.wav', engine)
         words[f'b{i}'], how = RS.word_times(tmp / f'b{i}.wav', c['body'])
         timing.append(how)
     words['intro'], _ = RS.word_times(tmp / 'intro.wav', hook)
@@ -418,13 +480,13 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
     if tl['T'] > Limits.reel_fail_seconds:
         longest = max(range(len(copies)), key=lambda i: durs[f'h{i}'] + durs[f'b{i}'])
         raise ReelFitError(f'the spoken reel runs {tl["T"]:.0f}s — the house fails anything over '
-                        f'{Limits.reel_fail_seconds:.0f}s. Shorten the reel_line and reel_support of story '
-                        f'{longest + 1} ({copies[longest]["place_short"]}), the longest — about '
-                        f'{budget(len(copies))["support_chars"]} chars for the card with {len(copies)} stories — '
-                        f'or move a story out of ಸುದ್ದಿ ಸಾರ')
+                           f'{Limits.reel_fail_seconds:.0f}s. Shorten the reel_line and reel_support of story '
+                           f'{longest + 1} ({copies[longest]["place_short"]}), the longest — about '
+                           f'{budget(len(copies))["support_chars"]} chars for the card with {len(copies)} stories — '
+                           f'or move a story out of ಸುದ್ದಿ ಸಾರ')
     pron = {f'story {i + 1}': sorted(set(RS.lint(c['say_head']) + RS.lint(c['body'])))
             for i, c in enumerate(copies)}
-    return dict(copies=copies, tl=tl, durs=durs, timing=timing, hook=hook,
+    return dict(copies=copies, tl=tl, durs=durs, timing=timing, hook=hook, voice=voice,
                 pron={k: v for k, v in pron.items() if v},
                 page=_page(edition, copies, tl, tmp / 'reel.html'))
 
@@ -464,6 +526,7 @@ def check(edition: Edition, shots: str | None = None) -> dict:
     pron = {f'story {i + 1}': sorted(set(RS.lint(c['say_head']) + RS.lint(c['body'])))
             for i, c in enumerate(copies)}
     return dict(stories=n, estimated_seconds=tl['T'], budget=budget(n), lines=laid.get('lines'), cover=laid.get('cover'),
+                questions=editor_questions(edition),
                 issues=laid.get('issues', []), warnings=_warnings(copies, laid, info),
                 pronunciation={k: v for k, v in pron.items() if v}, copies=copies)
 
@@ -488,7 +551,7 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
         b = _build(edition, tmp, engine)
         copies, tl = b['copies'], b['tl']
         info = dict(compress=tl['compress'], natural=tl['natural'], over=tl['over'], seconds=tl['T'],
-                    timing=b['timing'])
+                    timing=b['timing'], voice=b.get('voice') or {})
 
         def gate(laid):
             if laid.get('issues'):
@@ -497,7 +560,7 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
         def summary(laid, **extra):
             return dict(seconds=tl['T'], timeline=tl, lines=laid.get('lines'), issues=laid.get('issues', []),
                         warnings=_warnings(copies, laid, info), pronunciation=b['pron'],
-                        timing=b['timing'], clips={k: v for k, v in b['durs'].items()}, **extra)
+                        timing=b['timing'], clips={k: v for k, v in b['durs'].items()}, voice_audit=b.get('voice') or {}, **extra)
 
         if stills:
             async def shoot(frame):
