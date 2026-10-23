@@ -331,7 +331,8 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         saara_last=slides[-1] if slides else '',
         mukhya=mukhya_done,
         has_roundup=os.path.exists(os.path.join(outdir, 'roundup.mp4')),
-        animated=animate)
+        animated=animate,
+        has_saara_reel=os.path.exists(os.path.join(outdir, 'reel_saara.mp4')))
     if plan:
         with open(os.path.join(outdir, 'schedule.txt'), 'w', encoding='utf-8') as f:
             f.write(copywriter.plan_text(plan, ed.date_kn))

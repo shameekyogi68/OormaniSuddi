@@ -922,7 +922,8 @@ class Slot:
 def publishing_plan(has_saara: bool = False, saara_last: str = '',
                     mukhya: list[tuple[int, bool, str]] = (),
                     has_roundup: bool = False,
-                    animated: bool = False) -> list[Slot]:
+                    animated: bool = False,
+                    has_saara_reel: bool = False) -> list[Slot]:
     """The day's upload order, derived from what was actually rendered (D92).
 
     `mukhya` is one (k, breaking, last_slide) per ಮುಖ್ಯ ಸುದ್ದಿ set. A breaking
@@ -972,6 +973,13 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
             'The evening round-up. Not YouTube Shorts: AI card reels are '
             'suppressed there (AGENTS rule 9). Set roundup_cover.jpg as the '
             'cover, not frame 0.'))
+    if has_saara_reel:
+        plan.append(Slot(
+            Limits.saara_reel_slot, 'reel_saara.mp4',
+            'Instagram Reels + Facebook Reels + YouTube Shorts',
+            'ಸುದ್ದಿ ಸಾರ reel — the same stories as one video. Caption: saara_caption.txt',
+            'One file for all three. On YouTube because the editor asked for it '
+            '(AGENTS rule 9, D132): its Shorts numbers decide whether it stays.'))
     return sorted(plan, key=lambda s: ('0' if s.at == 'NOW' else '1') + s.at)
 
 

@@ -599,5 +599,5 @@ those carry a reason rather than a test.
 ## D132 · ಸುದ್ದಿ ಸಾರ as a reel: Ink & Gold, cut from the voice
 
 - **Tested by:** `tests/test_saara_reel.py`
-- Enforced in: `brand/saara_reel.py`, `brand/tokens.py`
+- Enforced in: `brand/copy.py`, `brand/saara_reel.py`, `brand/tokens.py`
 

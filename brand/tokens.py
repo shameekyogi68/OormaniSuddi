@@ -416,6 +416,7 @@ class Limits:
     carousel_slot = '08:00'     # ಸುದ್ದಿ ಸಾರ — Instagram + Facebook
     mukhya_slot = '13:30'       # ಮುಖ್ಯ ಸುದ್ದಿ — or the moment it breaks
     roundup_slot = '18:30'      # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — Instagram + Facebook Reels
+    saara_reel_slot = '19:30'   # ಸುದ್ದಿ ಸಾರ reel — Reels + Shorts, away from the 08:00 carousel (D132)
     # A WhatsApp community post carries this many stories at most; more is how
     # members mute the group. D94.
     whatsapp_items_max = 3

@@ -174,6 +174,9 @@ already exist (`python3 render.py --describe`).
    - **Instagram** gets the three formats.
    - **Reels from `render.py` (ಸ್ಪೀಡ್ ನ್ಯೂಸ್) are Instagram-only.** Cross-post
      to YouTube Shorts only when the editor explicitly asks.
+   - **The ಸುದ್ದಿ ಸಾರ reel (`reel_saara.mp4`) is the one the editor asked for**
+     (D132, 2026-10-22): it goes to Instagram Reels, Facebook Reels and YouTube
+     Shorts. Its Shorts numbers decide whether it stays there.
    - Every YouTube description ends with an engagement question in Kannada
      ("ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಮೆಂಟ್ ಮಾಡಿ.").
 10. **Strict workspace isolation.** No AI model, agent, subagent, script or

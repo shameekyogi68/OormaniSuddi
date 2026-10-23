@@ -223,9 +223,11 @@ def _speech_normalise(text: str) -> str:
     # The dots make an engine treat each letter as a finished sentence and
     # leave a long gap inside a person's name. Read without them the letters
     # run together exactly as they are spoken.
-    t = re.sub(r'(?:^|\s)([A-Za-z\u0C80-\u0CFF]{1,2})\.\s*(?=[A-Za-z\u0C80-\u0CFF]{1,2}\.)',
+    # An initial may end in a virama — ಎಚ್ (H), ಎಸ್ (S), ಆರ್ (R) — so "ಎಚ್.ಸಿ. ಬಾಲಕೃಷ್ಣ"
+    # kept its dots and was read as two sentences (2026-10-23).
+    t = re.sub(r'(?:^|\s)([A-Za-z\u0C80-\u0CFF]{1,2}\u0CCD?)\.\s*(?=[A-Za-z\u0C80-\u0CFF]{1,2}\u0CCD?\.)',
                r' \1 ', t)
-    t = re.sub(r'(?:^|\s)([A-Za-z\u0C80-\u0CFF]{1,2})\.\s+(?=[A-Za-z\u0C80-\u0CFF])',
+    t = re.sub(r'(?:^|\s)([A-Za-z\u0C80-\u0CFF]{1,2}\u0CCD?)\.\s+(?=[A-Za-z\u0C80-\u0CFF])',
                r' \1 ', t)
 
     # Money with a scale word is spoken in whole units of the scale below.

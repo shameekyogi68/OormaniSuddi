@@ -89,6 +89,13 @@ class NoLines(unittest.TestCase):
             self.assertNotIn(bad, css + PAGE.split('</style>')[1].split('<script>')[0])
 
 
+class SpokenRight(unittest.TestCase):
+    def test_an_initial_ending_in_a_virama_loses_its_dot(self):
+        from brand import voice
+        self.assertEqual(voice._spoken('ಸಚಿವ ಎಚ್.ಸಿ. ಬಾಲಕೃಷ್ಣ'), 'ಸಚಿವ ಎಚ್ ಸಿ ಬಾಲಕೃಷ್ಣ.')
+        self.assertIn('ಇದೆ. ಎಚ್ಚರ', voice._spoken('ಮಳೆ ಇದೆ. ಎಚ್ಚರ'))   # a sentence end stays
+
+
 class Wired(unittest.TestCase):
     def test_render_makes_it_beside_the_carousel_and_clears_it_with_saara(self):
         src = (ROOT / 'render.py').read_text(encoding='utf-8')
@@ -96,6 +103,15 @@ class Wired(unittest.TestCase):
         from render import FORMAT_FILES
         self.assertTrue(FORMAT_FILES['saara'].search('reel_saara.mp4'))
         self.assertTrue(FORMAT_FILES['saara'].search('saara_01_cover.mp4'))
+
+    def test_the_plan_lists_the_reel_for_all_three_platforms(self):
+        from brand.copy import publishing_plan
+        plan = publishing_plan(has_saara=True, saara_last='saara_05_sources.jpg', animated=True,
+                               has_saara_reel=True)
+        self.assertIn('saara_01_cover', plan[0].asset)       # the carousel still leads the day
+        reel = [s for s in plan if s.asset == 'reel_saara.mp4']
+        self.assertEqual(len(reel), 1)
+        self.assertIn('YouTube Shorts', reel[0].platform)
 
 
 if __name__ == '__main__':
