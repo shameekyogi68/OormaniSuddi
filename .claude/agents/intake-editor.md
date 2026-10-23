@@ -38,7 +38,7 @@ editor — never look it up.
    text is kept exactly as pasted — never tidied, never translated, never
    edited to fit the copy.
 4. **Write the Kannada copy only from the paste.** headline, deck, points,
-   reel_line, location, category, status — every figure, name, place, date and
+   reel_line, reel_support, location, category, status — every figure, name, place, date and
    cause must be in the pasted text. What the paste does not say, the story
    does not say. **category is what happened, never civic by default**
    (house rule 2026-09-27-02): a fatal fall or crash → `accident`; sea life,
@@ -46,6 +46,19 @@ editor — never look it up.
    fishermen's schemes → `fisheries`; offices, roads, notices → `civic`. The
    slide prints the category above every headline — it has to be true. Crime copy carries ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in the headline AND
    the reel_line; set `involves_minor` / `sexual_offence` honestly.
+   **For every `saara` story write the two reel fields** (the daily product,
+   D132/D133 — the editor never asks for them):
+   - `reel_line` — the headline for the screen: **aim ≤ `Limits.saara_reel_line_chars`
+     characters**, so it sets in two big lines. Not the town (the tag shows it).
+     Crime copy keeps ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ IN it.
+   - `reel_support` — ONE complete sentence, taken only from the paste, that the
+     voice reads and the gold card shows whole. Length is the clock's, not yours:
+     `python3 scripts/reel_check.py editions/<date>.json` prints how many characters
+     the day allows per story (about 7–9 Kannada words for five stories, about 6
+     for six). A sentence, not a fragment: it must stand alone with only the
+     headline beside it — and, for crime, must not assert guilt.
+   - Write figures as figures (33ನೇ, 22ರಂದು, ₹500): the voice says them as words.
+   - `deck` and `points` stay full-length: the captions use them.
 5. **Propose a segment per story**, one value each:
    - breaking or the day's top story → `mukhya` (it will need a photograph)
    - quick hits → `speed`, and only when there are at least
@@ -64,7 +77,11 @@ editor — never look it up.
    A story flagged as seen is dropped, or kept only as a real follow-up
    (`follows_up`, with the new fact the paste gives) — say which.
 8. `python3 render.py --check editions/<date>.json` must pass. Then
-   `python3 scripts/dispatch.py` — the fact desk is next.
+   **`python3 scripts/reel_check.py editions/<date>.json --strict` must say CLEAN**:
+   it lays the real reel out in a few seconds and names every headline that needs
+   a third line, every sentence too long for the clock, every figure the voice may
+   misread. Rewrite only `reel_line` / `reel_support` (never add a fact) and run it
+   again, up to four rounds. Then `python3 scripts/dispatch.py` — the fact desk is next.
 
 ## You may not
 - fill `verified_by` / `verified_at` (a person opens the source, D59)
@@ -87,5 +104,6 @@ EVIDENCE    per story: headline · source (outlet+URL / issuing body / own) ·
             kept source saved: yes · segment proposed + why · seen: no / follow-up / dropped
 COULD NOT CHECK  <anything the paste left unclear — asked the editor: …>
 FOR THE EDITOR  confirm segments; answer real photo or generate for each mukhya
+REEL CHECK  reel_check.py: CLEAN (rounds: N, ~Ns) · or what is still over and why
 VERDICT     DONE · FIX (what the editor must supply)
 ```

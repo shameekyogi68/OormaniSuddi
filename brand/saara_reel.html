@@ -38,8 +38,8 @@ html, body { width:1080px; height:1920px; overflow:hidden; background:#070B17; }
 .cap { font-family:Anek; font-weight:700; font-size:62px; line-height:1.38; color:#0B0F1A; }
 .cap span { position:relative; z-index:1; }
 .hl { position:absolute; z-index:0; background:#0B0F1A; border-radius:14px; }
-.row { display:flex; align-items:baseline; gap:30px; font-family:Anek; font-size:46px; line-height:1.3; padding:12px 0; white-space:nowrap; overflow:hidden; }
-.row .i { font-stretch:75%; font-weight:800; font-size:54px; width:62px; flex:none; color:#C81E1E; }
+.row { display:flex; align-items:baseline; gap:calc(30px * var(--k, 1)); font-family:Anek; font-size:calc(46px * var(--k, 1)); line-height:1.3; padding:calc(12px * var(--k, 1)) 0; white-space:nowrap; overflow:hidden; }
+.row .i { font-stretch:75%; font-weight:800; font-size:calc(54px * var(--k, 1)); width:calc(62px * var(--k, 1)); flex:none; color:#C81E1E; }
 .row .t { font-weight:800; color:#0B0F1A; flex:none; }
 .row .d { font-weight:600; color:rgba(11,15,26,.80); }
 #under { left:64px; display:flex; align-items:center; gap:26px; }
@@ -80,6 +80,7 @@ html, body { width:1080px; height:1920px; overflow:hidden; background:#070B17; }
 const D = /*DATA*/null;
 const W = 1080, H = 1920, X0 = 64, SAFE_BOTTOM = 1480, STORY_CARD_TOP = 1080;
 const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');   // the copy is text, never markup
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const prog = (t, a, d) => clamp((t - a) / d);
 const lerp = (a, b, x) => a + (b - a) * x;
@@ -114,24 +115,27 @@ function scan(line, p) {
 }
 
 // Lines are found by layout, never by counting characters, and a Kannada word is never cut.
-function buildLines(el, text, sizes, maxLines, maxH) {
-  sizes = sizes.map(x => Array.isArray(x) ? x : [x, maxLines, null]);
-  const words = text.replace(/\|/g, ' ').split(' ').filter(Boolean);
-  let groups;
-  if (text.includes('|')) { el.style.fontSize = sizes[0][0] + 'px'; groups = text.split('|').map(x => x.split(' ')); }
-  else for (const [size, lines, width] of sizes) {
-    el.style.fontSize = size + 'px';
-    if (width) el.style.width = width + 'px';
-    el.innerHTML = words.map(w => `<span>${w}</span>`).join(' ');
-    groups = []; let top = null;
+// `cands` are [size, lines, width] in order of preference; the first that `ok` accepts wins,
+// and if none does the last is used and the caller is told.
+function layoutLines(el, text, cands, ok) {
+  const words = text.split(' ').filter(Boolean);
+  let groups, used, fitted = false;
+  for (const cand of cands) {
+    const [size, maxLines, width] = cand;
+    el.style.fontSize = size + 'px'; el.style.width = width + 'px';
+    el.innerHTML = words.map(w => `<span>${esc(w)}</span>`).join(' ');
+    groups = []; let top = null, widest = 0;
     for (const sp of el.children) {
       if (top === null || Math.abs(sp.offsetTop - top) > 4) { groups.push([]); top = sp.offsetTop; }
       groups[groups.length - 1].push(sp.textContent);
+      widest = Math.max(widest, sp.offsetWidth);
     }
-    if (groups.length <= lines && (!maxH || el.offsetHeight <= maxH)) break;
+    used = cand;
+    if (groups.length <= maxLines && widest <= width && ok(el, groups.length, cand)) { fitted = true; break; }
   }
+  const height = el.offsetHeight;
   el.innerHTML = '';
-  return groups.map(g => {
+  const lines = groups.map(g => {
     const line = document.createElement('div'); line.className = 'line';
     const base = document.createElement('span'); base.className = 'base'; base.textContent = g.join(' ');
     const glint = document.createElement('span'); glint.className = 'glint'; glint.textContent = g.join(' ');
@@ -139,10 +143,52 @@ function buildLines(el, text, sizes, maxLines, maxH) {
     line._base = base; line._glint = glint; line._w = base.offsetWidth - 2 * PADX;
     return line;
   });
+  return { lines, cand: used, fitted, height: el.offsetHeight || height };
 }
 
-let bgx, five, ink, S = [], cover = {}, outro = {}, N = 0;
+let bgx, five, ink, fiveFont, S = [], cover = {}, outro = {}, N = 0;
+const ISSUES = [];
+const issue = msg => { if (!ISSUES.includes(msg)) ISSUES.push(msg); };
+const HEAD_TOP = 568, RAIL_Y = 856, MAX_CARD_BOTTOM = SAFE_BOTTOM - 74;   // the read-on line sits under the card
+
+// the front page: the largest scale at which the count, the title and every row fit
+function layoutCover(k) {
+  const fc = five.getContext('2d');
+  fiveFont = `800 ${Math.round(610 * k)}px Anek`;
+  fc.font = fiveFont; fc.fontStretch = 'ultra-condensed';
+  const m = fc.measureText(String(N));
+  ink = { l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent, P: 80 };
+  five.width = Math.ceil(ink.l + ink.r + 2 * ink.P); five.height = Math.ceil(ink.a + ink.d + 2 * ink.P);
+  const inkTop = 424;
+  five.style.left = (X0 - ink.P) + 'px'; five.style.top = (inkTop - ink.P) + 'px';
+  const cw = cover.words;
+  cw.style.left = (X0 + ink.l + ink.r + 22 * k) + 'px'; cw.style.top = '0px';
+  const kids = [...cw.children];
+  kids[0].style.fontSize = kids[1].style.fontSize = (78 * k).toFixed(1) + 'px';
+  kids[2].style.fontSize = (126 * k).toFixed(1) + 'px';
+  const mc = document.createElement('canvas').getContext('2d');
+  const [a, b, c] = kids.map(el => {
+    mc.font = `${getComputedStyle(el).fontSize} KnSerif`;
+    const mm = mc.measureText(el.firstChild.textContent);
+    return { el, asc: mm.actualBoundingBoxAscent, desc: mm.actualBoundingBoxDescent,
+             bo: el.querySelector('.bl').offsetTop };       // the baseline, inside its own positioned line
+  });
+  const G = 20 * k, bc = inkTop + ink.a;                   // ಸುದ್ದಿ on the count's baseline
+  const bb = bc - c.asc - G - b.desc, ba = bb - b.asc - G - a.desc;
+  [[a, ba], [b, bb], [c, bc]].forEach(([l, y]) => { l.el.style.top = (y - l.bo) + 'px'; });
+  cover.titleBottom = Math.max(inkTop + ink.a + ink.d, bc + c.desc);
+  cover.card.style.setProperty('--k', k);
+  cover.rows.forEach(r => { r.querySelector('.t').style.width = ''; });
+  const tw = Math.max(...cover.rows.map(r => r.querySelector('.t').offsetWidth));
+  cover.rows.forEach(r => { r.querySelector('.t').style.width = tw + 'px'; });
+  cover.h = cover.card.offsetHeight + 60;
+  cover.top = Math.round(cover.titleBottom + 64);
+  cover.k = k;
+  cover.title = kids.map(el => { const r = el.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)]; });
+}
+
 window.boot = async function () {
+  ISSUES.length = 0;
   await document.fonts.load('116px Kn'); await document.fonts.load('116px KnSerif'); await document.fonts.load('700 62px Anek'); await document.fonts.load('800 120px Anek');
   await document.fonts.ready;
   N = D.stories.length;
@@ -152,117 +198,122 @@ window.boot = async function () {
   $('#under .dots').innerHTML = D.stories.map(() => '<i></i>').join('');
   bgx = $('#bg').getContext('2d');
   if (!initGL()) throw new Error('WebGL is not available to the reel');
-
-  // the count, drawn so its ink — not its box — sits on the grid
-  five = $('#five'); const fc = five.getContext('2d');
-  fc.font = '800 610px Anek'; fc.fontStretch = 'ultra-condensed';
-  const m = fc.measureText(String(N));
-  ink = { l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent, P: 80 };
-  five.width = Math.ceil(ink.l + ink.r + 2 * ink.P); five.height = Math.ceil(ink.a + ink.d + 2 * ink.P);
-  const inkTop = 424;
-  five.style.left = (X0 - ink.P) + 'px'; five.style.top = (inkTop - ink.P) + 'px';
-  const cw = $('#coverWords');
-  cw.style.left = (X0 + ink.l + ink.r + 22) + 'px';
-  cw.style.top = '0px';
-  {
-    // ಸುದ್ದಿ on the count's baseline; the lines above it stacked at one tight gap of ink
-    const mc = document.createElement('canvas').getContext('2d');
-    const [a, b, c] = [...cw.children].map(el => {
-      mc.font = `${getComputedStyle(el).fontSize} KnSerif`;
-      const m = mc.measureText(el.firstChild.textContent);
-      return { el, asc: m.actualBoundingBoxAscent, desc: m.actualBoundingBoxDescent,
-               bo: el.querySelector('.bl').offsetTop - el.offsetTop };
-    });
-    const G = 20, bc = inkTop + ink.a;
-    const bb = bc - c.asc - G - b.desc;
-    const ba = bb - b.asc - G - a.desc;
-    [[a, ba], [b, bb], [c, bc]].forEach(([l, y]) => { l.el.style.top = (y - l.bo) + 'px'; });
-  }
-  cover.words = cw;
+  five = $('#five');
+  cover.words = $('#coverWords');
 
   const card = $('#card');
-  // cover: the running order, each teaser cut at a word to fit its row
+  // cover: the running order, each teaser the tail of its headline, cut at a word to fit its row
   const cv = document.createElement('div'); cv.className = 'cc'; cv.style.left = '40px'; cv.style.top = '30px'; cv.style.width = '768px';
   card.append(cv);
   D.stories.forEach((s, i) => {
     const r = document.createElement('div'); r.className = 'row';
-    r.innerHTML = `<span class="i">${String(i + 1).padStart(2, '0')}</span><span class="t">${s.place_short}</span><span class="d"></span>`;
+    r.innerHTML = `<span class="i">${String(i + 1).padStart(2, '0')}</span><span class="t">${esc(s.place_short)}</span><span class="d"></span>`;
     cv.append(r);
-    const d = r.querySelector('.d'), words = s.teaser.split(' ').filter(Boolean);
-    r._d = d; r._words = words;
-    for (let n = Math.max(0, words.length - 3); n < words.length; n++) {
-      d.textContent = words.slice(n).join(' ').replace(/^[,;:\s]+|[,;:]$/g, '');
-      if (r.scrollWidth <= 768) break;
-    }
+    r._d = r.querySelector('.d'); r._words = s.teaser.split(' ').filter(Boolean);
   });
   cover.card = cv; cover.rows = [...cv.children];
-  const tw = Math.max(...cover.rows.map(r => r.querySelector('.t').offsetWidth));
-  cover.rows.forEach(r => {
-    r.querySelector('.t').style.width = tw + 'px';
-    // re-fit to the narrower column; a teaser never opens on a word that ends in a comma
-    for (let n = Math.max(0, r._words.length - 3); n < r._words.length; n++) {
+  const fitRows = () => cover.rows.forEach(r => {
+    // a teaser never opens on a word that ends in a comma, and never overflows its row
+    let n = Math.max(0, r._words.length - 3), shown = false;
+    for (; n < r._words.length; n++) {
       if (/[,;:]$/.test(r._words[n]) && n < r._words.length - 1) continue;
       r._d.textContent = r._words.slice(n).join(' ').replace(/[,;:]$/, '');
-      if (r.scrollWidth <= 768) break;
+      if (r.scrollWidth <= 768) { shown = true; break; }
     }
+    if (!shown) { r._d.textContent = ''; }
+    r._clipped = !shown;
   });
-  cover.h = cv.offsetHeight + 60;
-  cover.top = Math.min(1040, SAFE_BOTTOM - cover.h);
+  // the largest scale that fits: the title clears the card and the card clears the Reels caption
+  let chosen = false;
+  for (let k = Math.min(1.16, 1.28 - 0.03 * N); k >= 0.6; k -= 0.04) {
+    layoutCover(k); fitRows();
+    if (cover.top + cover.h <= SAFE_BOTTOM - 20) { chosen = true; break; }
+  }
+  if (!chosen) issue('the front page does not fit its frame with ' + N + ' stories');
+  if (cover.title.some(r => r[0] < 0 || r[2] > 1080 - X0 || r[1] < 380 || r[3] > cover.top - 20)) issue('the front page title is not inside its frame');
+  cover.rows.forEach((r, i) => { if (r._clipped) issue(`front page: the town "${D.stories[i].place_short}" leaves no room for its teaser`); });
+  if (cover.top + cover.h > SAFE_BOTTOM) issue('the front page card runs under the Reels caption area');
 
   // stories
   const host = $('#stories');
   const meas = document.createElement('div'); meas.className = 'cap'; meas.style.cssText = 'position:absolute;visibility:hidden;width:768px';
   document.body.append(meas);
-  const twoLines = 2 * 62 * 1.38 + 4, threeLines = 3 * 62 * 1.38 + 4;
   D.stories.forEach((s, k) => {
     const o = Object.assign({}, D.timeline.stories[k]);
     o.num = document.createElement('div'); o.num.className = 'num a'; o.num.textContent = String(k + 1).padStart(2, '0');
     host.append(o.num); o.num.style.top = (1850 - o.num.offsetHeight) + 'px';   // low, clear of the read-on line
+
+    // the town tag: its text shrinks to fit, and sits on the ink of its own letters
     o.chip = document.createElement('div'); o.chip.className = 'chip a';
-    o.chip.innerHTML = `<span style="position:relative">${s.place}<i style="display:inline-block;width:0;height:0"></i></span>`;
+    o.chip.innerHTML = `<span style="position:relative">${esc(s.place)}<i style="display:inline-block;width:0;height:0"></i></span>`;
     host.append(o.chip);
-    {   // centre the town on the ink of its own letters, not on the font's box
+    let chipSize = 52;
+    while (chipSize > 34 && o.chip.offsetWidth > 1080 - 2 * X0) { chipSize -= 2; o.chip.style.fontSize = chipSize + 'px'; }
+    if (o.chip.offsetWidth > 1080 - 2 * X0) issue(`story ${k + 1}: the town tag is wider than the frame`);
+    {
       const sp = o.chip.firstChild, mc = document.createElement('canvas').getContext('2d');
-      mc.font = '52px Kn'; const m = mc.measureText(s.place);
+      mc.font = `${chipSize}px Kn`; const m = mc.measureText(s.place);
       const base = sp.offsetTop + sp.querySelector('i').offsetTop;   // the baseline, measured inside the tag
-      const inkMid = base - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
-      sp.style.top = (46 - inkMid).toFixed(1) + 'px';
+      sp.style.top = (46 - (base - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2)).toFixed(1) + 'px';
     }
-    o.head = document.createElement('div'); o.head.className = 'head a'; host.append(o.head);
-    // two lines end above y=860, so they may use the full width; a third line must clear the rail
-    o.lines = buildLines(o.head, s.head, [[118, 2, 952], [110, 2, 952], [102, 2, 952], [96, 2, 952], [90, 2, 952],
-                                          [110, 3, 848], [100, 3, 848], [92, 3, 848], [84, 3, 848], [78, 3, 848]], 3, STORY_CARD_TOP - 60 - 568);
-    // the read line, cut into two-line captions that roll as the voice speaks
+
+    // the read line comes first: how much room the card needs decides how much the headline gets
     const words = s.body.split(' ').filter(Boolean);
+    let capSize = 62;
+    const widest = size => { meas.style.fontSize = size + 'px'; meas.innerHTML = words.map(w => `<span>${esc(w)}</span>`).join(' ');
+                             return Math.max(0, ...[...meas.children].map(e => e.offsetWidth)); };
+    while (capSize > 46 && widest(capSize) > 768) capSize -= 4;
+    if (widest(capSize) > 768) issue(`story ${k + 1}: one word of the card sentence is wider than the card`);
+    const lh = capSize * 1.38, twoLines = 2 * lh + 4, threeLines = 3 * lh + 4;
+    meas.style.fontSize = capSize + 'px'; meas.textContent = s.body;
+    o.capSize = capSize; o.capLines = 2; o.chunks = [];
+    if (meas.offsetHeight <= threeLines) { o.chunks = [words]; o.capLines = Math.max(1, Math.round((meas.offsetHeight - 4) / lh)); }
+    else {
+      let cur = [];
+      for (let i = 0; i < words.length; i++) {
+        meas.textContent = cur.concat(words[i]).join(' ');
+        if (cur.length && meas.offsetHeight > twoLines) { o.chunks.push(cur); cur = []; }
+        cur.push(words[i]);
+        if (cur.length >= 3 && /,$/.test(words[i]) && i < words.length - 2) { o.chunks.push(cur); cur = []; }
+      }
+      if (cur.length) o.chunks.push(cur);
+    }
+    o.h = 44 + 46 + Math.ceil(o.capLines * lh + 4);
+
+    // the headline: the largest size whose lines fit above the card, clear of the Reels rail
+    o.head = document.createElement('div'); o.head.className = 'head a'; host.append(o.head);
+    const limitBottom = MAX_CARD_BOTTOM - o.h - 72;
+    const fit = layoutLines(o.head, s.head,
+      [[118, 2, 952], [110, 2, 952], [102, 2, 952], [96, 2, 952], [90, 2, 952], [84, 2, 952],
+       [110, 3, 848], [100, 3, 848], [92, 3, 848], [84, 3, 848], [76, 3, 848], [68, 4, 848], [60, 4, 848]],
+      (el, n, cand) => {
+        const bottom = HEAD_TOP + el.offsetHeight;
+        return bottom <= limitBottom && (cand[2] === 848 || bottom <= RAIL_Y);   // wide lines stay above the rail
+      });
+    o.lines = fit.lines;
+    if (!fit.fitted) issue(`story ${k + 1}: the headline does not fit above the card even at ${fit.cand[0]}px`);
+    o.cardTop = Math.round(Math.min(HEAD_TOP + o.head.offsetHeight + 104, MAX_CARD_BOTTOM - o.h));
+    if (o.cardTop < HEAD_TOP + o.head.offsetHeight + 40) issue(`story ${k + 1}: the card is too close under the headline`);
+
+    // when each word is said: measured from the voice by the engine; this estimate is the fallback
     const wt = words.map(w => [...w].length + 2 + (/[,.]$/.test(w) ? 4 : 0));
     const tot = wt.reduce((a, b) => a + b, 0); let acc = 0;
     o.wt = wt.map(x => { const a = acc / tot; acc += x; return [a * o.bodyDur, (acc / tot) * o.bodyDur]; });
-    // measured from the voice itself when the engine could (D132); the estimate is only the fallback
     if (o.words && o.words.length === words.length) o.wt = o.words;
-    o.chunks = []; let cur = [];
-    meas.textContent = s.body; o.capLines = 2;
-    if (meas.offsetHeight <= threeLines) { o.chunks = [words]; o.capLines = Math.max(1, Math.round((meas.offsetHeight - 4) / (62 * 1.38))); }
-    else for (let i = 0; i < words.length; i++) {
-      meas.textContent = cur.concat(words[i]).map(j => j).join(' ');
-      if (cur.length && meas.offsetHeight > twoLines) { o.chunks.push(cur); cur = []; }
-      cur.push(words[i]);
-      if (cur.length >= 3 && /,$/.test(words[i]) && i < words.length - 2) { o.chunks.push(cur); cur = []; }
-      cur._i = cur._i ?? i;
-    }
-    if (cur.length) o.chunks.push(cur);
     let wi = 0;
     o.chunkEls = o.chunks.map(c => {
       const el = document.createElement('div'); el.className = 'cc cap';
-      el.innerHTML = '<div class="hl"></div>' + c.map(w => `<span>${w}</span>`).join(' ');
+      el.style.fontSize = capSize + 'px';
+      el.innerHTML = '<div class="hl"></div>' + c.map(w => `<span>${esc(w)}</span>`).join(' ');
       el._hl = el.firstChild; el._first = wi; el._words = [...el.querySelectorAll('span')]; wi += c.length;
       el._t0 = o.wt[el._first][0]; card.append(el);
+      if (el.scrollWidth > 770) issue(`story ${k + 1}: a caption line is wider than the card`);
       // the pill hugs the letters' body, not the font's whole box
       el._rects = el._words.map(w => ({ x: w.offsetLeft - 9, y: w.offsetTop + w.offsetHeight * 0.08,
                                         w: w.offsetWidth + 18, h: w.offsetHeight * 0.72 }));
       return el;
     });
-    o.h = 44 + 46 + Math.ceil(o.capLines * 62 * 1.38 + 4);
-    o.cardTop = Math.round(clamp(568 + o.head.offsetHeight + 104, 920, STORY_CARD_TOP));
+    if (o.cardTop + o.h > MAX_CARD_BOTTOM + 1) issue(`story ${k + 1}: the card runs under the Reels caption area`);
     S.push(o);
   });
   meas.remove();
@@ -273,7 +324,9 @@ window.boot = async function () {
   $('#ofHandle').textContent = D.handle;
   outro.box = oc; outro.logo = $('#logo'); outro.h = 136;
   outro.parts = ['#ofName', '#ofHandle', '#ofWhy', '#ofYt'].map(q => $(q));
-  return { stories: N, chunks: S.map(o => o.chunks.length), lines: S.map(o => o.lines.length) };
+  outro.parts.forEach(el => { if (el.scrollWidth > el.clientWidth + 2) issue('the follow card text is wider than its frame'); });
+  return { stories: N, chunks: S.map(o => o.chunks.length), lines: S.map(o => o.lines.length), issues: ISSUES.slice(),
+           cover: { k: cover.k, top: cover.top, bottom: cover.top + cover.h, title: cover.title, ink: [ink.l, ink.r, ink.a, ink.d] } };
 };
 
 function camAt(t) {
@@ -368,7 +421,7 @@ let lastSheen = -1;
 function drawFive(sheen) {
   const c = five.getContext('2d');
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, five.width, five.height);
-  c.font = '800 610px Anek'; c.fontStretch = 'ultra-condensed';
+  c.font = fiveFont; c.fontStretch = 'ultra-condensed';
   const top = ink.P, bot = ink.P + ink.a + ink.d;
   c.shadowColor = 'rgba(245,179,1,.30)'; c.shadowBlur = 60; c.shadowOffsetY = 16;
   const g = c.createLinearGradient(0, top, 0, bot);
@@ -403,13 +456,10 @@ window.render = function (t) {
     const [o3, y3, b3] = loopW > 0 ? [loopW, 0, 8 * (1 - loopW)] : io(1, prog(t, B1 - 0.40, 0.34), 0, -24, 8);
     pose(cover.card, o3, y3, 1, b3);
     cover.rows.forEach((r, i) => {              // lit row by row while the hook names the towns
-      let at = D.timeline.hookAt + D.timeline.hookDur * 0.7 * i / Math.max(1, N - 1);
-      const hw = D.timeline.hookWords, ht = D.timeline.hookText || [];
-      const k = ht.findIndex(w => w.replace(/[.,]/g, '') === D.stories[i].place_short);
-      if (hw && k >= 0) at = D.timeline.hookAt + hw[k][0];   // lit as its town is said
+      const at = D.timeline.rowAt[i];                     // lit as its town is said
       const pulse = Math.sin(Math.PI * prog(tc, at, 0.55));
       r.style.background = `rgba(255,255,255,${(0.28 * pulse).toFixed(3)})`; r.style.borderRadius = '14px';
-      r.style.margin = '0 -14px'; r.style.padding = '12px 14px';
+      r.style.margin = '0 -14px'; r.style.padding = `calc(12px * var(--k, 1)) 14px`;
       r.style.transform = `translateX(${(12 * pulse).toFixed(2)}px)`;
     });
   }
@@ -447,23 +497,28 @@ window.render = function (t) {
       if (bt < t0 - 0.01 || (leave >= 1)) { pose(el, 0); return; }
       const [eo, ey, eb] = io(enter, leave, 26, -26, 8);
       pose(el, eo, ey, 1, eb);
-      let cur = -1;
+      // which word is being said; the pill follows it, and a word is white only while the pill is under it
+      let cur = -1, fade = 1;
+      const last = el._words.length - 1, tEnd = o.wt[el._first + last][1];
       el._words.forEach((w, j) => {
         const [ws, we] = o.wt[el._first + j];
-        const st = bt < ws ? 0 : bt < we ? 1 : 2;
-        if (st === 1) cur = j;
-        if (w._s === st) return; w._s = st;
-        w.style.color = st === 1 ? '#FFFFFF' : '#0B0F1A';      // one ink; the pill alone marks the voice
+        if (bt >= ws && bt < we) cur = j;
       });
-      // one pill glides from word to word along a line, and appears in place on a new line
-      const hl = el._hl;
-      if (cur < 0) { hl.style.opacity = 0; return; }
+      if (cur < 0 && bt >= tEnd && bt < tEnd + 0.3) { cur = last; fade = 1 - smooth(prog(bt, tEnd, 0.3)); }
+      const hl = el._hl, INK = '#0B0F1A', WHITE = '#FFFFFF';
+      if (cur < 0) { hl.style.opacity = 0; el._words.forEach(w => { w.style.color = INK; }); return; }
       const R2 = el._rects[cur], P2 = el._rects[Math.max(0, cur - 1)];
-      const g = cur === 0 ? 1 : expoOut(prog(bt, o.wt[el._first + cur][0], 0.16));
-      const q = Math.abs(P2.y - R2.y) < 4 ? g : 1;
-      hl.style.opacity = cur === 0 ? expoOut(prog(bt, o.wt[el._first][0], 0.12)) : 1;
-      hl.style.left = lerp(P2.x, R2.x, q).toFixed(1) + 'px'; hl.style.top = R2.y.toFixed(1) + 'px';
-      hl.style.width = lerp(P2.w, R2.w, q).toFixed(1) + 'px'; hl.style.height = R2.h.toFixed(1) + 'px';
+      const g = cur === 0 || fade < 1 ? 1 : expoOut(prog(bt, o.wt[el._first + cur][0], 0.16));
+      const same = Math.abs(P2.y - R2.y) < 4, q = same ? g : 1;
+      const hx = lerp(P2.x, R2.x, q), hw = lerp(P2.w, R2.w, q);
+      hl.style.opacity = (cur === 0 && fade === 1 ? expoOut(prog(bt, o.wt[el._first][0], 0.12)) : 1) * fade;
+      hl.style.left = hx.toFixed(1) + 'px'; hl.style.top = R2.y.toFixed(1) + 'px';
+      hl.style.width = hw.toFixed(1) + 'px'; hl.style.height = R2.h.toFixed(1) + 'px';
+      el._words.forEach((w, j) => {
+        const r = el._rects[j], cx = r.x + r.w / 2;
+        const under = (j === cur || j === cur - 1) && Math.abs(r.y - R2.y) < 4 && cx >= hx && cx <= hx + hw && fade > 0.4;
+        w.style.color = under ? WHITE : INK;                 // one ink; white only on the black pill
+      });
     });
   });
 

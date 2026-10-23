@@ -27,7 +27,7 @@ report on them through `scripts/backup.sh --status`, do not browse them.
      or `docs/HOUSE_RULES.json` that no longer exists
    - retired things still named as live: the morning fetch, the automatic
      draft, the trend scraper, the stock library, news-scout / trend-scout,
-     any format other than `roundup`, `saara`, `mukhya` (and `greeting`)
+     any format other than `roundup`, `saara` (the daily reel, `reel_saara`; its carousel kept off), `mukhya` (and `greeting`)
    - `brand/dispatch.py :: ROSTER` against `.claude/agents/*.md`
    - a derived file out of date (`python3 -m templates --dump && python3
      schemas/_build.py && python3 docs/_build_templates_md.py`)

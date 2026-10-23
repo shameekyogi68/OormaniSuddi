@@ -38,6 +38,7 @@ green, nothing below applies to you today.
 | **A Pillow, raqm or font update** | Kannada rasterises a pixel differently; nobody touched the design | `tests.test_golden` fails; `health.py` → `contract` stays green | RUNBOOK "The golden test failed": compare `PROVENANCE.json` of a recent render with now, **look** at `out/_blessed/`, bless only if it looks right |
 | **Pillow without raqm** | every conjunct renders broken | `health.py` → `tools` ✗ | `python3 -m pip install --break-system-packages --force-reinstall Pillow` |
 | **ffmpeg changes or disappears** | no reel, no carousel video | `health.py` → `tools` ✗; `tests.test_animate` fails | `brew install ffmpeg` (or `brew reinstall ffmpeg`) |
+| **Chrome updates, moves or disappears** | the ಸುದ್ದಿ ಸಾರ reel (drawn by Chrome, D132) cannot be made; the render makes the carousel instead and prints `REEL NOT MADE` | `health.py` → `reel` ✗ | install Google Chrome in /Applications, or set `OORMANI_CHROME` to its binary. A Chrome update that changes how text or WebGL draws is caught by `python3 scripts/reel_check.py` and by looking at the next reel's frames |
 | **Google's speech endpoint changes** | narration uses the fallback voice | the render prints `! TTS fell back google → edge`; `SND-02` if every engine fails | it is an unofficial endpoint (`translate_tts` in `brand/voice.py`). Short outages are retried (D110). If it stays down, the editor decides by ear: post with the fallback, or wait. `OORMANI_TTS_ENGINE=gemini` uses the Gemini key |
 | **Gemini retires its preview TTS model** | only matters when Gemini is in use | an HTTP 404 naming `gemini-2.5-flash-preview-tts` | that one string in `brand/voice.py :: _gemini_tts_synthesize`, plus a decision entry |
 | **An API key expires** | Gemini calls fail with 400/403 | the render's fallback line names it | a new key in `.env` (`GEMINI_API_KEY=…`) or `.gemini_key`. Never in git |
@@ -76,6 +77,7 @@ green, nothing below applies to you today.
 git clone https://github.com/shameekyogi68/OormaniSuddi.git "Oormani Suddi"
 cd "Oormani Suddi"
 brew install ffmpeg
+# Google Chrome in /Applications — it draws the ಸುದ್ದಿ ಸಾರ reel (health.py → reel)
 python3 -m pip install --break-system-packages -r requirements.txt
 bash scripts/install_hooks.sh
 python3 -m unittest discover tests          # all green, golden included, before anything else

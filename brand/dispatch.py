@@ -17,7 +17,7 @@ The production path, in waves (tasks in one wave run in parallel):
   2  kannada-editor     one per story
      picture-editor     one per story that needs a picture checked or briefed
   3  (after render)     package-inspector, one per format in out/<stem>
-                        (roundup, saara, mukhya_N) · social-writer caption
+                        (roundup, reel_saara, saara, mukhya_N) · social-writer caption
                         audit · gate-doctor when the gate HELD. The code
                         owners are NOT dispatched beside the doctor: it names
                         them in its receipt.
@@ -110,7 +110,9 @@ CODE_AGENT = {
 SEGMENTS = ('speed', 'saara', 'mukhya')
 PHOTO_PLANS = ('', 'real', 'ai')
 # The file-name prefix each format renders under in out/<stem>/.
-_FORMAT_FILE = re.compile(r'^(roundup|saara|mukhya(?:_\d+)?)(?=[_.\-]|$)')
+_FORMAT_FILE = re.compile(r'^(roundup|reel_saara|saara|mukhya(?:_\d+)?)(?=[_.\-]|$)')
+# only what a person LOOKS at makes a format due for inspection — a caption file does not
+_VISUAL = ('.mp4', '.jpg', '.png')
 
 # Stories a legal eye reads before anyone else polishes them.
 RISK_WORDS = ('ಸಾವು', 'ಮೃತ', 'ಆತ್ಮಹತ್ಯೆ', 'ಕೊಲೆ', 'ಅತ್ಯಾಚಾರ', 'ಬಂಧನ', 'ಆರೋಪ',
@@ -127,7 +129,7 @@ KNOWN_ERRATA = ('2026-09-23', '2026-09-24')
 FACT_FIELDS = ('headline', 'deck', 'points', 'numbers', 'quote', 'sources',
                'source_urls', 'location', 'dateline', 'category',
                'involves_minor', 'sexual_offence', 'convicted',
-               'published_at', 'reel_line')
+               'published_at', 'reel_line', 'reel_support')
 # The Kannada desk reads every line a reader sees or hears, for its format.
 COPY_FIELDS = FACT_FIELDS + ('hook', 'takeaway', 'reel_points', 'reel_support',
                              'narration_script', 'segment')
@@ -153,7 +155,7 @@ class Task:
     target: str = ''   # edition path, out dir, or ''
     story: int = 0
     urgent: bool = False
-    part: str = ''     # a format in out/<stem>: roundup, saara, mukhya_N
+    part: str = ''     # a format in out/<stem>: roundup, reel_saara, saara, mukhya_N
 
 
 @dataclass
@@ -297,7 +299,7 @@ def write_receipt(agent: str, edition_path: str, verdict: str, body: str,
     if verdict not in ('PASS', 'FIX', 'BLOCK', 'HELD', 'DONE'):
         raise ValueError('verdict is PASS, FIX, BLOCK, HELD or DONE')
     if part and not _FORMAT_FILE.match(part):
-        raise ValueError(f'format is roundup, saara or mukhya_N, not {part!r}')
+        raise ValueError(f'format is roundup, reel_saara, saara or mukhya_N, not {part!r}')
     stem, h = _stem(edition_path), ''
     if edition_path.endswith('.json') and os.path.exists(edition_path):
         with open(edition_path, encoding='utf-8') as fh:
@@ -349,7 +351,8 @@ def _risky(st: dict) -> bool:
             or st.get('sexual_offence'):
         return True
     text = ' '.join(filter(None, [st.get('headline', ''), st.get('deck', ''),
-                                  st.get('reel_line', ''), *st.get('points', [])]))
+                                  st.get('reel_line', ''), st.get('reel_support', ''),
+                                  *st.get('points', [])]))
     return any(w in text for w in RISK_WORDS)
 
 
@@ -499,7 +502,7 @@ def _edition_tasks(plan: Plan, path: str) -> None:
 
 
 def formats_in(outdir: str) -> dict[str, float]:
-    """Each rendered format in a render folder (roundup, saara, mukhya_N) and
+    """Each rendered format in a render folder (roundup, reel_saara, saara, mukhya_N) and
     the time of its newest file, _review/ frames included."""
     out: dict[str, float] = {}
     for d in (outdir, os.path.join(outdir, '_review')):
@@ -509,7 +512,7 @@ def formats_in(outdir: str) -> dict[str, float]:
             continue
         for n in names:
             m = _FORMAT_FILE.match(n)
-            if not m:
+            if not m or not n.lower().endswith(_VISUAL):
                 continue
             t = os.path.getmtime(os.path.join(d, n))
             out[m.group(1)] = max(out.get(m.group(1), 0.0), t)

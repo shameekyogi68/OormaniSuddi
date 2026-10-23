@@ -27,7 +27,11 @@ wrong because the copy is wrong, name the story and field and route it.
   (D86, PUB-09): town (Kannada), TownNews, subject, ಕರಾವಳಿಸುದ್ದಿ / channel.
   Other towns go in the 📍 line as searchable words.
 - No tag the story is not about: it is misleading metadata and cuts reach.
-- AI-card reels are Instagram-only (AGENTS.md rule 9). YouTube is footage.
+- AI-card reels are Instagram-only (AGENTS.md rule 9). YouTube is footage — **except the ಸುದ್ದಿ ಸಾರ reel
+  (`reel_saara.mp4`), which the editor asked to post on Instagram Reels, Facebook Reels AND YouTube
+  Shorts (D132)**: audit `saara_caption.txt` for the first two and `reel_saara_youtube.txt` (TITLE /
+  DESCRIPTION / TAGS) for the Short — title in the search snippet, no #Shorts, the Kannada comment
+  question, the Grievance line.
 - No clickbait the story cannot pay off; no emoji walls; Latin numerals.
 
 ## Steps

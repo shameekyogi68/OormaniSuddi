@@ -123,9 +123,12 @@ than a ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frame has.
 **Give every saara story a `reel_line` and a `reel_support` too** — they make
 the ಸುದ್ದಿ ಸಾರ reel (D132). `reel_line` is the reel's headline: aim for
 `Limits.saara_reel_line_chars` so it sits in two big lines. `reel_support` is
-ONE complete sentence of 12–16 words, taken only from the source, that the
-voice reads and the gold card shows whole. Without it the reel reads the long
-`deck` and has to roll it in pieces.
+ONE complete sentence, taken only from the source, that the voice reads and the
+gold card shows whole — about 7–9 Kannada words for five stories, 6 for six
+(`python3 scripts/reel_check.py editions/<date>.json --strict` prints the exact
+allowance and must say CLEAN before the render; the clock is 59 seconds). Without
+it the reel takes the story's own shortest fitting sentence, and says so.
+Write figures as figures (`33ನೇ`, `₹500`): the voice says them as Kannada words.
 
 **Set `location` on every story.** It drives the hashtags, the per-town
 forward, and whether a reader can tell the story is theirs (`PUB-08`). Put the
@@ -156,7 +159,7 @@ Every story carries exactly one `segment`. One story, one format.
 |---|---|---|
 | `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ — 4:5 animated video carousel (scan-wipe .mp4 per slide, D98–D100) for ONE story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | the breaking or top story of the day. **Always has a picture.** At most `Limits.mukhya_max_per_day`. |
 | `speed` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — 9:16 reel, one frame per story | quick hits that read in one line. Only when there are at least `Limits.roundup_min_stories` of them. |
-| `saara` | ಸುದ್ದಿ ಸಾರ — 4:5 animated video carousel (scan-wipe .mp4 per slide, D98–D100): front-page cover (the lead story + one-line teasers, D103) → one slide per story → sources | everything else. **Never has pictures.** Between `Limits.saara_min_stories` and `Limits.saara_max_stories`. |
+| `saara` | ಸುದ್ದಿ ಸಾರ — **a 9:16 reel since D132/D133** (`reel_saara.mp4`, for Reels and Shorts): front page (the count + every town and teaser) → one beat per story → follow card. The 4:5 carousel (D98–D104) is kept, off | everything else. **Never has pictures.** Between `Limits.saara_min_stories` and `Limits.saara_max_stories`. |
 
 The editor's instruction wins. When they gave none, propose segments and have
 the editor confirm them **before anything renders**.

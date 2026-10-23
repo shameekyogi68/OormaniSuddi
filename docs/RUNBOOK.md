@@ -58,7 +58,9 @@ inspected, or the paste files not audited, since the last render.
 ### Start — the editor pastes news
 
 The editor pastes the day's news (articles, press releases, what they saw) and
-says what to make — "speed news", "saara", "this one is mukhya", or nothing.
+says what to make — "speed news", "saara", "this one is mukhya", or nothing. **`/daily-saara` + a paste
+is a whole command (D133): it is the ಸುದ್ದಿ ಸಾರ reel, start to finish, with no question asked — see
+`.claude/skills/daily-saara/SKILL.md`, which is this runbook for that command.**
 Nobody fetches or scrapes news; there is no morning job. The assistant (or the
 `intake-editor` agent):
 
@@ -126,8 +128,11 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
    python3 render.py editions/<date>.json --check
    python3 render.py editions/<date>.json          # or --only roundup saara mukhya
    ```
-   Into `out/<date>/`: `roundup.mp4` + `roundup_cover.jpg`; the carousels as
-   animated slides — `saara_01_cover.mp4`, `saara_02.mp4` … `saara_NN_sources.mp4`;
+   Into `out/<date>/`: `roundup.mp4` + `roundup_cover.jpg`; **the ಸುದ್ದಿ ಸಾರ reel —
+   `reel_saara.mp4` + `reel_saara_cover.jpg` (one 9:16 video for Reels and Shorts,
+   D132/D133; the saara carousel is made only with `--carousel`, or when the reel
+   could not be made, and then the render says so)**; the ಮುಖ್ಯ ಸುದ್ದಿ carousels as
+   animated slides —
    `mukhya_1_01_cover.mp4`, `mukhya_1_02_points.mp4`, `mukhya_1_03_source.mp4` —
    each with its `_copy.txt` and `_caption.txt`. **Post the .mp4s** as ONE
    carousel post of separate videos (＋ → Post → select multiple → tick them
@@ -143,7 +148,8 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
    paste file. `sign_off.py` will not accept a signature until both have
    reported on this render (D95).
 4. **Points at the caption files** — `roundup_caption.txt`,
-   `saara_caption.txt`, `mukhya_1_caption.txt`: the caption and nothing else,
+   `saara_caption.txt` (the reel's Instagram/Facebook caption), `reel_saara_youtube.txt` (its YouTube
+   Short: title, description, tags), `mukhya_1_caption.txt`: the caption and nothing else,
    so posting is open, select all, paste (house rule 2026-09-17-06).
 5. **Hands over for sign-off.** The editor looks at `out/<date>/_review/` at
    feed size, listens to the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ once, and signs:
@@ -184,7 +190,8 @@ rm ~/Library/LaunchAgents/com.oormanisuddi.morning.plist
 
 | File | Where | When |
 |---|---|---|
-| `saara_*.mp4` + `saara_caption.txt` | Instagram carousel (separate videos, one post) | `Limits.carousel_slot` |
+| `reel_saara.mp4` + `saara_caption.txt` + `reel_saara_youtube.txt` | Instagram Reel + Facebook Reel + YouTube Short (one file, D132) | `Limits.saara_reel_slot` |
+| `saara_*.mp4` + `saara_caption.txt` (only if the carousel was asked for) | Instagram carousel (separate videos, one post) | `Limits.carousel_slot` |
 | `mukhya_<k>_*.mp4` + `mukhya_<k>_caption.txt` | Instagram carousel (separate videos, one post) | `Limits.mukhya_slot`, or the moment it breaks |
 | `roundup.mp4` + `roundup_cover.jpg` + `roundup_caption.txt` | Instagram Reels only | a slot in `Limits.reel_slots` |
 

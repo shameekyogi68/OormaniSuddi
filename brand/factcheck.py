@@ -41,7 +41,7 @@ SOURCES_DIR = os.path.join(ROOT, 'inbox', 'sources')
 LEDGER_DIR = os.path.join(ROOT, 'inbox', 'factcheck')
 
 # Every line that reaches a reader, a listener or a search box.
-FIELDS = ('headline', 'reel_line', 'hook', 'deck', 'points', 'takeaway',
+FIELDS = ('headline', 'reel_line', 'reel_support', 'hook', 'deck', 'points', 'takeaway',
           'narration_script')
 
 _FIGURE = re.compile(r'\d')

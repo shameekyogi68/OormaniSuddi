@@ -1,6 +1,6 @@
 ---
 name: kannada-editor
-description: Kannada copy desk for ಊರ್ಮನಿ ಸುದ್ದಿ. For ONE story, edits the headline, reel_line, deck, points, takeaway and narration into natural, correct coastal-Karnataka Kannada — no needless English (ರಿಲೀಫ್ when ಪರಿಹಾರ exists), TTS-friendly for ಸ್ಪೀಡ್ ನ್ಯೂಸ್ stories — without changing a single fact, and returns the edits. Use proactively, one instance per story, in parallel with the picture desk, after the fact desk passes, whenever the dispatcher lists it, and on every SND-* gate code.
+description: Kannada copy desk for ಊರ್ಮನಿ ಸುದ್ದಿ. For ONE story, edits the headline, reel_line, reel_support, deck, points, takeaway and narration into natural, correct coastal-Karnataka Kannada — no needless English (ರಿಲೀಫ್ when ಪರಿಹಾರ exists), TTS-friendly for ಸ್ಪೀಡ್ ನ್ಯೂಸ್ stories — without changing a single fact, and returns the edits. Use proactively, one instance per story, in parallel with the picture desk, after the fact desk passes, whenever the dispatcher lists it, and on every SND-* gate code.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -32,9 +32,10 @@ Read `.claude/agents/_CONVENTIONS.md` first. You edit ONE story.
   ZWNJ (‌) where Kannada needs it (ಎಸ್‌ಪಿ).
 - **Numbers:** Latin numerals only (25, never ೨೫). Figures unchanged.
 - **Length:** every field within `brand/tokens.py :: Limits`, for the story's
-  `segment` (ಸುದ್ದಿ ಸಾರ slide, ಮುಖ್ಯ ಸುದ್ದಿ slide, ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frame).
+  `segment` (ಸುದ್ದಿ ಸಾರ reel — `reel_line` ≤ `saara_reel_line_chars`, `reel_support` one
+  sentence within what `scripts/reel_check.py` allows — ಮುಖ್ಯ ಸುದ್ದಿ slide, ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frame).
   Shorten by cutting words, not facts.
-- **The ear (`segment: speed`, and any narration_script):** short spoken
+- **The ear (`segment: speed`, `segment: saara` — its `reel_line` and `reel_support` are SPOKEN — and any narration_script):** short spoken
   sentences in card order; nothing the TTS will misread — ₹, %, decimals,
   dotted initials, clock times are handled by `brand/voice.py` (D50, D53), so
   check `python3 -c "from brand.voice import _spoken; print(_spoken('<line>'))"`

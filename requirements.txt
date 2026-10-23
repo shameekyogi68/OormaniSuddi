@@ -26,6 +26,11 @@ edge-tts>=6.1           # the narration fallback when Google TTS is down (D53,
 # Nothing fetches news (D92): no scraper, no extraction model. The editor's
 # paste is the source.
 
+# ── The ಸುದ್ದಿ ಸಾರ reel (D132): drawn by Google Chrome over its debugging port.
+websockets>=12.0        # talks to Chrome frame by frame
+soundfile>=0.12         # reads the voice clips to place each word inside them
+# Google Chrome itself: /Applications/Google Chrome.app (or set OORMANI_CHROME).
+
 # ── Narration verification. Optional, local, no key. ─────────────────────────
 # Transcribes the rendered audio and diffs it against the script — the only
 # check here that can hear a mispronounced name. Install ONE:

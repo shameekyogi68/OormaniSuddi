@@ -24,6 +24,8 @@ What each one is FOR, which is most of the design:
                  it, so it is mostly sub and body with almost no top end.
   outro   1.60s  the follow card. A warm three-note ident over a soft hit —
                  the one moment the reel is allowed to be musical.
+  pop     0.16s  a town tag landing on the ಸುದ್ದಿ ಸಾರ reel (D132).
+  press   0.55s  the follow button pressed on that reel's close.
 """
 from __future__ import annotations
 
@@ -139,7 +141,39 @@ def outro() -> tuple[np.ndarray, np.ndarray]:
     return _fade(x, 0.003, 0.35), _fade(0.8 * x + 0.2 * right, 0.003, 0.35)
 
 
-SET = {'whoosh': whoosh, 'tick': tick, 'open': open_hit, 'outro': outro}
+def pop() -> tuple[np.ndarray, np.ndarray]:
+    """A town tag landing (ಸುದ್ದಿ ಸಾರ reel, D132): a soft bubble that rises a
+    fifth in forty milliseconds. Mid-range and very short, so it sits under the
+    anchor's first syllable instead of on top of it."""
+    rng = np.random.default_rng(SEED + 5)
+    t = _t(0.16)
+    f = 420 * np.exp(np.minimum(t, 0.045) * np.log(1.5) / 0.045)
+    bub = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 34)
+    click = _onepole_lp(rng.standard_normal(len(t)), 3200.0) * np.exp(-t * 300) * 0.35
+    x = _fade(bub + click, 0.0008, 0.03)
+    return x, x
+
+
+def press() -> tuple[np.ndarray, np.ndarray]:
+    """The follow button being pressed: a short low click, then one small bright
+    ding on the release. The one place the reel says "now do it"."""
+    rng = np.random.default_rng(SEED + 6)
+    t = _t(0.55)
+    click = np.sin(2 * np.pi * 170 * t) * np.exp(-t * 70) * 0.9
+    snap = _onepole_lp(rng.standard_normal(len(t)), 2600.0) * np.exp(-t * 220) * 0.4
+    start = int(SR * 0.07)
+    tt = t[:len(t) - start]
+    ding = np.zeros(len(t))
+    ding[start:] = (np.sin(2 * np.pi * 1318.5 * tt) + 0.3 * np.sin(2 * np.pi * 2637 * tt)) \
+        * (1 - np.exp(-tt * 300)) * np.exp(-tt * 7.5) * 0.45
+    x = _room(click + snap + ding, 0.6, 0.12)[:len(t)]
+    d = int(SR * 0.006)
+    right = np.concatenate([np.zeros(d), x[:-d]])
+    return _fade(x, 0.0008, 0.12), _fade(0.85 * x + 0.15 * right, 0.0008, 0.12)
+
+
+SET = {'whoosh': whoosh, 'tick': tick, 'open': open_hit, 'outro': outro,
+       'pop': pop, 'press': press}
 
 
 def _write(path: str, left: np.ndarray, right: np.ndarray, peak_db: float):

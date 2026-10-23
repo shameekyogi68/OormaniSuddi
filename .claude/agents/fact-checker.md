@@ -39,7 +39,8 @@ in the story is in the kept source it cites.
    body that issued the release, or `ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ`. A link in
    `source_urls` that the paste did not contain is a BLOCK.
 6. Crime / minors / sexual offences: the headline AND reel_line each carry
-   ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ, and nothing identifies a minor or a victim.
+   ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ (and the `reel_support` sentence never states guilt — it is read
+   alone on the card), and nothing identifies a minor or a victim.
    Obituaries need two sources or own reporting.
 7. Budget, cost & infrastructure figures: any rupee amount (e.g. ₹100 ಕೋಟಿ,
    grants, allocations) MUST be explicitly cited in the verified source. If an

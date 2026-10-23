@@ -28,6 +28,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import sys
 import time
 from dataclasses import asdict, replace
@@ -104,7 +105,7 @@ def load(path: str):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def write_copy(subject, outdir: str, name: str, voice_script: str | None = None,
-               post=None) -> str:
+               post=None, shorts_note: bool = False) -> str:
     """Write the post copy next to the artwork.
 
     Artwork on its own is not a post. Every render gets a .txt you can paste
@@ -137,9 +138,14 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None,
         f.write('═══ YOUTUBE TAGS ' + '═' * 51 + '\n\n')
         f.write(', '.join(c.youtube_tags) + '\n')
         f.write('\n═══ NOTE ' + '═' * 59 + '\n\n')
-        f.write('AI-card reels: Instagram only. YouTube gets real footage.\n')
-        f.write('Do not cross-post this package to YouTube Shorts unless the '
-                'editor explicitly overrides.\n')
+        if shorts_note:
+            f.write('The ಸುದ್ದಿ ಸಾರ reel (reel_saara.mp4) goes to Instagram Reels, Facebook Reels AND\n'
+                    'YouTube Shorts — the editor asked for it (D132). The YouTube fields above are for the\n'
+                    'Short; reel_saara_youtube.txt holds them on their own, ready to paste.\n')
+        else:
+            f.write('AI-card reels: Instagram only. YouTube gets real footage.\n')
+            f.write('Do not cross-post this package to YouTube Shorts unless the '
+                    'editor explicitly overrides.\n')
         if voice_script:
             f.write('\n═══ KANNADA VOICEOVER NARRATION SCRIPT (READ-OVER) ' + '═' * 20 + '\n\n')
             f.write(voice_script + '\n')
@@ -164,7 +170,7 @@ def write_copy(subject, outdir: str, name: str, voice_script: str | None = None,
 # — derived from what is in the folder — told the editor to post all eight,
 # the cut story among them. D107.
 FORMAT_FILES = {
-    'saara':   re.compile(r'saara_|reel_saara\.mp4$'),
+    'saara':   re.compile(r'saara_|reel_saara'),
     'mukhya':  re.compile(r'mukhya_\d+_|facebook_group_\d+\.txt$'),
     'roundup': re.compile(r'roundup[._]'),
 }
@@ -181,6 +187,10 @@ def clear_previous(outdir: str, formats) -> list[str]:
             continue
         for f in sorted(os.listdir(folder)):
             path = os.path.join(folder, f)
+            if os.path.isdir(path) and f.startswith('reel_saara') and 'saara' in formats:
+                shutil.rmtree(path, ignore_errors=True)         # the draft's preview frames
+                gone.append(f)
+                continue
             if not os.path.isfile(path):
                 continue
             if f == 'feed_sizes.jpg' or any(FORMAT_FILES[k].match(f) for k in formats):
@@ -199,7 +209,8 @@ class _NullLog:
 
 
 def render_edition(ed: Edition, outdir: str, only: list[str] | None,
-                   log=None, animate: bool = False) -> list[tuple[str, str]]:
+                   log=None, animate: bool = False, carousel: bool = False,
+                   reel: bool = True) -> list[tuple[str, str]]:
     """Render every format the edition's stories ask for (D92).
 
     Each story is drawn in its own segment's format and nowhere else, so the
@@ -233,24 +244,58 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
         _t = time.time()
         sub = replace(ed, stories=saara)
         segment_made, prints = [], []
-        for p in TP.render('saara', sub, outdir):
-            segment_made.append((p, 'post'))
-            prints.append(f'  ✓ {os.path.basename(p)}')
-        write_copy(sub, outdir, 'saara_copy')
-        prints.append('  ✓ saara_copy.txt')
-        # The same stories as ONE 9:16 reel for Reels and Shorts (D132). Video,
-        # so a --still draft skips it, the way it skips the animated slides.
-        if animate:
-            from brand import saara_reel
-            if saara_reel.available():
-                res = saara_reel.render(sub, os.path.join(outdir, 'reel_saara.mp4'))
-                prints.append(f'  ✓ reel_saara.mp4  ({res["seconds"]:.0f}s — Instagram/Facebook Reel and '
-                              'YouTube Short; caption: saara_caption.txt)')
+
+        # ಸುದ್ದಿ ಸಾರ is a reel (D132, owner 2026-10-23): nothing to ask for, nothing to
+        # remember. The carousel is made only when asked for (--carousel, or
+        # Limits.saara_carousel_default) — and as the safety net, so a day on which
+        # the reel cannot be made is never an empty day.
+        reel_made, reel_why = False, ''
+        from brand import saara_reel
+        if not reel:
+            pass                                          # --carousel-only: the carousel as it was, no reel
+        elif animate:
+            try:
+                res = saara_reel.make(sub, outdir)
+                reel_made = True
+                prints.append(f'  ✓ reel_saara.mp4  ({res["seconds"]:.0f}s, {res.get("render_seconds", 0):.0f}s to make — '
+                              'Instagram Reel + Facebook Reel + YouTube Short; captions: saara_caption.txt, '
+                              'reel_saara_youtube.txt)')
                 prints.extend(f'  ⚠ ಸುದ್ದಿ ಸಾರ reel: {w}' for w in res['warnings'])
-            else:
-                prints.append('  ⚠ reel_saara.mp4 not made — Google Chrome not found (set OORMANI_CHROME)')
+                for who, toks in res['pronunciation'].items():
+                    prints.append(f'  ⚠ ಸುದ್ದಿ ಸಾರ reel voice, {who}: {" ".join(toks)} may be misread — '
+                                  'respell it in assets/pronunciation.json')
+            except Exception as e:                        # noqa: BLE001 — never an empty day
+                reel_why = str(e)
+                log.fail('saara_reel', reel_why)
+                prints.append(f'  ✗ ಸುದ್ದಿ ಸಾರ REEL NOT MADE — {reel_why}')
+        else:
+            try:                                          # a --still draft: the frames, offline, no voice
+                chk = saara_reel.check(sub, shots=os.path.join(outdir, '_review', 'reel_saara_draft'))
+                prints.append('  ✓ _review/reel_saara_draft/  (front page, every story, the close — no voice, no film)')
+                prints.extend(f'  ✗ ಸುದ್ದಿ ಸಾರ reel: {i}' for i in chk['issues'])
+                prints.extend(f'  ⚠ ಸುದ್ದಿ ಸಾರ reel: {w}' for w in chk['warnings'])
+            except Exception as e:                        # noqa: BLE001
+                prints.append(f'  ! reel draft frames not made ({e})')
+
+        want_carousel = carousel or Limits.saara_carousel_default or (animate and reel and not reel_made) or not reel
+        if want_carousel:
+            if animate and not reel_made:
+                prints.append('  ⚠ making the CAROUSEL instead, so today is not empty. Fix the reel problem above '
+                              'and re-run to get the reel.')
+            for p in TP.render('saara', sub, outdir):
+                segment_made.append((p, 'post'))
+                prints.append(f'  ✓ {os.path.basename(p)}')
+        post = copywriter.for_saara_reel(sub) if reel_made else None
+        write_copy(sub, outdir, 'saara_copy', post=post, shorts_note=reel_made)
+        prints.append('  ✓ saara_copy.txt')
+        if reel_made:
+            with open(os.path.join(outdir, 'reel_saara_youtube.txt'), 'w', encoding='utf-8') as fh:
+                fh.write(copywriter.caption_text(post, 'youtube'))
+            cover = os.path.join(outdir, 'reel_saara_cover.jpg')
+            if os.path.exists(cover):
+                segment_made.append((cover, 'story'))      # audited like the speed-news cover
         log.done('saara', seconds=round(time.time() - _t, 1),
-                 stories=len(saara))
+                 stories=len(saara), reel=reel_made)
         return segment_made, [], prints
 
     def _render_mukhya():
@@ -296,17 +341,24 @@ def render_edition(ed: Edition, outdir: str, only: list[str] | None,
                  stories=res['stories'])
         return segment_made, [], prints
 
-    # Run all three segments concurrently — they write to different files.
+    # The card formats run side by side — they write to different files. The ಸುದ್ದಿ ಸಾರ
+    # reel runs AFTER them, alone: it draws a film frame by frame in Chrome and speaks
+    # five clips, and on an 8 GB Mac that beside two other renders is how the machine
+    # starts to swap (D133). One reel at a time, last, is a few minutes slower and never stalls.
     mukhya_done: list[tuple[int, bool, str]] = []
-    fns = [_render_saara, _render_mukhya, _render_roundup]
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        futures = {pool.submit(fn): fn.__name__ for fn in fns}
+
+    def take(result):
+        segment_made, md, prints = result
+        made.extend(segment_made)
+        mukhya_done.extend(md)
+        for line in prints:
+            print(line)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = {pool.submit(fn): fn.__name__ for fn in (_render_mukhya, _render_roundup)}
         for fut in as_completed(futures):
-            segment_made, md, prints = fut.result()
-            made.extend(segment_made)
-            mukhya_done.extend(md)
-            for line in prints:
-                print(line)
+            take(fut.result())
+    take(_render_saara())
 
     # The animated twin of every carousel slide (D98): the scan wipe.
     # animate_all() uses multiprocessing.Pool internally — all slides encode
@@ -495,6 +547,11 @@ def main() -> int:
                     choices=list(Limits.daily_templates),
                     help='render only these formats: '
                          + ', '.join(Limits.daily_templates))
+    ap.add_argument('--carousel-only', action='store_true', dest='carousel_only',
+                    help='the ಸುದ್ದಿ ಸಾರ carousel and NO reel (the pre-D132 behaviour, for when only the carousel is wanted)')
+    ap.add_argument('--carousel', action='store_true',
+                    help='also make the ಸುದ್ದಿ ಸಾರ carousel slides — ಸುದ್ದಿ ಸಾರ is a reel by default '
+                         '(D132); the carousel is kept for the day it is wanted again')
     ap.add_argument('--animate', action='store_true', default=True,
                     help='(the default) every carousel slide also as a scan-wipe '
                          'video (.mp4 beside the .jpg), posted as a video carousel (D98, D99)')
@@ -611,6 +668,19 @@ def main() -> int:
                       ' — a repeat needs follows_up and a new fact (DUP-01)'))
     except Exception as e:                       # never block a render on it
         print(f'  ! repeat check skipped ({e})')
+    saara = ed.segment('saara')
+    if saara:                                    # ಸುದ್ದಿ ಸಾರ is a reel: say, cheaply, what it will weigh (D133)
+        try:
+            from brand import saara_reel
+            copies = saara_reel._copies(saara)
+            est = saara_reel.estimate(copies)
+            info = dict(over=max(0.0, est - Limits.saara_reel_max_seconds), seconds=est, compress=0, natural=est, timing=[])
+            print(f'  ಸುದ್ದಿ ಸಾರ reel: {len(saara)} stories, about {est:.0f}s '
+                  f'(cap {Limits.saara_reel_max_seconds:.0f}s) — exact check: python3 scripts/reel_check.py {args.input} --strict')
+            for w in saara_reel._warnings(copies, {}, info):
+                print(f'    ⚠ {w}')
+        except Exception as e:                   # never block a check on it
+            print(f'  ! reel estimate skipped ({e})')
     if args.check:
         return 0
 
@@ -656,7 +726,9 @@ def main() -> int:
     t0 = time.time()
     try:
         made = render_edition(ed, outdir, args.only, log=log,
-                              animate=args.animate and not args.still)
+                              animate=args.animate and not args.still,
+                              carousel=args.carousel or args.carousel_only,
+                              reel=not args.carousel_only)
         log.done('render', seconds=round(time.time() - t0, 1),
                  files=len(made))
 

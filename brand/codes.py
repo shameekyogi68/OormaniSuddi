@@ -64,6 +64,7 @@ CODES: dict[str, str] = {
     'SND-05': 'a narration beat is over the character budget',
     'SND-06': 'the spoken track does not match the script it was given',
     'SND-07': 'a reel is mastered more than 1.5 LU off the house loudness',
+    'SND-08': 'a word in the ಸುದ್ದಿ ಸಾರ reel\'s voice may be misread — Latin letters, or a number the voice may not say (D132)',
     # ── VID ───────────────────────────────────────────────────────────────
     'VID-01': 'a reel is outside the house duration window (D56)',
     'VID-02': 'a reel would be refused or cropped by the platform',
@@ -71,6 +72,8 @@ CODES: dict[str, str] = {
     'VID-04': 'a video peaks above the true-peak ceiling',
     'VID-05': 'a carousel slide has no animated .mp4 — carousels post as animated video only (rule 11, D98–D100)',
     'VID-06': 'a carousel video does not move — it is a still picture in a video wrapper (D129)',
+    'VID-07': 'the ಸುದ್ದಿ ಸಾರ reel has text that does not fit its frame, or under the Reels interface (D132)',
+    'VID-08': 'the ಸುದ್ದಿ ಸಾರ reel\'s picture and voice were not cut from the same measured clips (D132)',
     # ── PKG ───────────────────────────────────────────────────────────────
     'PKG-01': 'the copy points at a file that was not rendered',
     'PKG-02': 'the folder contains nothing publishable',

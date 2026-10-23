@@ -44,11 +44,13 @@ posts), let them outrank every [House] line.
    the cover line (2–6 words, the town first) that is true to the story and
    makes a stranger from that town stop. Return it as the story's `hook`
    (the engine guards it for guilt like a headline).
-4. **Text load.** For ಸುದ್ದಿ ಸಾರ: does each slide hold one idea, three
-   points at most, readable in a few seconds? Name any slide whose points are
-   two ideas, and which to cut.
-5. **Slot.** Name the slot from `schedule.txt` logic (`Limits.carousel_slot`,
-   `mukhya_slot`, `roundup_slot`) or "now" for a breaking story — and why, in
+4. **Text load.** For ಸುದ್ದಿ ಸಾರ — a 9:16 reel since D132, one beat per story: is each
+   story one idea, its `reel_line` a headline a stranger gets in one look, its
+   `reel_support` one sentence? Name any story that is two ideas, and which to cut.
+   (Only if the carousel was asked for: does each slide hold one idea, three points
+   at most?)
+5. **Slot.** Name the slot from `schedule.txt` logic (`Limits.saara_reel_slot` for the
+   ಸುದ್ದಿ ಸಾರ reel, `mukhya_slot`, `roundup_slot`; `carousel_slot` only if the carousel was made) or "now" for a breaking story — and why, in
    one line, including the Gulf hour for ಅನಿವಾಸಿ stories.
 6. **First comment and first hour.** One honest question about the reader's
    own town (not bait), and the first-hour plan from INSTAGRAM.md §5, specific

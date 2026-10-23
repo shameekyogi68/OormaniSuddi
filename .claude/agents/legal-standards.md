@@ -20,8 +20,9 @@ You read the story and its kept source; you do not research the web.
 and the story's kept source in `inbox/sources/`.
 
 ## The seven tests, in this order
-1. **Defamation (BNS 356).** Read the headline, reel_line, deck, points,
-   takeaway and narration EACH ON ITS OWN, as the lawyer for the person
+1. **Defamation (BNS 356).** Read the headline, reel_line, reel_support, deck, points,
+   takeaway and narration EACH ON ITS OWN (the ಸುದ್ದಿ ಸಾರ reel's gold card shows
+   `reel_support` with only the headline beside it), as the lawyer for the person
    named. Does any of them assert guilt, imply it, or state as fact what is
    only alleged? `ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ / ಪ್ರಕರಣ ದಾಖಲು` must be in the
    headline AND the reel_line of crime copy. The word list is a floor — find

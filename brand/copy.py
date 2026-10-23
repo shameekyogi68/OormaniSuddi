@@ -974,12 +974,17 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
             'suppressed there (AGENTS rule 9). Set roundup_cover.jpg as the '
             'cover, not frame 0.'))
     if has_saara_reel:
+        # The reel IS the morning bulletin. If the carousel was made as well, the
+        # reel waits for the evening so the two never land together.
         plan.append(Slot(
-            Limits.saara_reel_slot, 'reel_saara.mp4',
+            Limits.saara_reel_slot_with_carousel if has_saara else Limits.saara_reel_slot,
+            'reel_saara.mp4  (cover: reel_saara_cover.jpg)',
             'Instagram Reels + Facebook Reels + YouTube Shorts',
-            'ಸುದ್ದಿ ಸಾರ reel — the same stories as one video. Caption: saara_caption.txt',
-            'One file for all three. On YouTube because the editor asked for it '
-            '(AGENTS rule 9, D132): its Shorts numbers decide whether it stays.'))
+            'ಸುದ್ದಿ ಸಾರ — one video for all three. Instagram/Facebook caption: saara_caption.txt · '
+            'YouTube title, description and tags: reel_saara_youtube.txt',
+            'The day\'s bulletin in one watch. Posted to YouTube Shorts because the editor asked for it '
+            '(AGENTS rule 9, D132); its Shorts numbers decide whether it stays there. Keep the platform\'s '
+            'default cover — the front page is whole at frame 0.'))
     return sorted(plan, key=lambda s: ('0' if s.at == 'NOW' else '1') + s.at)
 
 
@@ -1102,6 +1107,64 @@ def for_roundup(edition: Edition, seconds: float = 0.0) -> PostCopy:
         x_post=x_post(lead),
         first_comment=first_comment(lead),
     )
+
+
+def for_saara_reel(edition: Edition) -> PostCopy:
+    """Copy for the ಸುದ್ದಿ ಸಾರ REEL (D132). `edition` holds its stories only.
+
+    The reel's own words say "ಪೂರ್ಣ ವರದಿ ಕ್ಯಾಪ್ಶನ್‌ನಲ್ಲಿ" — the full report is in the
+    caption — so the caption has to BE the full report: each story's headline and
+    its whole deck, not a list of headlines to swipe through. A promise on the
+    screen that the caption does not keep is the oldest bait there is.
+
+    Over Instagram's limit, the takeaways go first, then each deck is cut to its
+    first sentence; the sourcing is never trimmed.
+    """
+    post = for_edition(edition)
+    lead = edition.stories[0]
+    tags = edition_hashtags(edition)
+    n = len(edition.stories)
+    seen: list[str] = []
+    for st in edition.stories:
+        for src in st.sources:
+            if src not in seen:
+                seen.append(src)
+
+    def build(takeaways: bool, first_sentence_only: bool) -> str:
+        reports = []
+        for i, st in enumerate(edition.stories, 1):
+            deck = (st.deck or (st.points[0] if st.points else '')).strip()
+            if first_sentence_only and deck:
+                deck = re.split(r'(?<=[.!?।])\s+', deck)[0]
+            lines = [f'{i}. {st.headline.strip()}']
+            if deck:
+                lines.append(deck)
+            if takeaways and st.takeaway.strip():
+                lines.append(f'👉 {st.takeaway.strip()}')
+            reports.append('\n'.join(lines))
+        blocks = [hook(lead),
+                  f'ಸುದ್ದಿ ಸಾರ — ಇಂದಿನ {n} ಸುದ್ದಿ, ಒಂದೇ ರೀಲ್‌ನಲ್ಲಿ. ಪೂರ್ಣ ವರದಿ ಕೆಳಗಿದೆ 👇',
+                  '\n\n'.join(reports), cta(lead),
+                  f'{M_SOURCE} ಮೂಲ: ' + ' · '.join(seen)]
+        g = Brand.grievance_line()
+        if g:
+            blocks.append(g)
+        pl = place_line(edition)
+        if pl:
+            blocks.append(pl)
+        blocks.append(' '.join(f'#{t}' for t in tags))
+        return _join(blocks)
+
+    caption = build(True, False)
+    if len(caption) > IG_CAPTION_MAX:
+        caption = build(False, False)
+    if len(caption) > IG_CAPTION_MAX:
+        caption = build(False, True)
+    post.instagram = caption
+    post.alt_text = (f'{Brand.name} ಸುದ್ದಿ ಸಾರ ರೀಲ್ — {edition.date_kn}. '
+                     f'{n} ಸುದ್ದಿಗಳು. {lead.headline}')
+    post.youtube_title = youtube_title(edition, 'short')
+    return post
 
 
 def for_edition(edition: Edition) -> PostCopy:

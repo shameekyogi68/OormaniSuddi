@@ -290,6 +290,40 @@ def _motion(path: str) -> float:
 MOTION_FLOOR = 0.03        # below this a "video" is a still picture (VID-06)
 
 
+def _check_saara_reel(outdir: str, r: 'ReviewReport') -> None:
+    """The reel's own report (written when it was made) against the film itself.
+
+    A reel that was cut short, or whose page said the copy did not fit, or whose
+    words may be misspoken, is named here — by the engine that knows, not found
+    by somebody watching it on a phone."""
+    r.checked.append('reel_saara.mp4: made from its own measured voice, text inside its frame')
+    path = os.path.join(outdir, '_review', 'reel_saara_report.json')
+    film = os.path.join(outdir, 'reel_saara.mp4')
+    if not os.path.exists(path):
+        r.add_warn('VID-08', 'reel_saara.mp4 has no report beside it — it was not made by the render, '
+                   'so nothing says its picture and voice were cut from the same clips', where='reel_saara.mp4')
+        return
+    try:
+        with open(path, encoding='utf-8') as fh:
+            rep = json.load(fh)
+    except (OSError, ValueError):
+        r.add_fail('VID-08', '_review/reel_saara_report.json cannot be read', where='reel_saara.mp4')
+        return
+    for msg in rep.get('issues', []):
+        r.add_fail('VID-07', f'reel_saara.mp4: {msg}', where='reel_saara.mp4')
+    d = _duration(film)
+    if d > 0 and abs(d - float(rep.get('seconds', d))) > 0.5:
+        r.add_fail('VID-08', f'reel_saara.mp4 runs {d:.1f}s but was cut for {rep["seconds"]:.1f}s — '
+                   'it was truncated, and the last beat (the follow card, the loop) is missing',
+                   where='reel_saara.mp4')
+    for who, toks in (rep.get('pronunciation') or {}).items():
+        r.add_warn('SND-08', f'reel_saara.mp4, {who}: {" ".join(toks)} may be misread by the voice — '
+                   'respell it in assets/pronunciation.json', where='reel_saara.mp4')
+    if any(h != 'measured' for h in rep.get('timing', [])):
+        r.add_warn('VID-08', 'reel_saara.mp4: some word timing fell back to an even split — '
+                   'the highlight may drift from the voice', where='reel_saara.mp4')
+
+
 def review(outdir: str, edition: Edition | None = None, draft: bool = False
            ) -> ReviewReport:
     """Establish every fact about a finished package that a machine can.
@@ -307,7 +341,7 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
     # roundup.mp4 is the speed-news reel (D81). It was once rendered by a
     # side script under another name and this pattern never saw it, so it
     # was cleared with no duration, audio or loudness check at all.
-    reels = [f for f in files if re.fullmatch(r'(reel(_\d+)?|roundup)\.mp4', f)]
+    reels = [f for f in files if re.fullmatch(r'(reel(_\d+)?|roundup|reel_saara)\.mp4', f)]
     # Festival wish posters (D54) are deliverables too; without this a
     # greetings folder was rejected as having nothing in it.
     slides = [f for f in files
@@ -404,7 +438,8 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
                 f'{REEL_TARGET_MAX:.0f}s).', where=f)
         if d < REEL_MIN_SECONDS:
             r.add_fail('VID-03', f'{f} is only {d:.1f}s — too short to be watched.', where=f)
-        if REEL_WARN_SECONDS < d <= REEL_FAIL_SECONDS:
+        warn_at = Limits.saara_reel_max_seconds if f == 'reel_saara.mp4' else REEL_WARN_SECONDS
+        if warn_at < d <= REEL_FAIL_SECONDS:
             r.add_warn(
                 'VID-01',
                 f'{f} runs {d:.1f}s. Target {Limits.reel_target_min:.0f}–'
@@ -436,8 +471,17 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
             r.add_fail('SND-02', f'{f} HAS NO VOICEOVER — synthesis failed and it fell '
                        f'back to a silent render ({why}). Re-run it.', where=f)
 
+    draft_frames = os.path.isdir(os.path.join(outdir, '_review', 'reel_saara_draft'))
     if not reels and not slides:
-        r.add_fail('PKG-02', 'the folder contains no reel and no ಸುದ್ದಿ ಸಾರ / ಮುಖ್ಯ ಸುದ್ದಿ slides')
+        if draft and draft_frames:
+            r.add_warn('PKG-02', 'draft: the ಸುದ್ದಿ ಸಾರ reel is only previewed (_review/reel_saara_draft/) — '
+                       'render without --still to make reel_saara.mp4')
+        else:
+            r.add_fail('PKG-02', 'the folder contains no reel and no ಸುದ್ದಿ ಸಾರ / ಮುಖ್ಯ ಸುದ್ದಿ slides')
+
+    # ── the ಸುದ್ದಿ ಸಾರ reel was cut from its own voice, and its frame fits (D132) ──
+    if 'reel_saara.mp4' in reels:
+        _check_saara_reel(outdir, r)
 
     # ── the copy ──────────────────────────────────────────────────────────
     if edition is not None:
@@ -469,7 +513,8 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
                             where=f'story {i}')
             # Anything that will be SET must be settable.
             for label, line in (('headline', st.headline),
-                                ('reel_line', st.reel_line)):
+                                ('reel_line', st.reel_line),
+                                ('reel_support', st.reel_support)):
                 if not line:
                     continue
                 gone = typo.missing_glyphs(line, typo.font_for(line, 'kn', 40))
@@ -839,7 +884,7 @@ def evidence(outdir: str, into: str | None = None) -> list[str]:
                 out.append(src)
         elif f.endswith('_cover.jpg'):
             out.append(src)
-        elif re.fullmatch(r'roundup\.mp4', f):
+        elif re.fullmatch(r'(roundup|reel_saara)\.mp4', f):
             d = _duration(src)
             if d <= 0:
                 continue
@@ -898,7 +943,7 @@ def feed_size_sheet(outdir: str, into: str) -> str:
         n = name.lower()
         if n.startswith(('saara_', 'mukhya_')):
             return 'post'
-        if n == 'roundup_cover.jpg':
+        if n in ('roundup_cover.jpg', 'reel_saara_cover.jpg'):
             return 'reel'
         if n.startswith('wish_'):
             return 'story'

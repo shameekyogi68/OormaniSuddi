@@ -11,7 +11,7 @@
     python3 scripts/dispatch.py receipt --agent fact-checker \\
         --edition editions/2026-09-25.json --story 3 --verdict PASS --file report.md
     … --file - reads the report from stdin
-    … --format roundup|saara|mukhya_N  for one rendered format (package-inspector)
+    … --format roundup|reel_saara|saara|mukhya_N  for one rendered format (package-inspector)
 
     # wired into .claude/settings.json; not for typing
     python3 scripts/dispatch.py hook session         # proactive briefing
@@ -134,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
                    help='one or more story numbers (same verdict for all; file '
                         'differing verdicts separately)')
     r.add_argument('--format', default='',
-                   help='roundup, saara or mukhya_N — one rendered format')
+                   help='roundup, reel_saara, saara or mukhya_N — one rendered format')
     r.add_argument('--verdict', required=True)
     r.add_argument('--file', default='-')
     h = sub.add_parser('hook')

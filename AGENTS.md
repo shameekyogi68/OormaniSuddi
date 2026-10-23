@@ -43,7 +43,7 @@ runs in that one format only — one story, one format.
 | `segment` | renders as | name | shape | pictures |
 |---|---|---|---|---|
 | `speed` | `roundup` | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ | 9:16 reel, one frame per story | a picture if the story has one; otherwise a type-only frame |
-| `saara` | `saara` | ಸುದ್ದಿ ಸಾರ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100): front-page cover (the lead story + one-line teasers, D103) → one slide per story → sources & follow; **and** the same stories as one 9:16 reel, `reel_saara.mp4`, for Reels and Shorts (Ink & Gold, D132) | **never** |
+| `saara` | `saara` | ಸುದ್ದಿ ಸಾರ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100): front-page cover (the lead story + one-line teasers, D103) → one slide per story → sources & follow; — **as of 2026-10-23 (D133) the product is the reel**, `reel_saara.mp4`, for Reels and Shorts (Ink & Gold, D132); the carousel is kept, off (`Limits.saara_carousel_default`, `--carousel`) | **never** |
 | `mukhya` | `mukhya` | ಮುಖ್ಯ ಸುದ್ದಿ | 4:5 video carousel (animated scan-wipe .mp4 per slide, D98–D100) for ONE breaking/top story: photo cover → ಏನಾಗಿದೆ? points → source & corrections | **always** |
 
 How many stories each takes lives in `tokens.Limits` (`roundup_min_stories`,
@@ -69,7 +69,9 @@ python3 scripts/verify.py editions/DATE.json --story N --by NAME   # a person ch
 
 # making
 python3 render.py editions/DATE.json               # every segment present; carousels render as animated scan-wipe .mp4 slides (D98–D100)
-python3 render.py editions/DATE.json --only saara  # any of: roundup saara mukhya
+python3 render.py editions/DATE.json --only saara  # any of: roundup saara mukhya (saara = the reel)
+python3 render.py editions/DATE.json --carousel    # …and ALSO the ಸುದ್ದಿ ಸಾರ carousel (off by default, D133)
+python3 scripts/reel_check.py editions/DATE.json --strict   # will the saara copy make a clean reel? (a few seconds)
 python3 render.py editions/DATE.json --still       # a quick draft: no animated twins
 python3 render.py editions/greetings/X.json        # a festival wish
 python3 render.py --describe                       # every format and its rules

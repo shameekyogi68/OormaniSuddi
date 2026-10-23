@@ -373,6 +373,13 @@ class Limits:
     # The ಸುದ್ದಿ ಸಾರ reel sets reel_line in two serif lines across the safe width;
     # past this it needs a third and the frame crowds. A warning, never a cut. D132.
     saara_reel_line_chars = 34
+    # ಸುದ್ದಿ ಸಾರ is a reel by default; the carousel is kept, off, for the day it is
+    # wanted again (`render.py --carousel`, or flip this). D132, owner 2026-10-23.
+    saara_carousel_default = False
+    # The reel stays under the house fail line (reel_fail_seconds) with a margin,
+    # and is never warned for being longer than a speed-news reel: it carries
+    # up to saara_max_stories stories.
+    saara_reel_max_seconds = 59.0
     hook_words = 7
     deck_chars = 190
     # The carousel slide shows headline + deck, nothing else. The deck gets
@@ -416,7 +423,8 @@ class Limits:
     carousel_slot = '08:00'     # ಸುದ್ದಿ ಸಾರ — Instagram + Facebook
     mukhya_slot = '13:30'       # ಮುಖ್ಯ ಸುದ್ದಿ — or the moment it breaks
     roundup_slot = '18:30'      # ಸ್ಪೀಡ್ ನ್ಯೂಸ್ — Instagram + Facebook Reels
-    saara_reel_slot = '19:30'   # ಸುದ್ದಿ ಸಾರ reel — Reels + Shorts, away from the 08:00 carousel (D132)
+    saara_reel_slot = '08:00'   # ಸುದ್ದಿ ಸಾರ reel — Reels + Shorts; it IS the morning bulletin (D132)
+    saara_reel_slot_with_carousel = '19:30'   # …when the carousel is made too, so they never land together
     # A WhatsApp community post carries this many stories at most; more is how
     # members mute the group. D94.
     whatsapp_items_max = 3
@@ -718,6 +726,16 @@ class Motion:
     saara_reel_close = 3.7   # follow card, the last 0.6s folding back to frame 0
     saara_reel_tempo = 1.00  # the house 1.15 only: 1.06 on top rushed the Kannada (owner, 2026-10-23)
     saara_reel_fps   = 30
+    # Tighter beats, used only when the measured voice would take the reel past
+    # Limits.saara_reel_max_seconds. Quicker pauses, never quicker speech.
+    saara_reel_lead_min  = 0.16
+    saara_reel_gap_min   = 0.08
+    saara_reel_tail_min  = 0.22
+    saara_reel_close_min = 3.1
+    saara_reel_hook_hold = 0.45   # the front page holds this long after the hook is said
+    # Spoken seconds per character of Kannada at the house voice (measured on
+    # twelve clips, 0.072–0.078): the estimate `scripts/reel_check.py` budgets with.
+    saara_reel_sec_per_char = 0.075
 
 
 class Ease:

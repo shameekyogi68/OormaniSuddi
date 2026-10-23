@@ -6,7 +6,8 @@ Automates the repetitive mechanical daily tasks:
   1. Archive yesterday's edition (`python3 scripts/daily_flow.py archive-yesterday`)
   2. Show which desks are due, batched (`python3 scripts/daily_flow.py receipts`) — files nothing
   3. Verify all stories, with the name the editor gave (`python3 scripts/daily_flow.py verify --by "<name>"`)
-  4. Render, then show what still has to inspect it (`python3 scripts/daily_flow.py render`)
+  4. Check the ಸುದ್ದಿ ಸಾರ reel copy fits (`python3 scripts/daily_flow.py reel-check`) — D133
+  5. Render, then show what still has to inspect it (`python3 scripts/daily_flow.py render`)
 
 Sources are kept one story at a time with `scripts/intake.py source` (D111).
 """
@@ -56,6 +57,8 @@ def cmd_archive_yesterday(args) -> int:
     target_date = os.path.basename(prev[-1])[:10]
     print(f"Archiving previous edition: {target_date}...")
     cmd = [sys.executable, os.path.join(ROOT, 'scripts', 'archive_edition.py'), target_date]
+    if getattr(args, 'force', False):
+        cmd.append('--force')
     res = subprocess.run(cmd)
     if res.returncode != 0:
         # archive_edition refuses to delete an unsigned out/ unless --force is
@@ -122,13 +125,28 @@ def cmd_render(args) -> int:
         return res.returncode
     # What still has to look at the render — the inspectors do, not this script.
     print("\n" + D.brief(D.plan(today), limit=200))
+    out = os.path.join(ROOT, 'out', today)
     print("\n" + "=" * 60)
     print(f"✓ Output ready in out/{today}/")
-    print(f"  Instagram Carousel: Animated .mp4 video slides (out/{today}/saara_01_cover.mp4 …)")
-    print(f"  Instagram Caption : out/{today}/saara_caption.txt")
+    if os.path.exists(os.path.join(out, 'reel_saara.mp4')):
+        print(f"  ಸುದ್ದಿ ಸಾರ reel   : out/{today}/reel_saara.mp4  (Instagram Reel + Facebook Reel + YouTube Short)")
+        print(f"  IG / FB caption   : out/{today}/saara_caption.txt")
+        print(f"  YouTube Short     : out/{today}/reel_saara_youtube.txt")
+    elif os.path.exists(os.path.join(out, 'saara_01_cover.mp4')):
+        print(f"  ⚠ the REEL was not made — the carousel was, instead (out/{today}/saara_01_cover.mp4 …).")
+        print("    Read 'REEL NOT MADE' above, fix the copy, and run render again.")
+    print(f"  Plan              : out/{today}/schedule.txt")
     print(f"  Sign-off Command  : {sign_off_hint(today, args.by)}")
     print("=" * 60)
     return 0
+
+
+def cmd_reel_check(args) -> int:
+    """Will today's ಸುದ್ದಿ ಸಾರ copy make a clean reel? A few seconds, no voice, no film (D133)."""
+    today = resolve_day(args.date)
+    ed_path = os.path.join(ROOT, 'editions', f"{today}.json")
+    cmd = [sys.executable, os.path.join(ROOT, 'scripts', 'reel_check.py'), ed_path, '--strict']
+    return subprocess.run(cmd).returncode
 
 
 def main():
@@ -137,6 +155,7 @@ def main():
 
     p_arch = sub.add_parser("archive-yesterday", help="Archive previous edition day")
     p_arch.add_argument("--date", help="Today's date (defaults to today)")
+    p_arch.add_argument("--force", action="store_true", help="Delete previous out/ even if unsigned")
 
     p_in = sub.add_parser("intake", help="retired (D111) — use scripts/intake.py source")
     p_in.add_argument("--date", help=argparse.SUPPRESS)
@@ -148,6 +167,9 @@ def main():
     p_ver = sub.add_parser("verify", help="Verify all stories in edition")
     p_ver.add_argument("--date", help="Today's date")
     p_ver.add_argument("--by", required=True, help="Editor's name")
+
+    p_rc = sub.add_parser("reel-check", help="Will today's saara copy make a clean reel? (a few seconds)")
+    p_rc.add_argument("--date", help="Today's date")
 
     p_rnd = sub.add_parser("render", help="Render the edition and show what still has to inspect it")
     p_rnd.add_argument("--date", help="Today's date")
@@ -166,6 +188,8 @@ def main():
         return cmd_receipts(args)
     elif args.cmd == "verify":
         return cmd_verify(args)
+    elif args.cmd == "reel-check":
+        return cmd_reel_check(args)
     elif args.cmd == "render":
         return cmd_render(args)
     return 0

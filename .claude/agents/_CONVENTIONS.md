@@ -12,10 +12,15 @@ fetches, scrapes or searches the web for news, trends or pictures.
 
 ## The newsroom since D92
 - **Three formats.** `roundup` = ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (9:16 reel, one frame per
-  story), `saara` = ಸುದ್ದಿ ಸಾರ (4:5 carousel, no picture ever),
-  `mukhya` = ಮುಖ್ಯ ಸುದ್ದಿ (4:5 photo carousel for ONE breaking/top story).
-  Both carousels are posted as animated `.mp4` slides (AGENTS rule 11); each
-  slide's finished `.jpg` still is in `out/<stem>/_review/` for inspection.
+  story), `saara` = ಸುದ್ದಿ ಸಾರ (**a 9:16 reel since 2026-10-23, D132/D133**:
+  `reel_saara.mp4`, Ink & Gold, no picture ever, one beat per story, cut from the
+  measured voice; the 4:5 carousel is kept switched off and is made only on
+  request or when the reel cannot be made), `mukhya` = ಮುಖ್ಯ ಸುದ್ದಿ (4:5 photo
+  carousel for ONE breaking/top story). A carousel is posted as animated `.mp4`
+  slides (AGENTS rule 11); each slide's finished `.jpg` still is in
+  `out/<stem>/_review/` for inspection. The saara reel's evidence is
+  `_review/reel_saara_t*.jpg` (eight frames), `reel_saara_cover.jpg` and
+  `_review/reel_saara_report.json` (what the engine measured and found).
 - **One story, one format.** Every story carries `segment` — `speed`,
   `saara` or `mukhya`. The field holds one value; a story is never in two.
 - **Pictures.** `mukhya` always has a photo; `speed` may; `saara` never.
@@ -39,6 +44,9 @@ fetches, scrapes or searches the web for news, trends or pictures.
 - In scope: every field that exists on the story — headline, reel_line,
   hook, deck, points, reel_points, takeaway, narration_script, photo caption.
   A field the story does not have is skipped, not reported as a finding.
+  For a `saara` story the reel shows **`reel_line`** (the headline, two lines) and
+  **`reel_support`** (ONE complete sentence on the gold card, read aloud) — each
+  is read ON ITS OWN, so each is checked on its own (facts, guilt, glyphs).
 - A render folder is only this edition's if `out/<stem>/.edition` names it
   (D90). If it names another edition, say so before anything else.
 
@@ -46,7 +54,7 @@ fetches, scrapes or searches the web for news, trends or pictures.
 File your report through Bash with a heredoc:
 ```bash
 python3 scripts/dispatch.py receipt --agent <you> \
-    --edition editions/<file>.json [--story N [N …]] [--format roundup|saara|mukhya_N] \
+    --edition editions/<file>.json [--story N [N …]] [--format roundup|reel_saara|saara|mukhya_N] \
     --verdict PASS|FIX|BLOCK|HELD|DONE --file - <<'EOF'
 <your report>
 EOF
@@ -54,7 +62,7 @@ EOF
 The receipt is stamped with a hash of what you looked at. The fact and legal
 desks' hash covers only the fact-bearing fields (headline, deck, points,
 numbers, quote, sources, source_urls, location, dateline, category, the legal
-flags, published_at, reel_line): assigning a segment or adding a photo does
+flags, published_at, reel_line, reel_support): assigning a segment or adding a photo does
 not make them due again; a copy edit does. A BLOCK is surfaced to a person —
 no agent clears another agent's block.
 

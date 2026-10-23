@@ -38,6 +38,9 @@ the things that are genuinely house style rather than contract.
 - **2026-10-07-02** — Every story credits the outlet its own link belongs to, and every news item the editor adds keeps its own source: a link → that outlet; a press release → who issued it; seen or told → ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ. Never fold added news under another paper's name, and never cite a link copied from a chatbot answer. A pasted item older than Limits.news_max_age_hours, or not about the coast, is pointed out to the editor before it becomes a story (FACT-07 flags a stale source).
   - _why:_ replaces 2026-09-25-01, whose last clause was worded for the morning auto-draft deleted in D92. Same intent: each story its own source; stale or off-coast news is not run by accident (D88)
   - _asked by:_ Shameek Yogi
+- **2026-10-23-01** — ಸುದ್ದಿ ಸಾರ (/daily-saara) is made as the 9:16 reel (reel_saara.mp4, Ink & Gold, D132) by default — no step is asked of the editor. The carousel code is kept, switched off (Limits.saara_carousel_default, render.py --carousel), and is made only when the editor asks or the reel cannot be made. The reel is posted to Instagram Reels, Facebook Reels and YouTube Shorts. Intake writes reel_line (aim 34 chars) and reel_support (one sentence, about 7-9 words) on every saara story, and runs scripts/reel_check.py until it says CLEAN before rendering.
+  - _why:_ The owner wants /daily-saara to bring followers and subscribers through Reels and Shorts, with no human step each day (2026-10-23).
+  - _asked by:_ the owner, in chat
 
 ## picture
 

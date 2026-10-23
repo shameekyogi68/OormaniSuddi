@@ -57,7 +57,7 @@ def _keep(name: str) -> bool:
         return True
     if name.startswith('forward_') and name.endswith('.txt'):
         return True
-    return name.endswith(('_copy.txt', '_copy.json', '_caption.txt', '_whatsapp.txt'))
+    return name.endswith(('_copy.txt', '_copy.json', '_caption.txt', '_whatsapp.txt', '_youtube.txt'))
 
 
 def snapshot_sources(date: str, dest: str) -> None:

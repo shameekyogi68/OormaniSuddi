@@ -10,6 +10,7 @@ Then, depending on the job:
 | You are about to… | Read |
 |---|---|
 | take news the editor pasted and make the day | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) "Chat workflow", then [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) |
+| the editor types `/daily-saara` (or "daily saara") + a paste | [`.claude/skills/daily-saara/SKILL.md`](.claude/skills/daily-saara/SKILL.md) — it is the whole command: the ಸುದ್ದಿ ಸಾರ **reel**, no question asked (D133) |
 | pick a format for a story | [`docs/DECISIONS.md`](docs/DECISIONS.md) D92, then `python3 render.py --describe` |
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
 | write or judge anything for Instagram (formats, hooks, captions, timing) | [`docs/INSTAGRAM.md`](docs/INSTAGRAM.md) — labelled by how reliable each line is |
@@ -42,6 +43,9 @@ That is not automatically a bug — but do not re-bless it without looking at
   dignity and news judgement are signed by a person —
   `python3 scripts/sign_off.py out/<date> --by "<name>"`. See D62.
 * **A ಸುದ್ದಿ ಸಾರ with no pictures.** Deliberate: it is the text bulletin (D92).
+* **ಸುದ್ದಿ ಸಾರ is a reel, not a carousel, and no `saara_01_cover.mp4`.** Deliberate since 2026-10-23
+  (D133): `/daily-saara` makes `reel_saara.mp4`. The carousel code is kept for the day it is wanted
+  (`--carousel`); never delete it, and never make it unasked unless the reel failed (the render says so).
 * **A render that stops to ask "real photo or generate?"** Deliberate: an AI
   picture is made only after the editor says so, and carries their name in
   `photo.approved_by` (D92).

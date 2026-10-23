@@ -3747,3 +3747,63 @@ the owner chose **Ink & Gold** and asked for it "10/10, the last time".
 `brand/tokens.py :: Motion.saara_reel_*, Limits.saara_reel_line_chars` ·
 `fonts/NotoSerifKannada-Black.ttf`
 
+## D133 · `/daily-saara` is the reel: no step asked, no copy left to luck
+
+**Decided (2026-10-23), by the owner.** "Whenever I type /daily-saara and put in
+information, it must come up with this kind of reel — by default, with no human
+intervention… I need 100% output, not 99%, 60%, 80%… every time the text differs,
+every time the sync differs." The carousel design is kept aside, not deleted.
+
+* **The default.** `render.py` makes `reel_saara.mp4` for every `saara` story and
+  nothing else for ಸುದ್ದಿ ಸಾರ; the carousel only with `--carousel` or
+  `Limits.saara_carousel_default`, and as the safety net when the reel cannot be
+  made (so a day is never empty — and the render says which it is). The editor is
+  never asked which format. House rule 2026-10-23-01; skill
+  `.claude/skills/daily-saara/SKILL.md` is the whole command.
+* **The copy is written for the reel at intake.** `reel_line` (aim
+  `Limits.saara_reel_line_chars`) and `reel_support` (one sentence) are written by
+  the intake desk from the paste, and `scripts/reel_check.py --strict` lays the
+  real page out in a few seconds and must say CLEAN before the render. A story
+  with no `reel_support` takes its own shortest fitting sentence (deck, points,
+  takeaway) — never an invented or cut one.
+* **`reel_support` is read alone, so it is guarded alone** — the guilt guard
+  (`Story._check_criminal_reporting`), the fact desk (`factcheck.FIELDS`,
+  `dispatch.FACT_FIELDS`), the gate's glyph check. It was a gap: the gold card shows
+  it with only the headline beside it.
+* **The page fits itself.** Headline size and lines (clear of the Reels rail),
+  the card, the front page scaled to 2–6 stories, the town tag, caption size;
+  anything that still does not fit is an `issue`, the render stops before the film
+  (`ReelError`), and the gate (`VID-07`) holds a reel whose report names one.
+* **The clock.** `Limits.saara_reel_max_seconds` (59) under the house fail line
+  (60). Over it the PAUSES are tightened — never the speech — and if that is not
+  enough the render stops and names the longest story.
+* **Voice.** One engine, three tries, no fallback to another voice inside a reel;
+  figures are spoken as Kannada words (`reel_speech.number_words`, ಮೂವತ್ತಮೂರನೇ);
+  initials ending in a virama (ಎಚ್.ಸಿ.) lose their dots in every format; what may still
+  be misread is listed in the render and the gate (`SND-08`) so the editor listens
+  for it; a respelling goes in `assets/pronunciation.json`.
+* **Sync is measured, not guessed.** Each word is placed from its clip's own audio
+  (`reel_speech.word_times`), weighed by what is SPOKEN; the front page's rows light
+  as the hook says their town; the gate (`VID-08`) holds a film that is not the
+  length it was cut for.
+* **The browser can die; the film cannot.** On the first real day-shaped render Chrome was closed
+  mid-film (`ConnectionClosedError: no close frame received or sent` — memory pressure on an 8 GB Mac), and
+  the safety net caught it by making the carousel. That was right, and not good enough: every frame is a pure
+  function of its time, so `saara_reel.render` now resumes in a fresh Chrome at the next frame (three
+  attempts), and the film is the same film — proven by killing Chrome twice mid-render (frames 678 and 1328)
+  and getting 1721 frames, −14.3 LUFS. Only copy that cannot fit (`ReelFitError`) is never retried.
+  The card formats run first and the reel alone, last, so the Mac is not asked to do both at once.
+* **Sounds.** Two new house effects, synthesised and registered (`pop` for the town
+  tag, `press` for the follow button); `tick` now marks each running-order row.
+* **The team.** `intake-editor` writes the reel fields and runs the check;
+  `kannada-editor`, `fact-checker`, `legal-standards` read them; `package-inspector`
+  has the reel's own Ink & Gold standard (`reel_saara`); `social-writer` audits the
+  Shorts file; `gate-doctor` routes VID-07/08 and SND-08; `health.py` proves Chrome,
+  WebGL, fonts and sounds every morning; `formats_in` counts only what a person
+  looks at, so a caption file no longer makes an empty format "due".
+
+`brand/saara_reel.py` · `brand/reel_speech.py` · `brand/saara_reel.html` ·
+`scripts/reel_check.py` · `render.py :: _render_saara` · `brand/review.py ::
+_check_saara_reel` · `brand/tokens.py :: Limits.saara_*, Motion.saara_reel_*` ·
+`tests/test_saara_reel.py`
+

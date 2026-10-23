@@ -29,6 +29,9 @@ Read `.claude/agents/_CONVENTIONS.md` first.
    | IMG | picture-editor — or the editor, if `photo_plan` is unanswered (IMG-04) |
    | SND | kannada-editor / re-render |
    | TYPE, VID | package-inspector finds it; copy edit or re-render |
+   | VID-07 (reel text does not fit) | intake-editor / kannada-editor: shorten `reel_line` / `reel_support`, run `scripts/reel_check.py --strict`, re-render |
+   | VID-08 (reel truncated / timing) | you: re-render (`python3 render.py editions/<d>.json --only saara`) |
+   | SND-08 (voice may misread a word) | kannada-editor: respell it in `assets/pronunciation.json`, re-render |
    | PUB | social-writer |
    | DUP | intake-editor (drop it, or make it a real `follows_up`) |
    | PKG | you — usually a re-render or a stale file |

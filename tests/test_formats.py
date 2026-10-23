@@ -37,7 +37,7 @@ class TheRenderMakesWhatTheSegmentsAsk(unittest.TestCase):
         with frozen(NOW):
             ed = Edition.load(FIXTURE)
             cls.made = render.render_edition(ed, cls.tmp.name,
-                                             ['saara', 'mukhya'])
+                                             ['saara', 'mukhya'], carousel=True, reel=False)
         cls.files = sorted(os.listdir(cls.tmp.name))
 
     @classmethod

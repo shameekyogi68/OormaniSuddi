@@ -111,6 +111,24 @@
       "licence": "own",
       "source_url": "",
       "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
+    },
+    {
+      "path": "assets/sfx/pop.wav",
+      "kind": "sfx",
+      "title": "House SFX — town tag landing (ಸುದ್ದಿ ಸಾರ reel)",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
+    },
+    {
+      "path": "assets/sfx/press.wav",
+      "kind": "sfx",
+      "title": "House SFX — follow button press (ಸುದ್ದಿ ಸಾರ reel)",
+      "status": "allowed",
+      "licence": "own",
+      "source_url": "",
+      "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
     }
   ]
 }

@@ -75,7 +75,7 @@ All [House] — to be tested.
 | Format | Job it is built for | The signal it should earn |
 |---|---|---|
 | ಸ್ಪೀಡ್ ನ್ಯೂಸ್ (reel) | reach people who do not follow us | watch time, then sends |
-| ಸುದ್ದಿ ಸಾರ (animated video carousel) | be the morning habit | saves, swipe-through |
+| ಸುದ್ದಿ ಸಾರ (reel, since D132/D133; the carousel is kept off) | reach AND be the morning habit: one watch, every town's story; ends on a follow button | watch time and completion, then follows — and, because it also goes to YouTube Shorts, subscribers |
 | ಮುಖ್ಯ ಸುದ್ದಿ (animated video carousel) | the one story worth sending | sends, comments |
 
 ## 4 · Writing for it

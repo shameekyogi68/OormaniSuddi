@@ -550,7 +550,7 @@ class Story:
     @property
     def _all_copy(self) -> str:
         return ' '.join(filter(None, [self.headline, self.deck, self.takeaway,
-                                      self.reel_line, *self.points]))
+                                      self.reel_line, self.reel_support, *self.points]))
 
     def _check_criminal_reporting(self):
         """Legal obligations, enforced by the type system.
@@ -573,10 +573,13 @@ class Story:
             # the only text on its scene. Checking the joined string let
             # "ಹೆತ್ತವರನ್ನೇ ಕೊಂದ ಪುತ್ರ ಬಂಧನ" through because the deck happened to
             # say ಆರೋಪಿ, which is precisely the exposure this guard exists for.
+            # The ಸುದ್ದಿ ಸಾರ reel's card shows reel_support with only the headline
+            # beside it, so it is read alone as well. D132.
             # The hook (the caption's first line) travels alone too. D41 —
             # it used to be guarded by the thumbnail template, which is gone.
             for where, text in (('headline', self.headline),
                                 ('reel_line', self.reel_line),
+                                ('reel_support', self.reel_support),
                                 ('hook', self._hook)):
                 hits = asserts_guilt(text)
                 if hits:
@@ -602,6 +605,7 @@ class Story:
             #      words that can describe nothing but a person's crime. D109.
             for where, text in (('headline', self.headline),
                                 ('reel_line', self.reel_line),
+                                ('reel_support', self.reel_support),
                                 ('hook', self._hook), ('copy', copy)):
                 hits = [v for v in asserts_guilt(text) if v not in NOT_ONLY_CRIME]
                 if hits:

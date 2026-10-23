@@ -53,8 +53,9 @@ class TheScanWipe(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         with frozen(NOW):
+            # the kept carousel design (D133): the carousel and no reel
             render.render_edition(Edition.load(FIXTURE), cls.tmp.name,
-                                  ['saara', 'mukhya'], animate=True)
+                                  ['saara', 'mukhya'], animate=True, carousel=True, reel=False)
         cls.files = sorted(os.listdir(cls.tmp.name))
 
     @classmethod
@@ -349,7 +350,7 @@ class TheDeliveryFolder(unittest.TestCase):
         with open(cls.ed, 'w', encoding='utf-8') as fh:
             fh.write(data)
         cls.r = subprocess.run(
-            [sys.executable, 'render.py', cls.ed, '--only', 'saara', '--out', cls.out,
+            [sys.executable, 'render.py', cls.ed, '--only', 'saara', '--carousel-only', '--out', cls.out,
              '--at', NOW],
             cwd=_ROOT, capture_output=True, text=True, timeout=900)
         cls.n_stories = len(ed.segment('saara'))

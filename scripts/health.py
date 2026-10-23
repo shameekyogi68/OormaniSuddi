@@ -219,6 +219,46 @@ def check_disk() -> list[str]:
     return [f'{OK} disk — {free:.0f} GB free']
 
 
+def check_reel() -> list[str]:
+    """The daily ಸುದ್ದಿ ಸಾರ reel needs Chrome with WebGL, two libraries, its fonts and
+    its sounds. If any is gone the render falls back to the carousel and says so
+    — but nobody wants to learn that at 8am. This draws a two-story reel's layout
+    (a few seconds) to prove the whole chain. D132."""
+    import importlib.util
+    out = []
+    try:
+        from brand import saara_reel as R
+        from brand.content import Edition, Story
+    except Exception as e:
+        return [f'{BAD} reel — the reel engine does not import: {e}']
+    if not R.available():
+        out.append(f'{BAD} reel — Google Chrome not found at {R.CHROME}: ಸುದ್ದಿ ಸಾರ would fall back '
+                   'to the carousel every day. Install Chrome, or set OORMANI_CHROME.')
+    for mod in ('websockets', 'soundfile'):
+        if importlib.util.find_spec(mod) is None:
+            out.append(f'{BAD} reel — {mod} is not installed: python3 -m pip install '
+                       '--break-system-packages -r requirements.txt')
+    gone = [p for p in ('fonts/NotoSerifKannada-Black.ttf', 'fonts/AnekKannada-Variable.ttf',
+                        'fonts/NotoSansKannada-Bold.ttf', 'assets/news_bgm.mp3',
+                        *(f'assets/sfx/{n}.wav' for n in ('whoosh', 'tick', 'open', 'outro', 'pop', 'press')))
+            if not os.path.exists(os.path.join(ROOT, p))]
+    if gone:
+        out.append(f'{BAD} reel — missing: {", ".join(gone)} (sounds rebuild with python3 -m brand.sfx)')
+    if not out:
+        try:
+            from datetime import datetime as dt
+            st = [Story(headline='ಪರೀಕ್ಷೆ: ಒಂದು', reel_line='ಪರೀಕ್ಷೆ ಒಂದು', reel_support='ಇದು ಒಂದು ಪರೀಕ್ಷಾ ವಾಕ್ಯ.',
+                        location='ಉಡುಪಿ', segment='saara'),
+                  Story(headline='ಪರೀಕ್ಷೆ: ಎರಡು', reel_line='ಪರೀಕ್ಷೆ ಎರಡು', reel_support='ಇದು ಇನ್ನೊಂದು ಪರೀಕ್ಷಾ ವಾಕ್ಯ.',
+                        location='ಕುಂದಾಪುರ', segment='saara')]
+            res = R.check(Edition(stories=st, date=dt(2026, 1, 1, 9, 0)))
+            if res['issues']:
+                out.append(f'{BAD} reel — the layout test did not fit: {"; ".join(res["issues"])}')
+        except Exception as e:                      # noqa: BLE001
+            out.append(f'{BAD} reel — Chrome could not draw the reel (WebGL?): {e}')
+    return out or [f'{OK} reel — Chrome draws it, the libraries, fonts and sounds are all there']
+
+
 def check_tools() -> list[str]:
     """What a render needs from this Mac, beyond Python. A system update can
     take any of these away without touching the repo. D113."""
@@ -282,7 +322,7 @@ def main() -> int:
     lines: list[str] = []
     for fn in (check_edition, check_clocks, check_reviews,
                check_house, check_business, check_music, check_disk, check_tools,
-               check_backups, check_git, check_tests):
+               check_reel, check_backups, check_git, check_tests):
         try:
             lines += fn()
         except Exception as e:                      # never fail the check
