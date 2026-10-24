@@ -94,6 +94,12 @@ within its character budget) and it is CLEAN the first time; when it is not, it 
 
 Edit only `reel_line` / `reel_support` in these rounds. Never add a fact to make a sentence fit.
 
+**Read what the voice will say.** `reel_check.py` prints "THE VOICE WILL SAY": every sentence, including the opening and
+the town-then-headline lines that code assembles and no desk ever saw. Read it once as a Kannada reader, and
+fix anything that is not a sentence you would print. It also lints certain mistakes (a line ending on ಮತ್ತು /
+ಸೇರಿದಂತೆ, an ending standing alone, `66 ರಲ್ಲಿ`, a word twice) — those are warnings that make it NOT CLEAN.
+A grammar slip heard on a posted reel is this step skipped.
+
 **Write it so the voice reads it right** (D134 — these were real mispronunciations):
 - a figure and its ending are ONE word, no space: `66ರಲ್ಲಿ`, `22ರಂದು`, `33ನೇ` — never `66 ರಲ್ಲಿ`
 - a name that ends in a consonant takes its ending after a joiner: `ಸ್ಟೀವನ್‌ಗೆ` (ZWNJ), not `ಸ್ಟೀವನ್ಗೆ`

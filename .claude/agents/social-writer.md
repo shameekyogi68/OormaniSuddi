@@ -45,8 +45,9 @@ wrong because the copy is wrong, name the story and field and route it.
    **Instagram checks** (`docs/INSTAGRAM.md` §4, read once): line one is a hook
    with the town, inside the first 125 characters · no link in the caption · no
    engagement bait ("like if…", "tag 3 friends") · the first comment is an honest
-   question about the reader's own town · the alt text in `MASTER_COPY.md` is
+   question about the reader's own town followed by the full 3-layer 30-tag block (Layer 1 Brand+Local, Layer 2 Story-specific hyper-local spots & topics, Layer 3 Broad Kannada news; house rule 2026-10-24-01) · the alt text in `MASTER_COPY.md` is
    present and describes the post · the search terms are plain words people type.
+   For YouTube Shorts: title tags (`#shorts #kannadanews #kundapuranews`) and 10–12 description tags.
    Mark each as [Official]/[House] in your report so the editor knows which are
    platform rules and which are our hypotheses.
 3. **WhatsApp community posts** (`whatsapp_<group>.txt`, D94): only that

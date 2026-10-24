@@ -41,6 +41,10 @@ the things that are genuinely house style rather than contract.
 - **2026-10-23-01** — ಸುದ್ದಿ ಸಾರ (/daily-saara) is made as the 9:16 reel (reel_saara.mp4, Ink & Gold, D132) by default — no step is asked of the editor. The carousel code is kept, switched off (Limits.saara_carousel_default, render.py --carousel), and is made only when the editor asks or the reel cannot be made. The reel is posted to Instagram Reels, Facebook Reels and YouTube Shorts. Intake writes reel_line (aim 34 chars) and reel_support (one sentence, about 7-9 words) on every saara story, and runs scripts/reel_check.py until it says CLEAN before rendering.
   - _why:_ The owner wants /daily-saara to bring followers and subscribers through Reels and Shorts, with no human step each day (2026-10-23).
   - _asked by:_ the owner, in chat
+- **2026-10-24-01** — For news reels (Instagram/Facebook Reels and YouTube Shorts), provide 3 layers of tags: Layer 1 Brand + Local (always kept: #oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews etc.), Layer 2 Story-specific (hyper-local spots like #Moodlakatte #Nellikatte #KodiBeach and story topics like #FishermenAlert #KarnatakaWeather for local virality), and Layer 3 Broad Kannada news (regional discovery: #KarnatakaNews #KannadaReels etc.). Keep top 5 in the caption and provide the full 30-tag set for the first comment on Instagram/Facebook. For YouTube Shorts, provide title tags (#shorts #kannadanews #kundapuranews) and 10-12 description tags.
+  - _why:_ Editor standing instruction (2026-10-24) for local virality and reach optimization.
+- **2026-10-24-02** — YouTube Shorts high-reach tag strategy: 1) Title under 60 chars ending with #shorts #KundapuraNews (the 3 player hook hashtags: #shorts #KundapuraNews #KannadaNews), 2) Description strictly under 15 hashtags (10-12 targeted tags at very bottom below a natural 2-sentence keyword summary), 3) Backend comma-separated video tags for YouTube Studio box (hyper-local coastal search phrases), 4) Visual hook in first 2 seconds for >80% retention.
+  - _why:_ Editor standing instruction (2026-10-24) optimizing for YouTube Shorts Browse Features, Shorts Feed, and Search distribution.
 
 ## picture
 

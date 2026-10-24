@@ -42,6 +42,12 @@ Read `.claude/agents/_CONVENTIONS.md` first. You edit ONE story.
   for any line that has them. A name the voice will mangle goes in your
   report for `assets/pronunciation.json`.
 
+## Read the whole spoken script, not only your fields (D134)
+Run `python3 scripts/reel_check.py editions/<file>.json` (scratch copy) and read "THE VOICE WILL SAY" top to bottom: the
+opening line and the town-then-headline lines are built by code and nobody else reads them. A sentence that is not a
+sentence (a list with no ಮತ್ತು, a line left hanging on ಸೇರಿದಂತೆ) is reported to the owner as a code fix — you cannot
+edit it in the story — and the lint warnings under it are yours to clear.
+
 ## What the voice gets wrong — fix it in the copy (D134, all seen on real days)
 - A figure and its ending are one word: `66ರಲ್ಲಿ`, `22ರಂದು`, `33ನೇ` — never `66 ರಲ್ಲಿ` (read apart as "ಅರವತ್ತಾರು ರಲ್ಲಿ").
 - A name ending in a consonant takes its ending after a ZWNJ: `ಸ್ಟೀವನ್‌ಗೆ`, not `ಸ್ಟೀವನ್ಗೆ`.

@@ -54,10 +54,15 @@ posts), let them outrank every [House] line.
    ಸುದ್ದಿ ಸಾರ reel, `mukhya_slot`, `roundup_slot`; `carousel_slot` only if the carousel was made) or "now" for a breaking story — and why, in
    one line, including the Gulf hour for ಅನಿವಾಸಿ stories.
 6. **First comment and first hour.** One honest question about the reader's
-   own town (not bait), and the first-hour plan from INSTAGRAM.md §5, specific
+   own town (not bait), the 30-tag first comment block (Layer 1 + Layer 2 + Layer 3), and the first-hour plan from INSTAGRAM.md §5, specific
    to today's stories (which WhatsApp group first, which town to reply in).
 7. **Search words.** Two or three plain terms per post, Kannada and English,
    that people actually type (place + what happened).
+8. **3-Layer Hashtag Architecture (house rule 2026-10-24-01):**
+   - **Layer 1 (Brand + Local - always keep):** `#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ #ಕುಂದಾಪುರ #ಬೈಂದೂರು #ಹೆಬ್ರಿ #Kundapura #Byndoor #Hebri`
+   - **Layer 2 (Story-specific - hyper-local virality):** hyper-local landmarks/places from the stories (`#Moodlakatte #Nellikatte #KodiBeach`), trending topics and angles (`#KarnatakaRains #ಮಳೆ #ಗುಡುಗುಮಳೆ #FishermenAlert #KarnatakaWeather #CyberFraud #MissingPerson`).
+   - **Layer 3 (Broad Kannada news - regional discovery):** `#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #LocalNews #NewsInKannada #BreakingKannada`.
+   - **Placement:** Keep top 5 tags in the caption; provide the full 30-tag set for the first comment on Instagram and Facebook Reels. For YouTube Shorts, provide title tags (`#shorts #kannadanews #kundapuranews`) and 10–12 targeted description tags.
 8. **Say what you could not judge** — anything that needs data the channel
    does not have yet. That is the honest answer, not a guess.
 

@@ -65,7 +65,7 @@ REPORT = 'reel_saara_report.json'                      # in _review/, read by th
 FOLLOW = 'ಪ್ರತಿದಿನದ ಕರಾವಳಿ|ಸುದ್ದಿಗಾಗಿ ಫಾಲೋ ಮಾಡಿ'          # Brand.follow_kn, broken for the card
 # The hook names the towns first — a local thumb stops for its own town — while the
 # running order lights up in time with them.
-INTRO_SAY = 'ಇಂದಿನ ಸುದ್ದಿ, {towns}.'   # ~3s: no commas between towns, at most three
+INTRO_SAY = 'ಇಂದಿನ ಸುದ್ದಿ, {towns}.'   # ~3s, at most three towns, listed as Kannada lists them (D134)
 OUTRO_SAY = 'ಪ್ರತಿದಿನದ ಸುದ್ದಿಗಾಗಿ ಫಾಲೋ ಮಾಡಿ.'
 WEEKDAY_KN = ('ಸೋಮವಾರ', 'ಮಂಗಳವಾರ', 'ಬುಧವಾರ', 'ಗುರುವಾರ', 'ಶುಕ್ರವಾರ', 'ಶನಿವಾರ', 'ಭಾನುವಾರ')
 MONTH_KN = ('ಜನವರಿ', 'ಫೆಬ್ರವರಿ', 'ಮಾರ್ಚ್', 'ಏಪ್ರಿಲ್', 'ಮೇ', 'ಜೂನ್', 'ಜುಲೈ', 'ಆಗಸ್ಟ್',
@@ -130,7 +130,7 @@ def _support_options(st: Story) -> list[str]:
 def _story_copy(st: Story) -> dict:
     place, short = _place(st)
     notes: list[str] = []
-    head = (st.reel_line or '').strip()
+    head = RS.join_endings((st.reel_line or '').strip())
     if not head:
         m = _KICKER.match(st.headline)
         head = (m.group(2) if m and short and m.group(1).strip().startswith(short[:3]) else st.headline).strip()
@@ -138,7 +138,7 @@ def _story_copy(st: Story) -> dict:
     say = head if short and short in head else f'{short}, {head}' if short else head
     # reel_support — one complete sentence written for the reel — is shown whole and read.
     # Without it the card takes the story's own sentence that fits the clock best (below).
-    return dict(place=place, place_short=short, head=head, say_head=say, body=(st.reel_support or '').strip(),
+    return dict(place=place, place_short=short, head=head, say_head=say, body=RS.join_endings((st.reel_support or '').strip()),
                 options=_support_options(st), teaser=head,
                 tone=TONES[CATEGORY_TONE.get(st.category, 'gold')], notes=notes)
 
@@ -191,8 +191,17 @@ def _est(text: str) -> float:
 
 
 def _hook_text(copies: list[dict]) -> str:
-    towns = list(dict.fromkeys(c['place_short'] for c in copies if c['place_short']))
-    return INTRO_SAY.format(towns=' '.join(towns[:3]))
+    allt = list(dict.fromkeys(c.get('place_short', '') for c in copies if c.get('place_short')))
+    towns = allt[:3]
+    # A bare run of names ("ಕೊಲ್ಲೂರು ಕುಂದಾಪುರ ಬೈಂದೂರು") is not a Kannada sentence. Two towns are joined by ಮತ್ತು,
+    # three are "A, B ಮತ್ತು C", and when more were left out, "A, B, C ಸೇರಿದಂತೆ" says they are only some.
+    if len(allt) > 3:
+        return ', '.join(towns) + ' ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.'          # "today's news, these towns among them"
+    elif len(towns) > 1:
+        named = ', '.join(towns[:-1]) + ' ಮತ್ತು ' + towns[-1]
+    else:
+        named = ''.join(towns)
+    return INTRO_SAY.format(towns=named)
 
 
 def budget(n: int) -> dict:
@@ -213,6 +222,15 @@ def estimate(copies: list[dict]) -> float:
     return round(t + max(M.saara_reel_close, 0.55 + _est(OUTRO_SAY) + 0.6), 1)
 
 
+def spoken_script(copies: list[dict]) -> list[tuple[str, str]]:
+    """Every sentence the voice will say, in order, as written — the opening and the dateline lines are
+    assembled by code, so no desk ever read them until this was printed (D134)."""
+    out = [('the opening', _hook_text(copies))]
+    for i, c in enumerate(copies, 1):
+        out += [(f'story {i} headline', c.get('say_head', '')), (f'story {i} card', c.get('body', ''))]
+    return out + [('the close', OUTRO_SAY)]
+
+
 def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[str]:
     """Copy that will crowd the frame or the clock — said, never silently cut (D132)."""
     out, info = [], info or {}
@@ -229,6 +247,9 @@ def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[
                        f'chars (~{b["support_words"]} words)')
         for note in c.get('notes', []):
             out.append(f'story {i + 1} ({c["place_short"]}): {note}')
+    for label, text in spoken_script(copies):
+        for note in RS.grammar(text):
+            out.append(f'grammar, {label}: {note} — "{text}"')
     for i, how in enumerate(info.get('timing') or []):
         if how != 'measured':
             out.append(f'story {i + 1}: word timing fell back to an even split — the highlight may drift a little')
@@ -520,7 +541,7 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
         plan += [(f'h{i}', c['say_head'], f'story {i + 1} headline'), (f'b{i}', c['body'], f'story {i + 1} card')]
     from concurrent.futures import ThreadPoolExecutor, as_completed
     with RS._one_engine(engine):
-        with ThreadPoolExecutor(max_workers=min(len(plan), 6)) as pool:
+        with ThreadPoolExecutor(max_workers=min(len(plan), Limits.saara_reel_gemini_workers if engine == 'gemini' else 6)) as pool:
             futures = {pool.submit(RS.clip, text, tmp / f'{k}.wav', engine): k for k, text, _ in plan}
             durs = {futures[fut]: fut.result() for fut in as_completed(futures)}
 
@@ -605,7 +626,7 @@ def check(edition: Edition, shots: str | None = None) -> dict:
     pron = {f'story {i + 1}': sorted(set(RS.lint(c['say_head']) + RS.lint(c['body'])))
             for i, c in enumerate(copies)}
     return dict(stories=n, estimated_seconds=tl['T'], budget=budget(n), lines=laid.get('lines'), cover=laid.get('cover'),
-                questions=editor_questions(edition),
+                questions=editor_questions(edition), script=spoken_script(copies),
                 issues=laid.get('issues', []), warnings=_warnings(copies, laid, info),
                 pronunciation={k: v for k, v in pron.items() if v}, copies=copies)
 
@@ -750,9 +771,30 @@ def copies_hash(copies: list[dict]) -> str:
     return hashlib.sha1(json.dumps(copies, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:12]
 
 
-def make(edition: Edition, outdir: str, engine: str = 'google') -> dict:
-    """The pipeline's entry: the reel, its cover, and the report the gate reads."""
-    res = render(edition, os.path.join(outdir, FILE), engine=engine)
+def make(edition: Edition, outdir: str, engine: str | None = None) -> dict:
+    """The pipeline's entry: the reel, its cover, and the report the gate reads.
+
+    The voice is `Limits.saara_reel_voice`. If it cannot be had (a quota, no key, a clip it will not say) the
+    WHOLE reel is made again in the Google voice — never a mix of two — and the report and the render say so."""
+    engine = engine or Limits.saara_reel_voice
+    fell_from = ''
+    try:
+        res = render(edition, os.path.join(outdir, FILE), engine=engine)
+    except ReelFitError:
+        raise                                            # the copy, not the voice: another voice would not help
+    except ReelError as e:
+        if engine == 'google':
+            raise
+        fell_from = f'{engine}: {str(e)[:160]}'
+        print(f'      ! the {engine} voice could not make the reel ({str(e)[:120]}) — making it again in the Google voice',
+              flush=True)
+        engine = 'google'
+        res = render(edition, os.path.join(outdir, FILE), engine=engine)
+    res['voice_engine'] = engine
+    if fell_from:
+        res['voice_fell_back_from'] = fell_from
+        res['warnings'] = list(res.get('warnings', [])) + [
+            f'the reel was spoken in the Google voice, not {Limits.saara_reel_voice} — it fell back ({fell_from})']
     rv = os.path.join(outdir, '_review')
     os.makedirs(rv, exist_ok=True)
     with open(os.path.join(rv, REPORT), 'w', encoding='utf-8') as fh:

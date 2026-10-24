@@ -34,7 +34,12 @@ kept current by the editor: paste Instagram's own announcements into
    exactly what this rewards.
 6. **Words in the caption are search terms.** Place, topic and what happened,
    in plain Kannada and in English — hashtags matter less than they did. [Reported]
-7. **Five hashtags at most**, only true to the story (D86, `PUB-09`). [House, D86]
+7. **Five hashtags at most in the caption** (D86, `PUB-09`), only true to the story.
+   **The 3-layer 30-tag architecture for first comment** (house rule 2026-10-24-01):
+   - *Layer 1 (Brand + Local, always kept):* `#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ #ಕುಂದಾಪುರ #ಬೈಂದೂರು #ಹೆಬ್ರಿ #Kundapura #Byndoor #Hebri`
+   - *Layer 2 (Story-specific, hyper-local spots & trending angles):* landmarks/spots (`#Moodlakatte #Nellikatte #KodiBeach`), trending topics (`#KarnatakaRains #ಮಳೆ #ಗುಡುಗುಮಳೆ #FishermenAlert #KarnatakaWeather #CyberFraud #MissingPerson`)
+   - *Layer 3 (Broad Kannada news, regional discovery):* `#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #LocalNews #NewsInKannada #BreakingKannada`
+   Put the top 5 in the caption; put the full 30 in the first comment for maximum local discovery and reach. For YouTube Shorts, add title tags (`#shorts #kannadanews #kundapuranews`) and 10–12 targeted description tags. [House, D86, 2026-10-24-01]
 8. **No engagement bait.** "Like if…", "tag three friends" and giveaways-for-follows
    are demoted. A real question about the reader's own town is fine. [Official]
 9. **Trial reels** go only to non-followers first — a way to test a hook

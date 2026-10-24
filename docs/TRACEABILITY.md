@@ -608,6 +608,6 @@ those carry a reason rather than a test.
 
 ## D134 · The reel in five minutes: draw it side by side, ask the desks while it draws, say the words right
 
-- **Tested by:** `tests/test_dispatch.py`, `tests/test_saara_reel.py`
+- **Tested by:** `tests/test_dispatch.py`, `tests/test_saara_reel.py`, `tests/test_saara_reel_layout.py`
 - Enforced in: `brand/dispatch.py`, `brand/reel_speech.py`, `brand/review.py`, `brand/saara_reel.py`, `brand/tokens.py`, `scripts/regate.py`
 

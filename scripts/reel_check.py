@@ -65,6 +65,9 @@ def main() -> int:
             mark = '✓' if lines <= 2 and len(c['body']) <= b['support_chars'] + 25 and not c['notes'] else '·'
             print(f' {mark} {i + 1}. {c["place_short"]:<14} headline {len(c["head"]):>3} chars → {lines} line(s)'
                   f' · card {len(c["body"]):>3} chars ({len(c["body"].split())} words)')
+        print('\nTHE VOICE WILL SAY (read it once as a Kannada reader — nobody else has):')
+        for label, text in res.get('script', []):
+            print(f'   {label:<16} {text}')
         for msg in res['issues']:
             print(f'\n ✗ DOES NOT FIT  {msg}')
         for msg in res['warnings']:

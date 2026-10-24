@@ -30,7 +30,7 @@ import time
 from pathlib import Path
 
 from . import voice
-from .tokens import Motion as M
+from .tokens import Limits, Motion as M
 
 
 class ReelError(RuntimeError):
@@ -107,9 +107,14 @@ def numbers_to_words(text: str) -> str:
 _FINAL_CONSONANT_ENDING = re.compile(r'([ನಲ]್)(ಗೆ|ಗೂ|ಗಾಗಿ)(?![ಀ-೿])')
 
 
+def join_endings(text: str) -> str:
+    """A name's consonant ending gets its joiner — on the screen as well as in the voice (D134)."""
+    return _FINAL_CONSONANT_ENDING.sub('\\1\u200c\\2', text)
+
+
 def spoken(text: str) -> str:
     """Exactly what the voice is given: the house normaliser, then figures as words."""
-    t = numbers_to_words(_FINAL_CONSONANT_ENDING.sub('\\1\u200c\\2', voice._spoken(text)))
+    t = numbers_to_words(join_endings(voice._spoken(text)))
     return re.sub(r'\s+', ' ', t).strip()
 
 
@@ -122,6 +127,32 @@ def lint(text: str) -> list[str]:
     carry. Respell a name in assets/pronunciation.json and it is fixed for
     every format."""
     return sorted(set(_HAZARD.findall(spoken(text))))
+
+
+# Things a Kannada reader hears as a mistake at once, found in lines that a machine assembles or a model
+# writes and that no person reads before the voice says them (D134: an opening that ended on "ಸೇರಿದಂತೆ",
+# and a list of towns with no "ಮತ್ತು"). Each rule is a certainty, not a taste — a false alarm costs a glance.
+_DANGLING = ('ಮತ್ತು', 'ಹಾಗೂ', 'ಅಥವಾ', 'ಸೇರಿದಂತೆ', 'ಮತ್ತೆ', 'ಎಂದು', 'ಇದರೊಂದಿಗೆ')
+_ENDINGS = ('ನಲ್ಲಿ', 'ದಲ್ಲಿ', 'ರಲ್ಲಿ', 'ಯಲ್ಲಿ', 'ನಿಂದ', 'ದಿಂದ', 'ರಿಂದ', 'ಯಿಂದ', 'ಗಳು', 'ಗಳನ್ನು', 'ಅನ್ನು', 'ವನ್ನು', 'ದೊಂದಿಗೆ', 'ರಂದು', 'ರವರೆಗೆ')
+
+
+def grammar(text: str) -> list[str]:
+    """What is certainly wrong in how `text` is written, before the voice reads it aloud."""
+    out = []
+    words = [w.strip('.,;:!?"“”') for w in text.split()]
+    words = [w for w in words if w]
+    if words and words[-1] in _DANGLING:
+        out.append(f'ends on "{words[-1]}" with nothing after it')
+    for prev, w in zip([''] + words, words):
+        if w in _ENDINGS:
+            if prev[-1:].isdigit():
+                out.append(f'a figure and its ending are written apart ("{prev} {w}") — write "{prev}{w}"')
+            else:
+                out.append(f'the ending "{w}" stands alone — it belongs on the word before it, no space')
+    for a, b in zip(words, words[1:]):
+        if a == b and len(a) > 2:
+            out.append(f'"{a}" is said twice in a row')
+    return out
 
 
 # ── one clip, one voice ──────────────────────────────────────────────────
@@ -159,10 +190,13 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
     raw = wav.with_suffix('.mp3')
     said = spoken(text)
     last: Exception | None = None
+    gem = engine == 'gemini'
     for attempt in range(1, tries + 1):
         try:
             with _one_engine(engine):
-                voice._synth_one(said, str(raw), engine, None, None)
+                # Gemini is told HOW to read as well as what (the direction is not spoken); it names a voice
+                voice._synth_one((Limits.saara_reel_gemini_style + said) if gem else said, str(raw), engine,
+                                 Limits.saara_reel_gemini_voice if gem else None, None)
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-af', TRIM,
                             '-ar', '48000', '-ac', '1', str(wav)], check=True)
             d = voice.get_audio_duration(str(wav))
@@ -174,6 +208,8 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
             last = e
             raw.unlink(missing_ok=True)
             wav.unlink(missing_ok=True)
+            if '429' in str(e) and 'daily quota' not in str(e) and attempt < tries:
+                time.sleep(15 * attempt)                       # a quota: wait it out, then ask again
             # a cached bad clip would be handed back every time
             with contextlib.suppress(Exception):
                 import os

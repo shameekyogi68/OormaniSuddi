@@ -384,6 +384,15 @@ class Limits:
     # Measured 2026-10-24 on an 8-core, 8 GB M1, a 58 s reel: 1 Chrome 137 s · 2 → 68 s · 3 → 58 s ·
     # 4 → 65 s · 6 → 72 s (the cores are the limit, so more only fights for them).
     saara_reel_workers = 3
+    # The reel's voice (D134). The owner chose Gemini's "Kore" over the Google translate voice by ear, 2026-10-24
+    # (A/B of the same two lines). But the project's key is on Gemini's FREE tier: 10 requests a DAY, and a reel
+    # is ~14 clips (measured: HTTP 429 "limit: 10 … per day"). So the default stays 'google' until billing is
+    # enabled on that key — then set this to 'gemini' and nothing else changes. If it is set and the quota is
+    # gone, the WHOLE reel is made in the Google voice (never a mix of two) and the report says so.
+    saara_reel_voice = 'google'
+    saara_reel_gemini_voice = 'Kore'
+    saara_reel_gemini_style = 'Read this as a clear, confident Kannada television news anchor, at a brisk steady pace: '
+    saara_reel_gemini_workers = 3
     # When even the tightest pauses leave the reel past the fail line, the speech is sped up by the
     # smallest steps that fit, never past this. 1.06 on top of the house 1.15 was heard as rushed (owner,
     # 2026-10-23); 1.05 is the most a day may take — a day that still does not fit says which story to shorten.

@@ -682,7 +682,19 @@ def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_ke
         data=json.dumps(payload).encode('utf-8'),
         headers={'Content-Type': 'application/json', 'x-goog-api-key': key}
     )
-    res = json.loads(_fetch(req, timeout=30).decode('utf-8'))
+    try:
+        res = json.loads(_fetch(req, timeout=30).decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        body = ''
+        try:
+            body = e.read().decode('utf-8', 'replace')
+        except Exception:                                  # noqa: BLE001
+            pass
+        if e.code == 429 and 'per day' in body.lower():
+            # the free tier's 10 a day: waiting does not help, so say so at once and let the caller decide
+            raise RuntimeError('Gemini daily quota exhausted (free tier: 10 requests a day) — enable billing '
+                               'on the key to use it for the reel') from e
+        raise
     part = res['candidates'][0]['content']['parts'][0]
     raw_pcm = base64.b64decode(part['inlineData']['data'])
 

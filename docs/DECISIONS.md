@@ -3861,6 +3861,17 @@ receipts filed after it, so a re-render only for the gate to see them, then ear-
   tightest pauses still pass the fail line, the speech is sped up by the smallest step that fits (2 %, 3.5 %,
   at most `Limits.saara_reel_speedup_max` = 5 %), with word timing re-measured and a warning saying so. Past
   that, the render still stops and names the story to shorten.
+* **Nothing the voice says goes unread.** The opening line ("ಕೊಲ್ಲೂರು ಕುಂದಾಪುರ ಬೈಂದೂರು" — no conjunction) was written
+  by code, not by any story, so no desk ever saw it and the owner heard the mistake on a posted reel. `reel_check.py` now
+  prints every spoken sentence ("THE VOICE WILL SAY") and `reel_speech.grammar()` lints the certain mistakes in all of them
+  (dangling ಮತ್ತು / ಸೇರಿದಂತೆ, a case ending standing alone, a figure apart from its ending, a doubled word); the
+  opening is built by `_hook_text` as Kannada lists towns. The same lint caught `66 ರಲ್ಲಿ` in the live day's on-screen headline.
+* **The voice (owner's ear, 2026-10-24).** In an A/B of the same two lines the owner preferred Gemini's "Kore" to the Google
+  translate voice. It is wired (`Limits.saara_reel_voice`, `saara_reel_gemini_voice`, a style direction that is not
+  spoken), but the project's key is on Gemini's free tier — **10 requests a day**, a reel needs ~14 (measured: HTTP 429) — so the
+  default stays `'google'`. After billing is enabled on that key, set `saara_reel_voice = 'gemini'`. If it is set and the
+  quota is gone, `make()` makes the WHOLE reel again in the Google voice, never two voices in one reel, and the report
+  and the render say so. (A first version waited out the 429 and cost two minutes; a daily quota now fails at once.)
 * **What this does NOT do, said plainly.** Nothing here can hear. The speech model catches a dropped or garbled
   word; on isolated words it is unreliable (it hears "High Court" for ಹೈಕೋರ್ಟ್), so words cannot be auto-respelled
   by it. A subtle slip is found by a person's ear once and fixed for ever with

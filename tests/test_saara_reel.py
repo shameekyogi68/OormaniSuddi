@@ -470,6 +470,73 @@ class TheFilmSurvivesItsBrowser(unittest.TestCase):
         self.assertNotIsInstance(cx.exception, R.ReelFitError)
 
 
+class TheWrittenGrammar(unittest.TestCase):
+    """D134: lines nobody reads before the voice says them are checked for what is certainly a mistake."""
+
+    def test_each_certain_mistake_is_named(self):
+        self.assertTrue(RS.grammar('ಇಂದಿನ ಸುದ್ದಿ, ಕೊಲ್ಲೂರು ಸೇರಿದಂತೆ.'))                 # ends on a connective
+        self.assertTrue(RS.grammar('ಹೆದ್ದಾರಿ 66 ರಲ್ಲಿ ಲಾರಿ ಡಿಕ್ಕಿ'))                      # figure and ending apart
+        self.assertTrue(RS.grammar('ಉಡುಪಿ ನಲ್ಲಿ ಸಭೆ'))                                     # an ending on its own
+        self.assertTrue(RS.grammar('ಸಭೆ ಸಭೆ ನಡೆಯಿತು'))                                    # a word twice
+
+    def test_good_lines_raise_nothing(self):
+        for t in ('ಹೆದ್ದಾರಿ 66ರಲ್ಲಿ ಲಾರಿ ಡಿಕ್ಕಿ: ಸಾವು', 'ಕೊಲ್ಲೂರು ಮತ್ತು ಬೈಂದೂರು ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.',
+                  'ಗ್ರಾಮಸ್ಥರು ಹಾಗೂ ಪೋಷಕರು ಸನ್ಮಾನಿಸಿದರು.'):
+            self.assertEqual(RS.grammar(t), [], t)
+
+    def test_the_opening_and_every_line_go_through_it_and_are_printed(self):
+        copies = [dict(place_short='ಅ', say_head='ಅ, ಹೆದ್ದಾರಿ 66 ರಲ್ಲಿ ಅಪಘಾತ', body='ಸಭೆ ನಡೆಯಿತು.', head='x', place='ಅ', notes=[])]
+        self.assertEqual(R.spoken_script(copies)[0][0], 'the opening')
+        self.assertTrue(any('grammar, story 1 headline' in w for w in R._warnings(copies, {'lines': [2]}, {})))
+
+
+class TheVoiceFallsBackWhole(unittest.TestCase):
+    """D134: a better voice may be asked for, but a day is never lost, and never spoken in two voices."""
+
+    def made(self, first_error):
+        calls = []
+
+        def fake_render(edition, out_path, stills=None, engine='google'):
+            calls.append(engine)
+            if engine == 'gemini' and first_error:
+                raise first_error
+            return dict(seconds=1.0, timeline=dict(stories=[], outro=0.1, compress=0), warnings=[], clips={})
+        d = tempfile.mkdtemp(dir=ROOT / 'build')
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        with mock.patch.object(R, 'render', fake_render), contextlib.redirect_stdout(io.StringIO()):
+            res = R.make(Edition(stories=[], date=__import__('datetime').datetime(2026, 1, 1)), d, engine='gemini')
+        return calls, res
+
+    def test_a_voice_that_cannot_be_had_means_the_whole_reel_in_google(self):
+        calls, res = self.made(R.ReelError('the gemini voice failed 3 times: Gemini daily quota exhausted'))
+        self.assertEqual(calls, ['gemini', 'google'])
+        self.assertEqual(res['voice_engine'], 'google')
+        self.assertTrue(any('fell back' in w for w in res['warnings']))
+
+    def test_a_healthy_voice_is_used_once(self):
+        calls, res = self.made(None)
+        self.assertEqual(calls, ['gemini'])
+        self.assertEqual(res['voice_engine'], 'gemini')
+
+    def test_copy_that_does_not_fit_is_not_blamed_on_the_voice(self):
+        with self.assertRaises(R.ReelFitError):
+            self.made(R.ReelFitError('too long'))
+
+
+class TheOpeningLine(unittest.TestCase):
+    def hook(self, *towns):
+        return R._hook_text([dict(place_short=t) for t in towns])
+
+    def test_towns_are_listed_the_way_kannada_lists_them(self):
+        self.assertEqual(self.hook('ಕೊಲ್ಲೂರು'), 'ಇಂದಿನ ಸುದ್ದಿ, ಕೊಲ್ಲೂರು.')
+        self.assertEqual(self.hook('ಕೊಲ್ಲೂರು', 'ಬೈಂದೂರು'), 'ಇಂದಿನ ಸುದ್ದಿ, ಕೊಲ್ಲೂರು ಮತ್ತು ಬೈಂದೂರು.')
+        self.assertEqual(self.hook('ಕೊಲ್ಲೂರು', 'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು'), 'ಇಂದಿನ ಸುದ್ದಿ, ಕೊಲ್ಲೂರು, ಕುಂದಾಪುರ ಮತ್ತು ಬೈಂದೂರು.')
+
+    def test_more_towns_than_are_named_says_so(self):
+        self.assertEqual(self.hook('ಅ', 'ಆ', 'ಇ', 'ಈ'), 'ಅ, ಆ, ಇ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.')
+        self.assertEqual(self.hook('ಬೈಂದೂರು', 'ಬೈಂದೂರು'), 'ಇಂದಿನ ಸುದ್ದಿ, ಬೈಂದೂರು.')       # a town twice is one town
+
+
 class WhenTheDayIsOneWordTooLong(unittest.TestCase):
     """D134: pauses first, then the speech by the smallest step that fits — never 'REEL NOT MADE' for a second."""
 

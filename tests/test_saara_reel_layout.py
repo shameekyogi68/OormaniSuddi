@@ -55,6 +55,12 @@ class ThePageFitsItself(unittest.TestCase):
                      'ಯೋಜನೆಗೆ ನೂರ ಇಪ್ಪತ್ತು ಕೋಟಿ ರೂಪಾಯಿ ಮಂಜೂರಾಗಿದೆ.', 'ಮಂಗಳೂರು', 'fisheries'), FIVE[1]])
         self.assertTrue(any('does not fit above the card' in i for i in r['issues']))
 
+    def test_the_front_page_keeps_a_headlines_subject(self):
+        # D134: "ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ ವಂಚನೆ: ದೂರು ದಾಖಲು" was shown as "ದೂರು ದಾಖಲು" — the subject cut off
+        r = check([S('ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ ವಂಚನೆ: ದೂರು ದಾಖಲು', 'ಖಾತೆಯಿಂದ ಹಣ ವರ್ಗಾವಣೆ ಆರೋಪ ಕೇಳಿಬಂದಿದೆ.', 'ಕುಂದಾಪುರ'), FIVE[1]])
+        self.assertIn('ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ ವಂಚನೆ', r['cover']['rows'][0])
+        self.assertEqual(r['issues'], [])
+
     def test_markup_in_the_copy_is_text(self):
         r = check([S('ಕಂಪನಿ A&B <ಹೊಸ> ಯೋಜನೆ</script>', 'ಎ&ಬಿ ಕಂಪನಿ <b>ಹೊಸ</b> ಯೋಜನೆ ಆರಂಭ.', 'ಉಡುಪಿ & ಮಣಿಪಾಲ'), FIVE[1]])
         self.assertEqual(r['issues'], [])
