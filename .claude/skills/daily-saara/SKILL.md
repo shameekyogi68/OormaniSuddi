@@ -10,6 +10,9 @@ reel. Nothing in between is asked of them — not "should I make a reel?", not "
 format?", not "shall I render?", not "is this ok?". Decide, do it, check it, report it.
 The only reason to stop and ask is a paste you genuinely cannot split or attribute.
 
+**The clock (D134): about five minutes from the paste.** The film is drawn by three Chromes at once (~1 min), the
+desks run while it does, and the gate is re-checked in seconds. Never run one after the other what can run together.
+
 **The product:** `out/<today>/reel_saara.mp4` — 1080×1920, ~50–58 s, Google Kannada
 voice, house news bed, house sound effects, Ink & Gold design, front page whole at
 frame 0, a follow button at the end, loops. Captions: `saara_caption.txt`
@@ -67,21 +70,21 @@ For each news item in the paste:
 4. **Already published?** `python3 scripts/intake.py seen editions/<today>.json` — a repeat needs
    `follows_up` and a new fact, or is dropped (say which).
 
-Write figures as figures (`33ನೇ`, `22ರಂದು`, `₹500`, `ಎಚ್.ಸಿ. ಬಾಲಕೃಷ್ಣ`): the voice says them
+Write figures as figures (`33ನೇ`, `22ರಂದು`, `66ರಲ್ಲಿ` — the ending joined, no space — `₹500`, `ಎಚ್.ಸಿ. ಬಾಲಕೃಷ್ಣ`): the voice says them
 as Kannada words. Never write a figure you cannot find in the paste.
 
-## Step 3 · Verify, validate, and make the reel copy CLEAN
+## Step 3 · Verify, validate, and make the reel copy CLEAN (one pass, ~10 s)
 
 ```bash
 python3 scripts/verify.py editions/<today>.json --all --by "Gautam Paduvari"   # the editor's standing instruction in this
                                                                               # skill; another name only if the editor gives one in chat
-python3 render.py --check editions/<today>.json
-python3 scripts/reel_check.py editions/<today>.json --strict
+python3 render.py --check editions/<today>.json && python3 scripts/reel_check.py editions/<today>.json --strict
 ```
 
-`reel_check.py` lays the real reel out in headless Chrome in a few seconds and prints, per
-story, what the render would find out four minutes later. **Repeat until it says `CLEAN`**
-(at most four rounds). It names exactly what to change:
+`reel_check.py` lays the real reel out in headless Chrome and prints, per story, what the render would
+find out later. Write the copy **to the allowance it prints** (headline ≤ 34 chars on two lines, card sentence
+within its character budget) and it is CLEAN the first time; when it is not, it names exactly what to change
+(at most three rounds):
 - a headline that needs a third line → shorten that `reel_line`
 - a card sentence too long for the clock → shorten that `reel_support` (never cut a fact — rewrite
   the sentence shorter)
@@ -91,28 +94,34 @@ story, what the render would find out four minutes later. **Repeat until it says
 
 Edit only `reel_line` / `reel_support` in these rounds. Never add a fact to make a sentence fit.
 
-## Step 4 · The desks (parallel agents)
+**Write it so the voice reads it right** (D134 — these were real mispronunciations):
+- a figure and its ending are ONE word, no space: `66ರಲ್ಲಿ`, `22ರಂದು`, `33ನೇ` — never `66 ರಲ್ಲಿ`
+- a name that ends in a consonant takes its ending after a joiner: `ಸ್ಟೀವನ್‌ಗೆ` (ZWNJ), not `ಸ್ಟೀವನ್ಗೆ`
+- a place or person the voice has never said: add it to `assets/pronunciation.json` BEFORE the render
+  if you know how it sounds; otherwise list it under "listen for" in the report (Step 6)
 
-```bash
-python3 scripts/dispatch.py
-```
+## Step 4 · Render and the desks — AT THE SAME TIME (this is what makes it ~5 minutes)
 
-Launch each wave it lists as ONE message of parallel `Agent` calls, one per line: `fact-checker`,
-`legal-standards` (crime/death/minor stories), `kannada-editor` (ಸುದ್ದಿ ಸಾರ copy, including the two
-reel fields — they are spoken), `instagram-strategist`. Apply every FIX they return. A BLOCK goes to
-the editor, never around it. After ANY edit to `reel_line` / `reel_support`, run `reel_check.py --strict`
-again. Never file a receipt yourself for a desk that did not run.
+The film takes about a minute (three Chromes draw it side by side) and does not need the desks'
+answers to start. So send **ONE message** that holds all of these:
 
-## Step 5 · Render the reel
+- `Bash` with `run_in_background: true`: `python3 render.py editions/<today>.json --only saara`
+- `Agent` calls, in parallel, one per line of `python3 scripts/dispatch.py` wave 1: `fact-checker`,
+  `kannada-editor` (ಸುದ್ದಿ ಸಾರ copy, including the two reel fields — they are spoken), `legal-standards`
+  (crime / death / minor stories), `instagram-strategist`
 
-```bash
-python3 render.py editions/<today>.json --only saara
-```
+You are told when the render ends. Then apply every FIX the desks return:
+- **a desk changed `reel_line` / `reel_support` / `headline` / `location`** (anything the film shows or says):
+  run `reel_check.py --strict`, then render again (≈1 min — the voice of every untouched sentence is cached).
+  The gate refuses a reel made from older wording (`VID-08`), so this cannot be forgotten.
+- **nothing the film shows or says changed** (deck, points, sources, a desk's PASS): do NOT re-render.
+  Re-run only the gate: `python3 scripts/regate.py editions/<today>.json` (seconds).
+- a desk edit to a fact-bearing field makes that story's fact receipt stale; `dispatch.py` lists it again —
+  re-run that one desk for that one story.
 
-About 4 minutes (the film is drawn frame by frame). It writes, in `out/<today>/`: `reel_saara.mp4`,
-`reel_saara_cover.jpg`, `saara_caption.txt`, `reel_saara_youtube.txt`, `saara_copy.txt`,
-`schedule.txt`, and the evidence in `_review/`.
+A BLOCK goes to the editor, never around it. Never file a receipt yourself for a desk that did not run.
 
+Render outcomes:
 - **"ಸುದ್ದಿ ಸಾರ REEL NOT MADE — <why>"**: read the reason. Copy that does not fit → fix it (Step 3) and
   re-render. A voice failure (Google, three tries) → re-render once. Chrome missing → tell the editor.
   (The carousel was made meanwhile so the day is not empty — say so; the reel is still the goal.)
@@ -122,17 +131,18 @@ About 4 minutes (the film is drawn frame by frame). It writes, in `out/<today>/`
   (after one automatic retry). Re-render once; if it repeats, the Google voice is failing — say so, never
   post it.
 
-## Step 6 · After the render — inspect and gate
+The render writes, in `out/<today>/`: `reel_saara.mp4`, `reel_saara_cover.jpg`, `saara_caption.txt`,
+`reel_saara_youtube.txt`, `saara_copy.txt`, `schedule.txt`, and the evidence in `_review/`.
 
-```bash
-python3 scripts/dispatch.py
-```
+## Step 5 · After the render — inspect (in parallel with the editor's look)
 
-Launch the due agents (`package-inspector` for `reel_saara`, `social-writer` for both caption files).
-If the gate is HELD (`review_report.json`): launch `gate-doctor`, apply the mechanical fixes, re-render
-(max two loops), and report anything left. Never edit a check to make a code go away.
+As soon as the render has ended, launch `package-inspector` (for `reel_saara`) and `social-writer` (both
+caption files) — they do not delay the gate; they are what lets the editor sign off. If the gate is HELD
+for something that is not a missing desk or the person-only items: launch `gate-doctor`, apply the
+mechanical fixes, re-render or `regate.py` (max two loops), and report anything left. Never edit a check to
+make a code go away.
 
-## Step 7 · Report — short, plain, in Kannada-friendly English
+## Step 6 · Report — short, plain, in Kannada-friendly English
 
 0. **Questions for the editor** — things only they can settle; list them FIRST, never change the copy to hide
    them: a weekday in the paste that does not match today's date ("ಮಂಗಳವಾರ" on a Thursday); a story that may
@@ -159,6 +169,7 @@ If the gate is HELD (`review_report.json`): launch `gate-doctor`, apply the mech
 - ask whether to make a reel, or which format — it is always the reel
 - make the carousel unless the editor asks (`render.py … --carousel`); never delete or restyle it
 - put a picture on a ಸುದ್ದಿ ಸಾರ story, write a fact the paste does not carry, or invent a name
+- wait for the desks before starting the render, or re-render only so the gate can see a receipt (`regate.py`);
 - skip `reel_check.py`, a desk wave, or the gate; or file a receipt for work no agent did
 - leave the editor to fix copy: if the reel's copy is wrong, you rewrite it and re-check
 

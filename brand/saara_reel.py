@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import json
 import os
 import re
@@ -240,7 +241,10 @@ def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[
         if listen:
             out.append('voice check — a speech model could not match these words, so listen for them: '
                        + ' · '.join(listen))
-    if info.get('compress'):
+    if info.get('speedup'):
+        out.append(f'even the tightest pauses ran past the cap, so the speech was sped up by '
+                   f'{(info["speedup"] - 1) * 100:.1f}% — shorten a story to hear it at its natural pace')
+    if info.get('compress') and not info.get('speedup'):
         out.append(f'the voice would run {info["natural"]:.1f}s; beats were tightened to fit '
                    f'{Limits.saara_reel_max_seconds:.0f}s (speech untouched)')
     if info.get('over', 0) > 0.05:
@@ -294,6 +298,34 @@ def _timeline(durs: dict, n: int, words: dict | None = None, towns: list[str] | 
                 compress=level, natural=natural[2], over=round(max(0.0, T - cap), 3))
 
 
+def _speed_up(tmp: Path, copies: list[dict], hook: str, durs: dict, towns: list[str], tl: dict):
+    """Re-time every clip by 2%, 3.5%, then `Limits.saara_reel_speedup_max` until the reel fits the cap.
+    Words are re-measured from the sped-up audio, so the highlight stays on the voice."""
+    keep = {k: tmp / f'{k}.orig.wav' for k in durs}
+    for k in durs:
+        if not keep[k].exists():
+            (tmp / f'{k}.wav').replace(keep[k])
+    steps = [f for f in (1.02, 1.035, Limits.saara_reel_speedup_max) if f <= Limits.saara_reel_speedup_max]
+    for f in steps:
+        new = {}
+        for k in durs:
+            subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(keep[k]), '-filter:a', f'atempo={f}',
+                            str(tmp / f'{k}.wav')], check=True)
+            new[k] = round(RS.voice.get_audio_duration(str(tmp / f'{k}.wav')), 3)
+        words, timing = {}, []
+        for i, c in enumerate(copies):
+            words[f'b{i}'], how = RS.word_times(tmp / f'b{i}.wav', c['body'])
+            timing.append(how)
+        words['intro'], _ = RS.word_times(tmp / 'intro.wav', hook)
+        words['intro_text'] = hook.split()
+        tl = _timeline(new, len(copies), words, towns)
+        tl['speedup'] = f
+        durs = new
+        if tl['T'] <= Limits.saara_reel_max_seconds:
+            break
+    return tl, durs, words, timing
+
+
 # ── the page and the browser ─────────────────────────────────────────────
 def _page(edition: Edition, copies: list[dict], tl: dict, dest: Path) -> Path:
     d = edition.date
@@ -342,23 +374,52 @@ async def _drive(page: Path, profile: Path, work, gate=None):
         if not target:
             raise ReelError('Chrome did not start for the ಸುದ್ದಿ ಸಾರ reel')
         async with websockets.connect(target['webSocketDebuggerUrl'], max_size=2 ** 30) as ws:
-            n = 0
+            msg_id = 0
+            pending = {}
+            events = []
+
+            async def receiver():
+                try:
+                    async for raw in ws:
+                        m = json.loads(raw)
+                        mid = m.get('id')
+                        if mid in pending and not pending[mid].done():
+                            if 'error' in m:
+                                pending[mid].set_exception(ReelError(f'{m["error"]}'))
+                            else:
+                                pending[mid].set_result(m.get('result'))
+                        method = m.get('method')
+                        if method:
+                            for waiter in list(events):
+                                if waiter['event'] == method and not waiter['future'].done():
+                                    waiter['future'].set_result(m)
+                                    events.remove(waiter)
+                except Exception as e:
+                    for fut in pending.values():
+                        if not fut.done():
+                            fut.set_exception(e)
+
+            recv_task = asyncio.create_task(receiver())
 
             async def call(method, wait_event=None, **params):
-                nonlocal n
-                n += 1
-                my = n
+                nonlocal msg_id
+                msg_id += 1
+                my = msg_id
+                loop = asyncio.get_running_loop()
+                fut = loop.create_future()
+                pending[my] = fut
+
+                event_fut = None
+                if wait_event:
+                    event_fut = loop.create_future()
+                    events.append({'event': wait_event, 'future': event_fut})
+
                 await ws.send(json.dumps({'id': my, 'method': method, 'params': params}))
-                got, seen = None, wait_event is None
-                while got is None or not seen:
-                    m = json.loads(await ws.recv())
-                    if m.get('id') == my:
-                        if 'error' in m:
-                            raise ReelError(f'{method}: {m["error"]}')
-                        got = m['result']
-                    elif wait_event and m.get('method') == wait_event:
-                        seen = True
-                return got
+                res = await fut
+                if event_fut:
+                    await event_fut
+                pending.pop(my, None)
+                return res
 
             async def js(expr):
                 r = await call('Runtime.evaluate', expression=expr, awaitPromise=True, returnByValue=True)
@@ -374,12 +435,21 @@ async def _drive(page: Path, profile: Path, work, gate=None):
             if gate:
                 gate(laid)
 
-            async def frame(t: float) -> bytes:
-                await js(f'render({t:.5f})')
-                shot = await call('Page.captureScreenshot', format='png', optimizeForSpeed=True)
+            async def frame(t: float, fmt: str = 'png', quality: int = 100) -> bytes:
+                await call('Runtime.evaluate', expression=f'render({t:.5f})', awaitPromise=True)
+                params = {'format': fmt}
+                if fmt in ('jpeg', 'webp'):
+                    params['quality'] = quality
+                else:
+                    params['optimizeForSpeed'] = True
+                shot = await call('Page.captureScreenshot', **params)
                 return base64.b64decode(shot['data'])
 
-            return laid, await work(frame)
+            try:
+                res = await work(frame)
+            finally:
+                recv_task.cancel()
+            return laid, res
     finally:
         proc.terminate()
         try:
@@ -448,7 +518,11 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
     plan = [('intro', hook, 'the hook'), ('outro', OUTRO_SAY, 'the follow card')]
     for i, c in enumerate(copies):
         plan += [(f'h{i}', c['say_head'], f'story {i + 1} headline'), (f'b{i}', c['body'], f'story {i + 1} card')]
-    durs = {k: RS.clip(text, tmp / f'{k}.wav', engine) for k, text, _ in plan}
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    with RS._one_engine(engine):
+        with ThreadPoolExecutor(max_workers=min(len(plan), 6)) as pool:
+            futures = {pool.submit(RS.clip, text, tmp / f'{k}.wav', engine): k for k, text, _ in plan}
+            durs = {futures[fut]: fut.result() for fut in as_completed(futures)}
 
     # Hear the clips back (a speech model, in its own process). A clip that does not sound like its
     # words — noise, silence, the wrong thing — is asked for once more; if it is still wrong the
@@ -476,7 +550,12 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
         timing.append(how)
     words['intro'], _ = RS.word_times(tmp / 'intro.wav', hook)
     words['intro_text'] = hook.split()
-    tl = _timeline(durs, len(stories), words, [c['place_short'] for c in copies])
+    towns = [c['place_short'] for c in copies]
+    tl = _timeline(durs, len(stories), words, towns)
+    if tl['T'] > Limits.reel_fail_seconds:
+        # Pauses are already as tight as they go. Speed the speech up by the smallest step that fits
+        # (D134): a day that is one word too long must still come out, never "REEL NOT MADE".
+        tl, durs, words, timing = _speed_up(tmp, copies, hook, durs, towns, tl)
     if tl['T'] > Limits.reel_fail_seconds:
         longest = max(range(len(copies)), key=lambda i: durs[f'h{i}'] + durs[f'b{i}'])
         raise ReelFitError(f'the spoken reel runs {tl["T"]:.0f}s — the house fails anything over '
@@ -532,6 +611,84 @@ def check(edition: Edition, shots: str | None = None) -> dict:
 
 
 # ── the film ─────────────────────────────────────────────────────────────
+def _encoder(path: Path, fps: int, first: bytes):
+    codec = 'png' if first.startswith(b'\x89PNG') else 'mjpeg'
+    return subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'image2pipe', '-framerate', str(fps),
+                             '-c:v', codec, '-i', '-', '-c:v', 'libx264', '-preset', 'fast', '-crf', '16',
+                             '-tune', 'film', '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-g', str(fps * 2),
+                             str(path)], stdin=subprocess.PIPE)
+
+
+def _film_stretch(page: Path, tmp: Path, idx: int, first: int, last: int, fps: int, gate, out: Path) -> dict:
+    """Frames [first, last) in a Chrome of their own, encoded into `out`.
+
+    Chrome is a browser on a busy Mac: it can be closed under memory pressure or crash. Every frame is a
+    pure function of its time, so a new Chrome simply picks up at the next frame — nothing already
+    drawn is lost, and the film is the same film (D133)."""
+    state = dict(written=first, enc=None)
+
+    async def film(frame):
+        while state['written'] < last:
+            data = await frame(state['written'] / fps, fmt='jpeg', quality=96)
+            if state['enc'] is None:
+                state['enc'] = _encoder(out, fps, data)
+            state['enc'].stdin.write(data)
+            state['written'] += 1
+
+    retries, laid = 3, {}
+    try:
+        for attempt in range(1, retries + 1):
+            try:
+                laid, _ = asyncio.run(_drive(page, tmp / f'chrome{idx}_{attempt}', film, gate))
+                break
+            except ReelFitError:
+                raise
+            except Exception as e:                       # noqa: BLE001
+                if attempt == retries:
+                    raise ReelError(f'Chrome failed {retries} times, at frame {state["written"]} of {last}: '
+                                    f'{type(e).__name__}: {e}') from e
+                print(f'      ! Chrome stopped at frame {state["written"]} of {last} ({type(e).__name__}: {e}) — '
+                      f'carrying on in a fresh one ({attempt}/{retries - 1})', flush=True)
+                time.sleep(2)
+    finally:
+        enc = state['enc']
+        if enc and enc.stdin:
+            enc.stdin.close()
+            enc.wait()
+    if state['enc'] is None or state['enc'].returncode != 0 or not out.exists():
+        raise ReelError('the video encoder failed')
+    return laid
+
+
+def _film(page: Path, tmp: Path, n: int, fps: int, gate, video: Path) -> dict:
+    """The whole video: `n` frames drawn by `Limits.saara_reel_workers` Chromes side by side, each a
+    contiguous stretch with its own encoder, then joined without re-encoding (D134)."""
+    from concurrent.futures import ThreadPoolExecutor
+    k = max(1, min(Limits.saara_reel_workers, n // (fps * 4) or 1))
+    edges = [round(n * i / k) for i in range(k + 1)]
+    parts = [tmp / f'part{i}.mp4' for i in range(k)]
+    with ThreadPoolExecutor(max_workers=k) as pool:
+        futs = [pool.submit(_film_stretch, page, tmp, i, edges[i], edges[i + 1], fps, gate, parts[i])
+                for i in range(k)]
+        laids = []
+        err = None
+        for f in futs:
+            try:
+                laids.append(f.result())
+            except Exception as e:                       # noqa: BLE001 — wait for the rest, then raise the first
+                err = err or e
+        if err:
+            raise err
+    if k == 1:
+        parts[0].replace(video)
+    else:
+        listing = tmp / 'parts.txt'
+        listing.write_text(''.join(f"file '{q}'\n" for q in parts), encoding='utf-8')
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', str(listing),
+                        '-c', 'copy', str(video)], check=True)
+    return laids[0]
+
+
 def render(edition: Edition, out_path: str, stills: list[float] | None = None,
            engine: str = 'google') -> dict:
     """Make the ಸುದ್ದಿ ಸಾರ reel. `edition` carries the saara stories only.
@@ -551,14 +708,14 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
         b = _build(edition, tmp, engine)
         copies, tl = b['copies'], b['tl']
         info = dict(compress=tl['compress'], natural=tl['natural'], over=tl['over'], seconds=tl['T'],
-                    timing=b['timing'], voice=b.get('voice') or {})
+                    speedup=tl.get('speedup'), timing=b['timing'], voice=b.get('voice') or {})
 
         def gate(laid):
             if laid.get('issues'):
                 raise ReelFitError('the copy does not fit the reel — ' + '; '.join(laid['issues']))
 
         def summary(laid, **extra):
-            return dict(seconds=tl['T'], timeline=tl, lines=laid.get('lines'), issues=laid.get('issues', []),
+            return dict(seconds=tl['T'], timeline=tl, copies_hash=copies_hash(copies), lines=laid.get('lines'), issues=laid.get('issues', []),
                         warnings=_warnings(copies, laid, info), pronunciation=b['pron'],
                         timing=b['timing'], clips={k: v for k, v in b['durs'].items()}, voice_audit=b.get('voice') or {}, **extra)
 
@@ -577,42 +734,7 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
         video, mix = tmp / 'video.mp4', tmp / 'mix.wav'
         _mix(tl, tmp, mix)
         n = int(round(tl['T'] * fps))
-        enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'image2pipe', '-framerate', str(fps),
-                                '-c:v', 'png', '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
-                                '-tune', 'film', '-pix_fmt', 'yuv420p', '-profile:v', 'high', str(video)],
-                               stdin=subprocess.PIPE)
-
-        written = 0                                      # frames the encoder already has
-
-        async def film(frame):
-            nonlocal written
-            while written < n:
-                enc.stdin.write(await frame(written / fps))
-                written += 1
-
-        # Chrome is a browser on a busy Mac: it can be closed under memory pressure or crash. Every
-        # frame is a pure function of its time, so a new Chrome simply picks up at the next frame —
-        # nothing already drawn is lost, and the film is the same film (D133).
-        retries, laid = 3, {}
-        try:
-            for attempt in range(1, retries + 1):
-                try:
-                    laid, _ = asyncio.run(_drive(b['page'], tmp / f'chrome{attempt}', film, gate))
-                    break
-                except ReelFitError:
-                    raise
-                except Exception as e:                   # noqa: BLE001
-                    if attempt == retries:
-                        raise ReelError(f'Chrome failed {retries} times, at frame {written} of {n}: '
-                                        f'{type(e).__name__}: {e}') from e
-                    print(f'      ! Chrome stopped at frame {written} of {n} ({type(e).__name__}: {e}) — '
-                          f'carrying on in a fresh one ({attempt}/{retries - 1})', flush=True)
-                    time.sleep(2)
-        finally:
-            enc.stdin.close()
-            enc.wait()
-        if enc.returncode != 0 or not video.exists():
-            raise ReelError('the video encoder failed')
+        laid = _film(b['page'], tmp, n, fps, gate, video)
         subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-i', str(mix), '-map', '0:v', '-map', '1:a',
                         '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart',
                         str(out)], check=True)
@@ -620,6 +742,12 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
                         str(out.with_name(COVER))], check=False)
     return summary(laid, path=str(out), frames=n, render_seconds=round(time.time() - t0, 1),
                    cover=str(out.with_name(COVER)))
+
+
+def copies_hash(copies: list[dict]) -> str:
+    """A fingerprint of everything the reel shows and says. The gate compares it with the copy as it
+    is NOW, so a desk's edit after the render is caught without anyone remembering to re-render (D134)."""
+    return hashlib.sha1(json.dumps(copies, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:12]
 
 
 def make(edition: Edition, outdir: str, engine: str = 'google') -> dict:

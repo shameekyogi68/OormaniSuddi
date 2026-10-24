@@ -62,16 +62,35 @@ def compare(script: str, heard: str) -> dict:
         for size in range(max(2, len(p) - 1), len(p) + 2):
             for i in range(0, max(1, len(b) - size + 1)):
                 best = max(best, difflib.SequenceMatcher(None, p, b[i:i + size]).ratio())
-        if best < 0.6:
+        if best < 0.7:
             suspects.append(w.strip('.,;:!?'))
     return {'similarity': round(sim, 3), 'suspects': suspects}
 
 
 def transcribe(wav: str) -> str:
+    import hashlib
+    from pathlib import Path
+    cache_file = None
+    try:
+        h = hashlib.sha256(Path(wav).read_bytes()).hexdigest()
+        cache_dir = Path(__file__).resolve().parents[1] / 'build' / 'audit_cache'
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_file = cache_dir / f'{h}.json'
+        if cache_file.exists():
+            return json.loads(cache_file.read_text(encoding='utf-8'))
+    except Exception:
+        cache_file = None
+
     import mlx_whisper
     out = mlx_whisper.transcribe(wav, path_or_hf_repo=MODEL, language='kn', temperature=0.0,
                                  condition_on_previous_text=False)
-    return (out.get('text') or '').strip()
+    text = (out.get('text') or '').strip()
+    if cache_file:
+        try:
+            cache_file.write_text(json.dumps(text, ensure_ascii=False), encoding='utf-8')
+        except Exception:
+            pass
+    return text
 
 
 def main(argv: list[str]) -> int:

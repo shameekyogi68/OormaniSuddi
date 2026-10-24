@@ -163,6 +163,16 @@ class SpokenRight(unittest.TestCase):
              99: 'ತೊಂಬತ್ತೊಂಬತ್ತು', 100: 'ನೂರು', 120: 'ನೂರ ಇಪ್ಪತ್ತು', 305: 'ಮುನ್ನೂರ ಐದು',
              2026: 'ಎರಡು ಸಾವಿರದ ಇಪ್ಪತ್ತಾರು', 5000: 'ಐದು ಸಾವಿರ'}
 
+    def test_a_figure_and_its_ending_are_one_word_even_with_a_space_between(self):
+        # a real day's headline: "ಹೆದ್ದಾರಿ 66 ರಲ್ಲಿ" was read "ಅರವತ್ತಾರು ರಲ್ಲಿ" — two words
+        self.assertEqual(RS.spoken('ಹೆದ್ದಾರಿ 66 ರಲ್ಲಿ ಲಾರಿ'), RS.spoken('ಹೆದ್ದಾರಿ 66ರಲ್ಲಿ ಲಾರಿ'))
+        self.assertIn('ಅರವತ್ತಾರರಲ್ಲಿ', RS.spoken('ಹೆದ್ದಾರಿ 66 ರಲ್ಲಿ'))
+        self.assertEqual(RS.spoken('5 ಜನ'), 'ಐದು ಜನ.')                # not an ending: a word of its own
+
+    def test_a_name_ending_in_a_consonant_gets_its_ending_after_a_joiner(self):
+        self.assertEqual(RS.spoken('ಸ್ಟೀವನ್ಗೆ ದೀಕ್ಷೆ'), 'ಸ್ಟೀವನ್\u200cಗೆ ದೀಕ್ಷೆ.')
+        self.assertEqual(RS.spoken('ಮಾರ್ಗಗಳು ಮತ್ತು ದುರ್ಗ'), 'ಮಾರ್ಗಗಳು ಮತ್ತು ದುರ್ಗ.')     # real conjuncts untouched
+
     def test_a_figure_is_said_as_kannada_words(self):
         for n, w in self.TABLE.items():
             self.assertEqual(RS.number_words(n), w, n)
@@ -387,7 +397,7 @@ class TheFilmSurvivesItsBrowser(unittest.TestCase):
     """Chrome is a browser on a busy Mac: closed under memory pressure, or crashed. Every frame is a pure
     function of its time, so a fresh Chrome picks up at the next frame and the film is the same film (D133)."""
 
-    def render_with(self, die_after, fit_issue=None, forever=False):
+    def render_with(self, die_after, fit_issue=None, forever=False, seconds=1.0):
         import asyncio, io
         from PIL import Image
         calls = []
@@ -397,11 +407,12 @@ class TheFilmSurvivesItsBrowser(unittest.TestCase):
 
         async def fake_drive(page, profile, work, gate=None):
             calls.append(profile.name)
+            me = len(calls)
             seen = {'n': 0}
 
-            async def frame(t):
+            async def frame(t, fmt='png', quality=100):
                 seen['n'] += 1
-                if die_after is not None and (forever or len(calls) == 1) and seen['n'] > die_after:
+                if die_after is not None and (forever or me == 1) and seen['n'] > die_after:
                     raise RuntimeError('no close frame received or sent')
                 return png
             laid = {'lines': [2], 'issues': [fit_issue] if fit_issue else []}
@@ -410,11 +421,11 @@ class TheFilmSurvivesItsBrowser(unittest.TestCase):
             return laid, await work(frame)
 
         def fake_build(edition, tmp, engine):
-            tl = {'T': 1.0, 'stories': [], 'outro': 0.2, 'compress': 0, 'natural': 1.0, 'over': 0.0}
+            tl = {'T': seconds, 'stories': [], 'outro': 0.2, 'compress': 0, 'natural': seconds, 'over': 0.0}
             return dict(copies=[], tl=tl, durs={}, timing=[], pron={}, hook='', page=tmp / 'x.html')
 
         def fake_mix(tl, clips, out):
-            subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=300:duration=1',
+            subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=300:duration=%s' % seconds,
                             str(out)], check=True)
 
         d = tempfile.mkdtemp(dir=ROOT / 'build')
@@ -434,6 +445,16 @@ class TheFilmSurvivesItsBrowser(unittest.TestCase):
                            capture_output=True, text=True).stdout.strip()
         self.assertEqual(n, '30')                                        # not one frame lost or doubled
 
+    def test_a_long_film_is_drawn_by_several_chromes_and_joined_whole(self):
+        # 12 s → 360 frames → three stretches (Limits.saara_reel_workers); one Chrome dies in its stretch
+        calls, res, mp4 = self.render_with(die_after=20, seconds=12.0)
+        self.assertEqual(len(calls), 3 + 1)                              # three workers + one replacement
+        self.assertEqual(res['frames'], 360)
+        probe = subprocess.run(['ffprobe', '-v', 'error', '-count_frames', '-select_streams', 'v:0',
+                                '-show_entries', 'stream=nb_read_frames', '-of', 'csv=p=0', mp4],
+                               capture_output=True, text=True).stdout.strip()
+        self.assertEqual(probe, '360')                                   # joined without a frame lost or doubled
+
     def test_a_healthy_chrome_is_used_once(self):
         calls, _res, _mp4 = self.render_with(die_after=None)
         self.assertEqual(len(calls), 1)
@@ -447,6 +468,38 @@ class TheFilmSurvivesItsBrowser(unittest.TestCase):
             self.render_with(die_after=5, forever=True)
         self.assertIn('Chrome failed 3 times', str(cx.exception))
         self.assertNotIsInstance(cx.exception, R.ReelFitError)
+
+
+class WhenTheDayIsOneWordTooLong(unittest.TestCase):
+    """D134: pauses first, then the speech by the smallest step that fits — never 'REEL NOT MADE' for a second."""
+
+    def clips(self, per_clip):
+        d = Path(tempfile.mkdtemp(dir=ROOT / 'build'))
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        n = 6
+        durs = {'intro': per_clip, 'outro': 2.6}
+        for i in range(n):
+            durs[f'h{i}'] = durs[f'b{i}'] = per_clip
+        for k, v in durs.items():
+            sf.write(d / f'{k}.wav', np.random.default_rng(1).normal(0, 0.05, int(48000 * v)), 48000)
+        return d, durs, n
+
+    def test_a_reel_just_over_the_fail_line_is_sped_up_not_refused(self):
+        d, durs, n = self.clips(4.1)                                   # tightest cut ≈ 60.5 s
+        copies = [dict(body='ಒಂದು ಎರಡು ಮೂರು', place_short='ಉಡುಪಿ') for _ in range(n)]
+        tl0 = R._timeline(durs, n)
+        self.assertGreater(tl0['T'], Limits.reel_fail_seconds)
+        tl, new, _w, _t = R._speed_up(d, copies, 'ಉಡುಪಿ ಉಡುಪಿ', durs, ['ಉಡುಪಿ'] * n, tl0)
+        self.assertLessEqual(tl['T'], Limits.reel_fail_seconds)
+        self.assertGreater(tl['speedup'], 1.0)
+        self.assertLessEqual(tl['speedup'], Limits.saara_reel_speedup_max)
+        self.assertLess(new['h0'], durs['h0'])                         # the clip on disk really is shorter
+
+    def test_a_reel_far_over_is_still_refused_naming_the_story(self):
+        d, durs, n = self.clips(5.2)
+        copies = [dict(body='ಒಂದು', place_short='ಉಡುಪಿ') for _ in range(n)]
+        tl, *_ = R._speed_up(d, copies, 'ಉಡುಪಿ', durs, ['ಉಡುಪಿ'] * n, R._timeline(durs, n))
+        self.assertGreater(tl['T'], Limits.reel_fail_seconds)          # _build raises ReelFitError on this
 
 
 class TheGate(unittest.TestCase):
@@ -472,6 +525,21 @@ class TheGate(unittest.TestCase):
         c = self.codes(self.folder(dict(seconds=8.0, issues=[], pronunciation={}, timing=['measured'])))
         for code in ('VID-07', 'VID-08', 'SND-08'):
             self.assertNotIn(code, c)
+
+    def test_a_reel_made_from_earlier_wording_is_refused_until_it_is_made_again(self):
+        # D134: a desk edits a headline after the render; the gate sees it without anyone remembering
+        import datetime
+        from brand.review import review
+        st = Story(headline='ಕಂಪನಿ: ಹೊಸ ಯೋಜನೆ', reel_line='ಹೊಸ ಯೋಜನೆ ಆರಂಭ', reel_support='ಯೋಜನೆ ಸೋಮವಾರ ಆರಂಭ.',
+                   location='ಉಡುಪಿ', category='civic', segment='saara')
+        ed = Edition(stories=[st], date=datetime.datetime(2026, 10, 24, 9, 0))
+        made = R.copies_hash(R._copies(ed.segment('saara')))
+        d = self.folder(dict(seconds=8.0, issues=[], pronunciation={}, timing=['measured'], copies_hash=made))
+        self.assertNotIn('VID-08', {f.code for f in review(d, ed).findings})
+        st.reel_line = 'ಹೊಸ ಯೋಜನೆ ಸ್ಥಗಿತ'                                   # a desk's edit, after the render
+        found = {f.code: f for f in review(d, ed).findings}
+        self.assertEqual(found['VID-08'].severity, 'fail')
+        self.assertIn('earlier wording', found['VID-08'].message)
 
     def test_text_that_does_not_fit_holds_the_package(self):
         c = self.codes(self.folder(dict(seconds=8.0, issues=['story 1: the headline does not fit above the card even at 60px'])))

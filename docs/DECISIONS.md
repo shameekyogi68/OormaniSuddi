@@ -3823,3 +3823,50 @@ _check_saara_reel` · `brand/tokens.py :: Limits.saara_*, Motion.saara_reel_*` �
   carries it and checks every figure and name against that. No paste carries it → still `own`, as before.
   A zero-width joiner between stem and suffix (ಪಂಚಾಯತ್‌ನಿಂದ) is ignored when matching, so the suffix is not
   read as an invented word. `tests/test_factcheck_own.py` pins both.
+
+
+## D134 · The reel in five minutes: draw it side by side, ask the desks while it draws, say the words right
+
+**Decided (2026-10-24), by the owner.** "It is taking too much time to create that reel — three hours yesterday
+and still not posted… I need it within 5 minutes, perfectly. A lot of pronunciation issues."
+
+**Where the three hours went** (read from `out/2026-10-23/run_report.md`, the receipts and the code, not guessed):
+the film itself took 194 s. The rest was the morning's *sequence*: intake, then reel_check rounds, then the
+fact/legal desks, then the Kannada desk after them, then the render, then the gate holding on `OPS-04` for
+receipts filed after it, so a re-render only for the gate to see them, then ear-found respellings
+(listen → respell → re-render, each a 3-minute loop) — repeated.
+
+* **The film is drawn by three Chromes at once** (`Limits.saara_reel_workers`, measured on this 8-core M1:
+  1 → 137 s, 2 → 68 s, **3 → 58 s**, 4 → 65 s, 6 → 72 s). Each draws a contiguous stretch into its own encoder;
+  the parts are joined without re-encoding (`brand/saara_reel.py :: _film`). A Chrome that dies is replaced and
+  carries on from its own next frame, as before (D133). Frames are captured as JPEG q96 and encoded `-preset fast`;
+  against the PNG stills the film's frames measure ≈38 dB PSNR (video compression included). Voice clips are
+  asked of Google six at a time, and the speech-model audit is cached by the clip's bytes. Cold, the whole
+  reel is ≈85 s; with the voice cached ≈60 s (was ≈200 s).
+* **Render and desks start together.** The Kannada desk now reads beside the fact desk (wave 1), not after it;
+  if it changes a fact-bearing word the story's fact receipt goes stale and that one story is listed again — nothing
+  is skipped, nothing waits. `/daily-saara` sends the render (background) and every wave-1 agent in ONE message.
+* **The gate no longer needs a re-render to see a receipt.** `scripts/regate.py editions/<d>.json` re-reads the gate
+  over the existing folder in seconds. To keep that safe, the reel's report carries a fingerprint of everything the
+  film shows and says (`copies_hash`); `review()` compares it with the copy as it is now and holds the package
+  (`VID-08`, "made from earlier wording") if a desk changed a word after the render. Re-render only then.
+* **Pronunciation, fixed where it can be fixed by a rule** (each was heard on a real day):
+  a figure and its ending are one word even with a space typed between (`66 ರಲ್ಲಿ` was read "ಅರವತ್ತಾರು ರಲ್ಲಿ");
+  a name ending in ನ್ / ಲ್ before ಗೆ / ಗೂ / ಗಾಗಿ takes a ZWNJ (`ಸ್ಟೀವನ್‌ಗೆ`); more case endings after figures. The Kannada desk
+  and the intake desk are told to write that way, and the speech-model audit now lists a word it matches below 0.7
+  ("listen for …"), where it was 0.6 and missed "ರಿಷಭ್".
+* **A day one word too long still comes out.** The first real run after this change (23 Oct) was refused —
+  "REEL NOT MADE, 60 s" — because the estimate said 57 s and the voice ran 62 s (place names speak slowly:
+  0.083 s/char, not 0.075; `Motion.saara_reel_sec_per_char` is now 0.082). Pauses are tightened first; if the
+  tightest pauses still pass the fail line, the speech is sped up by the smallest step that fits (2 %, 3.5 %,
+  at most `Limits.saara_reel_speedup_max` = 5 %), with word timing re-measured and a warning saying so. Past
+  that, the render still stops and names the story to shorten.
+* **What this does NOT do, said plainly.** Nothing here can hear. The speech model catches a dropped or garbled
+  word; on isolated words it is unreliable (it hears "High Court" for ಹೈಕೋರ್ಟ್), so words cannot be auto-respelled
+  by it. A subtle slip is found by a person's ear once and fixed for ever with
+  `scripts/reel_say.py "<line>" --respell "<word>=<sound>"` (`assets/pronunciation.json`, every format).
+  A respell only changes audio, so the fix costs one render (≈1 min), not a morning.
+
+Enforced by: `tests/test_saara_reel.py` (SpokenRight, TheFilmSurvivesItsBrowser incl. the three-Chrome film,
+TheGate stale-wording), `tests/test_dispatch.py` (wave), `tests/test_factcheck_own.py`.
+

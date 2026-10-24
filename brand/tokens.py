@@ -380,6 +380,14 @@ class Limits:
     # and is never warned for being longer than a speed-news reel: it carries
     # up to saara_max_stories stories.
     saara_reel_max_seconds = 59.0
+    # How many Chromes draw the reel's frames side by side, each its own stretch of the film (D134).
+    # Measured 2026-10-24 on an 8-core, 8 GB M1, a 58 s reel: 1 Chrome 137 s · 2 → 68 s · 3 → 58 s ·
+    # 4 → 65 s · 6 → 72 s (the cores are the limit, so more only fights for them).
+    saara_reel_workers = 3
+    # When even the tightest pauses leave the reel past the fail line, the speech is sped up by the
+    # smallest steps that fit, never past this. 1.06 on top of the house 1.15 was heard as rushed (owner,
+    # 2026-10-23); 1.05 is the most a day may take — a day that still does not fit says which story to shorten.
+    saara_reel_speedup_max = 1.05
     # The voice, heard back by a speech model (brand/reel_audit.py). A right voice scores
     # 0.96-1.00 on the phonetic skeleton and wrong audio 0.13-0.26, so these are not close calls.
     saara_reel_voice_warn = 0.80
@@ -737,9 +745,10 @@ class Motion:
     saara_reel_tail_min  = 0.22
     saara_reel_close_min = 3.1
     saara_reel_hook_hold = 0.45   # the front page holds this long after the hook is said
-    # Spoken seconds per character of Kannada at the house voice (measured on
-    # twelve clips, 0.072–0.078): the estimate `scripts/reel_check.py` budgets with.
-    saara_reel_sec_per_char = 0.075
+    # Spoken seconds per character of Kannada at the house voice: the estimate `scripts/reel_check.py`
+    # budgets with. 0.072–0.078 on the first dozen clips (D132); 0.072–0.092, mean 0.083, on 23 Oct's six
+    # place-name-heavy stories (D134) — the estimate said 57 s, the voice ran 62 s. Place names are slow.
+    saara_reel_sec_per_char = 0.082
 
 
 class Ease:

@@ -57,7 +57,8 @@ editor — never look it up.
      the day allows a card sentence (about 7–9 Kannada words for five stories, about 6
      for six) — UP TO that: shorter is fine. A sentence, not a fragment: it must stand alone with only the
      headline beside it — and, for crime, must not assert guilt.
-   - Write figures as figures (33ನೇ, 22ರಂದು, ₹500): the voice says them as words.
+   - Write figures as figures (33ನೇ, 22ರಂದು, 66ರಲ್ಲಿ — the ending joined to the figure, never `66 ರಲ್ಲಿ`; ₹500): the voice says them as words.
+   - A name ending in a consonant takes its ending after a ZWNJ (ಸ್ಟೀವನ್‌ಗೆ), or the voice mispronounces it.
    - `deck` and `points` stay full-length: the captions use them.
 5. **Propose a segment per story**, one value each:
    - breaking or the day's top story → `mukhya` (it will need a photograph)

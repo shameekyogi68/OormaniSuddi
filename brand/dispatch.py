@@ -14,8 +14,11 @@ The production path, in waves (tasks in one wave run in parallel):
      corrections-officer  a complaint clock is running, or a known error is
                         uncorrected
   1  fact-checker, legal-standards      one per story (legal: risky ones)
-  2  kannada-editor     one per story
-     picture-editor     one per story that needs a picture checked or briefed
+     kannada-editor     one per story — beside the fact desk, not after it (D134): the copy it reads is
+                        the copy the fact desk reads, and if it changes a fact-bearing word the fact
+                        receipt goes stale and that one story is listed again. A morning had three
+                        waves of agents one after another; this is one.
+  2  picture-editor     one per story that needs a picture checked or briefed
   3  (after render)     package-inspector, one per format in out/<stem>
                         (roundup, reel_saara, saara, mukhya_N) · social-writer caption
                         audit · gate-doctor when the gate HELD. The code
@@ -493,7 +496,7 @@ def _edition_tasks(plan: Plan, path: str) -> None:
                 plan.person.append(f'{rel} story {i}: legal-standards BLOCKED it')
         if sd.get('segment', '') in SEGMENTS:
             if not _receipt_current('kannada-editor', stem, copy_hash(sd), i):
-                plan.add('kannada-editor', 'reactive', 2,
+                plan.add('kannada-editor', 'reactive', 1,
                          f'{sd["segment"]} copy not read in this form', rel, story=i)
             _picture_tasks(plan, rel, stem, i, sd)
         if not sd.get('verified_by'):

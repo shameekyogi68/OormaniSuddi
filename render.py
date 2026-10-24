@@ -807,7 +807,7 @@ def _finish(outdir, ed, made, log, t0, draft: bool = False) -> int:
             print(f'       python3 scripts/sign_off.py {outdir} --by "<name>"')
     else:
         print(f'  🔴 HELD — {len(rep.fail)} fault(s) above must be fixed and '
-              f'the render re-run. Do NOT publish this folder: it has no '
+              f'the gate re-checked (scripts/regate.py — a re-render only if the copy changed). Do NOT publish this folder: it has no '
               f'APPROVAL.md. Codes and owners in review_report.json.')
 
     # The editor's folder holds what gets posted: a carousel slide's .jpg

@@ -283,7 +283,7 @@ class TheRightAgentIsCalled(_Newsroom):
         self.assertEqual(wave['intake-editor'], 0)
         self.assertEqual(wave['fact-checker'], 1)
         self.assertEqual(wave['legal-standards'], 1)
-        self.assertEqual(wave['kannada-editor'], 2)
+        self.assertEqual(wave['kannada-editor'], 1)       # beside the fact desk, not after it (D134)
         self.assertEqual(wave['picture-editor'], 2)
 
     def test_the_brief_says_to_run_a_wave_in_parallel(self):

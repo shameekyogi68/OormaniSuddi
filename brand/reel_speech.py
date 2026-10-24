@@ -74,10 +74,12 @@ def number_words(n: int) -> str | None:
 
 # What may follow a figure directly. Each begins with a consonant, so the number
 # word's final ು is dropped before it: ಐದು + ಕ್ಕೆ → ಐದಕ್ಕೆ, ಮೂವತ್ತಮೂರು + ನೇ → ಮೂವತ್ತಮೂರನೇ.
-_SUFFIXES = sorted(['ನೇ', 'ನೆಯ', 'ರಂದು', 'ರಲ್ಲಿ', 'ರಿಂದ', 'ರವರೆಗೆ', 'ರೊಳಗೆ', 'ರ', 'ಕ್ಕೆ',
-                    'ಕ್ಕೂ', 'ಕ್ಕಿಂತ', 'ಕ್ಕಾಗಿ', 'ರಷ್ಟು'], key=len, reverse=True)
+_SUFFIXES = sorted(['ನೇ', 'ನೆಯ', 'ನೆಯದು', 'ರಂದು', 'ರಲ್ಲಿ', 'ರಲ್ಲೂ', 'ರಿಂದ', 'ರವರೆಗೆ', 'ರವರೆಗೂ', 'ರೊಳಗೆ',
+                    'ರೊಂದಿಗೆ', 'ರಿಗೆ', 'ರ', 'ಕ್ಕೆ', 'ಕ್ಕೂ', 'ಕ್ಕಿಂತ', 'ಕ್ಕಾಗಿ', 'ರಷ್ಟು'], key=len, reverse=True)
 _KN = 'ಀ-೿'
-_WITH_SUFFIX = re.compile(r'(?<![\d.])(\d{1,5})(' + '|'.join(_SUFFIXES) + r')(?![' + _KN + r'\d])')
+# "66 ರಲ್ಲಿ" (a space typed between) is the same word as "66ರಲ್ಲಿ": read apart it is "ಅರವತ್ತಾರು ರಲ್ಲಿ",
+# which no Kannada speaker says. D134 (a real day's headline had exactly this).
+_WITH_SUFFIX = re.compile(r'(?<![\d.])(\d{1,5}) ?(' + '|'.join(_SUFFIXES) + r')(?![' + _KN + r'\d])')
 _PLAIN = re.compile(r'(?<![\d.])(\d{1,5})(?!\d)')
 
 
@@ -99,9 +101,15 @@ def numbers_to_words(text: str) -> str:
     return _PLAIN.sub(plain, text)
 
 
+# A name borrowed with a final consonant takes its ending after a joiner — ಸ್ಟೀವನ್‌ಗೆ, not ಸ್ಟೀವನ್ಗೆ. Typed
+# without it, the voice reads ನ್ಗ as one conjunct and says something else (a real day, D134). Only ನ್ and ಲ್
+# before ಗೆ / ಗೂ / ಗಾಗಿ: no native word has those conjuncts, so nothing is changed that should not be.
+_FINAL_CONSONANT_ENDING = re.compile(r'([ನಲ]್)(ಗೆ|ಗೂ|ಗಾಗಿ)(?![ಀ-೿])')
+
+
 def spoken(text: str) -> str:
     """Exactly what the voice is given: the house normaliser, then figures as words."""
-    t = numbers_to_words(voice._spoken(text))
+    t = numbers_to_words(_FINAL_CONSONANT_ENDING.sub('\\1\u200c\\2', voice._spoken(text)))
     return re.sub(r'\s+', ' ', t).strip()
 
 

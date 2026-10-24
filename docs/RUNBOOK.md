@@ -86,15 +86,19 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
 4. **Runs the desks in waves.** `python3 scripts/dispatch.py` lists who is
    due, as agent runs. Each wave is ONE message of parallel Agent calls, one
    per line (a desk reads several stories in one run, D97):
-   - wave 1 — `fact-checker` + `legal-standards` + `instagram-strategist`
+   - wave 1 — `fact-checker` + `kannada-editor` + `legal-standards` + `instagram-strategist`
      (`python3 scripts/fact_check.py editions/<date>.json` checks every figure
-     against the kept source, offline);
-   - wave 2 — `kannada-editor` + `picture-editor`.
+     against the kept source, offline). Since D134 the ಸುದ್ದಿ ಸಾರ reel's render is started in the
+     same message, not after: the film needs about a minute and does not wait for the desks;
+   - wave 2 — `picture-editor` (only when a story carries a picture).
 
    Apply the strategist's proposals the way you apply any desk's edit — the
    hooks into `hook`, a format change only if the editor agrees.
 
-   No sentence is polished before its fact check passes (D84, D87). These
+   A sentence is still never *left* polished-but-unchecked (D84, D87): the Kannada desk now reads beside the
+   fact desk, and if it changes a fact-bearing word the story's fact receipt goes stale and that one story is
+   listed again. After the desks, re-render only if a word the film shows or says changed; otherwise
+   `python3 scripts/regate.py editions/<date>.json` re-reads the gate in seconds (D134). These
    waves are not optional: the gate holds any edition a due desk has not
    read (`OPS-04`, D95). The first ಸುದ್ದಿ ಸಾರ skipped them and shipped a death
    in red, three wrong categories and two wording slips.

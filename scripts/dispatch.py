@@ -40,7 +40,7 @@ from brand import dispatch as D                          # noqa: E402
 
 # Commands after which the state can have changed enough to react to.
 REACT_ON = ('render.py', 'fact_check.py', 'correction.py', 'intake.py',
-            'verify.py')
+            'verify.py', 'regate.py')
 QUIET = ('--check', '--describe', '--schema', '--help', 'status', '--show')
 
 

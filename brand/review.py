@@ -290,7 +290,7 @@ def _motion(path: str) -> float:
 MOTION_FLOOR = 0.03        # below this a "video" is a still picture (VID-06)
 
 
-def _check_saara_reel(outdir: str, r: 'ReviewReport') -> None:
+def _check_saara_reel(outdir: str, r: 'ReviewReport', edition: 'Edition | None' = None) -> None:
     """The reel's own report (written when it was made) against the film itself.
 
     A reel that was cut short, or whose page said the copy did not fit, or whose
@@ -309,6 +309,17 @@ def _check_saara_reel(outdir: str, r: 'ReviewReport') -> None:
     except (OSError, ValueError):
         r.add_fail('VID-08', '_review/reel_saara_report.json cannot be read', where='reel_saara.mp4')
         return
+    if edition is not None and rep.get('copies_hash'):
+        # a desk's edit after the render: the film no longer says what the copy says (D134)
+        try:
+            from . import saara_reel
+            now = saara_reel.copies_hash(saara_reel._copies(edition.segment('saara')))
+        except Exception:                                  # noqa: BLE001 — the copy cannot be read: other checks say so
+            now = rep['copies_hash']
+        if now != rep['copies_hash']:
+            r.add_fail('VID-08', 'reel_saara.mp4 was made from earlier wording of the copy — a headline, card '
+                       'sentence or place has changed since. Re-render: python3 render.py editions/<date>.json --only saara',
+                       where='reel_saara.mp4')
     for msg in rep.get('issues', []):
         r.add_fail('VID-07', f'reel_saara.mp4: {msg}', where='reel_saara.mp4')
     d = _duration(film)
@@ -497,7 +508,7 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
 
     # ── the ಸುದ್ದಿ ಸಾರ reel was cut from its own voice, and its frame fits (D132) ──
     if 'reel_saara.mp4' in reels:
-        _check_saara_reel(outdir, r)
+        _check_saara_reel(outdir, r, edition)
 
     # ── the copy ──────────────────────────────────────────────────────────
     if edition is not None:
@@ -778,7 +789,8 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
             r.checked.append('every desk read the current wording (OPS-04)')
             for gap in desk_gaps(ed_path):
                 r.add_fail('OPS-04', f'{gap}. Run the waves '
-                           '`python3 scripts/dispatch.py` lists, then re-render.')
+                           '`python3 scripts/dispatch.py` lists, then re-check the gate with '
+                           '`python3 scripts/regate.py <edition>` (no re-render unless a desk changed the copy).')
 
     # The script is checked, not the audio alone, because a hazard is visible
     # in the text and only audible after a four-minute render.

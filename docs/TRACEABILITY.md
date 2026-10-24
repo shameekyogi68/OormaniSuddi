@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **96/133** decisions are named by at least one test
+- **97/134** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -605,4 +605,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_animate.py`, `tests/test_factcheck_own.py`, `tests/test_saara_reel.py`, `tests/test_saara_reel_golden.py`, `tests/test_saara_reel_layout.py`
 - Enforced in: `brand/factcheck.py`, `brand/reel_audit.py`, `brand/saara_reel.py`, `scripts/daily_flow.py`, `scripts/reel_say.py`
+
+## D134 · The reel in five minutes: draw it side by side, ask the desks while it draws, say the words right
+
+- **Tested by:** `tests/test_dispatch.py`, `tests/test_saara_reel.py`
+- Enforced in: `brand/dispatch.py`, `brand/reel_speech.py`, `brand/review.py`, `brand/saara_reel.py`, `brand/tokens.py`, `scripts/regate.py`
 
