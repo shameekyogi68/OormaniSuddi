@@ -67,7 +67,8 @@ def compare(script: str, heard: str) -> dict:
     return {'similarity': round(sim, 3), 'suspects': suspects}
 
 
-def transcribe(wav: str) -> str:
+def transcribe_full(wav: str) -> dict:
+    """{text, words:[[word, start, end]…]} — cached by the clip's bytes."""
     import hashlib
     from pathlib import Path
     cache_file = None
@@ -75,7 +76,7 @@ def transcribe(wav: str) -> str:
         h = hashlib.sha256(Path(wav).read_bytes()).hexdigest()
         cache_dir = Path(__file__).resolve().parents[1] / 'build' / 'audit_cache'
         cache_dir.mkdir(parents=True, exist_ok=True)
-        cache_file = cache_dir / f'{h}.json'
+        cache_file = cache_dir / f'{h}.w.json'
         if cache_file.exists():
             return json.loads(cache_file.read_text(encoding='utf-8'))
     except Exception:
@@ -83,22 +84,45 @@ def transcribe(wav: str) -> str:
 
     import mlx_whisper
     out = mlx_whisper.transcribe(wav, path_or_hf_repo=MODEL, language='kn', temperature=0.0,
-                                 condition_on_previous_text=False)
-    text = (out.get('text') or '').strip()
+                                 condition_on_previous_text=False, word_timestamps=True)
+    words = [[w['word'].strip(), round(float(w['start']), 3), round(float(w['end']), 3)]
+             for seg in out.get('segments', []) for w in seg.get('words', [])]
+    res = {'text': (out.get('text') or '').strip(), 'words': words}
     if cache_file:
         try:
-            cache_file.write_text(json.dumps(text, ensure_ascii=False), encoding='utf-8')
+            cache_file.write_text(json.dumps(res, ensure_ascii=False), encoding='utf-8')
         except Exception:
             pass
-    return text
+    return res
+
+
+def transcribe(wav: str) -> str:
+    return transcribe_full(wav)['text']
+
+
+def stutters(script: str, words: list) -> list[list[float]]:
+    """[[start, end]] of each word the voice said TWICE running that the script says once (D138).
+
+    Found on a real Kore reel: "ಕಡಲಿನಲ್ಲಿ" came out as "ಕಡಲಿ ನಲ್ಲಿ ನಲ್ಲಿ". The overall similarity was 0.94, so the old
+    audit passed it. Two adjacent heard words with the same phonetic skeleton, where the script has no such pair,
+    are a repeat; the SECOND one is the span to cut."""
+    sw = [phonetic(w) for w in script.split()]
+    said_twice = {a for a, b in zip(sw, sw[1:]) if a and a == b}
+    out = []
+    for (w1, s1, e1), (w2, s2, e2) in zip(words, words[1:]):
+        a, b = phonetic(w1), phonetic(w2)
+        if len(a) >= 2 and a == b and a not in said_twice:
+            out.append([s2, e2])
+    return out
 
 
 def main(argv: list[str]) -> int:
     items = json.load(open(argv[1], encoding='utf-8'))
     results = {}
     for it in items:
-        heard = transcribe(it['wav'])
-        results[it['label']] = dict(compare(it['text'], heard), heard=heard)
+        full = transcribe_full(it['wav'])
+        heard = full['text']
+        results[it['label']] = dict(compare(it['text'], heard), heard=heard, stutters=stutters(it['text'], full['words']))
     print(json.dumps(results, ensure_ascii=False))
     return 0
 

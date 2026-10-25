@@ -3963,3 +3963,19 @@ The clips were measured, not guessed (`scratch/tone`, 25 Oct reel, 12 clips):
 
 Enforced by: `tests/test_saara_reel.py :: TheVoiceIsEven`.
 
+
+## D138 · A syllable said twice is found and cut out
+
+**Found by the owner's ear (2026-10-25):** Kore said "ಕಡಲಿನಲ್ಲಿ" as "ಕಡಲಿ ನಲ್ಲಿ ನಲ್ಲಿ". The speech check had scored the clip 0.94 and
+passed it — it compares the whole clip, and one repeated syllable barely moves the score.
+
+* `reel_audit.transcribe_full` now returns each word's start and end; `stutters(script, words)` finds two adjacent HEARD words with the
+  same phonetic skeleton where the script has no such pair (a repeat the script really has — "ಇಬ್ಬರು ಇಬ್ಬರು" — is not one).
+* `_build` cuts the second occurrence out of the clip (`reel_speech.cut_out`, 12 ms crossfade), hears the clip back to confirm, and
+  records the repair in the report; the render prints "the voice said a syllable twice and it was cut out — listen to it once".
+  Measured on the real clip: before "ಕಡಲಿ ನಲಿ ನಲಿ", after no repeat.
+* A cut is a repair, not a cure: the next time it can be asked for again (a new sample) if there is quota; it is only listed, never
+  hidden. Only a person's ear closes it.
+
+Enforced by: `tests/test_saara_reel.py :: WhenTheVoiceStutters`.
+

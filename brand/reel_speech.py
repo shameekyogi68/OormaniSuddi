@@ -249,6 +249,28 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
 
 
 # ── hear the clips back ──────────────────────────────────────────────────
+def cut_out(wav: Path, spans: list[list[float]], fade: float = 0.012) -> float:
+    """Remove the given [start, end] spans from a clip, joining the rest with a short crossfade; returns the new seconds."""
+    import numpy as np
+    import soundfile as sf
+    x, sr = sf.read(str(wav))
+    keep, pos = [], 0
+    for s0, s1 in sorted(spans):
+        a, b = int(max(0, s0) * sr), int(min(len(x) / sr, s1) * sr)
+        if a > pos:
+            keep.append(x[pos:a])
+        pos = max(pos, b)
+    keep.append(x[pos:])
+    n = int(fade * sr)
+    out = keep[0]
+    for seg in keep[1:]:
+        k = min(n, len(out), len(seg))
+        ramp = np.linspace(0, 1, k)
+        out = np.concatenate([out[:len(out) - k], out[len(out) - k:] * (1 - ramp) + seg[:k] * ramp, seg[k:]])
+    sf.write(str(wav), out, sr)
+    return round(len(out) / sr, 3)
+
+
 def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = 'gemini', tries: int = 3) -> tuple[float, float]:
     """Two clips from ONE request: both sentences are asked for together and cut apart at the pause between them.
 

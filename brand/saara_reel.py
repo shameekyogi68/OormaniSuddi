@@ -572,6 +572,8 @@ def _voice_findings(voice: dict) -> tuple[list[str], list[str]]:
                         f'it said "{v.get("heard", "")[:70]}"')
         elif v['suspects']:
             listen.append(f'{label}: {" ".join(v["suspects"])}')
+        if v.get('repaired'):
+            weak.append(f'{label}: the voice said a syllable twice and it was cut out ({len(v["repaired"])}×) — listen to it once')
     return listen, weak
 
 
@@ -614,6 +616,20 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
     def items(rows):
         return [dict(label=label, wav=str(tmp / f'{k}.wav'), text=RS.spoken(text)) for k, text, label in rows]
     voice = RS.audit(items(plan))
+    if 'unavailable' not in voice:
+        # a syllable said twice ("ಕಡಲಿ ನಲ್ಲಿ ನಲ್ಲಿ") is cut out where it is, and heard back again (D138)
+        fixed = []
+        for k, text, label in plan:
+            spans = voice[label].get('stutters') or []
+            if spans:
+                durs[k] = RS.cut_out(tmp / f'{k}.wav', spans)
+                fixed.append((k, text, label))
+        if fixed:
+            again = RS.audit(items(fixed))
+            if 'unavailable' not in again:
+                for k, text, label in fixed:
+                    again[label]['repaired'] = voice[label]['stutters']
+                    voice[label] = again[label]
     if 'unavailable' not in voice:
         bad = [row for row in plan if voice[row[2]]['similarity'] < Limits.saara_reel_voice_fail]
         for k, text, label in bad:

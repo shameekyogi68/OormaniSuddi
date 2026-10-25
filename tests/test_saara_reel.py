@@ -643,6 +643,27 @@ class TheSecondGeminiKey(unittest.TestCase):
         self.assertEqual(self.run_synth(False), ['KEY1', 'KEY1'])
 
 
+class WhenTheVoiceStutters(unittest.TestCase):
+    """D138: Kore said "ಕಡಲಿನಲ್ಲಿ" as "ಕಡಲಿ ನಲ್ಲಿ ನಲ್ಲಿ" and the audit scored it 0.94 — a pass."""
+
+    def test_a_syllable_said_twice_that_the_script_says_once_is_found(self):
+        from brand import reel_audit as A
+        heard = [['ಕುಂದಾಪುರ', 0, .56], ['ಕಡಲಿ', .56, 1.04], ['ನಲಿ', 1.04, 1.26], ['ನಲಿ', 1.26, 1.48], ['ಬಿರುಗಾಳಿ', 1.48, 2.02]]
+        self.assertEqual(A.stutters('ಕುಂದಾಪುರ, ಕಡಲಿನಲ್ಲಿ ಬಿರುಗಾಳಿ', heard), [[1.26, 1.48]])
+
+    def test_a_repeat_the_script_really_has_is_not_one(self):
+        from brand import reel_audit as A
+        self.assertEqual(A.stutters('ಇಬ್ಬರು ಇಬ್ಬರು ಬಂದರು', [['ಇಬ್ಬರು', 0, 1], ['ಇಬ್ಬರು', 1, 2], ['ಬಂದರು', 2, 3]]), [])
+
+    def test_the_repeat_is_cut_out_and_the_rest_joined(self):
+        p = Path(tempfile.mkdtemp(dir=ROOT / 'build')) / 'c.wav'
+        self.addCleanup(lambda: __import__('shutil').rmtree(p.parent, ignore_errors=True))
+        sf.write(p, np.random.default_rng(2).normal(0, .1, 48000 * 3), 48000)
+        new = RS.cut_out(p, [[1.0, 1.4]])
+        self.assertAlmostEqual(new, 2.6, delta=0.03)
+        self.assertAlmostEqual(len(sf.read(p)[0]) / 48000, new, places=2)
+
+
 class TheVoiceIsEven(unittest.TestCase):
     """D137: every clip is a separate request at its own level; the listener must not hear the voice change mood."""
 
