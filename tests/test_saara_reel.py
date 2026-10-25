@@ -490,6 +490,33 @@ class TheWrittenGrammar(unittest.TestCase):
         self.assertTrue(any('grammar, story 1 headline' in w for w in R._warnings(copies, {'lines': [2]}, {})))
 
 
+class OneRequestTwoClips(unittest.TestCase):
+    """D134: a headline and its card asked for together (Gemini's free tier is 10 requests a day) and cut at the pause."""
+
+    def pair(self, gap):
+        d = Path(tempfile.mkdtemp(dir=ROOT / 'build'))
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        rng = np.random.default_rng(3)
+        x = np.concatenate([rng.normal(0, .2, int(48000 * 1.6)), np.zeros(int(48000 * gap)), rng.normal(0, .2, int(48000 * 1.2))])
+        sf.write(d / 'src.wav', x, 48000)
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(d / 'src.wav'), str(d / 'src.mp3')], check=True)
+
+        def fake(text, out, engine, name, key):
+            __import__('shutil').copy(d / 'src.mp3', out)
+        with mock.patch.object(RS.voice, '_synth_one', fake):
+            return RS.clip_pair('ಒಂದು ಎರಡು ಮೂರು ನಾಲ್ಕು', 'ಐದು ಆರು ಏಳು', d / 'h.wav', d / 'b.wav')
+
+    def test_it_is_cut_at_the_pause(self):
+        a, b = self.pair(0.45)
+        self.assertAlmostEqual(a, 1.6, delta=0.25)
+        self.assertAlmostEqual(b, 1.2, delta=0.25)
+
+    def test_with_hardly_a_pause_it_still_cuts_near_the_boundary(self):
+        a, b = self.pair(0.05)
+        self.assertGreater(a, 1.0)
+        self.assertGreater(b, 0.8)
+
+
 class TheVoiceFallsBackWhole(unittest.TestCase):
     """D134: a better voice may be asked for, but a day is never lost, and never spoken in two voices."""
 

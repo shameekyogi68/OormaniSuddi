@@ -540,10 +540,30 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
     for i, c in enumerate(copies):
         plan += [(f'h{i}', c['say_head'], f'story {i + 1} headline'), (f'b{i}', c['body'], f'story {i + 1} card')]
     from concurrent.futures import ThreadPoolExecutor, as_completed
+    durs = {}
     with RS._one_engine(engine):
-        with ThreadPoolExecutor(max_workers=min(len(plan), Limits.saara_reel_gemini_workers if engine == 'gemini' else 6)) as pool:
-            futures = {pool.submit(RS.clip, text, tmp / f'{k}.wav', engine): k for k, text, _ in plan}
-            durs = {futures[fut]: fut.result() for fut in as_completed(futures)}
+        if engine == 'gemini':
+            # one request per story (its headline and card together, cut at the pause): 8 requests, not 14 (D134)
+            jobs = [pool_job for pool_job in (
+                [('single', 'intro', hook), ('single', 'outro', OUTRO_SAY)] +
+                [('pair', i, (c['say_head'], c['body'])) for i, c in enumerate(copies)])]
+            with ThreadPoolExecutor(max_workers=Limits.saara_reel_gemini_workers) as pool:
+                futs = {}
+                for kind, k, text in jobs:
+                    if kind == 'single':
+                        futs[pool.submit(RS.clip, text, tmp / f'{k}.wav', engine)] = (kind, k)
+                    else:
+                        futs[pool.submit(RS.clip_pair, text[0], text[1], tmp / f'h{k}.wav', tmp / f'b{k}.wav', engine)] = (kind, k)
+                for fut in as_completed(futs):
+                    kind, k = futs[fut]
+                    if kind == 'single':
+                        durs[k] = fut.result()
+                    else:
+                        durs[f'h{k}'], durs[f'b{k}'] = fut.result()
+        else:
+            with ThreadPoolExecutor(max_workers=6) as pool:
+                futures = {pool.submit(RS.clip, text, tmp / f'{k}.wav', engine): k for k, text, _ in plan}
+                durs = {futures[fut]: fut.result() for fut in as_completed(futures)}
 
     # Hear the clips back (a speech model, in its own process). A clip that does not sound like its
     # words — noise, silence, the wrong thing — is asked for once more; if it is still wrong the

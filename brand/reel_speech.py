@@ -222,6 +222,72 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
 
 
 # ── hear the clips back ──────────────────────────────────────────────────
+def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = 'gemini', tries: int = 3) -> tuple[float, float]:
+    """Two clips from ONE request: both sentences are asked for together and cut apart at the pause between them.
+
+    Gemini's free tier allows 10 requests a day; a six-story reel needs 14 clips but only 8 requests this way
+    (a headline and its card per story, plus the opening and the close). The cut is at the silence nearest
+    where the words say the boundary falls; if there is no clear pause the reel stops, and the caller falls back
+    to the Google voice for the whole reel (D134)."""
+    raw = wav_a.with_suffix('.pair.mp3')
+    full = wav_a.with_suffix('.pair.wav')
+    a, b = spoken(first), spoken(second)
+    gem = engine == 'gemini'
+    last: Exception | None = None
+    sent = name = None
+    for attempt in range(1, tries + 1):
+        try:
+            sent = (Limits.saara_reel_gemini_style if gem else '') + a + '\n' + b
+            name = Limits.saara_reel_gemini_voice if gem else None
+            with _one_engine(engine):
+                voice._synth_one(sent, str(raw), engine, name, None)
+            subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-ar', '48000', '-ac', '1', str(full)], check=True)
+            total = voice.get_audio_duration(str(full))
+            sil = subprocess.run(['ffmpeg', '-i', str(full), '-af', 'silencedetect=n=-38dB:d=0.14', '-f', 'null', '-'],
+                                 capture_output=True, text=True).stderr
+            starts = [float(x) for x in re.findall(r'silence_start: ([\d.]+)', sil)]
+            ends = [float(x) for x in re.findall(r'silence_end: ([\d.]+)', sil)]
+            gaps = [(st, en) for st, en in zip(starts, ends) if st > 0.4 and en < total - 0.2]
+            wa = sum(weight(w) for w in a.split()); wb = sum(weight(w) for w in b.split())
+            guess = total * wa / (wa + wb)
+            near = [g for g in gaps if abs((g[0] + g[1]) / 2 - guess) <= 0.35 * total]
+            if near:
+                st, en = min(near, key=lambda g: abs((g[0] + g[1]) / 2 - guess))
+            else:
+                # no clear pause (the voice ran the two sentences together): cut at the quietest instant near
+                # where the words say the boundary falls. The speech model hears each half back afterwards, so
+                # a cut inside a word is caught there and the reel falls back — it is never silently wrong.
+                import numpy as np
+                import soundfile as sf
+                x, sr = sf.read(str(full))
+                hop = int(0.02 * sr)
+                rms = np.array([np.sqrt(np.mean(x[i:i + hop] ** 2)) for i in range(0, len(x) - hop, hop)])
+                lo, hi = int(max(0.3, guess - 0.25 * total) / 0.02), int(min(total - 0.3, guess + 0.25 * total) / 0.02)
+                k = lo + int(np.argmin(rms[lo:hi]))
+                st = en = k * 0.02
+            for path, (t0, t1) in ((wav_a, (0.0, st + 0.06)), (wav_b, (en - 0.06, total))):
+                subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{t0:.3f}', '-to', f'{t1:.3f}', '-i', str(full),
+                                '-af', TRIM, '-ar', '48000', '-ac', '1', str(path)], check=True)
+            da, db = (voice.get_audio_duration(str(wav_a)), voice.get_audio_duration(str(wav_b)))
+            if da < 0.8 or db < 0.8:
+                raise ReelError(f'a clip cut from the pair is only {min(da, db):.2f}s')
+            return round(da, 3), round(db, 3)
+        except Exception as e:      # noqa: BLE001
+            last = e
+            if '429' in str(e) and 'daily quota' not in str(e) and attempt < tries:
+                time.sleep(15 * attempt)
+            elif attempt < tries and 'daily quota' not in str(e):
+                with contextlib.suppress(Exception):          # a cached bad pair would be handed back every time
+                    import os
+                    os.remove(os.path.join(voice.TTS_CACHE, f'{voice._cache_key(sent, engine, name)}.mp3'))
+        finally:
+            raw.unlink(missing_ok=True)
+            full.unlink(missing_ok=True)
+        if last is not None and 'daily quota' in str(last):
+            break
+    raise ReelError(f'the {engine} voice failed for {a[:30]!r}: {last}')
+
+
 def audit(items: list[dict], timeout: float = 600.0) -> dict:
     """[{label, wav, text}] → {label: {similarity, suspects, heard}}, or {'unavailable': why}.
 

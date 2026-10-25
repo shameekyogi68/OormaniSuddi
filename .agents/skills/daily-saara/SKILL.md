@@ -159,7 +159,10 @@ make a code go away.
 1. The file: `out/<today>/reel_saara.mp4` — duration, stories, size.
 2. What to post where, from `schedule.txt` (Instagram Reel + Facebook Reel + YouTube Short; the two
    caption files).
-3. **The voice, honestly.** You cannot hear the reel — but a speech model heard every clip back (the
+3. **Which voice spoke.** The reel is spoken in Gemini's "Kore" (the owner's choice, `Limits.saara_reel_voice`). The free tier
+   allows 10 requests a day, so if the render says it "fell back" to the Google voice, SAY SO in the report and why (quota); never
+   switch the setting yourself, and never call it Kore if it fell back. Enabling billing on the Gemini key ends the fallback.
+   **The voice, honestly.** You cannot hear the reel — but a speech model heard every clip back (the
    render prints `voice heard back … lowest 0.9x`; a right voice scores 0.96+, wrong audio 0.2–0.3). Say
    the lowest score. It catches a dropped, garbled or wrong word; it cannot catch a subtle slip, so list
    the words it flagged ("listen for …") and the "may be misread" words, and which stories used their

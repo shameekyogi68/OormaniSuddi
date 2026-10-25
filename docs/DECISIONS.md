@@ -3867,11 +3867,15 @@ receipts filed after it, so a re-render only for the gate to see them, then ear-
   (dangling ಮತ್ತು / ಸೇರಿದಂತೆ, a case ending standing alone, a figure apart from its ending, a doubled word); the
   opening is built by `_hook_text` as Kannada lists towns. The same lint caught `66 ರಲ್ಲಿ` in the live day's on-screen headline.
 * **The voice (owner's ear, 2026-10-24).** In an A/B of the same two lines the owner preferred Gemini's "Kore" to the Google
-  translate voice. It is wired (`Limits.saara_reel_voice`, `saara_reel_gemini_voice`, a style direction that is not
-  spoken), but the project's key is on Gemini's free tier — **10 requests a day**, a reel needs ~14 (measured: HTTP 429) — so the
-  default stays `'google'`. After billing is enabled on that key, set `saara_reel_voice = 'gemini'`. If it is set and the
-  quota is gone, `make()` makes the WHOLE reel again in the Google voice, never two voices in one reel, and the report
-  and the render say so. (A first version waited out the 429 and cost two minutes; a daily quota now fails at once.)
+  translate voice, and asked for it. `Limits.saara_reel_voice = 'gemini'`, voice `saara_reel_gemini_voice`, with a style
+  direction that is not spoken. The project's key is on Gemini's FREE tier — **10 requests a day** (HTTP 429 "limit: 10 …
+  per day", resets about 12:30 IST) — so a reel asks for each story's headline and card in ONE request and cuts them apart at
+  the pause (`reel_speech.clip_pair`; no pause → the quietest instant near where the words say the boundary falls, and the
+  speech-model audit hears each half back): the opening, the close and one per story = 8 requests for six stories. A re-render
+  reuses the cache; only a story whose words changed asks again. If the quota is gone anyway (or a clip will not say its words)
+  `make()` makes the WHOLE reel in the Google voice, never two voices in one reel, and the report and the render say so;
+  a daily quota fails at once instead of waiting. Billing on the key removes the limit. 'google' switches Gemini off.
+  Not yet proven end-to-end on a real day: the quota was spent diagnosing; the cut is tested on a saved Kore clip and on synthetic ones.
 * **What this does NOT do, said plainly.** Nothing here can hear. The speech model catches a dropped or garbled
   word; on isolated words it is unreliable (it hears "High Court" for ಹೈಕೋರ್ಟ್), so words cannot be auto-respelled
   by it. A subtle slip is found by a person's ear once and fixed for ever with
