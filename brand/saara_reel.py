@@ -66,7 +66,7 @@ FOLLOW = 'ಪ್ರತಿದಿನದ ಕರಾವಳಿ|ಸುದ್ದಿಗ�
 # The hook names the towns first — a local thumb stops for its own town — while the
 # running order lights up in time with them.
 INTRO_SAY = 'ಇಂದಿನ ಸುದ್ದಿ, {towns}.'   # ~3s, at most three towns, listed as Kannada lists them (D134)
-OUTRO_SAY = 'ಪ್ರತಿದಿನದ ಸುದ್ದಿಗಾಗಿ ಫಾಲೋ ಮಾಡಿ.'
+OUTRO_SAY = 'ಪ್ರತಿದಿನದ ಸುದ್ದಿಗಾಗಿ, ಫಾಲೋ ಮಾಡಿ.'
 WEEKDAY_KN = ('ಸೋಮವಾರ', 'ಮಂಗಳವಾರ', 'ಬುಧವಾರ', 'ಗುರುವಾರ', 'ಶುಕ್ರವಾರ', 'ಶನಿವಾರ', 'ಭಾನುವಾರ')
 MONTH_KN = ('ಜನವರಿ', 'ಫೆಬ್ರವರಿ', 'ಮಾರ್ಚ್', 'ಏಪ್ರಿಲ್', 'ಮೇ', 'ಜೂನ್', 'ಜುಲೈ', 'ಆಗಸ್ಟ್',
             'ಸೆಪ್ಟೆಂಬರ್', 'ಅಕ್ಟೋಬರ್', 'ನವೆಂಬರ್', 'ಡಿಸೆಂಬರ್')
@@ -589,6 +589,8 @@ def _voice_findings(voice: dict) -> tuple[list[str], list[str]]:
                         f'it said "{v.get("heard", "")[:70]}"')
         elif v['suspects']:
             listen.append(f'{label}: {" ".join(v["suspects"])}')
+        if not 0.8 <= v.get('ratio', 1.0) <= 1.25:
+            weak.append(f'{label}: said {v["ratio"]:.2f}× as much as it was given — words are extra or missing; it said "{v.get("heard", "")[:70]}"')
         if v.get('repaired'):
             weak.append(f'{label}: the voice said a syllable twice and it was cut out ({len(v["repaired"])}×) — listen to it once')
     return listen, weak
@@ -658,7 +660,8 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
                     again[label]['repaired'] = voice[label]['stutters']
                     voice[label] = again[label]
     if 'unavailable' not in voice:
-        bad = [row for row in plan if voice[row[2]]['similarity'] < Limits.saara_reel_voice_fail]
+        bad = [row for row in plan if voice[row[2]]['similarity'] < Limits.saara_reel_voice_fail
+               or not 0.7 <= voice[row[2]].get('ratio', 1.0) <= 1.4]      # another sentence's words on it, or words missing (D140)
         for k, text, label in bad:
             RS.forget(text, engine)
             durs[k] = RS.clip(text, tmp / f'{k}.wav', engine)

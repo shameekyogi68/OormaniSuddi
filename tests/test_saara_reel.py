@@ -510,7 +510,7 @@ class OneRequestTwoClips(unittest.TestCase):
 
         def fake(text, out, engine, name, key):
             __import__('shutil').copy(d / 'src.mp3', out)
-        with mock.patch.object(RS.voice, '_synth_one', fake):
+        with mock.patch.object(RS.voice, '_synth_one', fake), mock.patch.object(RS, 'audit', return_value={'unavailable': 'test'}):
             return RS.clip_pair('ಒಂದು ಎರಡು ಮೂರು ನಾಲ್ಕು', 'ಐದು ಆರು ಏಳು', d / 'h.wav', d / 'b.wav')
 
     def test_it_is_cut_at_the_pause(self):
@@ -522,6 +522,36 @@ class OneRequestTwoClips(unittest.TestCase):
         a, b = self.pair(0.05)
         self.assertGreater(a, 1.0)
         self.assertGreater(b, 0.8)
+
+
+class TheBoundaryComesFromTheWords(unittest.TestCase):
+    """D140: the cut between a headline and its card was the first long silence, which fell after the card's first words."""
+
+    def test_the_words_not_the_first_pause_place_the_cut(self):
+        d = Path(tempfile.mkdtemp(dir=ROOT / 'build'))
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        rng = np.random.default_rng(4)
+        # 0–1.6 s headline | 0.16 s thin gap | 1.76–2.6 s "name," | 0.45 s CLEAR gap | 3.05–5 s the rest of the card
+        x = np.concatenate([rng.normal(0, .2, int(48000 * 1.6)), np.zeros(int(48000 * .16)), rng.normal(0, .2, int(48000 * .84)),
+                            np.zeros(int(48000 * .45)), rng.normal(0, .2, int(48000 * 1.95))])
+        full = d / 'p.wav'
+        sf.write(full, x, 48000)
+        a, b = 'ಒಂದು ಎರಡು ಮೂರು ನಾಲ್ಕು', 'ಡಾಕ್ಟರ್ ರಾಜೇಶ್ ಐದು ಆರು ಏಳು ಎಂಟು'
+        words = [['ಒಂದು', 0, .4], ['ಎರಡು', .4, .8], ['ಮೂರು', .8, 1.2], ['ನಾಲ್ಕು', 1.2, 1.6], ['ಡಾಕ್ಟರ್', 1.76, 2.2], ['ರಾಜೇಶ್', 2.2, 2.6],
+                 ['ಐದು', 3.05, 3.5], ['ಆರು', 3.5, 4.0], ['ಏಳು', 4.0, 4.5], ['ಎಂಟು', 4.5, 5.0]]
+        with mock.patch.object(RS, 'audit', return_value={'pair': {'words': words}}):
+            cut = RS._pair_boundary(full, a, b, len(x) / 48000)
+        self.assertAlmostEqual(cut, 1.68, delta=0.12)               # the thin gap after the headline — not the clear one at 2.8
+
+    def test_without_the_speech_model_it_still_cuts_near_the_weights_guess(self):
+        d = Path(tempfile.mkdtemp(dir=ROOT / 'build'))
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        rng = np.random.default_rng(4)
+        x = np.concatenate([rng.normal(0, .2, 48000 * 2), np.zeros(int(48000 * .3)), rng.normal(0, .2, 48000 * 2)])
+        sf.write(d / 'p.wav', x, 48000)
+        with mock.patch.object(RS, 'audit', return_value={'unavailable': 'test'}):
+            cut = RS._pair_boundary(d / 'p.wav', 'ಒಂದು ಎರಡು', 'ಮೂರು ನಾಲ್ಕು', len(x) / 48000)
+        self.assertAlmostEqual(cut, 2.15, delta=0.3)
 
 
 class TheVoiceFallsBackWhole(unittest.TestCase):

@@ -303,6 +303,50 @@ def cut_out(wav: Path, spans: list[list[float]], fade: float = 0.012) -> float:
     return round(len(out) / sr, 3)
 
 
+_WHISPER_LOCK = __import__('threading').Lock()      # the speech model is ~1.6 GB: one at a time, never three
+
+
+def _pair_boundary(full: Path, a: str, b: str, total: float) -> float:
+    """Where the headline ends and the card begins inside a pair read in one go (D140).
+
+    The words say it: the speech model gives each heard word its time, the headline's share of all the sounds is
+    known from its letters, and the boundary is the gap after the word where the running share matches. (A
+    silence-only search once cut after "ಡಾಕ್ಟರ್ ರಾಜೇಶ್ ಬಾಯರಿ," — the first long pause it found — so the headline carried
+    the card's opening words and the card lost them.) Then the quietest instant within 150 ms of it. If the speech
+    model is away, the quietest instant near the weights' guess, within 15 % of the length."""
+    import numpy as np
+    import soundfile as sf
+    from .reel_audit import phonetic
+    guess = None
+    with _WHISPER_LOCK:
+        res = audit([dict(label='pair', wav=str(full), text=a + ' ' + b)])
+    words = (res.get('pair') or {}).get('words') or [] if 'unavailable' not in res else []
+    if len(words) >= 2:
+        lens = [len(phonetic(w)) for w, _s, _e in words]
+        tot = sum(lens) or 1
+        want = len(phonetic(a)) / max(1, len(phonetic(a)) + len(phonetic(b)))
+        run, best = 0, None
+        for k in range(len(words) - 1):
+            run += lens[k]
+            err = abs(run / tot - want)
+            if best is None or err < best[0]:
+                best = (err, k)
+        if best and best[0] < 0.2:
+            guess, span = (words[best[1]][2] + words[best[1] + 1][1]) / 2, 0.15
+    if guess is None:
+        wa = sum(weight(w) for w in a.split())
+        wb = sum(weight(w) for w in b.split())
+        guess, span = total * wa / (wa + wb), 0.15 * total
+    x, sr = sf.read(str(full))
+    x = x if x.ndim == 1 else x.mean(axis=1)
+    hop = int(0.01 * sr)
+    env = np.array([np.sqrt(np.mean(x[i:i + hop] ** 2)) for i in range(0, len(x) - hop, hop)])
+    lo, hi = max(1, int((guess - span) / 0.01)), min(len(env) - 1, int((guess + span) / 0.01))
+    if hi <= lo:
+        return guess
+    return (lo + int(np.argmin(env[lo:hi])) + 0.5) * 0.01
+
+
 def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = 'gemini', tries: int = 3) -> tuple[float, float]:
     """Two clips from ONE request: both sentences are asked for together and cut apart at the pause between them.
 
@@ -324,29 +368,7 @@ def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = '
                 voice._synth_one(sent, str(raw), engine, name, None)
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-ar', '48000', '-ac', '1', str(full)], check=True)
             total = voice.get_audio_duration(str(full))
-            sil = subprocess.run(['ffmpeg', '-i', str(full), '-af', 'silencedetect=n=-38dB:d=0.14', '-f', 'null', '-'],
-                                 capture_output=True, text=True).stderr
-            starts = [float(x) for x in re.findall(r'silence_start: ([\d.]+)', sil)]
-            ends = [float(x) for x in re.findall(r'silence_end: ([\d.]+)', sil)]
-            gaps = [(st, en) for st, en in zip(starts, ends) if st > 0.4 and en < total - 0.2]
-            wa = sum(weight(w) for w in a.split()); wb = sum(weight(w) for w in b.split())
-            guess = total * wa / (wa + wb)
-            near = [g for g in gaps if abs((g[0] + g[1]) / 2 - guess) <= 0.35 * total]
-            if near:
-                st, en = min(near, key=lambda g: abs((g[0] + g[1]) / 2 - guess))
-            else:
-                # no clear pause (the voice ran the two sentences together): cut at the quietest instant near
-                # where the words say the boundary falls. The speech model hears each half back afterwards, so
-                # a cut inside a word is caught there and the reel falls back — it is never silently wrong.
-                import numpy as np
-                import soundfile as sf
-                x, sr = sf.read(str(full))
-                hop = int(0.02 * sr)
-                rms = np.array([np.sqrt(np.mean(x[i:i + hop] ** 2)) for i in range(0, len(x) - hop, hop)])
-                lo, hi = int(max(0.3, guess - 0.25 * total) / 0.02), int(min(total - 0.3, guess + 0.25 * total) / 0.02)
-                k = lo + int(np.argmin(rms[lo:hi]))
-                st = en = k * 0.02
-            mid = (st + en) / 2                                      # the middle of the pause: both halves keep their edges
+            mid = _pair_boundary(full, a, b, total)
             for path, (t0, t1) in ((wav_a, (0.0, mid)), (wav_b, (mid, total))):
                 subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{t0:.3f}', '-to', f'{t1:.3f}', '-i', str(full),
                                 '-af', TRIM, '-ar', '48000', '-ac', '1', str(path)], check=True)

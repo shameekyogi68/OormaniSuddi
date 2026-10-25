@@ -4000,3 +4000,25 @@ nobody read the bulletin as ONE thing that a newsreader says aloud, and nobody c
 
 Enforced by: `tests/test_saara_reel.py :: TheCardAddsToTheHeadline`, `tests/test_dispatch.py`.
 
+
+## D140 · A reel's headline and card are cut apart by the WORDS, and the amount said is checked
+
+**Found by the owner's ear, and then by measurement (2026-10-25):** "a sync issue and a little pronunciation issue". The audio was
+exactly where the timeline put it (every clip cross-correlated against the finished reel: 0 ms). What was wrong was a cut.
+Story 4's headline and card come from one Kore request; the cut was placed at "the silence nearest the weights' guess", and the
+only silence the detector saw was the comma pause AFTER "ಡಾಕ್ಟರ್ ರಾಜೇಶ್ ಬಾಯರಿ," — so the headline clip carried the doctor's name and the
+card began without it. The speech check had flagged it (0.83) but only as "listen for".
+
+* **The cut now comes from the words** (`reel_speech._pair_boundary`): the speech model times every heard word, the headline's share of
+  all the sounds is known from its letters, and the cut is the gap after the word where the running share matches, snapped to the
+  quietest instant within 150 ms. Silence alone is only the fallback when the model is away. The model is run one at a time
+  (`_WHISPER_LOCK`) — 1.6 GB each, never three at once on an 8 GB Mac.
+* **The audit checks how much was said**, not only how alike it sounded (`compare` → `ratio`): a clip with words added or missing is
+  asked for again outside 0.7–1.4, and warned about outside 0.8–1.25. After the fix the ratios are 0.95–1.04 on every clip.
+* **The follow line** is "ಪ್ರತಿದಿನದ ಸುದ್ದಿಗಾಗಿ, ಫಾಲೋ ಮಾಡಿ." with a direction to say each syllable of ಫಾ-ಲೋ ಮಾ-ಡಿ distinctly with a small pause
+  between the two words (the speech check heard "ಫಾಲ್ಮಾರಿ" before, "ಫಾಲೋ…ಡಿ" after: better, not proven — listen).
+* **Measured, and fine:** audio-to-timeline offset 0 ms on all ten clips; the highlight's word starts sit on real dips in the voice
+  (one word in 31 does not — "ವೇದಿಕೆಗಳು" — and is listed here, not hidden).
+
+Enforced by: `tests/test_saara_reel.py :: TheBoundaryComesFromTheWords`.
+

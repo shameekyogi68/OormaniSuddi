@@ -64,7 +64,10 @@ def compare(script: str, heard: str) -> dict:
                 best = max(best, difflib.SequenceMatcher(None, p, b[i:i + size]).ratio())
         if best < 0.7:
             suspects.append(w.strip('.,;:!?'))
-    return {'similarity': round(sim, 3), 'suspects': suspects}
+    # how much was said, against how much was asked for: a clip with another sentence's words on its end, or with
+    # words missing, can still score well on similarity (D140)
+    ratio = round(len(b) / len(a), 2) if a else 1.0
+    return {'similarity': round(sim, 3), 'suspects': suspects, 'ratio': ratio}
 
 
 def transcribe_full(wav: str) -> dict:
@@ -122,7 +125,8 @@ def main(argv: list[str]) -> int:
     for it in items:
         full = transcribe_full(it['wav'])
         heard = full['text']
-        results[it['label']] = dict(compare(it['text'], heard), heard=heard, stutters=stutters(it['text'], full['words']))
+        results[it['label']] = dict(compare(it['text'], heard), heard=heard, stutters=stutters(it['text'], full['words']),
+                                     words=full['words'])
     print(json.dumps(results, ensure_ascii=False))
     return 0
 
