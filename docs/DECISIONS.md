@@ -3885,3 +3885,28 @@ receipts filed after it, so a re-render only for the gate to see them, then ear-
 Enforced by: `tests/test_saara_reel.py` (SpokenRight, TheFilmSurvivesItsBrowser incl. the three-Chrome film,
 TheGate stale-wording), `tests/test_dispatch.py` (wave), `tests/test_factcheck_own.py`.
 
+
+## D135 · Licensed sound effects for the reel, fitted to the house design
+
+**Decided (2026-10-25), by the owner:** "do the sound design perfectly" — the code-made effects (D74's own set,
+brand/sfx.py) were the weakest part of the reel's sound. The owner downloaded candidates from Mixkit (free licence,
+commercial use, no attribution) and Pixabay into `assets/sfx/incoming/`.
+
+* **Chosen per slot by measurement**, not by ear (the model cannot hear): duration, loudness, spectral centre and low-end
+  share — `scripts/sfx_import.py :: CHOICE` records each pick and why (an airy 4.5 kHz whoosh above the voice; a 30 ms
+  tick because six run under the opening line; a dry pop, not the 8 kHz bubble; a short acoustic kick for frame 0, not
+  the ringing floor tom; the bells for the follow card).
+* **Fitted, not just dropped in:** silence trimmed, high-passed off the voice (110 Hz; 30 Hz for the opening hit), and
+  matched in loudness (EBU R128 momentary max) to the house sound each replaces, so the mix balance tuned in D132 still
+  holds. Nothing is cut into: the mix places a hit, wipe or click so its loudest instant falls where the house one's did,
+  and the bells from their first strike (`saara_reel._sfx`). Measured in the mix against the voice: whoosh −8 dB, opening
+  hit −4 dB, press −7 dB, pop −14 dB, tick −20 dB; the bells were −5 dB under the spoken follow line and are now −8 dB.
+* **The files are not in git.** Mixkit's and Pixabay's licences allow them in our videos but forbid redistributing the
+  files, and the repo is public: `assets/sfx/incoming/` and `assets/sfx/pro/` are git-ignored, carried by
+  `scripts/backup.sh`, and registered in `assets/LICENCES.json` (`local_only`, with each licence page). A machine without
+  them uses the house set, slot by slot — a reel is never silent for want of a file.
+* `Limits.saara_reel_sfx = 'pro'`; `'house'` returns to the synthesised set. The owner judges by ear: an A/B of the same
+  reel with each set is in `out/_sound_ab/`.
+
+Enforced by: `tests/test_saara_reel.py` (TheSoundEffectsSet, TheSounds), `brand/music.py :: audit`.
+

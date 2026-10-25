@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-17",
+  "updated": "2026-10-25",
   "policy": "A track must be status=allowed with a licence somebody can produce before it can be a bed. 'own' needs no URL — there is no licence page for something the channel made. Everything else needs source_url, because a licence you cannot point at is one you cannot produce when a Content ID claim arrives. Unverified files stay on disk: deleting the evidence of what was used is worse than blocking it. Audited by brand/music.py audit(), quarterly per the editorial calendar.",
   "tracks": [
     {
@@ -129,6 +129,171 @@
       "licence": "own",
       "source_url": "",
       "notes": "Synthesised by brand/sfx.py from a fixed seed; `python3 -m brand.sfx` rebuilds the identical bytes. Nothing third-party in it."
+    },
+    {
+      "path": "assets/sfx/pro/whoosh.wav",
+      "kind": "sfx",
+      "title": "Fast whoosh transition (reel whoosh)",
+      "status": "allowed",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/whoosh/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "notes": "Original file mixkit-fast-whoosh-transition-1490.wav, downloaded by the owner 2026-10-25 and fitted by scripts/sfx_import.py (high-pass, loudness-matched to the house whoosh). Not in git: the licence forbids redistributing the file. D135.",
+      "local_only": true
+    },
+    {
+      "path": "assets/sfx/pro/tick.wav",
+      "kind": "sfx",
+      "title": "Modern technology select (reel tick)",
+      "status": "allowed",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/click/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "notes": "Original file mixkit-modern-technology-select-3124.wav, downloaded by the owner 2026-10-25 and fitted by scripts/sfx_import.py (high-pass, loudness-matched to the house tick). Not in git: the licence forbids redistributing the file. D135.",
+      "local_only": true
+    },
+    {
+      "path": "assets/sfx/pro/pop.wav",
+      "kind": "sfx",
+      "title": "Dry pop up notification alert (reel pop)",
+      "status": "allowed",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/pop/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "notes": "Original file mixkit-dry-pop-up-notification-alert-2356.wav, downloaded by the owner 2026-10-25 and fitted by scripts/sfx_import.py (high-pass, loudness-matched to the house pop). Not in git: the licence forbids redistributing the file. D135.",
+      "local_only": true
+    },
+    {
+      "path": "assets/sfx/pro/press.wav",
+      "kind": "sfx",
+      "title": "Select click (reel press)",
+      "status": "allowed",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/click/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "notes": "Original file mixkit-select-click-1109.wav, downloaded by the owner 2026-10-25 and fitted by scripts/sfx_import.py (high-pass, loudness-matched to the house press). Not in git: the licence forbids redistributing the file. D135.",
+      "local_only": true
+    },
+    {
+      "path": "assets/sfx/pro/outro.wav",
+      "kind": "sfx",
+      "title": "Happy bells notification (reel outro)",
+      "status": "allowed",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/notification/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "notes": "Original file mixkit-happy-bells-notification-937.wav, downloaded by the owner 2026-10-25 and fitted by scripts/sfx_import.py (high-pass, loudness-matched to the house outro). Not in git: the licence forbids redistributing the file. D135.",
+      "local_only": true
+    },
+    {
+      "path": "assets/sfx/pro/open.wav",
+      "kind": "sfx",
+      "title": "Kick drum acoustic sample (reel open)",
+      "status": "allowed",
+      "licence": "pixabay",
+      "source_url": "https://pixabay.com/sound-effects/kick-drum-acoustic-sample-455285/",
+      "licence_url": "https://pixabay.com/service/license-summary/",
+      "notes": "Original file soundreality-kick-drum-acoustic-sample-455285.mp3, downloaded by the owner 2026-10-25 and fitted by scripts/sfx_import.py (high-pass, loudness-matched to the house open). Not in git: the licence forbids redistributing the file. D135.",
+      "local_only": true
+    },
+    {
+      "path": "assets/sfx/incoming/freesound_community-floor-tom-107404.mp3",
+      "kind": "sfx-source",
+      "title": "freesound_community-floor-tom-107404.mp3",
+      "status": "blocked",
+      "licence": "pixabay",
+      "source_url": "https://pixabay.com/sound-effects/floor-tom-107404/",
+      "licence_url": "https://pixabay.com/service/license-summary/",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/mixkit-bubble-pop-up-alert-notification-2357.wav",
+      "kind": "sfx-source",
+      "title": "mixkit-bubble-pop-up-alert-notification-2357.wav",
+      "status": "blocked",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/mixkit-dry-pop-up-notification-alert-2356.wav",
+      "kind": "sfx-source",
+      "title": "mixkit-dry-pop-up-notification-alert-2356.wav",
+      "status": "blocked",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/mixkit-fast-swipe-zoom-2627.wav",
+      "kind": "sfx-source",
+      "title": "mixkit-fast-swipe-zoom-2627.wav",
+      "status": "blocked",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/mixkit-fast-whoosh-transition-1490.wav",
+      "kind": "sfx-source",
+      "title": "mixkit-fast-whoosh-transition-1490.wav",
+      "status": "blocked",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/mixkit-happy-bells-notification-937.wav",
+      "kind": "sfx-source",
+      "title": "mixkit-happy-bells-notification-937.wav",
+      "status": "blocked",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/mixkit-modern-technology-select-3124.wav",
+      "kind": "sfx-source",
+      "title": "mixkit-modern-technology-select-3124.wav",
+      "status": "blocked",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/mixkit-select-click-1109.wav",
+      "kind": "sfx-source",
+      "title": "mixkit-select-click-1109.wav",
+      "status": "blocked",
+      "licence": "mixkit-free",
+      "source_url": "https://mixkit.co/free-sound-effects/",
+      "licence_url": "https://mixkit.co/license/#sfxFree",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
+    },
+    {
+      "path": "assets/sfx/incoming/soundreality-kick-drum-acoustic-sample-455285.mp3",
+      "kind": "sfx-source",
+      "title": "soundreality-kick-drum-acoustic-sample-455285.mp3",
+      "status": "blocked",
+      "licence": "pixabay",
+      "source_url": "https://pixabay.com/sound-effects/kick-drum-acoustic-sample-455285/",
+      "licence_url": "https://pixabay.com/service/license-summary/",
+      "local_only": true,
+      "notes": "The original download, kept as evidence of what was licensed. Not played: the fitted copy in assets/sfx/pro/ is. D135."
     }
   ]
 }

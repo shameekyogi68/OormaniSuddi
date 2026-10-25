@@ -480,9 +480,38 @@ async def _drive(page: Path, profile: Path, work, gate=None):
 
 
 # ── sound ────────────────────────────────────────────────────────────────
+# Each slot is placed by the instant that matters: the loudest one for a hit, a wipe or a click (so it lands on the
+# picture as the house sound did), the first one for the outro bells (so they start with the card, not before it).
+_ALIGN_ONSET = {'outro'}
+
+
+def _peak_at(path: Path) -> float:
+    import numpy as np
+    import soundfile as sf
+    x, sr = sf.read(str(path), always_2d=True)
+    env = np.abs(x).max(axis=1)
+    hop = max(1, int(0.005 * sr))
+    return float(np.argmax(np.convolve(env, np.ones(hop) / hop, mode='same'))) / sr
+
+
+def _sfx(slot: str) -> tuple[Path, float]:
+    """(file, seconds to shift it by) for a slot, in the set Limits.saara_reel_sfx names (D135)."""
+    house = BASE / 'assets/sfx' / f'{slot}.wav'
+    pro = BASE / 'assets/sfx/pro' / f'{slot}.wav'
+    if Limits.saara_reel_sfx != 'pro' or not pro.exists():
+        return house, 0.0
+    if slot in _ALIGN_ONSET:
+        return pro, 0.0
+    return pro, _peak_at(house) - _peak_at(pro)
+
+
 def _mix(tl: dict, clips: Path, out: Path) -> None:
-    sfx, T = BASE / 'assets/sfx', tl['T']
+    T = tl['T']
     args, chains, vo, fx = [], [], [], []
+
+    def fx_add(slot: str, at: float, vol: float, label: str):
+        path, shift = _sfx(slot)
+        add(path, at + shift, vol, label, fx)
 
     def add(path: Path, at: float, vol: float, label: str, bus: list):
         args.extend(['-i', str(path)])
@@ -495,15 +524,15 @@ def _mix(tl: dict, clips: Path, out: Path) -> None:
     for i, s in enumerate(tl['stories']):
         add(clips / f'h{i}.wav', s['headAt'], 1.0, f'h{i}', vo)
         add(clips / f'b{i}.wav', s['bodyAt'], 1.0, f'b{i}', vo)
-        add(sfx / 'whoosh.wav', s['B'] - 0.32, 0.32, f'w{i}', fx)      # the wash of light crossing
-        add(sfx / 'pop.wav', s['B'] + 0.10, 0.26, f'p{i}', fx)          # the town tag landing
+        fx_add('whoosh', s['B'] - 0.32, 0.32, f'w{i}')      # the wash of light crossing
+        fx_add('pop', s['B'] + 0.10, 0.26, f'p{i}')          # the town tag landing
     add(clips / 'outro.wav', tl['outro'] + 0.55, 1.0, 'vz', vo)
-    add(sfx / 'open.wav', 0.0, 0.45, 'f0', fx)
+    fx_add('open', 0.0, 0.45, 'f0')
     for k, at in enumerate(sorted(set(tl['rowAt']))):                   # each row of the running order
-        add(sfx / 'tick.wav', at + 0.04, 0.20, f't{k}', fx)
-    add(sfx / 'whoosh.wav', tl['outro'] - 0.32, 0.32, 'wz', fx)
-    add(sfx / 'outro.wav', tl['outro'] + 0.1, 0.4, 'fz', fx)
-    add(sfx / 'press.wav', tl['outro'] + 1.80, 0.5, 'fp', fx)           # the follow button, pressed
+        fx_add('tick', at + 0.04, 0.20, f't{k}')
+    fx_add('whoosh', tl['outro'] - 0.32, 0.32, 'wz')
+    fx_add('outro', tl['outro'] + 0.1, 0.28, 'fz')                    # under the follow line: −8 dB to the voice, not −5 (D135)
+    fx_add('press', tl['outro'] + 1.80, 0.5, 'fp')           # the follow button, pressed
     args.extend(['-stream_loop', '-1', '-i', str(BASE / 'assets/news_bgm.mp3')])
     bed = args.count('-i') - 1
     g = ';'.join(chains)

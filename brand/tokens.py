@@ -393,6 +393,10 @@ class Limits:
     saara_reel_gemini_voice = 'Kore'
     saara_reel_gemini_style = 'Read this as a clear, confident Kannada television news anchor, at a brisk steady pace: '
     saara_reel_gemini_workers = 3
+    # The reel's sound effects (D135): 'pro' — licensed Mixkit / Pixabay effects fitted by scripts/sfx_import.py into
+    # assets/sfx/pro/ (git-ignored: their licences forbid redistributing the files) — or 'house', the synthesised set
+    # (brand/sfx.py). A missing pro file falls back to the house one, slot by slot, so a new Mac still makes a reel.
+    saara_reel_sfx = 'pro'
     # When even the tightest pauses leave the reel past the fail line, the speech is sped up by the
     # smallest steps that fit, never past this. 1.06 on top of the house 1.15 was heard as rushed (owner,
     # 2026-10-23); 1.05 is the most a day may take — a day that still does not fit says which story to shorten.

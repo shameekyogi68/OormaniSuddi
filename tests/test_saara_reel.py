@@ -318,15 +318,18 @@ class NoLines(unittest.TestCase):
 
 
 class TheSounds(unittest.TestCase):
-    def test_every_effect_the_reel_plays_is_house_made_and_registered(self):
+    def test_every_effect_the_reel_plays_is_registered_and_the_house_set_is_always_there(self):
+        # the house set is the fallback (D135): it must exist and be allowed; a licensed slot must be allowed too
         from brand import music
         allowed = music.allowed_paths('sfx')
         for name in ('whoosh', 'tick', 'open', 'outro', 'pop', 'press'):
             self.assertTrue((ROOT / 'assets/sfx' / f'{name}.wav').exists(), name)
             self.assertIn(f'assets/sfx/{name}.wav', allowed, name)
+            path, _ = R._sfx(name)
+            self.assertIn(str(path.relative_to(ROOT)), allowed, name)
         src = (ROOT / 'brand/saara_reel.py').read_text(encoding='utf-8')
         for name in ('pop', 'press', 'tick', 'whoosh'):
-            self.assertIn(f"sfx / '{name}.wav'", src)
+            self.assertIn(f"fx_add('{name}'", src)
 
     def test_the_set_is_rebuilt_to_the_same_bytes(self):
         from brand import sfx
@@ -548,6 +551,31 @@ class TheVoiceFallsBackWhole(unittest.TestCase):
     def test_copy_that_does_not_fit_is_not_blamed_on_the_voice(self):
         with self.assertRaises(R.ReelFitError):
             self.made(R.ReelFitError('too long'))
+
+
+class TheSoundEffectsSet(unittest.TestCase):
+    """D135: licensed effects where they exist, the house set where they do not — slot by slot, never silence."""
+
+    def test_a_missing_licensed_file_falls_back_to_the_house_one(self):
+        with mock.patch.object(R, 'BASE', Path(tempfile.mkdtemp())):
+            (R.BASE / 'assets/sfx').mkdir(parents=True)
+            path, shift = R._sfx('whoosh')
+        self.assertEqual(path.parent.name, 'sfx')
+        self.assertEqual(shift, 0.0)
+
+    def test_the_house_set_is_used_when_asked_for(self):
+        with mock.patch.object(Limits, 'saara_reel_sfx', 'house'):
+            self.assertEqual(R._sfx('pop')[0], ROOT / 'assets/sfx/pop.wav')
+
+    @unittest.skipUnless((ROOT / 'assets/sfx/pro/whoosh.wav').exists(), 'the licensed set lives only on the owner\'s Mac')
+    def test_a_licensed_whoosh_peaks_where_the_house_one_did(self):
+        path, shift = R._sfx('whoosh')
+        self.assertIn('pro', str(path))
+        self.assertAlmostEqual(R._peak_at(path) + shift, R._peak_at(ROOT / 'assets/sfx/whoosh.wav'), places=3)
+
+    def test_every_licensed_effect_on_disk_is_in_the_register(self):
+        from brand import music
+        self.assertEqual([p for p in music.audit() if 'sfx' in p], [])
 
 
 class TheOpeningLine(unittest.TestCase):

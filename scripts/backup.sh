@@ -211,14 +211,14 @@ if [ "$FULL" = "1" ]; then
   ARCHIVE="$LOCAL/oormani-full-$STAMP.tar.gz"
   # Everything needed to rebuild on a machine that has never seen this repo,
   # for the case where GitHub is also unreachable.
-  CANDIDATES=(archive editions inbox/sources business assets/bgm_options
+  CANDIDATES=(archive editions inbox/sources business assets/bgm_options assets/sfx/incoming assets/sfx/pro
               assets/LICENCES.json assets/pronunciation.json fonts
               brand templates scripts docs tests render.py requirements.txt
               AGENTS.md CLAUDE.md STANDARDS.md)
 else
   ARCHIVE="$LOCAL/oormani-$STAMP.tar.gz"
   # Only what git does not have and the record above does not hold.
-  CANDIDATES=(inbox/sources business editions/greetings/calendar.json)
+  CANDIDATES=(inbox/sources business editions/greetings/calendar.json assets/sfx/incoming assets/sfx/pro)
   for item in "$ROOT"/archive/*; do
     [ -f "$item" ] && [ "$(wc -c < "$item")" -lt 1000000 ] \
       && CANDIDATES+=("archive/$(basename "$item")")

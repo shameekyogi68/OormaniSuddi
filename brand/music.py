@@ -72,7 +72,8 @@ def audit() -> list[str]:
             f'cannot be used, but it can be picked by mistake — add a row, '
             f'even if that row says blocked.')
 
-    for p in sorted(listed - on_disk):
+    local_only = {(r.get('path') or '').replace('\\', '/') for r in rows if r.get('local_only')}
+    for p in sorted(listed - on_disk - local_only):
         problems.append(
             f'{p} is registered and not on disk. Either it was deleted, or a '
             f'path moved and a render that asks for it will fail at the worst '

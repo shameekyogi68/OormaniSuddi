@@ -36,6 +36,12 @@ business/*
 # source of truth; the artwork is not.
 out/*
 
+# Licensed sound effects (D135). Mixkit's and Pixabay's licences allow them in our videos but forbid
+# redistributing the files, and this remote is public. Carried by scripts/backup.sh; the register
+# (assets/LICENCES.json) records where each came from and under what licence.
+assets/sfx/incoming/
+assets/sfx/pro/
+
 # Reel intermediates. Rebuilt on every render.
 build/
 
