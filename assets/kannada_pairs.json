@@ -1,0 +1,353 @@
+{
+ "about": "Words whose MEANING changes with a single sound — vowel length (ಹ್ರಸ್ವ/ದೀರ್ಘ), ಲ/ಳ, ನ/ಣ, aspirated/plain, single/double consonant. The reel's checks list any of these that the voice will say, so the Kannada desk confirms the spelling letter by letter and the editor listens for them (D136). Each row: the word as it may appear (a stem is enough for inflected forms), its meaning, the word it is confused with, and that word's meaning. Add a row whenever one is found; a wrong row costs a glance, a missing one can cost a meaning.",
+ "pairs": [
+  {
+   "w": "ಕೊಲೆ",
+   "en": "murder",
+   "vs": "ಕೊಳೆ",
+   "vs_en": "dirt / rot"
+  },
+  {
+   "w": "ಕಲ್ಲು",
+   "en": "stone",
+   "vs": "ಕಳ್ಳ",
+   "vs_en": "thief"
+  },
+  {
+   "w": "ಕಳ್ಳ",
+   "en": "thief",
+   "vs": "ಕಲ್ಲು",
+   "vs_en": "stone"
+  },
+  {
+   "w": "ಮಳೆ",
+   "en": "rain",
+   "vs": "ಮಲೆ",
+   "vs_en": "hill (Malnad)"
+  },
+  {
+   "w": "ಮೂಳೆ",
+   "en": "bone",
+   "vs": "ಮೂಲೆ",
+   "vs_en": "corner"
+  },
+  {
+   "w": "ಮೂಲೆ",
+   "en": "corner",
+   "vs": "ಮೂಳೆ",
+   "vs_en": "bone"
+  },
+  {
+   "w": "ಹೊಳೆ",
+   "en": "river / shine",
+   "vs": "ಹೊಲ",
+   "vs_en": "field"
+  },
+  {
+   "w": "ಹೊಲ",
+   "en": "field",
+   "vs": "ಹೊಳೆ",
+   "vs_en": "river"
+  },
+  {
+   "w": "ಕಲೆ",
+   "en": "art",
+   "vs": "ಕಳೆ",
+   "vs_en": "glow / to spend / to lose"
+  },
+  {
+   "w": "ಕಳೆ",
+   "en": "glow / to lose / weed",
+   "vs": "ಕಲೆ",
+   "vs_en": "art"
+  },
+  {
+   "w": "ತಲೆ",
+   "en": "head",
+   "vs": "ತಳ",
+   "vs_en": "bottom"
+  },
+  {
+   "w": "ತಳ",
+   "en": "bottom",
+   "vs": "ತಲೆ",
+   "vs_en": "head"
+  },
+  {
+   "w": "ಅನ್ನ",
+   "en": "cooked rice / food",
+   "vs": "ಅಣ್ಣ",
+   "vs_en": "elder brother"
+  },
+  {
+   "w": "ಅಣ್ಣ",
+   "en": "elder brother",
+   "vs": "ಅನ್ನ",
+   "vs_en": "rice"
+  },
+  {
+   "w": "ಮನೆ",
+   "en": "house",
+   "vs": "ಮಣೆ",
+   "vs_en": "wooden plank / seat"
+  },
+  {
+   "w": "ಹಣ",
+   "en": "money",
+   "vs": "ಹಣೆ",
+   "vs_en": "forehead"
+  },
+  {
+   "w": "ಹಣೆ",
+   "en": "forehead",
+   "vs": "ಹಣ",
+   "vs_en": "money"
+  },
+  {
+   "w": "ಕಣ್ಣು",
+   "en": "eye",
+   "vs": "ಕನ್ನ",
+   "vs_en": "burglary (a hole in a wall)"
+  },
+  {
+   "w": "ಬಲ",
+   "en": "strength / right side",
+   "vs": "ಬಾಲ",
+   "vs_en": "tail / child"
+  },
+  {
+   "w": "ಬಾಲ",
+   "en": "tail / child",
+   "vs": "ಬಲ",
+   "vs_en": "strength"
+  },
+  {
+   "w": "ಸರ",
+   "en": "necklace / chain",
+   "vs": "ಸಾರ",
+   "vs_en": "essence / gist; ಸರಿ = correct"
+  },
+  {
+   "w": "ದಿನ",
+   "en": "day",
+   "vs": "ದೀನ",
+   "vs_en": "wretched / humble"
+  },
+  {
+   "w": "ದೀನ",
+   "en": "wretched / humble",
+   "vs": "ದಿನ",
+   "vs_en": "day"
+  },
+  {
+   "w": "ಕರೆ",
+   "en": "call / summon",
+   "vs": "ಕೆರೆ",
+   "vs_en": "lake / tank"
+  },
+  {
+   "w": "ಕೆರೆ",
+   "en": "lake / tank",
+   "vs": "ಕರೆ",
+   "vs_en": "call"
+  },
+  {
+   "w": "ಬರ",
+   "en": "drought",
+   "vs": "ಬರೆ",
+   "vs_en": "to write; a burn / scar"
+  },
+  {
+   "w": "ಬರೆ",
+   "en": "to write",
+   "vs": "ಬರ",
+   "vs_en": "drought"
+  },
+  {
+   "w": "ಬೆಲೆ",
+   "en": "price",
+   "vs": "ಬಲೆ",
+   "vs_en": "net"
+  },
+  {
+   "w": "ಬಲೆ",
+   "en": "net",
+   "vs": "ಬೆಲೆ",
+   "vs_en": "price"
+  },
+  {
+   "w": "ಕೇಳು",
+   "en": "ask / listen",
+   "vs": "ಕೆಳ",
+   "vs_en": "below"
+  },
+  {
+   "w": "ಕೆಳ",
+   "en": "below",
+   "vs": "ಕೇಳು",
+   "vs_en": "ask / listen"
+  },
+  {
+   "w": "ಕೊಡು",
+   "en": "give",
+   "vs": "ಕೋಡು",
+   "vs_en": "horn"
+  },
+  {
+   "w": "ಕೋಡು",
+   "en": "horn",
+   "vs": "ಕೊಡು",
+   "vs_en": "give"
+  },
+  {
+   "w": "ಕೊರೆ",
+   "en": "to bore / bitter cold",
+   "vs": "ಕೋರೆ",
+   "vs_en": "tusk"
+  },
+  {
+   "w": "ಕೋರೆ",
+   "en": "tusk",
+   "vs": "ಕೊರೆ",
+   "vs_en": "to bore / chill"
+  },
+  {
+   "w": "ಕೊಂದು",
+   "en": "having killed",
+   "vs": "ಕೊಂಡು",
+   "vs_en": "having taken / bought"
+  },
+  {
+   "w": "ಕೊಂಡು",
+   "en": "having taken / bought",
+   "vs": "ಕೊಂದು",
+   "vs_en": "having killed"
+  },
+  {
+   "w": "ಬಂಧ",
+   "en": "bond / arrest (ಬಂಧನ)",
+   "vs": "ಬಂದ",
+   "vs_en": "came"
+  },
+  {
+   "w": "ಬಂದ",
+   "en": "came",
+   "vs": "ಬಂಧ",
+   "vs_en": "bond / arrest"
+  },
+  {
+   "w": "ಧನ",
+   "en": "wealth",
+   "vs": "ದನ",
+   "vs_en": "cattle"
+  },
+  {
+   "w": "ದನ",
+   "en": "cattle",
+   "vs": "ಧನ",
+   "vs_en": "wealth"
+  },
+  {
+   "w": "ಸಾಲ",
+   "en": "loan / row",
+   "vs": "ಸಲ",
+   "vs_en": "a time (once, twice)"
+  },
+  {
+   "w": "ಸಲ",
+   "en": "a time (once, twice)",
+   "vs": "ಸಾಲ",
+   "vs_en": "loan"
+  },
+  {
+   "w": "ಮರ",
+   "en": "tree",
+   "vs": "ಮಾರು",
+   "vs_en": "to sell"
+  },
+  {
+   "w": "ಮಾರು",
+   "en": "to sell",
+   "vs": "ಮರ",
+   "vs_en": "tree"
+  },
+  {
+   "w": "ಕರ",
+   "en": "hand / tax",
+   "vs": "ಕಾರ",
+   "vs_en": "spicy"
+  },
+  {
+   "w": "ಪಾಲು",
+   "en": "share",
+   "vs": "ಪಾಳು",
+   "vs_en": "fallow / ruined"
+  },
+  {
+   "w": "ಪಾಳು",
+   "en": "fallow / ruined",
+   "vs": "ಪಾಲು",
+   "vs_en": "share"
+  },
+  {
+   "w": "ಗಾಳಿ",
+   "en": "wind / air",
+   "vs": "ಗಾಲಿ",
+   "vs_en": "wheel"
+  },
+  {
+   "w": "ಗಾಲಿ",
+   "en": "wheel",
+   "vs": "ಗಾಳಿ",
+   "vs_en": "wind"
+  },
+  {
+   "w": "ಬೇಳೆ",
+   "en": "pulses / dal",
+   "vs": "ಬೆಳೆ",
+   "vs_en": "crop; ಬೆಲೆ = price"
+  },
+  {
+   "w": "ಬೆಳೆ",
+   "en": "crop / to grow",
+   "vs": "ಬೇಳೆ",
+   "vs_en": "pulses"
+  },
+  {
+   "w": "ಉರಿ",
+   "en": "to burn",
+   "vs": "ಊರು",
+   "vs_en": "town / village"
+  },
+  {
+   "w": "ಊರು",
+   "en": "town / village",
+   "vs": "ಉರಿ",
+   "vs_en": "burn"
+  },
+  {
+   "w": "ಅರಿ",
+   "en": "to know",
+   "vs": "ಆರಿ",
+   "vs_en": "to go out (a flame)"
+  },
+  {
+   "w": "ಆರಿ",
+   "en": "went out (a flame)",
+   "vs": "ಅರಿ",
+   "vs_en": "know"
+  },
+  {
+   "w": "ತೆರೆ",
+   "en": "to open / curtain / wave",
+   "vs": "ತೇರು",
+   "vs_en": "temple chariot"
+  },
+  {
+   "w": "ತೇರು",
+   "en": "temple chariot",
+   "vs": "ತೆರೆ",
+   "vs_en": "to open / curtain"
+  }
+ ]
+}

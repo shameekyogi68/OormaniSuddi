@@ -391,7 +391,9 @@ class Limits:
     # reel is made in the Google voice (never a mix of two) and the report says so. 'google' switches Gemini off.
     saara_reel_voice = 'gemini'
     saara_reel_gemini_voice = 'Kore'
-    saara_reel_gemini_style = 'Read this as a clear, confident Kannada television news anchor, at a brisk steady pace: '
+    saara_reel_gemini_style = ('Read this as a clear, confident Kannada television news anchor, at a brisk steady pace. '
+                               'Say every vowel exactly as written — short and long vowels distinct, ಲ and ಳ distinct, ನ and ಣ '
+                               'distinct, doubled consonants held: ')
     saara_reel_gemini_workers = 3
     # The reel's sound effects (D135): 'pro' — licensed Mixkit / Pixabay effects fitted by scripts/sfx_import.py into
     # assets/sfx/pro/ (git-ignored: their licences forbid redistributing the files) — or 'house', the synthesised set

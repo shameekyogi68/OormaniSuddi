@@ -231,6 +231,20 @@ def spoken_script(copies: list[dict]) -> list[tuple[str, str]]:
     return out + [('the close', OUTRO_SAY)]
 
 
+def spelling_watch(copies: list[dict]) -> dict:
+    """What in the spoken script is one sound from a different word, and what no newspaper spelled (D136)."""
+    from . import kannada_check as K
+    pairs, unseen = [], []
+    for label, text in spoken_script(copies):
+        for hit in K.meaning_pairs(text):
+            pairs.append(dict(hit, where=label))
+        if label in ('the opening', 'the close'):
+            continue                                       # house lines, heard and approved; only the towns vary
+        for w in K.unseen_spellings(text):
+            unseen.append(dict(word=w, where=label))
+    return dict(pairs=pairs, unseen=unseen)
+
+
 def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[str]:
     """Copy that will crowd the frame or the clock — said, never silently cut (D132)."""
     out, info = [], info or {}
@@ -675,7 +689,7 @@ def check(edition: Edition, shots: str | None = None) -> dict:
     pron = {f'story {i + 1}': sorted(set(RS.lint(c['say_head']) + RS.lint(c['body'])))
             for i, c in enumerate(copies)}
     return dict(stories=n, estimated_seconds=tl['T'], budget=budget(n), lines=laid.get('lines'), cover=laid.get('cover'),
-                questions=editor_questions(edition), script=spoken_script(copies),
+                questions=editor_questions(edition), script=spoken_script(copies), watch=spelling_watch(copies),
                 issues=laid.get('issues', []), warnings=_warnings(copies, laid, info),
                 pronunciation={k: v for k, v in pron.items() if v}, copies=copies)
 
@@ -785,7 +799,7 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
                 raise ReelFitError('the copy does not fit the reel — ' + '; '.join(laid['issues']))
 
         def summary(laid, **extra):
-            return dict(seconds=tl['T'], timeline=tl, copies_hash=copies_hash(copies), lines=laid.get('lines'), issues=laid.get('issues', []),
+            return dict(seconds=tl['T'], timeline=tl, copies_hash=copies_hash(copies), watch=spelling_watch(copies), lines=laid.get('lines'), issues=laid.get('issues', []),
                         warnings=_warnings(copies, laid, info), pronunciation=b['pron'],
                         timing=b['timing'], clips={k: v for k, v in b['durs'].items()}, voice_audit=b.get('voice') or {}, **extra)
 
@@ -817,7 +831,11 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
 def copies_hash(copies: list[dict]) -> str:
     """A fingerprint of everything the reel shows and says. The gate compares it with the copy as it
     is NOW, so a desk's edit after the render is caught without anyone remembering to re-render (D134)."""
-    return hashlib.sha1(json.dumps(copies, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:12]
+    # only what the film shows or says: the candidate sentences (`options`) are used only when a story has no
+    # reel_support, so a desk's edit to a deck or a point must not make a finished reel look out of date
+    shown = [{k: c.get(k) for k in ('place', 'place_short', 'head', 'say_head', 'body', 'tone')} | {'body_used': c.get('body')}
+             for c in copies]
+    return hashlib.sha1(json.dumps(shown, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:12]
 
 
 def make(edition: Edition, outdir: str, engine: str | None = None) -> dict:

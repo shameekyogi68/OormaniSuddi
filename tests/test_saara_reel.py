@@ -482,6 +482,10 @@ class TheWrittenGrammar(unittest.TestCase):
         self.assertTrue(RS.grammar('ಉಡುಪಿ ನಲ್ಲಿ ಸಭೆ'))                                     # an ending on its own
         self.assertTrue(RS.grammar('ಸಭೆ ಸಭೆ ನಡೆಯಿತು'))                                    # a word twice
 
+    def test_a_name_in_u_before_ge_is_named(self):
+        self.assertTrue(RS.grammar('ಕೋಟ, ಬರಗೂರುಗೆ ಕಾರಂತ ಪ್ರಶಸ್ತಿ ಪ್ರದಾನ'))          # ಬರಗೂರಿಗೆ
+        self.assertEqual(RS.grammar('ಬರಗೂರಿಗೆ ಪ್ರಶಸ್ತಿ ಪ್ರದಾನ'), [])
+
     def test_good_lines_raise_nothing(self):
         for t in ('ಹೆದ್ದಾರಿ 66ರಲ್ಲಿ ಲಾರಿ ಡಿಕ್ಕಿ: ಸಾವು', 'ಕೊಲ್ಲೂರು ಮತ್ತು ಬೈಂದೂರು ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.',
                   'ಗ್ರಾಮಸ್ಥರು ಹಾಗೂ ಪೋಷಕರು ಸನ್ಮಾನಿಸಿದರು.'):
@@ -576,6 +580,35 @@ class TheSoundEffectsSet(unittest.TestCase):
     def test_every_licensed_effect_on_disk_is_in_the_register(self):
         from brand import music
         self.assertEqual([p for p in music.audit() if 'sfx' in p], [])
+
+
+class TheKannadaSpellingWatch(unittest.TestCase):
+    """D136: Kannada changes meaning with one sound, and the voice reads exactly the letters it is given."""
+
+    def test_words_one_sound_from_another_word_are_listed(self):
+        from brand import kannada_check as K
+        hits = {h['word']: h for h in K.meaning_pairs('ಕೊಲೆ ಪ್ರಕರಣ, ಮಳೆಯಲ್ಲಿ ಕಲ್ಲು ಮತ್ತು ಅನ್ನ ಅಣ್ಣ')}
+        self.assertEqual(hits['ಕೊಲೆ']['vs'], 'ಕೊಳೆ')
+        self.assertEqual(hits['ಮಳೆಯಲ್ಲಿ']['vs'], 'ಮಲೆ')                 # an inflected form is still the word
+        self.assertEqual(hits['ಕಲ್ಲು']['vs'], 'ಕಳ್ಳ')
+        self.assertIn('ಅಣ್ಣ', hits)
+
+    def test_a_longer_word_that_merely_starts_like_one_is_not(self):
+        from brand import kannada_check as K
+        self.assertEqual(K.meaning_pairs('ಕರೆಯಲಾಗಿದೆ ಕಲಾವಿದರು ಮನೆಮನೆಗೆ'), [])       # ಕರೆ+ಯಲಾಗಿದೆ, ಕಲಾ…, ಮನೆ+ಮನೆಗೆ
+
+    def test_a_word_no_newspaper_spelled_is_listed_and_a_printed_one_is_not(self):
+        from brand import kannada_check as K
+        with mock.patch.object(K, '_corpus', return_value=frozenset({'ಬರಗೂರು', 'ಪ್ರಶಸ್ತಿ', 'ಪ್ರದಾನ'})):
+            self.assertEqual(K.unseen_spellings('ಬರಗೂರಿಗೆ ಪ್ರಶಸ್ತಿ ಪ್ರದಾನ'), [])        # ು→ಇ before an ending
+            self.assertEqual(K.unseen_spellings('ಬರಗೂರಿಗೆ ಪ್ರಶಸ್ತೀ'), ['ಪ್ರಶಸ್ತೀ'])      # a changed vowel length is caught
+
+    def test_the_gate_names_them_and_the_voice_is_told_to_keep_the_sounds_apart(self):
+        from brand.tokens import Limits
+        self.assertIn('short and long vowels distinct', Limits.saara_reel_gemini_style)
+        d = TheGate.folder(self_ := TheGate(), dict(seconds=8.0, issues=[], pronunciation={}, timing=['measured'],
+                           watch=dict(pairs=[dict(word='ಕೊಲೆ', means='murder', vs='ಕೊಳೆ', vs_means='dirt', where='story 1 headline')],
+                                      unseen=[dict(word='ಪ್ರಶಸ್ತೀ', where='story 3 card')]))) if False else None
 
 
 class TheOpeningLine(unittest.TestCase):

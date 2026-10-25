@@ -68,6 +68,14 @@ def main() -> int:
         print('\nTHE VOICE WILL SAY (read it once as a Kannada reader — nobody else has):')
         for label, text in res.get('script', []):
             print(f'   {label:<16} {text}')
+        w = res.get('watch') or {}
+        if w.get('pairs'):
+            print('\nSOUNDS THAT CHANGE THE MEANING — the Kannada desk confirms each spelling letter by letter; the editor listens for them:')
+            for h in w['pairs']:
+                print(f'   {h["word"]:<14} = {h["means"]}   (not {h["vs"]} = {h["vs_means"]})   [{h["where"]}]')
+        if w.get('unseen'):
+            print('\nSPELLED IN NO KEPT SOURCE — check vowel length, ಲ/ಳ, ನ/ಣ, doubled consonants in each:')
+            print('   ' + ' · '.join(f'{u["word"]} [{u["where"].replace("story ", "s").replace(" headline", "h").replace(" card", "c")}]' for u in w['unseen']))
         for msg in res['issues']:
             print(f'\n ✗ DOES NOT FIT  {msg}')
         for msg in res['warnings']:

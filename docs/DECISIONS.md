@@ -3910,3 +3910,33 @@ commercial use, no attribution) and Pixabay into `assets/sfx/incoming/`.
 
 Enforced by: `tests/test_saara_reel.py` (TheSoundEffectsSet, TheSounds), `brand/music.py :: audit`.
 
+
+## D136 · Kannada changes meaning with one sound — so spelling is checked word by word
+
+**Decided (2026-10-25), by the owner:** "ಹ್ರಸ್ವ / ದೀರ್ಘ — there are a lot of things like this in Kannada. If the pronunciation is off the meaning
+becomes different, and for a news channel that is a serious problem. I don't want any pronunciation issue in future."
+
+**What is true, said plainly.** Both voices (Gemini, Google) read exactly the letters they are given. A vowel-length, ಲ/ಳ, ನ/ಣ,
+aspirate or doubled-consonant error in the SPELLING is therefore an error in the sound, and the model-written copy is where such
+spellings can be wrong unnoticed. Nothing here can hear, and the speech-model audit deliberately collapses vowel length and a few
+near-twins (D133) because Whisper spells Kannada its own way — so it cannot catch a length slip. The defence that can be built is to
+narrow the whole script to the few words where a slip would change what the news says, and put those in front of the desk and the
+editor every time. That is what is built; it does not make a slip impossible.
+
+* **`assets/kannada_pairs.json`** — 58 words one sound from a different word (ಕೊಲೆ "murder" / ಕೊಳೆ "dirt", ಕಲ್ಲು / ಕಳ್ಳ, ಮಳೆ / ಮಲೆ,
+  ಅನ್ನ / ಅಣ್ಣ, ದಿನ / ದೀನ, ದನ / ಧನ, ಬಂದ / ಬಂಧ, ಕೊಂದು / ಕೊಂಡು, …). `brand/kannada_check.py :: meaning_pairs` finds them in what the
+  voice will say (inflected forms too, ಮಳೆಯಲ್ಲಿ; a merely similar longer word, ಕರೆಯಲಾಗಿದೆ, is not one). Add a row whenever a new pair is found.
+* **`unseen_spellings`** — the spoken words spelled in NO kept source paste (`inbox/sources/`): only a case ending is forgiven, so a
+  changed vowel length in a stem is caught. A newspaper spelled the paste's words; the rest are the model's own.
+* Both are printed by `reel_check.py` under the spoken script, carried in the reel's report, and raised by the gate as `SND-08`
+  warnings. The Kannada desk's brief and the skill make it check every listed word letter by letter against the paste, and never
+  respell a word the paste spells.
+* **Gemini is told** to keep short and long vowels, ಲ/ಳ and ನ/ಣ distinct and to hold doubled consonants (`Limits.saara_reel_gemini_style`);
+  the Google voice takes no direction.
+* Found and fixed the same day by the same kind of check: `ಬರಗೂರುಗೆ` → `ಬರಗೂರಿಗೆ` (a noun in ು takes ಇ before an ending),
+  `66 ರಲ್ಲಿ`, `ಸ್ಟೀವನ್ಗೆ` (D134).
+* **Still only a person's ear closes it.** The editor listens for the listed words once; a word heard wrong is fixed for good with
+  `scripts/reel_say.py "<line>" --respell "<word>=<sound>"`.
+
+Enforced by: `tests/test_saara_reel.py :: TheKannadaSpellingWatch`.
+

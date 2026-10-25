@@ -330,6 +330,15 @@ def _check_saara_reel(outdir: str, r: 'ReviewReport', edition: 'Edition | None' 
     for who, toks in (rep.get('pronunciation') or {}).items():
         r.add_warn('SND-08', f'reel_saara.mp4, {who}: {" ".join(toks)} may be misread by the voice — '
                    'respell it in assets/pronunciation.json', where='reel_saara.mp4')
+    watch = rep.get('watch') or {}
+    if watch.get('pairs'):
+        r.add_warn('SND-08', 'reel_saara.mp4: one sound from a different word — ' + '; '.join(
+            f'{h["word"]} ({h["means"]}, not {h["vs"]} {h["vs_means"]}) [{h["where"]}]' for h in watch['pairs'][:8])
+            + ' — confirm the spelling letter by letter and listen for it', where='reel_saara.mp4')
+    if watch.get('unseen'):
+        r.add_warn('SND-08', 'reel_saara.mp4: spelled in no kept source — ' + ' · '.join(
+            f'{u["word"]} [{u["where"]}]' for u in watch['unseen'][:10])
+            + ' — check vowel length, ಲ/ಳ, ನ/ಣ and doubled consonants', where='reel_saara.mp4')
     audit = rep.get('voice_audit') or {}
     if 'unavailable' in audit:
         r.add_warn('SND-06', f'reel_saara.mp4: the voice was not heard back ({audit["unavailable"]}) — '

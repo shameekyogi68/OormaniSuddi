@@ -48,6 +48,13 @@ opening line and the town-then-headline lines are built by code and nobody else 
 sentence (a list with no ಮತ್ತು, a line left hanging on ಸೇರಿದಂತೆ) is reported to the owner as a code fix — you cannot
 edit it in the story — and the lint warnings under it are yours to clear.
 
+## Spelling is sound: vowel length, ಲ/ಳ, ನ/ಣ, doubled consonants (D136)
+Kannada changes meaning with one sound (ದಿನ/ದೀನ, ಕೊಲೆ/ಕೊಳೆ, ಕಲ್ಲು/ಕಳ್ಳ, ಅನ್ನ/ಅಣ್ಣ, ದನ/ಧನ, ಬಂದ/ಬಂಧ, ಕೊಂದು/ಕೊಂಡು), and the
+voice reads exactly the letters written. After `reel_check.py`, take EVERY word under "SOUNDS THAT CHANGE THE MEANING" and "SPELLED IN
+NO KEPT SOURCE" and check it letter by letter against the source paste: the right ಹ್ರಸ್ವ/ದೀರ್ಘ, the right ಲ/ಳ and ನ/ಣ, the right single
+or double consonant, and that the word means what the story means. A word that is in the paste keeps the paste's spelling. List in
+your report each word you checked and the verdict; a word you could not settle goes under "listen for".
+
 ## What the voice gets wrong — fix it in the copy (D134, all seen on real days)
 - A figure and its ending are one word: `66ರಲ್ಲಿ`, `22ರಂದು`, `33ನೇ` — never `66 ರಲ್ಲಿ` (read apart as "ಅರವತ್ತಾರು ರಲ್ಲಿ").
 - A name ending in a consonant takes its ending after a ZWNJ: `ಸ್ಟೀವನ್‌ಗೆ`, not `ಸ್ಟೀವನ್ಗೆ`.

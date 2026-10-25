@@ -149,6 +149,9 @@ def grammar(text: str) -> list[str]:
                 out.append(f'a figure and its ending are written apart ("{prev} {w}") — write "{prev}{w}"')
             else:
                 out.append(f'the ending "{w}" stands alone — it belongs on the word before it, no space')
+    for w in words:
+        if re.search(r'ರುಗೆ$', w):
+            out.append(f'"{w}" — a name ending in ು takes ಇ before ಗೆ: "{w[:-3]}ರಿಗೆ"')
     for a, b in zip(words, words[1:]):
         if a == b and len(a) > 2:
             out.append(f'"{a}" is said twice in a row')

@@ -100,6 +100,12 @@ fix anything that is not a sentence you would print. It also lints certain mista
 ಸೇರಿದಂತೆ, an ending standing alone, `66 ರಲ್ಲಿ`, a word twice) — those are warnings that make it NOT CLEAN.
 A grammar slip heard on a posted reel is this step skipped.
 
+**Kannada spelling decides the sound (D136).** The voice reads exactly the letters it is given, and Kannada changes meaning
+with one sound — ದಿನ "day" / ದೀನ "wretched", ಕೊಲೆ "murder" / ಕೊಳೆ "dirt", ಕಲ್ಲು "stone" / ಕಳ್ಳ "thief", ಅನ್ನ / ಅಣ್ಣ. `reel_check.py`
+prints two lists under the spoken script: "SOUNDS THAT CHANGE THE MEANING" and "SPELLED IN NO KEPT SOURCE". Take every word on
+them back to the paste, spell it as the newspaper did, and when you cannot, say so in the report. A word the paste spells one
+way is never respelled another way "to fix the sound" — change the letters only to match the paste.
+
 **Write it so the voice reads it right** (D134 — these were real mispronunciations):
 - a figure and its ending are ONE word, no space: `66ರಲ್ಲಿ`, `22ರಂದು`, `33ನೇ` — never `66 ರಲ್ಲಿ`
 - a name that ends in a consonant takes its ending after a joiner: `ಸ್ಟೀವನ್‌ಗೆ` (ZWNJ), not `ಸ್ಟೀವನ್ಗೆ`
