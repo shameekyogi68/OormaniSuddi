@@ -86,7 +86,7 @@ Nobody fetches or scrapes news; there is no morning job. The assistant (or the
 4. **Runs the desks in waves.** `python3 scripts/dispatch.py` lists who is
    due, as agent runs. Each wave is ONE message of parallel Agent calls, one
    per line (a desk reads several stories in one run, D97):
-   - wave 1 — `fact-checker` + `kannada-editor` + `legal-standards` + `instagram-strategist`
+   - wave 1 — `fact-checker` + `kannada-editor` + `newsreader` (D138: the whole spoken script, once per edition) + `legal-standards` + `instagram-strategist`
      (`python3 scripts/fact_check.py editions/<date>.json` checks every figure
      against the kept source, offline). Since D134 the ಸುದ್ದಿ ಸಾರ reel's render is started in the
      same message, not after: the film needs about a minute and does not wait for the desks;

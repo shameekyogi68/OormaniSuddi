@@ -222,6 +222,19 @@ def estimate(copies: list[dict]) -> float:
     return round(t + max(M.saara_reel_close, 0.55 + _est(OUTRO_SAY) + 0.6), 1)
 
 
+def _repeats(head: str, body: str) -> list[str]:
+    """The headline's words that the card says again — MORE than half of them means the card adds nothing (D138:
+    "ಮೊಬೈಲ್ ಕಳವು: ಹಣ ವರ್ಗಾವಣೆ ದೂರು" then "ಹಣ ವರ್ಗಾವಣೆ ಕುರಿತು ದೂರು ದಾಖಲಾಗಿದೆ")."""
+    from . import kannada_check as K
+    hw = [w for w in K.words(head) if len(w) >= 3]
+    bw = K.words(body)
+    if len(hw) < 3:
+        return []
+    stems = {w[:4] for w in bw}
+    hit = [w for w in hw if w[:4] in stems]
+    return hit if len(hit) * 2 > len(hw) else []
+
+
 def spoken_script(copies: list[dict]) -> list[tuple[str, str]]:
     """Every sentence the voice will say, in order, as written — the opening and the dateline lines are
     assembled by code, so no desk ever read them until this was printed (D134)."""
@@ -259,6 +272,10 @@ def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[
             out.append(f'story {i + 1} ({c["place_short"]}): the card sentence is {len(c["body"])} chars '
                        f'(~{len(c["body"].split())} words); for {n} stories keep it under ~{b["support_chars"]} '
                        f'chars (~{b["support_words"]} words)')
+        rep = _repeats(c.get('head', ''), c.get('body', ''))
+        if rep:
+            out.append(f'story {i + 1} ({c["place_short"]}): the card repeats the headline ({" ".join(rep)}) — it must tell '
+                       f'something the headline does not')
         for note in c.get('notes', []):
             out.append(f'story {i + 1} ({c["place_short"]}): {note}')
     for label, text in spoken_script(copies):
@@ -596,7 +613,8 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
                 futs = {}
                 for kind, k, text in jobs:
                     if kind == 'single':
-                        futs[pool.submit(RS.clip, text, tmp / f'{k}.wav', engine)] = (kind, k)
+                        futs[pool.submit(RS.clip, text, tmp / f'{k}.wav', engine, 3,
+                                         Limits.saara_reel_gemini_style_cta if k == 'outro' else None)] = (kind, k)
                     else:
                         futs[pool.submit(RS.clip_pair, text[0], text[1], tmp / f'h{k}.wav', tmp / f'b{k}.wav', engine)] = (kind, k)
                 for fut in as_completed(futs):
@@ -609,6 +627,15 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
             with ThreadPoolExecutor(max_workers=6) as pool:
                 futures = {pool.submit(RS.clip, text, tmp / f'{k}.wav', engine): k for k, text, _ in plan}
                 durs = {futures[fut]: fut.result() for fut in as_completed(futures)}
+
+    # After the town the newsreader stops. The voice ran it into the headline, so the pause is made at least
+    # Limits.saara_reel_town_pause long, in the clip itself (D138).
+    for i, c in enumerate(copies):
+        n = len((c.get('place_short') or '').split())
+        if n and c['say_head'].startswith(c['place_short']):
+            times, how = RS.word_times(tmp / f'h{i}.wav', c['say_head'])
+            if how == 'measured' and len(times) >= n:
+                durs[f'h{i}'] = RS.pause_at(tmp / f'h{i}.wav', times[n - 1][1], Limits.saara_reel_town_pause)
 
     # Hear the clips back (a speech model, in its own process). A clip that does not sound like its
     # words — noise, silence, the wrong thing — is asked for once more; if it is still wrong the

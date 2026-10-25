@@ -398,6 +398,13 @@ class Limits:
     # Every voice clip is brought to this integrated loudness before the mix, so the voice does not change level from
     # story to story (D134). −17 LUFS of speech under the −14 LUFS finished mix.
     saara_reel_speech_lufs = -17.0
+    # After the town a newsreader stops — "ಬೈಂದೂರು. …" — before the line (owner, 2026-10-25: the voice ran the town into the
+    # headline). Whatever pause the voice made there is lengthened to at least this, in the audio itself.
+    saara_reel_town_pause = 0.36
+    # How the follow line is asked for (Gemini only): warm and inviting, "follow" and "maadi" said plainly.
+    saara_reel_gemini_style_cta = ('Say this as a warm, friendly, upbeat invitation to the viewer, in clear natural Kannada, '
+                                   'with "ಫಾಲೋ" said as the English word follow and "ಮಾಡಿ" as maadi, ending on a lifted, '
+                                   'smiling note: ')
     # The reel's sound effects (D135): 'pro' — licensed Mixkit / Pixabay effects fitted by scripts/sfx_import.py into
     # assets/sfx/pro/ (git-ignored: their licences forbid redistributing the files) — or 'house', the synthesised set
     # (brand/sfx.py). A missing pro file falls back to the house one, slot by slot, so a new Mac still makes a reel.

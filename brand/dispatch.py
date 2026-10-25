@@ -71,6 +71,7 @@ ROSTER: dict[str, dict] = {
     'fact-checker':        {'kind': 'reactive', 'stage': 'desk'},
     'legal-standards':     {'kind': 'reactive', 'stage': 'desk'},
     'kannada-editor':      {'kind': 'reactive', 'stage': 'desk'},
+    'newsreader':          {'kind': 'reactive', 'stage': 'desk'},     # D138: the whole spoken script, as sound
     'picture-editor':      {'kind': 'reactive', 'stage': 'picture'},
     'instagram-strategist': {'kind': 'reactive', 'stage': 'reach'},
     'package-inspector':   {'kind': 'reactive', 'stage': 'package'},
@@ -250,6 +251,14 @@ def strategy_hash(story: dict) -> str:
     return _digest({k: story.get(k) for k in STRATEGY_FIELDS if k in story})
 
 
+VOICE_FIELDS = ('reel_line', 'reel_support', 'location', 'segment')
+
+
+def voice_hash(story: dict) -> str:
+    """Only what the reel's voice says: the newsreader desk need not re-read for a deck or a source."""
+    return _digest({k: story.get(k) for k in VOICE_FIELDS if k in story})
+
+
 def picture_hash(story: dict) -> str:
     return _digest({k: story.get(k) for k in PICTURE_FIELDS if k in story})
 
@@ -257,7 +266,7 @@ def picture_hash(story: dict) -> str:
 # Which hash stamps which desk's receipt.
 HASH_OF = {'fact-checker': fact_hash, 'legal-standards': fact_hash,
            'kannada-editor': copy_hash, 'picture-editor': picture_hash,
-           'instagram-strategist': strategy_hash}
+           'instagram-strategist': strategy_hash, 'newsreader': voice_hash}
 
 
 def hash_for(agent: str, story: dict) -> str:
@@ -464,6 +473,13 @@ def _edition_tasks(plan: Plan, path: str) -> None:
                      'reach plan: format fit, cover hooks, slot, first comment '
                      'and first hour', rel)
 
+    # The whole spoken script, read as a newsreader would say it — once per edition that has ಸುದ್ದಿ ಸಾರ stories (D138).
+    if any(sd.get('segment') == 'saara' for sd in stories) and not no_segment:
+        vh = edition_hash(raw, voice_hash)
+        if read_receipt('newsreader', stem, 0).get('hash') != vh:
+            plan.add('newsreader', 'reactive', 1,
+                     'the whole spoken script, read as a newsreader: labels, repeated cards, breath', rel)
+
     for i, (st, sd) in enumerate(zip(objs, stories), 1):
         fh_ = fact_hash(sd)
         receipt = _receipt_current('fact-checker', stem, fh_, i)
@@ -660,7 +676,7 @@ def _ops_tasks(plan: Plan, today: date) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 PRE_RENDER_DESKS = ('fact-checker', 'legal-standards', 'kannada-editor',
-                    'picture-editor', 'instagram-strategist')
+                    'picture-editor', 'instagram-strategist', 'newsreader')
 POST_RENDER_DESKS = ('package-inspector', 'social-writer')
 
 

@@ -643,6 +643,26 @@ class TheSecondGeminiKey(unittest.TestCase):
         self.assertEqual(self.run_synth(False), ['KEY1', 'KEY1'])
 
 
+class TheCardAddsToTheHeadline(unittest.TestCase):
+    """D139: a card that says the headline's words again wastes the one sentence the viewer reads and hears."""
+
+    def test_the_card_that_repeated_the_headline_is_named(self):
+        self.assertTrue(R._repeats('ಮೊಬೈಲ್ ಕಳವು ಮಾಡಿ ಹಣ ವರ್ಗಾವಣೆ', 'ಮೊಬೈಲ್ ಕಳವು ಮಾಡಿ ಹಣ ವರ್ಗಾವಣೆ ನಡೆದಿದೆ.'))
+
+    def test_a_card_that_tells_more_is_not(self):
+        self.assertEqual(R._repeats('ಮೊಬೈಲ್ ಕಳವು ಮಾಡಿ ಹಣ ವರ್ಗಾವಣೆ', 'ಬೈಂದೂರು ಠಾಣೆಯಲ್ಲಿ ಪ್ರಕರಣ ದಾಖಲಾಗಿದ್ದು, ಪೊಲೀಸರು ತನಿಖೆ ಆರಂಭಿಸಿದ್ದಾರೆ.'), [])
+
+    def test_the_town_gets_its_pause(self):
+        p = Path(tempfile.mkdtemp(dir=ROOT / 'build')) / 'h.wav'
+        self.addCleanup(lambda: __import__('shutil').rmtree(p.parent, ignore_errors=True))
+        rng = np.random.default_rng(1)
+        sf.write(p, np.concatenate([rng.normal(0, .2, 24000), np.zeros(1500), rng.normal(0, .2, 48000)]), 48000)
+        before = len(sf.read(p)[0]) / 48000
+        after = RS.pause_at(p, 0.53, Limits.saara_reel_town_pause)
+        self.assertAlmostEqual(after - before, Limits.saara_reel_town_pause - 1500 / 48000, delta=0.02)
+        self.assertEqual(RS.pause_at(p, 0.53, 0.1), after)           # a pause already long enough is left alone
+
+
 class WhenTheVoiceStutters(unittest.TestCase):
     """D138: Kore said "ಕಡಲಿನಲ್ಲಿ" as "ಕಡಲಿ ನಲ್ಲಿ ನಲ್ಲಿ" and the audit scored it 0.94 — a pass."""
 

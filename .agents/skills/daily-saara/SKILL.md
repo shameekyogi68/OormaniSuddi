@@ -119,7 +119,8 @@ answers to start. So send **ONE message** that holds all of these:
 
 - `Bash` with `run_in_background: true`: `python3 render.py editions/<today>.json --only saara`
 - `Agent` calls, in parallel, one per line of `python3 scripts/dispatch.py` wave 1: `fact-checker`,
-  `kannada-editor` (ಸುದ್ದಿ ಸಾರ copy, including the two reel fields — they are spoken), `legal-standards`
+  `kannada-editor` (ಸುದ್ದಿ ಸಾರ copy, including the two reel fields — they are spoken), `newsreader` (the whole spoken
+  script read as a bulletin: labels, cards that repeat the headline, breath — one run for the edition), `legal-standards`
   (crime / death / minor stories), `instagram-strategist`
 
 You are told when the render ends. Then apply every FIX the desks return:

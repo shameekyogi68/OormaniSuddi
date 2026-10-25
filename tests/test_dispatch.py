@@ -623,6 +623,7 @@ class TheDesksAreNotOptional(unittest.TestCase):
             for agent in ('fact-checker', 'kannada-editor'):
                 D.write_receipt(agent, self.ed, 'PASS', 'read', story=i)
         D.write_receipt('instagram-strategist', self.ed, 'PASS', 'plan')
+        D.write_receipt('newsreader', self.ed, 'PASS', 'read as a newsreader')      # D138
         self.assertEqual(D.desk_gaps(self.ed), [])
 
     def test_changing_the_wording_reopens_the_kannada_desk(self):

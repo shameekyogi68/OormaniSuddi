@@ -3979,3 +3979,24 @@ passed it — it compares the whole clip, and one repeated syllable barely moves
 
 Enforced by: `tests/test_saara_reel.py :: WhenTheVoiceStutters`.
 
+
+## D139 · A newsreader reads the whole bulletin; the town gets its breath; the card must add something
+
+**Found by the owner's ear (2026-10-25), in strong terms:** a headline that was a label ("ಹಣ ವರ್ಗಾವಣೆ ದೂರು"), a card that said the
+same words again, no pause after the town name, and a follow line delivered flat. The desks had each passed their own part:
+nobody read the bulletin as ONE thing that a newsreader says aloud, and nobody can hear it.
+
+* **A new desk, `newsreader`** (`.claude/agents/newsreader.md`, in the roster, `dispatch.py`): one run per edition that has ಸುದ್ದಿ ಸಾರ
+  stories, in wave 1 beside the fact and Kannada desks, hashed on what the voice says only (`voice_hash`), and a gap in the gate (`OPS-04`)
+  until it has read the current script. It reads "THE VOICE WILL SAY" top to bottom and judges labels, repeated cards, hanging or
+  run-on sentences, stories that sound alike, and where the voice must breathe. On its first day it rewrote four of five headlines.
+* **The town's pause is made in the audio:** after the first (town) word of each headline clip the pause is at least
+  `Limits.saara_reel_town_pause` (0.36 s) — `reel_speech.pause_at`, found by the word timings, and only lengthened, never doubled.
+* **A card that repeats its headline is warned about** (`saara_reel._repeats`: more than half of the headline's words said again); and
+  `reel_check` prints it. A name shared by the headline and the card is not a repeat.
+* **The follow line** is asked of Gemini as a warm, lifted invitation (`Limits.saara_reel_gemini_style_cta`), "ಫಾಲೋ" said as the English
+  word and "ಮಾಡಿ" as maadi. Unverified by ear: the quota was spent. Listen to it once.
+* **Not a cure:** the newsreader is another model; it cannot hear. What it adds is a reader of the whole script, which nobody was.
+
+Enforced by: `tests/test_saara_reel.py :: TheCardAddsToTheHeadline`, `tests/test_dispatch.py`.
+

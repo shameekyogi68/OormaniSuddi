@@ -211,7 +211,7 @@ def forget(text: str, engine: str = 'google') -> None:
             os.remove(cached)
 
 
-def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
+def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3, style: str | None = None) -> float:
     """Synthesise `text` as `wav` (trimmed, 48k mono). Returns its seconds."""
     raw = wav.with_suffix('.mp3')
     said = spoken(text)
@@ -221,7 +221,7 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
         try:
             with _one_engine(engine):
                 # Gemini is told HOW to read as well as what (the direction is not spoken); it names a voice
-                voice._synth_one((Limits.saara_reel_gemini_style + said) if gem else said, str(raw), engine,
+                voice._synth_one(((style or Limits.saara_reel_gemini_style) + said) if gem else said, str(raw), engine,
                                  Limits.saara_reel_gemini_voice if gem else None, None)
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-af', TRIM,
                             '-ar', '48000', '-ac', '1', str(wav)], check=True)
@@ -249,6 +249,38 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
 
 
 # ── hear the clips back ──────────────────────────────────────────────────
+def pause_at(wav: Path, near: float, seconds: float, window: float = 0.07) -> float:
+    """Make the pause at (about) `near` seconds at least `seconds` long, in place; returns the new length.
+
+    The quietest instant within `window` of `near` is where silence is added, so a pause the voice already made is
+    only extended and nothing audible is split."""
+    import numpy as np
+    import soundfile as sf
+    x, sr = sf.read(str(wav))
+    mono = x if x.ndim == 1 else x.mean(axis=1)
+    hop = int(0.005 * sr)
+    lo, hi = max(0, int((near - window) * sr)), min(len(mono) - hop, int((near + window) * sr))
+    if hi <= lo:
+        return round(len(x) / sr, 3)
+    rms = np.array([np.sqrt(np.mean(mono[i:i + hop] ** 2)) for i in range(lo, hi, hop)])
+    centre = lo + int(np.argmin(rms)) * hop + hop // 2
+    # how much quiet is already there around that instant
+    thr = np.abs(mono).max() * 10 ** (-40 / 20)
+    a = centre
+    while a > 0 and abs(mono[a]) < thr:
+        a -= 1
+    b = centre
+    while b < len(mono) - 1 and abs(mono[b]) < thr:
+        b += 1
+    have = (b - a) / sr
+    need = max(0.0, seconds - have)
+    if need <= 0.01:
+        return round(len(x) / sr, 3)
+    gap = np.zeros((int(need * sr),) + x.shape[1:])
+    sf.write(str(wav), np.concatenate([x[:centre], gap, x[centre:]]), sr)
+    return round((len(x) + len(gap)) / sr, 3)
+
+
 def cut_out(wav: Path, spans: list[list[float]], fade: float = 0.012) -> float:
     """Remove the given [start, end] spans from a clip, joining the rest with a short crossfade; returns the new seconds."""
     import numpy as np
