@@ -524,6 +524,47 @@ class OneRequestTwoClips(unittest.TestCase):
         self.assertGreater(b, 0.8)
 
 
+class TheDatelineAndTheLastSlide(unittest.TestCase):
+    """D141: a full stop after the town, and the follow button pressed as the words are said."""
+
+    def test_the_town_is_a_sentence_of_its_own(self):
+        c = R._story_copy(Story(headline='ಬೈಂದೂರು: ಮೊಬೈಲ್ ಕಳವು', reel_line='ಮೊಬೈಲ್ ಕದ್ದು ಹಣ ವರ್ಗಾಯಿಸಿದ ಆರೋಪ', location='ಬೈಂದೂರು',
+                                category='civic', segment='saara'))
+        self.assertTrue(c['say_head'].startswith('ಬೈಂದೂರು. ಮೊಬೈಲ್'))
+
+    def test_the_press_lands_on_the_last_spoken_word(self):
+        durs = {'intro': 3.0, 'outro': 2.6, 'h0': 3.0, 'b0': 3.0}
+        words = {'outro': [[0.0, 0.5], [0.6, 1.2], [1.7, 2.1]]}                # the last word starts 1.7 s into the clip
+        tl = R._timeline(durs, 1, words)
+        self.assertAlmostEqual(tl['pressAt'], tl['outro'] + 0.55 + 1.7 - 0.12, places=2)
+        self.assertAlmostEqual(R._timeline(durs, 1)['pressAt'], R._timeline(durs, 1)['outro'] + 1.7, places=2)   # unmeasured
+
+    def test_a_clip_that_is_out_of_step_is_measured_and_named(self):
+        d = Path(tempfile.mkdtemp(dir=ROOT / 'build'))
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        rng = np.random.default_rng(9)
+        clip = rng.normal(0, .2, 48000)
+        sf.write(d / 'intro.wav', clip, 48000)
+        mix = np.zeros(48000 * 4)
+        mix[int(48000 * 0.55):int(48000 * 0.55) + 48000] = clip                  # sits at 0.55 s; the timeline says 0.30
+        sf.write(d / 'mix.wav', mix, 48000)
+        tl = {'stories': [], 'outro': 99.0}
+        res = R._sync_check(tl, d, d / 'mix.wav')
+        self.assertAlmostEqual(res['offsets_ms']['intro'], 250, delta=5)
+        self.assertGreater(res['worst_ms'], 120)
+
+    def test_the_gate_fails_a_reel_whose_audio_is_out_of_step(self):
+        from brand.review import review
+        g = TheGate()
+        g.addCleanup = lambda *a, **k: None
+        d = g.folder(dict(seconds=8.0, issues=[], pronunciation={}, timing=['measured'], sync=dict(worst_ms=300, offsets_ms={'outro': 300})))
+        try:
+            found = {f.code: f for f in review(d).findings}
+        finally:
+            __import__('shutil').rmtree(d, ignore_errors=True)
+        self.assertEqual(found['VID-08'].severity, 'fail')
+
+
 class TheBoundaryComesFromTheWords(unittest.TestCase):
     """D140: the cut between a headline and its card was the first long silence, which fell after the card's first words."""
 

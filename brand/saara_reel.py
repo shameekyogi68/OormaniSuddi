@@ -135,7 +135,9 @@ def _story_copy(st: Story) -> dict:
         m = _KICKER.match(st.headline)
         head = (m.group(2) if m and short and m.group(1).strip().startswith(short[:3]) else st.headline).strip()
         notes.append('no reel_line — used the headline')
-    say = head if short and short in head else f'{short}, {head}' if short else head
+    # the town is a sentence of its own — "ಬೈಂದೂರು. …", not "ಬೈಂದೂರು, …": a full stop gives the falling tone and the pause
+    # a newsreader makes after a dateline (owner, 2026-10-25)
+    say = head if short and short in head else f'{short}. {head}' if short else head
     # reel_support — one complete sentence written for the reel — is shown whole and read.
     # Without it the card takes the story's own sentence that fits the clock best (below).
     return dict(place=place, place_short=short, head=head, say_head=say, body=RS.join_endings((st.reel_support or '').strip()),
@@ -334,6 +336,10 @@ def _timeline(durs: dict, n: int, words: dict | None = None, towns: list[str] | 
                      M.saara_reel_close_min, 0.25)
         level = 1
     stories, outro, T = chosen
+    # the follow button is pressed as "ಮಾಡಿ" is said — measured from the voice, not a fixed beat (D141: a longer follow line
+    # had left the press a second before the words)
+    ow = words.get('outro')
+    press_at = round(outro + 0.55 + ow[-1][0] - 0.12, 3) if ow else round(outro + 1.7, 3)
     hook_words = words.get('intro')
     hook_text = words.get('intro_text') or []
     # when each running-order row lights: as its town is said, else spread over the hook
@@ -345,7 +351,7 @@ def _timeline(durs: dict, n: int, words: dict | None = None, towns: list[str] | 
             row_at.append(round(M.saara_reel_hook_at + hook_words[k][0], 3))
         else:
             row_at.append(round(M.saara_reel_hook_at + durs['intro'] * 0.7 * i / max(1, n - 1), 3))
-    return dict(stories=stories, outro=outro, T=T, hookAt=M.saara_reel_hook_at, hookDur=durs['intro'],
+    return dict(stories=stories, outro=outro, pressAt=press_at, T=T, hookAt=M.saara_reel_hook_at, hookDur=durs['intro'],
                 hookWords=hook_words, hookText=hook_text, rowAt=row_at,
                 compress=level, natural=natural[2], over=round(max(0.0, T - cap), 3))
 
@@ -370,6 +376,7 @@ def _speed_up(tmp: Path, copies: list[dict], hook: str, durs: dict, towns: list[
             timing.append(how)
         words['intro'], _ = RS.word_times(tmp / 'intro.wav', hook)
         words['intro_text'] = hook.split()
+        words['outro'], _ = RS.word_times(tmp / 'outro.wav', OUTRO_SAY)
         tl = _timeline(new, len(copies), words, towns)
         tl['speedup'] = f
         durs = new
@@ -536,6 +543,38 @@ def _sfx(slot: str) -> tuple[Path, float]:
     return pro, _peak_at(house) - _peak_at(pro)
 
 
+def _sync_check(tl: dict, clips: Path, mix: Path) -> dict:
+    """Is every voice clip in the finished mix where the timeline (and so the picture) says it is? (D141)
+
+    Each clip is found in the mixed audio by cross-correlation and its offset from the timeline is measured; the
+    follow button's press is compared with the word it is meant to land on. Measured, not assumed: a longer follow
+    line once left the press a second ahead of the words and nothing in the pipeline noticed."""
+    import numpy as np
+    import soundfile as sf
+    from scipy.signal import fftconvolve
+    fin, sr = sf.read(str(mix))
+    fin = fin if fin.ndim == 1 else fin.mean(axis=1)
+    rows = [('intro', 0.30)] + [(f'{k}{i}', s[f'{"headAt" if k == "h" else "bodyAt"}'])
+                                for i, s in enumerate(tl['stories']) for k in ('h', 'b')] + [('outro', tl['outro'] + 0.55)]
+    worst, offs = 0.0, {}
+    for name, expect in rows:
+        if not (clips / f'{name}.wav').exists():
+            continue
+        x, csr = sf.read(str(clips / f'{name}.wav'))
+        x = x if x.ndim == 1 else x.mean(axis=1)
+        if csr != sr:
+            continue
+        lo = max(0, int((expect - 0.4) * sr))
+        seg = fin[lo:lo + len(x) + int(0.8 * sr)]
+        if len(seg) < len(x):
+            continue
+        k = int(np.argmax(fftconvolve(seg, x[::-1], mode='valid')))
+        off = (lo + k) / sr - expect
+        offs[name] = round(off * 1000)
+        worst = max(worst, abs(off))
+    return dict(worst_ms=round(worst * 1000), offsets_ms=offs)
+
+
 def _mix(tl: dict, clips: Path, out: Path) -> None:
     T = tl['T']
     args, chains, vo, fx = [], [], [], []
@@ -563,7 +602,7 @@ def _mix(tl: dict, clips: Path, out: Path) -> None:
         fx_add('tick', at + 0.04, 0.20, f't{k}')
     fx_add('whoosh', tl['outro'] - 0.32, 0.32, 'wz')
     fx_add('outro', tl['outro'] + 0.1, 0.28, 'fz')                    # under the follow line: −8 dB to the voice, not −5 (D135)
-    fx_add('press', tl['outro'] + 1.80, 0.5, 'fp')           # the follow button, pressed
+    fx_add('press', tl.get('pressAt', tl['outro'] + 1.7) + 0.16, 0.5, 'fp')         # the follow button, pressed — its loudest instant on the picture's
     args.extend(['-stream_loop', '-1', '-i', str(BASE / 'assets/news_bgm.mp3')])
     bed = args.count('-i') - 1
     g = ';'.join(chains)
@@ -680,6 +719,7 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
         timing.append(how)
     words['intro'], _ = RS.word_times(tmp / 'intro.wav', hook)
     words['intro_text'] = hook.split()
+    words['outro'], _ = RS.word_times(tmp / 'outro.wav', OUTRO_SAY)
     towns = [c['place_short'] for c in copies]
     tl = _timeline(durs, len(stories), words, towns)
     if tl['T'] > Limits.reel_fail_seconds:
@@ -845,7 +885,8 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
                 raise ReelFitError('the copy does not fit the reel — ' + '; '.join(laid['issues']))
 
         def summary(laid, **extra):
-            return dict(seconds=tl['T'], timeline=tl, copies_hash=copies_hash(copies), watch=spelling_watch(copies), lines=laid.get('lines'), issues=laid.get('issues', []),
+            return dict(seconds=tl['T'], timeline=tl, copies_hash=copies_hash(copies), watch=spelling_watch(copies),
+                        sync=info.get('sync'), lines=laid.get('lines'), issues=laid.get('issues', []),
                         warnings=_warnings(copies, laid, info), pronunciation=b['pron'],
                         timing=b['timing'], clips={k: v for k, v in b['durs'].items()}, voice_audit=b.get('voice') or {}, **extra)
 
@@ -863,6 +904,10 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
         fps = M.saara_reel_fps
         video, mix = tmp / 'video.mp4', tmp / 'mix.wav'
         _mix(tl, tmp, mix)
+        try:
+            info['sync'] = _sync_check(tl, tmp, mix)
+        except Exception:                                  # noqa: BLE001 — a checker that cannot run never stops a day
+            info['sync'] = {}
         n = int(round(tl['T'] * fps))
         laid = _film(b['page'], tmp, n, fps, gate, video)
         subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-i', str(mix), '-map', '0:v', '-map', '1:a',
@@ -913,7 +958,7 @@ def make(edition: Edition, outdir: str, engine: str | None = None) -> dict:
     with open(os.path.join(rv, REPORT), 'w', encoding='utf-8') as fh:
         json.dump({k: v for k, v in res.items() if k != 'timeline'} |
                   {'beats': [dict(B=s['B'], headAt=s['headAt'], bodyAt=s['bodyAt']) for s in res['timeline']['stories']],
-                   'outro': res['timeline']['outro'], 'compress': res['timeline']['compress']},
+                   'outro': res['timeline']['outro'], 'pressAt': res['timeline'].get('pressAt'), 'compress': res['timeline']['compress']},
                   fh, indent=2, ensure_ascii=False)
         fh.write('\n')
     return res

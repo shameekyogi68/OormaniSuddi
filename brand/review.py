@@ -330,6 +330,12 @@ def _check_saara_reel(outdir: str, r: 'ReviewReport', edition: 'Edition | None' 
     for who, toks in (rep.get('pronunciation') or {}).items():
         r.add_warn('SND-08', f'reel_saara.mp4, {who}: {" ".join(toks)} may be misread by the voice — '
                    'respell it in assets/pronunciation.json', where='reel_saara.mp4')
+    sync = rep.get('sync') or {}
+    if sync.get('worst_ms', 0) > 120:
+        r.add_fail('VID-08', f'reel_saara.mp4: a voice clip sits {sync["worst_ms"]} ms from where the picture expects it '
+                   f'({sync.get("offsets_ms")}) — audio and picture are out of step', where='reel_saara.mp4')
+    elif sync.get('worst_ms', 0) > 40:
+        r.add_warn('VID-08', f'reel_saara.mp4: a voice clip sits {sync["worst_ms"]} ms from where the picture expects it', where='reel_saara.mp4')
     watch = rep.get('watch') or {}
     if watch.get('pairs'):
         r.add_warn('SND-08', 'reel_saara.mp4: one sound from a different word — ' + '; '.join(

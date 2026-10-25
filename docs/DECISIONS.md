@@ -4022,3 +4022,23 @@ card began without it. The speech check had flagged it (0.83) but only as "liste
 
 Enforced by: `tests/test_saara_reel.py :: TheBoundaryComesFromTheWords`.
 
+
+## D141 · The town ends with a full stop; the follow button is pressed on the word; sync is measured on every reel
+
+**Said by the owner (2026-10-25):** after the place, a full stop — "ಬೈಂದೂರು. ಕುಂದಾಪುರ." not "ಬೈಂದೂರು," — and, on the last slide, the audio was a
+little out of step with the picture.
+
+* **Dateline:** the voice is given "ಬೈಂದೂರು. <headline>" (`_story_copy`); the full stop gives the falling tone and the breath a newsreader
+  makes after a dateline, and the engine still lengthens the pause to `Limits.saara_reel_town_pause`. The speech model writes a full stop
+  after the town in the clips it hears back.
+* **The last slide:** the follow button's press was fixed at 1.7 s into the card, and the voice sound, "ಫಾಲೋ ಮಾಡಿ", fell at about 1.4–2.4 s. When
+  the line grew a comma and a clearer pause (D140) the words moved later and the button was pressed a second BEFORE they were said. Now the
+  press is timed from the voice: the card pulses as the last word starts (`timeline.pressAt`, from `word_times` of the follow clip), the page
+  reads it (`TL.pressAt`), and the press sound's loudest instant is put on the picture's (`pressAt + 0.16`).
+* **Measured on every reel from now on** (`saara_reel._sync_check`): each voice clip is found in the finished mix by cross-correlation and its
+  offset from the timeline is stored in the report; the gate warns above 40 ms and fails (`VID-08`) above 120 ms. On today's reel: worst 1 ms.
+  The check cannot see a visual that is timed against something other than the timeline — that is how the press was missed; each such cue is
+  now computed from the voice, not fixed.
+
+Enforced by: `tests/test_saara_reel.py :: TheDatelineAndTheLastSlide`.
+
