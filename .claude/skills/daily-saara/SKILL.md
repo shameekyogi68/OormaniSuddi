@@ -155,6 +155,19 @@ for something that is not a missing desk or the person-only items: launch `gate-
 mechanical fixes, re-render or `regate.py` (max two loops), and report anything left. Never edit a check to
 make a code go away.
 
+## Before you say "done" — the release checklist (D134–D141)
+The owner's standard is no mistakes, and nobody on the team can hear. So every one of these is checked, in this order, and reported:
+1. **Copy final BEFORE the render.** Every Gemini voice request is spent for good (free tier: 10 a day per key, three keys in `.env`);
+   a re-render after a copy change asks again for every changed story. Let all of wave 1 — fact, Kannada, `newsreader`, legal,
+   reach — pass FIRST when a day has few requests to spare; otherwise start the render beside them but expect a second.
+2. **The newsreader desk passed** (no label headlines, every card adds a fact, a breath after each town) and `reel_check.py` says CLEAN.
+3. **The report** (`out/<d>/_review/reel_saara_report.json`) shows: `voice_engine` is `gemini` (if it says google, say why — quota — in the
+   report), `sync.worst_ms` ≤ 40, every clip's `ratio` between 0.8 and 1.25, nothing `repaired` unless you name it.
+4. **Say the watch lists to the owner**, short: the words under "SOUNDS THAT CHANGE THE MEANING" and "SPELLED IN NO KEPT SOURCE", and
+   the follow line, the one place a model's delivery could be flat. They listen once; you cannot.
+5. **A story that repeats an earlier day** (`render --check` prints "same source URL as …") is the owner's call: ask, never drop or keep silently.
+6. `scripts/regate.py editions/<d>.json` ends "mechanical checks clean"; the sign-off is the owner's.
+
 ## Step 6 · Report — short, plain, in Kannada-friendly English
 
 0. **Questions for the editor** — things only they can settle; list them FIRST, never change the copy to hide
