@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **99/136** decisions are named by at least one test
+- **100/137** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -620,4 +620,8 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_saara_reel.py`
 - Enforced in: `brand/kannada_check.py`, `brand/saara_reel.py`
+
+## D137 · The voice made even: levels, edges and pauses (measured on a real Kore reel)
+
+- **Tested by:** `tests/test_saara_reel.py`
 

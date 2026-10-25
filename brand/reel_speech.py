@@ -159,9 +159,32 @@ def grammar(text: str) -> list[str]:
 
 
 # ── one clip, one voice ──────────────────────────────────────────────────
-TRIM = ('silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.03,areverse,'
-        'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.05,areverse,'
+# A clip is trimmed to its sound, but not cut INTO it (D134: measured on a real Kore reel — eight of twelve clips began
+# within 3 dB of their loudest instant and a third ended while the voice was still loud, i.e. chopped consonants and cut-off
+# tails). 80 ms of lead-in and 140 ms of tail are kept, and the edges are faded (6 ms in, 30 ms out) so nothing clicks.
+TRIM = ('silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.08,areverse,'
+        'silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.14,'
+        'afade=t=in:d=0.03,areverse,afade=t=in:d=0.006,'
         f'atempo={M.saara_reel_tempo}')
+
+
+def level(wav: Path, target: float | None = None) -> float:
+    """Bring a clip to the house speech loudness (integrated, gated) in place; returns the gain applied, in dB.
+
+    Every clip is a separate request and every request comes back at its own level: on a real day they spread over
+    7.7 dB (−13.3 to −21.0 LUFS), which the listener hears as a voice that changes mood from story to story."""
+    target = Limits.saara_reel_speech_lufs if target is None else target
+    err = subprocess.run(['ffmpeg', '-nostats', '-i', str(wav), '-af', 'ebur128', '-f', 'null', '-'],
+                         capture_output=True, text=True).stderr
+    m = re.findall(r'I:\s+(-?[\d.]+) LUFS', err)
+    if not m or float(m[-1]) < -60:
+        return 0.0
+    gain = max(-10.0, min(10.0, target - float(m[-1])))
+    tmp = wav.with_suffix('.lvl.wav')
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(wav), '-af', f'volume={gain:.2f}dB,alimiter=limit=0.95',
+                    '-ar', '48000', '-ac', '1', str(tmp)], check=True)
+    tmp.replace(wav)
+    return round(gain, 2)
 
 
 @contextlib.contextmanager
@@ -202,6 +225,7 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3) -> float:
                                  Limits.saara_reel_gemini_voice if gem else None, None)
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-af', TRIM,
                             '-ar', '48000', '-ac', '1', str(wav)], check=True)
+            level(wav)
             d = voice.get_audio_duration(str(wav))
             floor = 0.35 + 0.03 * len(said)
             if d < min(floor, 1.2):
@@ -268,9 +292,11 @@ def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = '
                 lo, hi = int(max(0.3, guess - 0.25 * total) / 0.02), int(min(total - 0.3, guess + 0.25 * total) / 0.02)
                 k = lo + int(np.argmin(rms[lo:hi]))
                 st = en = k * 0.02
-            for path, (t0, t1) in ((wav_a, (0.0, st + 0.06)), (wav_b, (en - 0.06, total))):
+            mid = (st + en) / 2                                      # the middle of the pause: both halves keep their edges
+            for path, (t0, t1) in ((wav_a, (0.0, mid)), (wav_b, (mid, total))):
                 subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{t0:.3f}', '-to', f'{t1:.3f}', '-i', str(full),
                                 '-af', TRIM, '-ar', '48000', '-ac', '1', str(path)], check=True)
+                level(path)
             da, db = (voice.get_audio_duration(str(wav_a)), voice.get_audio_duration(str(wav_b)))
             if da < 0.8 or db < 0.8:
                 raise ReelError(f'a clip cut from the pair is only {min(da, db):.2f}s')

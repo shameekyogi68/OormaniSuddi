@@ -643,7 +643,43 @@ class TheSecondGeminiKey(unittest.TestCase):
         self.assertEqual(self.run_synth(False), ['KEY1', 'KEY1'])
 
 
-class TheOpeningLine(unittest.TestCase):
+class TheVoiceIsEven(unittest.TestCase):
+    """D137: every clip is a separate request at its own level; the listener must not hear the voice change mood."""
+
+    def wav(self, amp, name):
+        d = Path(tempfile.mkdtemp(dir=ROOT / 'build'))
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        rng = np.random.default_rng(5)
+        x = np.concatenate([np.zeros(4800), rng.normal(0, amp, 48000 * 2), np.zeros(4800)])
+        p = d / name
+        sf.write(p, x, 48000)
+        return p
+
+    def lufs(self, p):
+        err = subprocess.run(['ffmpeg', '-nostats', '-i', str(p), '-af', 'ebur128', '-f', 'null', '-'], capture_output=True, text=True).stderr
+        return float(re.findall(r'I:\s+(-?[\d.]+) LUFS', err)[-1])
+
+    def test_a_quiet_and_a_loud_clip_come_to_the_same_level(self):
+        quiet, loud = self.wav(0.05, 'q.wav'), self.wav(0.25, 'l.wav')   # ±10 dB is as far as the gain goes
+        RS.level(quiet)
+        RS.level(loud)
+        self.assertAlmostEqual(self.lufs(quiet), Limits.saara_reel_speech_lufs, delta=0.6)
+        self.assertAlmostEqual(self.lufs(loud), Limits.saara_reel_speech_lufs, delta=0.6)
+
+    def test_silence_is_left_alone(self):
+        p = self.wav(0.0, 's.wav')
+        self.assertEqual(RS.level(p), 0.0)
+
+    def test_the_trim_keeps_the_edges_of_the_sound(self):
+        p = self.wav(0.1, 'e.wav')
+        out = p.with_name('t.wav')
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(p), '-af', RS.TRIM, str(out)], check=True)
+        x, sr = sf.read(out)
+        self.assertGreater(len(x) / sr, 2.0)                  # the 2 s of sound is all there
+        self.assertLess(len(x) / sr, 2.0 + 0.08 + 0.14 + 0.05)  # plus no more than the lead-in and tail kept
+
+
+
     def hook(self, *towns):
         return R._hook_text([dict(place_short=t) for t in towns])
 

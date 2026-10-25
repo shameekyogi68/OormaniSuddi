@@ -395,6 +395,9 @@ class Limits:
                                'Say every vowel exactly as written — short and long vowels distinct, ಲ and ಳ distinct, ನ and ಣ '
                                'distinct, doubled consonants held: ')
     saara_reel_gemini_workers = 3
+    # Every voice clip is brought to this integrated loudness before the mix, so the voice does not change level from
+    # story to story (D134). −17 LUFS of speech under the −14 LUFS finished mix.
+    saara_reel_speech_lufs = -17.0
     # The reel's sound effects (D135): 'pro' — licensed Mixkit / Pixabay effects fitted by scripts/sfx_import.py into
     # assets/sfx/pro/ (git-ignored: their licences forbid redistributing the files) — or 'house', the synthesised set
     # (brand/sfx.py). A missing pro file falls back to the house one, slot by slot, so a new Mac still makes a reel.
@@ -748,8 +751,8 @@ class Motion:
     saara_reel_intro = 2.9   # the front page, before the first change
     saara_reel_hook_at = 0.25  # the town-name hook starts speaking
     saara_reel_lead  = 0.30  # change → the voice reads the headline
-    saara_reel_gap   = 0.18  # headline voice → read-line voice
-    saara_reel_tail  = 0.45  # end of the read line → next change
+    saara_reel_gap   = 0.32  # headline voice → read-line voice (0.18 until D134: the headline needs a beat to land)
+    saara_reel_tail  = 0.55  # end of the read line → next change (0.45 until D134)
     saara_reel_close = 3.7   # follow card, the last 0.6s folding back to frame 0
     saara_reel_tempo = 1.00  # the house 1.15 only: 1.06 on top rushed the Kannada (owner, 2026-10-23)
     saara_reel_fps   = 30

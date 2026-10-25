@@ -3940,3 +3940,26 @@ editor every time. That is what is built; it does not make a slip impossible.
 
 Enforced by: `tests/test_saara_reel.py :: TheKannadaSpellingWatch`.
 
+
+## D137 · The voice made even: levels, edges and pauses (measured on a real Kore reel)
+
+**Decided (2026-10-25), by the owner:** "a few tonal and pause issues — correct them now and make sure future reels are perfect."
+The clips were measured, not guessed (`scratch/tone`, 25 Oct reel, 12 clips):
+
+* **Level:** each clip is its own request and came back at its own loudness — from −13.3 to −21.0 LUFS, **7.7 dB apart** (story 4's card
+  sat 6 dB under story 3's headline). The final mix is normalised as a whole, so nothing evened them. Now every clip is brought to
+  `Limits.saara_reel_speech_lufs` (−17 LUFS integrated) in `reel_speech.level` — **spread 0.1 dB**; gain is capped at ±10 dB, so a
+  clip that far off is left to be noticed rather than boosted into noise.
+* **Edges:** eight of twelve clips began within 3 dB of their loudest instant and a third ended while the voice was still loud —
+  clipped consonants and cut tails, heard as a chopped, nervous delivery. The trim now keeps 80 ms of lead-in and 140 ms of tail and
+  fades the edges (6 ms in, 30 ms out); a headline/card pair from one request is cut in the MIDDLE of the pause between them, not
+  60 ms inside it. Every clip's first and last 40 ms are now ≥ 40 dB under its peak.
+* **Pauses:** the headline got 0.18 s before its card and a story 0.45 s before the next change — a gabble. Now 0.32 s and 0.55 s
+  (`Motion.saara_reel_gap`, `saara_reel_tail`); the tight values remain the fallback when a day is long (`*_min`). A 5-story Kore
+  reel is 47 s (was 43 s); six stories in the Google voice still fit by tightening, then by the ≤5 % speed-up (D134).
+* **Not changed, because it cannot be checked:** a direction to Gemini about tone and sentence endings. Changing the wording would
+  also change the cache key, so every clip would be asked for again, and the free quota was spent. Try it only with quota to spare and
+  an ear to judge.
+
+Enforced by: `tests/test_saara_reel.py :: TheVoiceIsEven`.
+
