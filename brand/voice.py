@@ -83,6 +83,63 @@ def load_gemini_key(kind: str = 'voice') -> str:
 
 DEFAULT_GEMINI_KEY = load_gemini_key()
 
+
+def load_gemini_keys() -> list[str]:
+    """Every Gemini key we may use, in order: the main one, then GEMINI_API_KEY_FALLBACK(_2…) from the environment or
+    .env. A second key on its own Google project has its own free daily quota (D134)."""
+    keys = [load_gemini_key()]
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    lines = []
+    try:
+        with open(os.path.join(base, '.env'), encoding='utf-8') as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        pass
+    for name in ('GEMINI_API_KEY_FALLBACK', 'GEMINI_API_KEY_FALLBACK_2', 'GEMINI_API_KEY_FALLBACK_3'):
+        v = os.environ.get(name, '').strip()
+        if not v:
+            for line in lines:
+                if line.strip().startswith(name + '='):
+                    v = line.split('=', 1)[1].strip().strip('"').strip("'")
+        keys.append(v)
+    out = []
+    for k in keys:
+        if k and k not in out:
+            out.append(k)
+    return out
+
+
+_KEY_STATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'build', 'gemini_keys.json')
+
+
+def _key_tag(key: str) -> str:
+    import hashlib
+    return hashlib.sha256(key.encode()).hexdigest()[:10]          # never the key itself
+
+
+def _key_spent(key: str) -> bool:
+    try:
+        with open(_KEY_STATE, encoding='utf-8') as fh:
+            until = json.load(fh).get(_key_tag(key), 0)
+    except (OSError, ValueError):
+        return False
+    return time.time() < until
+
+
+def _mark_spent(key: str, retry_seconds: float) -> None:
+    try:
+        os.makedirs(os.path.dirname(_KEY_STATE), exist_ok=True)
+        try:
+            with open(_KEY_STATE, encoding='utf-8') as fh:
+                st = json.load(fh)
+        except (OSError, ValueError):
+            st = {}
+        st[_key_tag(key)] = time.time() + max(300.0, retry_seconds)
+        with open(_KEY_STATE, 'w', encoding='utf-8') as fh:
+            json.dump(st, fh)
+    except OSError:
+        pass
+
 # Industry-standard Kannada newsreader voices:
 # kn-IN-SapnaNeural: Articulate, clear, authoritative female television news anchor (Default)
 # kn-IN-GaganNeural: Authoritative baritone male news anchor
@@ -656,45 +713,50 @@ def _fetch(req: urllib.request.Request, timeout: float) -> bytes:
 
 
 def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_key: str | None = None) -> str:
-    """Synthesize speech using Google Gemini Flash TTS."""
-    key = api_key or DEFAULT_GEMINI_KEY
-    if not (key or '').strip():
-        raise RuntimeError(
-            'Gemini TTS needs GEMINI_API_KEY (or .gemini_key). '
-            'The key is not sent in the URL.')
+    """Synthesize speech using Google Gemini Flash TTS.
+
+    Tries the keys in order, skipping one whose free daily quota is known to be spent (and remembering a spent one
+    until Gemini says it resets), so a second key carries on where the first stops (D134)."""
+    keys = [api_key] if api_key else load_gemini_keys()
+    if not keys:
+        raise RuntimeError('Gemini TTS needs GEMINI_API_KEY (or .gemini_key). '
+                           'The key is not sent in the URL.')
     url = ('https://generativelanguage.googleapis.com/v1beta/models/'
            'gemini-2.5-flash-preview-tts:generateContent')
     payload = {
         'contents': [{'parts': [{'text': text}]}],
         'generationConfig': {
             'responseModalities': ['AUDIO'],
-            'speechConfig': {
-                'voiceConfig': {
-                    'prebuiltVoiceConfig': {
-                        'voiceName': voice
-                    }
-                }
-            }
+            'speechConfig': {'voiceConfig': {'prebuiltVoiceConfig': {'voiceName': voice}}}
         }
     }
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode('utf-8'),
-        headers={'Content-Type': 'application/json', 'x-goog-api-key': key}
-    )
-    try:
-        res = json.loads(_fetch(req, timeout=30).decode('utf-8'))
-    except urllib.error.HTTPError as e:
-        body = ''
+    res, spent = None, 0
+    for key in keys:
+        if _key_spent(key):
+            spent += 1
+            continue
+        req = urllib.request.Request(
+            url, data=json.dumps(payload).encode('utf-8'),
+            headers={'Content-Type': 'application/json', 'x-goog-api-key': key})
         try:
-            body = e.read().decode('utf-8', 'replace')
-        except Exception:                                  # noqa: BLE001
-            pass
-        if e.code == 429 and 'per day' in body.lower():
-            # the free tier's 10 a day: waiting does not help, so say so at once and let the caller decide
-            raise RuntimeError('Gemini daily quota exhausted (free tier: 10 requests a day) — enable billing '
-                               'on the key to use it for the reel') from e
-        raise
+            res = json.loads(_fetch(req, timeout=30).decode('utf-8'))
+            break
+        except urllib.error.HTTPError as e:
+            body = ''
+            try:
+                body = e.read().decode('utf-8', 'replace')
+            except Exception:                              # noqa: BLE001
+                pass
+            if e.code == 429 and 'per day' in body.lower():
+                m = re.search(r'retry in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s', body)
+                secs = (int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60 + float(m.group(3))) if m else 3600
+                _mark_spent(key, secs)
+                spent += 1
+                continue                                   # the next key
+            raise
+    if res is None:
+        raise RuntimeError('Gemini daily quota exhausted on every key (free tier: 10 requests a day each) — '
+                           'enable billing, or add GEMINI_API_KEY_FALLBACK to .env')
     part = res['candidates'][0]['content']['parts'][0]
     raw_pcm = base64.b64decode(part['inlineData']['data'])
 

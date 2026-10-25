@@ -611,6 +611,38 @@ class TheKannadaSpellingWatch(unittest.TestCase):
                                       unseen=[dict(word='ಪ್ರಶಸ್ತೀ', where='story 3 card')]))) if False else None
 
 
+class TheSecondGeminiKey(unittest.TestCase):
+    """D134: a second key (its own free daily quota) carries on where the first one's runs out."""
+
+    def run_synth(self, first_spent):
+        import io, urllib.error
+        from brand import voice
+        used = []
+
+        def fake_fetch(req, timeout):
+            key = req.get_header('X-goog-api-key')
+            used.append(key)
+            if key == 'KEY1' and first_spent:
+                raise urllib.error.HTTPError(req.full_url, 429, 'x', {}, io.BytesIO(
+                    b'{"error":{"message":"limit: 10 ... per day ... Please retry in 2h30m10.5s."}}'))
+            import base64, json
+            return json.dumps({'candidates': [{'content': {'parts': [{'inlineData': {'data': base64.b64encode(b'\0\0' * 2400).decode()}}]}}]}).encode()
+        d = tempfile.mkdtemp(dir=ROOT / 'build')
+        self.addCleanup(lambda: __import__('shutil').rmtree(d, ignore_errors=True))
+        state = os.path.join(d, 'state.json')
+        with mock.patch.object(voice, 'load_gemini_keys', return_value=['KEY1', 'KEY2']), \
+                mock.patch.object(voice, '_fetch', fake_fetch), mock.patch.object(voice, '_KEY_STATE', state):
+            voice._gemini_tts_synthesize('x', os.path.join(d, 'o.mp3'), voice='Kore')
+            voice._gemini_tts_synthesize('y', os.path.join(d, 'o2.mp3'), voice='Kore')
+        return used
+
+    def test_the_second_key_is_used_when_the_first_is_spent_and_the_first_is_not_asked_again(self):
+        self.assertEqual(self.run_synth(True), ['KEY1', 'KEY2', 'KEY2'])        # one refusal, then straight to KEY2
+
+    def test_the_first_key_is_used_while_it_lasts(self):
+        self.assertEqual(self.run_synth(False), ['KEY1', 'KEY1'])
+
+
 class TheOpeningLine(unittest.TestCase):
     def hook(self, *towns):
         return R._hook_text([dict(place_short=t) for t in towns])
