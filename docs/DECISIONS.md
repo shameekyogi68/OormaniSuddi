@@ -4118,3 +4118,6 @@ verbs, never colour the paste lacks** (ದಾರುಣ, ಭೀಕರ, ತೀವ�
 
 Enforced by: `tests/test_saara_reel.py :: TheChampionBroadcastVoiceAndAudit, TheSourceHasNoColour`, `tests/test_reel_standard.py`.
 
+* **The owner's ear, 2026-10-27:** of six samples of the same three sentences (Kore on gemini-2.5, Kore on gemini-3.8, Orus, Charon, Leda, Edge Gagan) the owner
+  chose **Kore on `gemini-2.5-flash-preview-tts`** as the most native Kannada. It is what the code uses; the choice is closed unless the owner reopens it.
+
