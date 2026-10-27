@@ -330,9 +330,9 @@
       "id": "2026-10-24-01",
       "said": "For news reels (Instagram/Facebook Reels and YouTube Shorts), provide 3 layers of tags: Layer 1 Brand + Local (always kept: #oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews etc.), Layer 2 Story-specific (hyper-local spots like #Moodlakatte #Nellikatte #KodiBeach and story topics like #FishermenAlert #KarnatakaWeather for local virality), and Layer 3 Broad Kannada news (regional discovery: #KarnatakaNews #KannadaReels etc.). Keep top 5 in the caption and provide the full 30-tag set for the first comment on Instagram/Facebook. For YouTube Shorts, provide title tags (#shorts #kannadanews #kundapuranews) and 10-12 description tags.",
       "scope": "desk",
-      "why": "Editor standing instruction (2026-10-24) for local virality and reach optimization.",
+      "why": "Editor standing instruction (2026-10-24) for local virality and reach optimization.  · retired: superseded: on comments hashtags do not work for search/reach on Instagram; caption itself must contain all hashtags",
       "added": "2026-10-24",
-      "retired": "",
+      "retired": "2026-10-26",
       "by": ""
     },
     {
@@ -343,6 +343,42 @@
       "added": "2026-10-24",
       "retired": "",
       "by": ""
+    },
+    {
+      "id": "2026-10-26-01",
+      "said": "REACH-FIRST EDITORIAL DOCTRINE: 1) Story #1 must always pass the DM-Shareability Test (urgent safety, highway disruption, big accident, major civic alert — NEVER an institutional seminar or award press release). 2) Primary high-intent hashtags must sit directly in the CAPTION for immediate AI crawler indexing. 3) Frame 0-2s must deliver the strongest visual/text hook to kill swipe-away. 4) Titles and hooks must use conversational street Kannada that triggers curiosity and urgency, not formal press release jargon.",
+      "scope": "always",
+      "why": "Editor mandate (2026-10-26): Pivot entire newsroom intelligence to prioritize maximum audience reach, non-follower distribution, and viral shareability.",
+      "added": "2026-10-26",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-10-26-02",
+      "said": "News copy must strictly follow professional Kannada TV news channel broadcast style (TV9/Suvarna/Udayavani): punchy active headlines ([ಸ್ಥಳ]: [ಮುಖ್ಯಾಂಶ]), dignified broadcast verbs (ಭೀಕರ, ದಾರುಣ, ದಾಖಲು, ತೀವ್ರ ಆಗ್ರಹ), and anchor-ready rhythm, never dry or amateur translation",
+      "scope": "desk",
+      "why": "channel credibility demands professional Kannada television newsroom presentation",
+      "added": "2026-10-26",
+      "retired": "",
+      "by": "Gautam"
+    },
+    {
+      "id": "2026-10-26-03",
+      "said": "Dateline and headline separators must use a full stop (.), never a comma or colon (e.g. 'ಹೊಸಾಡು. ಕೆರೆಗೆ ಬಿದ್ದು ಬಾಲಕಿಯರು ದಾರುಣ ಸಾವು'), giving the authoritative falling tone and pause a newsreader makes after a town",
+      "scope": "desk",
+      "why": "user standing instruction: full stop creates proper anchor cadence",
+      "added": "2026-10-26",
+      "retired": "",
+      "by": "Gautam"
+    },
+    {
+      "id": "2026-10-26-04",
+      "said": "For all reels, the caption itself must contain all the hashtags directly; never put hashtags in the comments (on Instagram comments do not work for search indexing or reach). Perfectly curate the 3 layers directly into the caption for maximum discovery: Layer 1 Brand + Local (#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ), Layer 2 Story-specific hyper-local towns, spots and news trends, and Layer 3 Broad Kannada news discovery (#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #BreakingKannada). First comment is strictly for community conversation and questions.",
+      "scope": "desk",
+      "why": "Editor standing instruction (2026-10-26): hashtags in comments do not work; caption itself must carry all hashtags for best reach.",
+      "added": "2026-10-26",
+      "retired": "",
+      "by": "editor"
     }
   ]
 }

@@ -18,6 +18,9 @@ the old formats; nothing from it runs today.
 first.** The JSON contract, how a story picks its format, the picture rule,
 and what will be rejected.
 
+**Making the daily ಸುದ್ದಿ ಸಾರ reel (`/daily-saara`) → [`docs/REEL_STANDARD.md`](docs/REEL_STANDARD.md) first** — the quality contract for the
+copy, the clock, the voice and the sound, the same for every AI. The gate enforces it; reading it saves a render.
+
 **The editor pastes news in this chat, approves, or says "Stop" → follow
 [`docs/RUNBOOK.md`](docs/RUNBOOK.md) "Chat workflow" exactly**, whichever AI
 tool you are. It is the editor's standing instruction for how a conversation

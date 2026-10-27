@@ -54,6 +54,34 @@ class FiveTagsAndTheRestAsWords(unittest.TestCase):
             last = c.instagram.strip().split('\n')[-1]
             self.assertLessEqual(last.count('#'), Limits.ig_hashtags_max, last)
 
+    def test_reels_caption_carries_hashtags_directly_and_never_in_comments(self):
+        """D143: Hashtags belong directly in the caption for Instagram search,
+        not in comments. Limits.ig_hashtags_max caps at 30."""
+        ed = Edition(stories=[story(location=l) for l in
+                              ('ಉಡುಪಿ', 'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು')], edition_no=1)
+        post = C.for_saara_reel(ed)
+        self.assertIn('#', post.instagram)
+        self.assertNotIn('#', post.first_comment)
+        tags_in_cap = [w for w in post.instagram.split() if w.startswith('#')]
+        self.assertLessEqual(len(tags_in_cap), Limits.ig_hashtags_max)
+        self.assertGreaterEqual(len(tags_in_cap), 5)
+
+    def test_saara_reel_youtube_package_optimised_for_shorts_reach(self):
+        """D144: YouTube Shorts packaging overhaul: title under 60 chars with #shorts,
+        semantic search description with comment question and 10-12 tags, and 500-char search tags."""
+        ed = Edition(stories=[story(location=l) for l in
+                              ('ಉಡುಪಿ', 'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು')], edition_no=1)
+        post = C.for_saara_reel(ed)
+        self.assertLessEqual(len(post.youtube_title), 60)
+        self.assertIn('#shorts', post.youtube_title.lower())
+        self.assertIn('Coastal Karnataka', post.youtube_description)
+        self.assertIn('ಕಾಮೆಂಟ್ ಮಾಡಿ', post.youtube_description)
+        tags_in_desc = [w for w in post.youtube_description.split() if w.startswith('#')]
+        self.assertGreaterEqual(len(tags_in_desc), 10)
+        self.assertLessEqual(len(tags_in_desc), 15)
+        self.assertLessEqual(len(', '.join(post.youtube_tags)), Limits.yt_tags_chars)
+        self.assertIn('kundapura news', post.youtube_tags)
+
     def test_towns_that_miss_the_tags_are_still_searchable(self):
         towns = ('ಉಡುಪಿ', 'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು', 'ಕಾರ್ಕಳ', 'ಮಲ್ಪೆ', 'ಹೆಬ್ರಿ')
         ed = Edition(stories=[story(location=l) for l in towns], edition_no=1)

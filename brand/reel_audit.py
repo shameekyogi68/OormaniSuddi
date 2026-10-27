@@ -39,10 +39,25 @@ _VOWELS = {'ಆ': 'ಅ', 'ಾ': '', 'ಈ': 'ಇ', 'ೀ': 'ಿ', 'ಏ': 'ಇ', '�
 _TABLE = str.maketrans(_VOWELS)
 
 
+_LATIN_TO_KN = {
+    'b': 'ಬ', 'c': 'ಚ', 'd': 'ದ', 'g': 'ಗ', 'h': 'ಹ', 'j': 'ಜ',
+    'k': 'ಕ', 'l': 'ಲ', 'm': 'ಮ', 'n': 'ನ', 'p': 'ಪ', 'r': 'ರ',
+    's': 'ಸ', 't': 'ತ', 'v': 'ವ', 'w': 'ವ', 'y': 'ಯ', 'z': 'ಜ'
+}
+
+
 def phonetic(text: str) -> str:
     """A Kannada string as its consonant skeleton: no spaces (where the transcriber breaks
     a word is its whim), no punctuation, vowel length and a few near-twins collapsed."""
-    t = re.sub(r'[‌‍]', '', text)
+    t = text
+    # If Whisper transcribed in Roman/Latin letters (e.g. 'Brahmavr Dali Čitra Kalā Utcava')
+    if not re.search(r'[ಀ-೿]', t) and re.search(r'[A-Za-z]', t):
+        import unicodedata
+        n = unicodedata.normalize('NFKD', t)
+        clean = ''.join(c for c in n if not unicodedata.combining(c)).lower()
+        return ''.join(_LATIN_TO_KN.get(c, '') for c in clean)
+
+    t = re.sub(r'[‌‍]', '', t)
     t = t.replace('ೈ', 'ಯಿ').replace('ೌ', 'ಅವ').replace('ಐ', 'ಅಯಿ').replace('ಔ', 'ಅವು')
     t = t.translate(_TABLE)
     t = re.sub(r'[^ಀ-೿]', '', t)
@@ -111,10 +126,23 @@ def stutters(script: str, words: list) -> list[list[float]]:
     are a repeat; the SECOND one is the span to cut."""
     sw = [phonetic(w) for w in script.split()]
     said_twice = {a for a, b in zip(sw, sw[1:]) if a and a == b}
+    
+    # Pure consonant skeleton of the whole script to avoid cutting compound/reduplicated words like ಮುಖಾಮುಖಿ
+    def _pure(t: str) -> str:
+        return re.sub(r'[ಾಿೀುೂೃೄೆೇೈೊೋೌಅಆಇಈಉಊಋಎಏಐಒಓಔ]', '', phonetic(t))
+    script_consonants = _pure(script)
+    
     out = []
     for (w1, s1, e1), (w2, s2, e2) in zip(words, words[1:]):
         a, b = phonetic(w1), phonetic(w2)
-        if len(a) >= 2 and a == b and a not in said_twice:
+        if not a or not b:
+            continue
+        # If the adjacent tokens are parts of a single word in the script (e.g. Muka Muki in ಮುಖಾಮುಖಿ), do not cut!
+        a_p, b_p = _pure(w1), _pure(w2)
+        if (a_p + b_p) in script_consonants or (b_p + a_p) in script_consonants:
+            continue
+        # Only true repeated words with audible duration (>180ms); never zero-length or micro-timestamp glitches
+        if len(a) >= 2 and a == b and a not in said_twice and (e2 - s2) >= 0.18:
             out.append([s2, e2])
     return out
 

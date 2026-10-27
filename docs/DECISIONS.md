@@ -4042,3 +4042,79 @@ little out of step with the picture.
 
 Enforced by: `tests/test_saara_reel.py :: TheDatelineAndTheLastSlide`.
 
+
+
+## D142 · The Champion Broadcast Anchor: Gemini Kore, TV Newsroom Writing Style, Full-Stop Datelines and Mutilation-Free Audits
+
+**Decided (2026-10-26), by the owner.** After direct blind and measured comparison of all available TTS options (Google, Edge Gagan/Sapna, and Gemini Kore/Aoede/Puck), the owner selected **Gemini 2.5 Flash TTS Kore** directed as a senior Udupi/Kundapura television news anchor as the permanent champion broadcast voice ("this is perfect for tomorrow, I need this voice perfectly without any issues").
+
+* **The Locked-in Voice:** Limits.saara_reel_voice = "gemini", Limits.saara_reel_gemini_voice = "Kore", and persona:
+  "You are a professional native Kannada television news anchor broadcasting from Udupi/Kundapura. Read with serious, authoritative dignity, perfect native Kannada accent, no foreign accent, clear vowels and natural pauses: " (brand/tokens.py).
+* **Prime-Time Kannada TV News Writing Standards:** Flat, dry, literal translation is prohibited. Both intake-editor and kannada-editor must follow premier Kannada TV news channel conventions (TV9 / Suvarna / Udayavani style): active broadcast headlines ([ಸ್ಥಳ]. [ಮುಖ್ಯಾಂಶ].), dignified broadcast news verbs (ಭೀಕರ ಅಪಘಾತ, ದಾರುಣ ಸಾವು, ಆಸ್ಪತ್ರೆಗೆ ದಾಖಲು, ತೀವ್ರ ಆಗ್ರಹ), and anchor-ready rhythm. Enforced by house rule 2026-10-26-02.
+* **Full-Stop Dateline Cadence:** Separator after town/dateline must always be a full stop (.), never a colon (:) or comma (,) (e.g. "ಹೊಸಾಡು. ಕೆರೆಗೆ ಬಿದ್ದು ಬಾಲಕಿಯರು ದಾರುಣ ಸಾವು."). Gives the anchor voice an authoritative falling intonation and ~320ms natural breath pause. Enforced by house rule 2026-10-26-03.
+* **Phonetic Pronunciation Maps:** Mapped intervocalic dental softening ("ಸೇತುವೆ": "ಸೇದುವೆ") in assets/pronunciation.json so Dravidian TTS engines pronounce the word fluidly as a single unbroken word with 0ms gap.
+* **Audit Hardening Against Word Splicing:** stutters() in brand/reel_audit.py was erroneously slicing legitimate audio from compound and reduplicated words (like ಮುಖಾಮುಖಿ -> Muka Muki, and ottakshara stop closures). Hardened to check pure consonant skeletons against the script before flagging repetitions.
+
+
+## D143 · Reels Hashtags Belong in the Caption Itself; Comments Are Ignored by Instagram Search
+
+**Decided (2026-10-26), by the owner:** "from next reel, caption mutst itlsef contain all the hastags , ebcaz on comments its not working, and also make sure that you add hastags perfectly for best reach".
+
+* **The Problem with Comments:** On 2026-10-24, house rule 2026-10-24-01 attempted to keep the caption short (5 tags) and put a 30-tag block in the first comment. Real-world testing proved what Instagram engineering has confirmed: Instagram's AI search indexing and Reels recommendation algorithms only read keywords and hashtags placed directly in the main caption. Hashtags in comments are discarded by the search indexer.
+* **Hashtags In Caption Only:** All curated hashtags must sit directly at the end of the caption in `*_caption.txt` and `saara_caption.txt`. Comments must never carry hashtags. The first comment is reserved strictly for community engagement and conversation questions.
+* **Limits & Gate:** `Limits.ig_hashtags_max` is updated from 5 to 30 (Instagram's platform maximum). `PUB-09` enforces that no caption exceeds the 30-hashtag ceiling.
+* **3-Layer Curation for Peak Reach:**
+  - *Layer 1 (Brand & Core Local):* `#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ`
+  - *Layer 2 (Story-Specific Hyper-Local Places & Topics):* Specific towns/taluks covered in Kannada and English (`#ಕುಂದಾಪುರ #Kundapura #ಬೈಂದೂರು #Byndoor #ಅರಾಟೆ #Arate`), plus relevant news topic/trend tags (`#ಹವಾಮಾನ #WeatherAlert #CrimeNews #Accident #Fisheries` etc.).
+  - *Layer 3 (Broad Kannada News Discovery):* Targeted news tags (`#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #BreakingKannada #NewsInKannada`) — excluding generic mega-tags like `#Karnataka` that drown local news.
+
+Enforced by: `brand/tokens.py :: Limits.ig_hashtags_max`, `brand/review.py :: PUB-09`, `brand/copy.py :: edition_hashtags`, house rule `2026-10-26-04`.
+
+
+## D144 · YouTube Shorts Packaging Overhaul: Hook Titles Under 60 Chars, Semantic Search Descriptions, and 500-Character Search Query Tag Blocks
+
+**Decided (2026-10-26), by the owner:** "YTreahc is 5-10 viewers in short, so update the reach capacity with the contents for yt uplaod , i mean titel descriptin and tags".
+
+* **The Cause of 5-10 View Throttling:** YouTube Shorts was previously packaged as a long-form archive broadcast bulletin (`... | 26 ಅಕ್ಟೋಬರ್ 2026 ಕರಾವಳಿ ಬುಲೆಟಿನ್`), omitted `#shorts` priority player tags, dumped raw unformatted text without semantic bilingual keyword summaries, and provided only 3 hashtags. YouTube's recommendation engine failed to classify the video topic into the Shorts Feed, limiting initial test distribution to 5-10 viewers.
+* **The High-Reach YouTube Shorts Architecture:**
+  - **Title:** Strictly under 60 characters (never truncated on mobile Shorts feed), opening with the urgent local news hook and ending with priority algorithm tags (`#shorts #[Town]News` e.g. `#shorts #KundapuraNews`).
+  - **Description:** First 2-3 lines provide natural Kannada & English semantic search sentences (town names + topic) for instant AI indexing; concise 1-line numbered story highlights; engagement prompt (`💬 ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಾಮೆಂಟ್ ಮಾಡಿ!`); and 10–12 targeted high-intent Shorts hashtags at the bottom (strictly under YouTube's 15-tag penalty limit).
+  - **Backend Video Tags:** Curated 500-character comma-separated search phrase block for YouTube Studio's Tags box, covering hyper-local searches (`kundapura news`, `byndoor news`, `udupi news`), broad queries (`kannada news live`, `karnataka breaking news`), and shorts discovery (`kannada shorts`, `shorts kannada`).
+
+Enforced by: `brand/copy.py :: for_saara_reel`, `saara_reel_youtube_title`, `saara_reel_youtube_description`, `saara_reel_youtube_tags`, `tests/test_reach_copy.py :: test_saara_reel_youtube_package_optimised_for_shorts_reach`, house rule `2026-10-24-02`.
+
+
+## D145 · One standard for every AI; the voice and its model chosen by measurement; the SFX kept off the words
+
+**Asked by the owner (2026-10-27), back from a few days of working with Gemini:** the voice still sounds a little Tamil/Malayali-accented; the
+pronunciation (aspirates, ottaksharas, vowel length) must be native; today's reel had a sound-effect fault; and the quality must hold whichever AI
+makes the reel, Claude or Gemini.
+
+What the Gemini sessions changed was read before anything else was touched. Kept: the full-stop dateline, hashtags in the caption (D143), the
+YouTube Shorts packaging (D144), the hardened stutter detector, the ಸೇತುವೆ respelling. Not kept: (a) the Kannada desk's brief had been rewritten to
+TV style and had LOST the spelling watch, the whole-script read and the voice rules — merged back, with a limit: **the TV punch is word order and
+verbs, never colour the paste lacks** (ದಾರುಣ, ಭೀಕರ, ತೀವ್ರ, ಸುಸಜ್ಜಿತ …); a mechanical check (`kannada_check.colour_words`) now names such words;
+(b) the fallback voice had become Edge.
+
+* **Why the accent.** Tamil- and Malayalam-influenced Kannada loses the aspirates (ಖ ಘ ಛ ಝ ಠ ಢ ಥ ಧ ಫ ಭ). Measured on one sentence full of them, heard back
+  sentence by sentence: Gemini 2.5 Kore kept 5 of 5 (long vowels 12 of 13), Gemini 3.8 Kore 4 of 5, the Google voice 3 of 5, Microsoft's Edge voices
+  1–2 of 5. Twelve Gemini voices scored alike (4–5 of 5): the voice is the owner's ear to choose; the model is what the measurement picks. So
+  `GEMINI_MODELS` starts with `gemini-2.5-flash-preview-tts`, the cache key now includes the model (`gemini_cache_voice` — a clip from an old model
+  was being handed back as "new"), and the fallback is Google, not Edge.
+* **Why no spoken direction.** Tried 2026-10-27: gemini-2.5 answers a long direction with "no audio (OTHER)"; gemini-3.x reads it aloud (a 25 s clip of
+  the instruction and a loop of "ಲ್ಯಾ…"); `systemInstruction` is refused ("Developer instruction is not enabled"). The text is sent bare;
+  `saara_reel_gemini_style` and `_style_cta` are `''` on purpose, and a test says so.
+* **The follow line** is written "Follow ಮಾಡಿ" for the voice (Latin "Follow"): Kore slurred "ಫಾಲೋ ಮಾಡಿ" into "ಫಾಲ್ಮಾಲಿ"/"ಫಾಲ್ವಾಡಿ"; with "Follow ಮಾಡಿ" the speech
+  check heard three clean words (1.00). The check and the button's timing use the Kannada spelling (`OUTRO_KN`).
+* **The sound effect on 27 Oct.** The copy was too long for the clock; the pauses went to their minimum and the speech was sped up 5 %. The licensed whoosh
+  has a 0.85 s run-up (its peak is at its end), so with the tight pause it began on the previous card's last words. A whoosh is now cut so that it begins no
+  earlier than the last word before it ends (+30 ms), its loudest instant unchanged, and the report carries `effect_over_speech_ms` (0 on the re-made reel;
+  the gate warns above 120 ms). The deeper cause: the clock estimate had said "CLEAN" — it had been tuned on Google clips. Recalibrated to the Kore clips
+  (0.088 s a character, plus the town's 0.36 s breath in a headline): 27 Oct now reads NOT CLEAN at 62 s, as it was.
+* **One standard.** `docs/REEL_STANDARD.md` is the contract for any AI, pointed to from `AGENTS.md`, `CLAUDE.md`, the skill (both copies) and
+  `.agents/rules/reel-quality-standard.md` (the folder Gemini reads). The gate is where it is enforced; the page says what will hold a reel before a render is wasted.
+* **Said plainly.** Nothing here hears. Whisper's spelling of Kannada is its own, so "aspirates kept" is a comparison between voices, not a verdict on
+  one. The accent is judged by an ear; the 12-voice sweep and the A/B files are for that ear.
+
+Enforced by: `tests/test_saara_reel.py :: TheChampionBroadcastVoiceAndAudit, TheSourceHasNoColour`, `tests/test_reel_standard.py`.
+

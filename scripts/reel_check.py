@@ -73,6 +73,9 @@ def main() -> int:
             print('\nSOUNDS THAT CHANGE THE MEANING — the Kannada desk confirms each spelling letter by letter; the editor listens for them:')
             for h in w['pairs']:
                 print(f'   {h["word"]:<14} = {h["means"]}   (not {h["vs"]} = {h["vs_means"]})   [{h["where"]}]')
+        if w.get('colour'):
+            print('\nCOLOUR THE SOURCE DOES NOT CARRY — say it in the paste\'s own words, or the fact desk will strike it:')
+            print('   ' + ' · '.join(f'{c["word"]} [{c["where"]}]' for c in w['colour']))
         if w.get('unseen'):
             print('\nSPELLED IN NO KEPT SOURCE — check vowel length, ಲ/ಳ, ನ/ಣ, doubled consonants in each:')
             print('   ' + ' · '.join(f'{u["word"]} [{u["where"].replace("story ", "s").replace(" headline", "h").replace(" card", "c")}]' for u in w['unseen']))

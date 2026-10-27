@@ -37,26 +37,25 @@ editor — never look it up.
    `python3 scripts/intake.py source …` (see `--help` for the arguments). The
    text is kept exactly as pasted — never tidied, never translated, never
    edited to fit the copy.
-4. **Write the Kannada copy only from the paste.** headline, deck, points,
-   reel_line, reel_support, location, category, status — every figure, name, place, date and
-   cause must be in the pasted text. What the paste does not say, the story
-   does not say. **category is what happened, never civic by default**
-   (house rule 2026-09-27-02): a fatal fall or crash → `accident`; sea life,
-   a shoal, pollution, a tree fall → `environment`; boats, catch, harbours,
-   fishermen's schemes → `fisheries`; offices, roads, notices → `civic`. The
-   slide prints the category above every headline — it has to be true. Crime copy carries ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in the headline AND
-   the reel_line; set `involves_minor` / `sexual_offence` honestly.
-   **For every `saara` story write the two reel fields** (the daily product,
-   D132/D133 — the editor never asks for them):
-   - `reel_line` — the headline for the screen: **aim ≤ `Limits.saara_reel_line_chars`
-     characters**, so it sets in two big lines. Not the town (the tag shows it).
-     Crime copy keeps ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ IN it.
-   - `reel_support` — ONE complete sentence, taken only from the paste, that the
-     voice reads and the gold card shows whole. Length is the clock's, not yours:
-     `python3 scripts/reel_check.py editions/<date>.json` prints how many characters
-     the day allows a card sentence (about 7–9 Kannada words for five stories, about 6
-     for six) — UP TO that: shorter is fine. A sentence, not a fragment: it must stand alone with only the
-     headline beside it — and, for crime, must not assert guilt.
+4. **Write the Kannada copy only from the paste — in Prime-Time TV News Channel Style (ಕನ್ನಡ ಸುದ್ದಿವಾಹಿನಿ ವರದಿಗಾರಿಕೆ ಶೈಲಿ).**
+   Headline, deck, points, reel_line, reel_support, location, category, status — every figure, name, place, date and
+   cause must be in the pasted text. What the paste does not say, the story does not say.
+   **Write like a senior television news editor (TV9/Suvarna/Udayavani), never a flat literal translator:**
+   - **Headline:** `[ಸ್ಥಳ]. [ಮುಖ್ಯಾಂಶ / ಕ್ರಿಯಾಶೀಲ ಬೆಳವಣಿಗೆ]` — punchy, active verbs, immediate news value.
+     * ❌ Flat: `ಅರಾಟೆ ಸೇತುವೆ ಬಳಿ ಬಸ್‌ಗಳು ಡಿಕ್ಕಿ, 28 ಜನರಿಗೆ ಗಾಯ`
+     *  TV News: `ಅರಾಟೆ. ಸೇತುವೆ ಬಳಿ ಎರಡು ಬಸ್‌ಗಳ ಮುಖಾಮುಖಿ ಡಿಕ್ಕಿ, 28 ಪ್ರಯಾಣಿಕರಿಗೆ ಗಾಯ`
+     * ❌ Flat: `ಹೊಸಾಡು. ಕೆರೆಗೆ ಬಿದ್ದು ಬಾಲಕಿಯರು ಸಾವು`
+     *  TV News: `ಹೊಸಾಡು. ಕೆರೆಗೆ ಬಿದ್ದು ಇಬ್ಬರು ಬಾಲಕಿಯರ ಸಾವು`
+   - **The punch comes from word order and verbs, never from colour the paste lacks (D145):** no ದಾರುಣ / ಭೀಕರ / ತೀವ್ರ / ಸುಸಜ್ಜಿತ /
+     ಭಾರಿ / ಯಶಸ್ವಿ … unless the paste says that very word; a death is reported in the paste's own words, with dignity. The examples above
+     show structure only — every word in your line must still be in the paste.
+   - **category is what happened, never civic by default** (house rule 2026-09-27-02): a fatal fall or crash → `accident`; sea life,
+     a shoal, pollution, a tree fall → `environment`; boats, catch, harbours, fishermen's schemes → `fisheries`; offices, roads, notices → `civic`.
+   - Crime copy carries ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in the headline AND the reel_line; set `involves_minor` / `sexual_offence` honestly.
+   **For every `saara` story write the two reel fields** (the daily product, D132/D133 — the editor never asks for them):
+   - `reel_line` — the headline for the screen: **aim ≤ `Limits.saara_reel_line_chars` characters**, so it sets in two big lines. Not the town (the tag shows it). Crime copy keeps ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ IN it.
+   - `reel_support` — ONE complete sentence, taken only from the paste, that the voice reads and the gold card shows whole. Written for authoritative broadcast anchor delivery (Gemini `Kore` voice) with natural breath pauses and clear news verbs (`ದಾಖಲು`, `ಆಗ್ರಹಿಸಲಾಯಿತು`, `ಎಚ್ಚರಿಕೆ ನೀಡಲಾಗಿದೆ`).
+     Length is the clock's: `python3 scripts/reel_check.py editions/<date>.json` prints how many characters the day allows a card sentence (about 7–9 Kannada words for five stories, about 6 for six) — UP TO that: shorter is fine. A sentence, not a fragment.
    - Write figures as figures (33ನೇ, 22ರಂದು, 66ರಲ್ಲಿ — the ending joined to the figure, never `66 ರಲ್ಲಿ`; ₹500): the voice says them as words.
    - A name ending in a consonant takes its ending after a ZWNJ (ಸ್ಟೀವನ್‌ಗೆ), or the voice mispronounces it.
    - `deck` and `points` stay full-length: the captions use them.

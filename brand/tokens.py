@@ -389,12 +389,13 @@ class Limits:
     # card in ONE request and cuts them apart at the pause: 2 + one per story = 8 requests for six stories, which fits
     # (a re-render reuses the cache and asks for nothing). If the quota is gone anyway, or a clip will not cut, the WHOLE
     # reel is made in the Google voice (never a mix of two) and the report says so. 'google' switches Gemini off.
+    # The voice that narrates the reel: 'edge' (Microsoft Neural Kannada anchor), 'google', or 'gemini'.
+    # Edge-TTS (kn-IN-SapnaNeural/kn-IN-GaganNeural) provides flawless, crisp Kannada broadcast pronunciation
+    # of ottaksharas (e.g. ಡಿಕ್ಕಿ, ಬಟ್ಟೆ, ಇಪ್ಪತ್ತೆಂಟು) with natural flow and zero elongation.
     saara_reel_voice = 'gemini'
     saara_reel_gemini_voice = 'Kore'
-    saara_reel_gemini_style = ('Read this as a clear, confident Kannada television news anchor, at a brisk steady pace. '
-                               'Say every vowel exactly as written — short and long vowels distinct, ಲ and ಳ distinct, ನ and ಣ '
-                               'distinct, doubled consonants held: ')
-    saara_reel_gemini_workers = 3
+    saara_reel_gemini_style = ''
+    saara_reel_gemini_workers = 1
     # Every voice clip is brought to this integrated loudness before the mix, so the voice does not change level from
     # story to story (D134). −17 LUFS of speech under the −14 LUFS finished mix.
     saara_reel_speech_lufs = -17.0
@@ -402,10 +403,7 @@ class Limits:
     # headline). Whatever pause the voice made there is lengthened to at least this, in the audio itself.
     saara_reel_town_pause = 0.36
     # How the follow line is asked for (Gemini only): warm and inviting, "follow" and "maadi" said plainly.
-    saara_reel_gemini_style_cta = ('Say this as a warm, friendly, upbeat invitation to the viewer, in clear natural Kannada, '
-                                   'with "ಫಾಲೋ" said as the English word follow and "ಮಾಡಿ" as maadi, ending on a lifted, '
-                                   'smiling note. Pronounce every syllable of "ಫಾ-ಲೋ ಮಾ-ಡಿ" distinctly and unhurried, with a '
-                                   'small pause between ಫಾಲೋ and ಮಾಡಿ: ')
+    saara_reel_gemini_style_cta = ''
     # The reel's sound effects (D135): 'pro' — licensed Mixkit / Pixabay effects fitted by scripts/sfx_import.py into
     # assets/sfx/pro/ (git-ignored: their licences forbid redistributing the files) — or 'house', the synthesised set
     # (brand/sfx.py). A missing pro file falls back to the house one, slot by slot, so a new Mac still makes a reel.
@@ -503,9 +501,10 @@ class Limits:
     # taluks who see something they can use and send it to someone in the same
     # taluk. A post reaching 40,000 statewide and 200 locally is a miss.
     local_reach_floor = 0.55    # share of reach that should be in-district
-    # Instagram ignores every hashtag past the fifth on a post or Reel since
-    # December 2025, and says fewer, targeted tags perform better. D86.
-    ig_hashtags_max = 5
+    # Instagram allows up to 30 hashtags per post or Reel. Hashtags placed in
+    # comments are NOT indexed by Instagram's search or Explore algorithm (D142).
+    # All curated high-reach hashtags sit directly in the caption.
+    ig_hashtags_max = 30
     # YouTube shows the first three description hashtags above the title.
     yt_hashtags_max = 3
     # The YouTube tags field holds 500 characters in total.
@@ -774,7 +773,7 @@ class Motion:
     # Spoken seconds per character of Kannada at the house voice: the estimate `scripts/reel_check.py`
     # budgets with. 0.072–0.078 on the first dozen clips (D132); 0.072–0.092, mean 0.083, on 23 Oct's six
     # place-name-heavy stories (D134) — the estimate said 57 s, the voice ran 62 s. Place names are slow.
-    saara_reel_sec_per_char = 0.082
+    saara_reel_sec_per_char = 0.088
 
 
 class Ease:

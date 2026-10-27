@@ -222,7 +222,7 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3, style: st
             with _one_engine(engine):
                 # Gemini is told HOW to read as well as what (the direction is not spoken); it names a voice
                 voice._synth_one(((style or Limits.saara_reel_gemini_style) + said) if gem else said, str(raw), engine,
-                                 Limits.saara_reel_gemini_voice if gem else None, None)
+                                 voice.gemini_cache_voice(Limits.saara_reel_gemini_voice) if gem else None, None)
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-af', TRIM,
                             '-ar', '48000', '-ac', '1', str(wav)], check=True)
             level(wav)
@@ -363,7 +363,7 @@ def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = '
     for attempt in range(1, tries + 1):
         try:
             sent = (Limits.saara_reel_gemini_style if gem else '') + a + '\n' + b
-            name = Limits.saara_reel_gemini_voice if gem else None
+            name = voice.gemini_cache_voice(Limits.saara_reel_gemini_voice) if gem else None
             with _one_engine(engine):
                 voice._synth_one(sent, str(raw), engine, name, None)
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-ar', '48000', '-ac', '1', str(full)], check=True)

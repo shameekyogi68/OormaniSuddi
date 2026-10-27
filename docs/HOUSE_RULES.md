@@ -41,10 +41,17 @@ the things that are genuinely house style rather than contract.
 - **2026-10-23-01** — ಸುದ್ದಿ ಸಾರ (/daily-saara) is made as the 9:16 reel (reel_saara.mp4, Ink & Gold, D132) by default — no step is asked of the editor. The carousel code is kept, switched off (Limits.saara_carousel_default, render.py --carousel), and is made only when the editor asks or the reel cannot be made. The reel is posted to Instagram Reels, Facebook Reels and YouTube Shorts. Intake writes reel_line (aim 34 chars) and reel_support (one sentence, about 7-9 words) on every saara story, and runs scripts/reel_check.py until it says CLEAN before rendering.
   - _why:_ The owner wants /daily-saara to bring followers and subscribers through Reels and Shorts, with no human step each day (2026-10-23).
   - _asked by:_ the owner, in chat
-- **2026-10-24-01** — For news reels (Instagram/Facebook Reels and YouTube Shorts), provide 3 layers of tags: Layer 1 Brand + Local (always kept: #oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews etc.), Layer 2 Story-specific (hyper-local spots like #Moodlakatte #Nellikatte #KodiBeach and story topics like #FishermenAlert #KarnatakaWeather for local virality), and Layer 3 Broad Kannada news (regional discovery: #KarnatakaNews #KannadaReels etc.). Keep top 5 in the caption and provide the full 30-tag set for the first comment on Instagram/Facebook. For YouTube Shorts, provide title tags (#shorts #kannadanews #kundapuranews) and 10-12 description tags.
-  - _why:_ Editor standing instruction (2026-10-24) for local virality and reach optimization.
 - **2026-10-24-02** — YouTube Shorts high-reach tag strategy: 1) Title under 60 chars ending with #shorts #KundapuraNews (the 3 player hook hashtags: #shorts #KundapuraNews #KannadaNews), 2) Description strictly under 15 hashtags (10-12 targeted tags at very bottom below a natural 2-sentence keyword summary), 3) Backend comma-separated video tags for YouTube Studio box (hyper-local coastal search phrases), 4) Visual hook in first 2 seconds for >80% retention.
   - _why:_ Editor standing instruction (2026-10-24) optimizing for YouTube Shorts Browse Features, Shorts Feed, and Search distribution.
+- **2026-10-26-02** — News copy must strictly follow professional Kannada TV news channel broadcast style (TV9/Suvarna/Udayavani): punchy active headlines ([ಸ್ಥಳ]: [ಮುಖ್ಯಾಂಶ]), dignified broadcast verbs (ಭೀಕರ, ದಾರುಣ, ದಾಖಲು, ತೀವ್ರ ಆಗ್ರಹ), and anchor-ready rhythm, never dry or amateur translation
+  - _why:_ channel credibility demands professional Kannada television newsroom presentation
+  - _asked by:_ Gautam
+- **2026-10-26-03** — Dateline and headline separators must use a full stop (.), never a comma or colon (e.g. 'ಹೊಸಾಡು. ಕೆರೆಗೆ ಬಿದ್ದು ಬಾಲಕಿಯರು ದಾರುಣ ಸಾವು'), giving the authoritative falling tone and pause a newsreader makes after a town
+  - _why:_ user standing instruction: full stop creates proper anchor cadence
+  - _asked by:_ Gautam
+- **2026-10-26-04** — For all reels, the caption itself must contain all the hashtags directly; never put hashtags in the comments (on Instagram comments do not work for search indexing or reach). Perfectly curate the 3 layers directly into the caption for maximum discovery: Layer 1 Brand + Local (#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ), Layer 2 Story-specific hyper-local towns, spots and news trends, and Layer 3 Broad Kannada news discovery (#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #BreakingKannada). First comment is strictly for community conversation and questions.
+  - _why:_ Editor standing instruction (2026-10-26): hashtags in comments do not work; caption itself must carry all hashtags for best reach.
+  - _asked by:_ editor
 
 ## picture
 
@@ -84,6 +91,8 @@ the things that are genuinely house style rather than contract.
   - _why:_ The October 2026 research proposed all of these; a sponsor beside the news is the one thing that spends the readers' trust (docs/ADVERTISING.md, D118–D119).
 - **2026-10-12-02** — An Instagram or Facebook collab on a news post is only with a public body or an event organiser, never with a business or an advertiser. Access to a Facebook group is never paid for with coverage.
   - _why:_ Co-authoring news with a business blurs who is speaking; coverage is never currency (decisions_2026-10.md A4).
+- **2026-10-26-01** — REACH-FIRST EDITORIAL DOCTRINE: 1) Story #1 must always pass the DM-Shareability Test (urgent safety, highway disruption, big accident, major civic alert — NEVER an institutional seminar or award press release). 2) Primary high-intent hashtags must sit directly in the CAPTION for immediate AI crawler indexing. 3) Frame 0-2s must deliver the strongest visual/text hook to kill swipe-away. 4) Titles and hooks must use conversational street Kannada that triggers curiosity and urgency, not formal press release jargon.
+  - _why:_ Editor mandate (2026-10-26): Pivot entire newsroom intelligence to prioritize maximum audience reach, non-follower distribution, and viral shareability.
 
 ## Retired
 
@@ -119,3 +128,5 @@ Kept, because knowing a rule was dropped and when is worth more than a tidy file
   - Editor demand for universal lifetime solution (2026-09-25): prevent half-baked carousel slides with missing points/reality and prevent inappropriate coastal boilerplate on special awareness segments (D89).  · retired: D92: the old carousel and the ಕಾನೂನು ಕವಚ segment branding are deleted (see D93)
 - ~~2026-10-09-01~~ (2026-10-09 → 2026-10-13) — ಮುಖ್ಯ ಸುದ್ದಿ (mukhya) cover slide must always be dynamically animated with photo fade-in, gold sunline draw, and scan-wipe text reveals on headline and deck, followed by swipe chevron nudge. Never deliver it as a static holding frame.
   - Owner instruction on 2026-10-09: Slide 1 cover must not be static; full dynamic scan-wipe and photo animation is mandatory for all future editions.  · retired: Replaced by the rule added 2026-10-13: same animated cover, without the gold sunline (D128: no decorative lines).
+- ~~2026-10-24-01~~ (2026-10-24 → 2026-10-26) — For news reels (Instagram/Facebook Reels and YouTube Shorts), provide 3 layers of tags: Layer 1 Brand + Local (always kept: #oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews etc.), Layer 2 Story-specific (hyper-local spots like #Moodlakatte #Nellikatte #KodiBeach and story topics like #FishermenAlert #KarnatakaWeather for local virality), and Layer 3 Broad Kannada news (regional discovery: #KarnatakaNews #KannadaReels etc.). Keep top 5 in the caption and provide the full 30-tag set for the first comment on Instagram/Facebook. For YouTube Shorts, provide title tags (#shorts #kannadanews #kundapuranews) and 10-12 description tags.
+  - Editor standing instruction (2026-10-24) for local virality and reach optimization.  · retired: superseded: on comments hashtags do not work for search/reach on Instagram; caption itself must contain all hashtags

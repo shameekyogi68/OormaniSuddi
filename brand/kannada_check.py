@@ -100,5 +100,17 @@ def unseen_spellings(text: str, source: str = '') -> list[str]:
     return out
 
 
+# Colour a television-style rewrite likes to add and a source rarely carries (D145). A death or a crash is reported in the paste's
+# own words; "ಭೀಕರ", "ದಾರುಣ" … belong only where the paste says them.
+_COLOUR = ('ದಾರುಣ', 'ಭೀಕರ', 'ತೀವ್ರ', 'ಸುಸಜ್ಜಿತ', 'ಅಮಾನುಷ', 'ಹೃದಯವಿದ್ರಾವಕ', 'ಭಯಾನಕ', 'ಶೋಚನೀಯ', 'ವೈಭವದ', 'ಯಶಸ್ವಿ', 'ಭಾರಿ', 'ಬೃಹತ್',
+           'ಭಾರೀ', 'ಅತ್ಯಂತ', 'ಮಹತ್ವದ', 'ಐತಿಹಾಸಿಕ', 'ಸಂಚಲನ', 'ಆಘಾತಕಾರಿ', 'ಬೆಚ್ಚಿಬೀಳಿಸುವ')
+
+
+def colour_words(text: str) -> list[str]:
+    """Intensifiers in `text` that no kept source paste uses."""
+    corpus = _corpus()
+    return [w for w in dict.fromkeys(words(text)) if any(w.startswith(c) for c in _COLOUR) and not any(c.startswith(w[:5]) for c in corpus)]
+
+
 def reset() -> None:
     _corpus.cache_clear()

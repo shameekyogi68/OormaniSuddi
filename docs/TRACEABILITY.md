@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **104/141** decisions are named by at least one test
+- **108/145** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -385,7 +385,7 @@ those carry a reason rather than a test.
 ## D86 · Five hashtags, and a trend only when the story is about it
 
 - **Tested by:** `tests/test_reach_copy.py`
-- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/review.py`, `brand/tokens.py`, `brand/trends.py`
+- Enforced in: `brand/copy.py`, `brand/review.py`, `brand/tokens.py`, `brand/trends.py`
 
 ## D87 · The newsroom runs as a team of agents, in parallel, fact desk first
 
@@ -643,4 +643,23 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_saara_reel.py`
 - Enforced in: `brand/saara_reel.py`
+
+## D142 · The Champion Broadcast Anchor: Gemini Kore, TV Newsroom Writing Style, Full-Stop Datelines and Mutilation-Free Audits
+
+- **Tested by:** `tests/test_saara_reel.py`
+- Enforced in: `brand/codes.py`, `brand/copy.py`, `brand/review.py`, `brand/tokens.py`, `scripts/voice_expert.py`
+
+## D143 · Reels Hashtags Belong in the Caption Itself; Comments Are Ignored by Instagram Search
+
+- **Tested by:** `tests/test_reach_copy.py`
+
+## D144 · YouTube Shorts Packaging Overhaul: Hook Titles Under 60 Chars, Semantic Search Descriptions, and 500-Character Search Query Tag Blocks
+
+- **Tested by:** `tests/test_reach_copy.py`
+- Enforced in: `brand/copy.py`
+
+## D145 · One standard for every AI; the voice and its model chosen by measurement; the SFX kept off the words
+
+- **Tested by:** `tests/test_reel_standard.py`, `tests/test_saara_reel.py`
+- Enforced in: `brand/kannada_check.py`, `brand/voice.py`
 

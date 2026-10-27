@@ -66,7 +66,10 @@ FOLLOW = 'ಪ್ರತಿದಿನದ ಕರಾವಳಿ|ಸುದ್ದಿಗ�
 # The hook names the towns first — a local thumb stops for its own town — while the
 # running order lights up in time with them.
 INTRO_SAY = 'ಇಂದಿನ ಸುದ್ದಿ, {towns}.'   # ~3s, at most three towns, listed as Kannada lists them (D134)
-OUTRO_SAY = 'ಪ್ರತಿದಿನದ ಸುದ್ದಿಗಾಗಿ, ಫಾಲೋ ಮಾಡಿ.'
+# "Follow" is written in Latin letters FOR THE VOICE: measured 2026-10-27, Kore said "ಫಾಲೋ ಮಾಡಿ" as "ಫಾಲ್ಮಾಲಿ" / "ಫಾಲ್ವಾಡಿ" (the ಲೋ and ಮಾ run
+# together) and, with "Follow ಮಾಡಿ", as three clean words. The speech check and the button's timing use the Kannada spelling (OUTRO_KN).
+OUTRO_SAY = 'ಪ್ರತಿದಿನದ ಸುದ್ದಿಗಾಗಿ, Follow ಮಾಡಿ.'
+OUTRO_KN = 'ಪ್ರತಿದಿನದ ಸುದ್ದಿಗಾಗಿ, ಫಾಲೋ ಮಾಡಿ.'
 WEEKDAY_KN = ('ಸೋಮವಾರ', 'ಮಂಗಳವಾರ', 'ಬುಧವಾರ', 'ಗುರುವಾರ', 'ಶುಕ್ರವಾರ', 'ಶನಿವಾರ', 'ಭಾನುವಾರ')
 MONTH_KN = ('ಜನವರಿ', 'ಫೆಬ್ರವರಿ', 'ಮಾರ್ಚ್', 'ಏಪ್ರಿಲ್', 'ಮೇ', 'ಜೂನ್', 'ಜುಲೈ', 'ಆಗಸ್ಟ್',
             'ಸೆಪ್ಟೆಂಬರ್', 'ಅಕ್ಟೋಬರ್', 'ನವೆಂಬರ್', 'ಡಿಸೆಂಬರ್')
@@ -209,7 +212,7 @@ def _hook_text(copies: list[dict]) -> str:
 def budget(n: int) -> dict:
     """What the copy may weigh for `n` stories, so intake can write to it."""
     beats = M.saara_reel_lead_min + M.saara_reel_gap_min + M.saara_reel_tail_min
-    spare = Limits.saara_reel_max_seconds - 3.2 - 3.4 - n * (beats + 0.4)
+    spare = Limits.saara_reel_max_seconds - 3.2 - 3.4 - n * (beats + 0.4 + Limits.saara_reel_town_pause)
     per_story = spare / max(1, n) / M.saara_reel_sec_per_char
     return dict(stories=n, spoken_chars_per_story=int(per_story),
                 support_chars=int(per_story - 40), support_words=max(5, int((per_story - 40) / 9)),
@@ -220,7 +223,8 @@ def estimate(copies: list[dict]) -> float:
     n = len(copies)
     t = max(M.saara_reel_intro, M.saara_reel_hook_at + _est(_hook_text(copies)) + M.saara_reel_hook_hold)
     for c in copies:
-        t += M.saara_reel_lead + _est(c['say_head']) + M.saara_reel_gap + _est(c['body']) + M.saara_reel_tail
+        t += (M.saara_reel_lead + _est(c['say_head']) + Limits.saara_reel_town_pause + M.saara_reel_gap + _est(c['body'])
+              + M.saara_reel_tail)
     return round(t + max(M.saara_reel_close, 0.55 + _est(OUTRO_SAY) + 0.6), 1)
 
 
@@ -249,15 +253,17 @@ def spoken_script(copies: list[dict]) -> list[tuple[str, str]]:
 def spelling_watch(copies: list[dict]) -> dict:
     """What in the spoken script is one sound from a different word, and what no newspaper spelled (D136)."""
     from . import kannada_check as K
-    pairs, unseen = [], []
+    pairs, unseen, colour = [], [], []
     for label, text in spoken_script(copies):
         for hit in K.meaning_pairs(text):
             pairs.append(dict(hit, where=label))
+        for w in K.colour_words(text):
+            colour.append(dict(word=w, where=label))
         if label in ('the opening', 'the close'):
             continue                                       # house lines, heard and approved; only the towns vary
         for w in K.unseen_spellings(text):
             unseen.append(dict(word=w, where=label))
-    return dict(pairs=pairs, unseen=unseen)
+    return dict(pairs=pairs, unseen=unseen, colour=colour)
 
 
 def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[str]:
@@ -376,7 +382,7 @@ def _speed_up(tmp: Path, copies: list[dict], hook: str, durs: dict, towns: list[
             timing.append(how)
         words['intro'], _ = RS.word_times(tmp / 'intro.wav', hook)
         words['intro_text'] = hook.split()
-        words['outro'], _ = RS.word_times(tmp / 'outro.wav', OUTRO_SAY)
+        words['outro'], _ = RS.word_times(tmp / 'outro.wav', OUTRO_KN)
         tl = _timeline(new, len(copies), words, towns)
         tl['speedup'] = f
         durs = new
@@ -575,32 +581,59 @@ def _sync_check(tl: dict, clips: Path, mix: Path) -> dict:
     return dict(worst_ms=round(worst * 1000), offsets_ms=offs)
 
 
-def _mix(tl: dict, clips: Path, out: Path) -> None:
+def _mix(tl: dict, clips: Path, out: Path) -> dict:
     T = tl['T']
     args, chains, vo, fx = [], [], [], []
 
-    def fx_add(slot: str, at: float, vol: float, label: str):
-        path, shift = _sfx(slot)
-        add(path, at + shift, vol, label, fx)
+    import soundfile as sf
 
-    def add(path: Path, at: float, vol: float, label: str, bus: list):
+    def seconds(p: Path) -> float:
+        try:
+            return sf.info(str(p)).duration
+        except Exception:                                  # noqa: BLE001
+            return 0.0
+
+    # Where the voice is speaking: an effect with a run-up (a whoosh) must not begin until the last word before it has
+    # ended — measured on 27 Oct 2026, when a compressed day let a 0.85 s run-up sit on the previous card's last words.
+    spoken = [(0.30, 0.30 + seconds(clips / 'intro.wav'))]
+    for i, s in enumerate(tl['stories']):
+        spoken += [(s['headAt'], s['headAt'] + seconds(clips / f'h{i}.wav')), (s['bodyAt'], s['bodyAt'] + seconds(clips / f'b{i}.wav'))]
+    spoken.append((tl['outro'] + 0.55, tl['outro'] + 0.55 + seconds(clips / 'outro.wav')))
+    placed = []
+
+    def last_word_before(t: float) -> float:
+        ends = [e for s0, e in spoken if s0 < t]
+        return max(ends) if ends else 0.0
+
+    def fx_add(slot: str, at: float, vol: float, label: str, clear_of_speech: bool = False):
+        path, shift = _sfx(slot)
+        start, cut = at + shift, 0.0
+        if clear_of_speech:
+            earliest = last_word_before(at + 0.32) + 0.03
+            if start < earliest:
+                cut, start = earliest - start, earliest
+        add(path, start, vol, label, fx, cut)
+        placed.append((slot, start, start + max(0.0, seconds(path) - cut)))
+
+    def add(path: Path, at: float, vol: float, label: str, bus: list, cut: float = 0.0):
         args.extend(['-i', str(path)])
         i = args.count('-i') - 1
         ms = max(0, int(at * 1000))
-        chains.append(f'[{i}:a]aresample=48000,aformat=channel_layouts=stereo,volume={vol},adelay={ms}|{ms}[{label}]')
+        head = f'atrim=start={cut:.3f},asetpts=PTS-STARTPTS,afade=t=in:d=0.02,' if cut > 0 else ''
+        chains.append(f'[{i}:a]{head}aresample=48000,aformat=channel_layouts=stereo,volume={vol},adelay={ms}|{ms}[{label}]')
         bus.append(label)
 
     add(clips / 'intro.wav', 0.30, 1.0, 'v0', vo)
     for i, s in enumerate(tl['stories']):
         add(clips / f'h{i}.wav', s['headAt'], 1.0, f'h{i}', vo)
         add(clips / f'b{i}.wav', s['bodyAt'], 1.0, f'b{i}', vo)
-        fx_add('whoosh', s['B'] - 0.32, 0.32, f'w{i}')      # the wash of light crossing
+        fx_add('whoosh', s['B'] - 0.32, 0.32, f'w{i}', clear_of_speech=True)      # the wash of light crossing
         fx_add('pop', s['B'] + 0.10, 0.26, f'p{i}')          # the town tag landing
     add(clips / 'outro.wav', tl['outro'] + 0.55, 1.0, 'vz', vo)
     fx_add('open', 0.0, 0.45, 'f0')
     for k, at in enumerate(sorted(set(tl['rowAt']))):                   # each row of the running order
         fx_add('tick', at + 0.04, 0.20, f't{k}')
-    fx_add('whoosh', tl['outro'] - 0.32, 0.32, 'wz')
+    fx_add('whoosh', tl['outro'] - 0.32, 0.32, 'wz', clear_of_speech=True)
     fx_add('outro', tl['outro'] + 0.1, 0.28, 'fz')                    # under the follow line: −8 dB to the voice, not −5 (D135)
     fx_add('press', tl.get('pressAt', tl['outro'] + 1.7) + 0.16, 0.5, 'fp')         # the follow button, pressed — its loudest instant on the picture's
     args.extend(['-stream_loop', '-1', '-i', str(BASE / 'assets/news_bgm.mp3')])
@@ -614,6 +647,13 @@ def _mix(tl: dict, clips: Path, out: Path) -> None:
           f'apad=whole_dur={T},atrim=0:{T},loudnorm=I={Limits.lufs}:TP=-1.5:LRA=11[mix]')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', *args, '-filter_complex', g, '-map', '[mix]',
                     '-ar', '48000', '-c:a', 'pcm_s16le', str(out)], check=True)
+    # how far any effect with a run-up still runs onto speech (the opening ticks and the pop sit under the voice by design)
+    worst = 0.0
+    for slot, a0, a1 in placed:
+        if slot == 'whoosh':                                 # the bells sit under the follow line on purpose
+            for s0, e0 in spoken:
+                worst = max(worst, min(a1, e0) - max(a0, s0))
+    return dict(effect_over_speech_ms=round(max(0.0, worst) * 1000))
 
 
 # ── the clips, the timeline, the page ────────────────────────────────────
@@ -682,7 +722,7 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
     # words — noise, silence, the wrong thing — is asked for once more; if it is still wrong the
     # render stops and says which, rather than post a reel that talks nonsense (D133).
     def items(rows):
-        return [dict(label=label, wav=str(tmp / f'{k}.wav'), text=RS.spoken(text)) for k, text, label in rows]
+        return [dict(label=label, wav=str(tmp / f'{k}.wav'), text=RS.spoken(OUTRO_KN if k == 'outro' else text)) for k, text, label in rows]
     voice = RS.audit(items(plan))
     if 'unavailable' not in voice:
         # a syllable said twice ("ಕಡಲಿ ನಲ್ಲಿ ನಲ್ಲಿ") is cut out where it is, and heard back again (D138)
@@ -719,7 +759,7 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
         timing.append(how)
     words['intro'], _ = RS.word_times(tmp / 'intro.wav', hook)
     words['intro_text'] = hook.split()
-    words['outro'], _ = RS.word_times(tmp / 'outro.wav', OUTRO_SAY)
+    words['outro'], _ = RS.word_times(tmp / 'outro.wav', OUTRO_KN)
     towns = [c['place_short'] for c in copies]
     tl = _timeline(durs, len(stories), words, towns)
     if tl['T'] > Limits.reel_fail_seconds:
@@ -903,9 +943,9 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
 
         fps = M.saara_reel_fps
         video, mix = tmp / 'video.mp4', tmp / 'mix.wav'
-        _mix(tl, tmp, mix)
+        mixed = _mix(tl, tmp, mix) or {}
         try:
-            info['sync'] = _sync_check(tl, tmp, mix)
+            info['sync'] = dict(_sync_check(tl, tmp, mix), **mixed)
         except Exception:                                  # noqa: BLE001 — a checker that cannot run never stops a day
             info['sync'] = {}
         n = int(round(tl['T'] * fps))
@@ -934,25 +974,28 @@ def make(edition: Edition, outdir: str, engine: str | None = None) -> dict:
 
     The voice is `Limits.saara_reel_voice`. If it cannot be had (a quota, no key, a clip it will not say) the
     WHOLE reel is made again in the Google voice — never a mix of two — and the report and the render say so."""
-    engine = engine or Limits.saara_reel_voice
+    engine = os.environ.get('OORMANI_TTS_ENGINE') or engine or Limits.saara_reel_voice
     fell_from = ''
     try:
         res = render(edition, os.path.join(outdir, FILE), engine=engine)
     except ReelFitError:
         raise                                            # the copy, not the voice: another voice would not help
     except ReelError as e:
-        if engine == 'google':
+        if engine in ('edge', 'google'):
             raise
         fell_from = f'{engine}: {str(e)[:160]}'
-        print(f'      ! the {engine} voice could not make the reel ({str(e)[:120]}) — making it again in the Google voice',
+        # Google, not Edge: measured 2026-10-27 on aspirates (ಖ ಘ ಧ ಭ …) — Google kept 3 of 5, Edge 1–2 of 5, and
+        # losing aspirates is what makes Kannada sound Tamil/Malayalam-accented. (Gemini was 4–5 of 5.)
+        fallback_engine = 'google'
+        print(f'      ! the {engine} voice could not make the reel ({str(e)[:120]}) — making it again in the {fallback_engine} voice',
               flush=True)
-        engine = 'google'
+        engine = fallback_engine
         res = render(edition, os.path.join(outdir, FILE), engine=engine)
     res['voice_engine'] = engine
     if fell_from:
         res['voice_fell_back_from'] = fell_from
         res['warnings'] = list(res.get('warnings', [])) + [
-            f'the reel was spoken in the Google voice, not {Limits.saara_reel_voice} — it fell back ({fell_from})']
+            f'the reel was spoken in the {engine} voice, not {Limits.saara_reel_voice} — it fell back ({fell_from})']
     rv = os.path.join(outdir, '_review')
     os.makedirs(rv, exist_ok=True)
     with open(os.path.join(rv, REPORT), 'w', encoding='utf-8') as fh:

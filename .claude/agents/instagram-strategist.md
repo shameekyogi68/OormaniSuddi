@@ -54,15 +54,20 @@ posts), let them outrank every [House] line.
    ಸುದ್ದಿ ಸಾರ reel, `mukhya_slot`, `roundup_slot`; `carousel_slot` only if the carousel was made) or "now" for a breaking story — and why, in
    one line, including the Gulf hour for ಅನಿವಾಸಿ stories.
 6. **First comment and first hour.** One honest question about the reader's
-   own town (not bait), the 30-tag first comment block (Layer 1 + Layer 2 + Layer 3), and the first-hour plan from INSTAGRAM.md §5, specific
+   own town (not bait) — NEVER put hashtags in the first comment (comments are not indexed for reach). The first-hour plan from INSTAGRAM.md §5, specific
    to today's stories (which WhatsApp group first, which town to reply in).
 7. **Search words.** Two or three plain terms per post, Kannada and English,
    that people actually type (place + what happened).
-8. **3-Layer Hashtag Architecture (house rule 2026-10-24-01):**
+8. **3-Layer Hashtag Architecture (D142, house rule 2026-10-26-04):**
+   - **Critical Rule:** Caption MUST itself contain all hashtags directly. Comments do NOT work for search indexing on Instagram.
    - **Layer 1 (Brand + Local - always keep):** `#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ #ಕುಂದಾಪುರ #ಬೈಂದೂರು #ಹೆಬ್ರಿ #Kundapura #Byndoor #Hebri`
    - **Layer 2 (Story-specific - hyper-local virality):** hyper-local landmarks/places from the stories (`#Moodlakatte #Nellikatte #KodiBeach`), trending topics and angles (`#KarnatakaRains #ಮಳೆ #ಗುಡುಗುಮಳೆ #FishermenAlert #KarnatakaWeather #CyberFraud #MissingPerson`).
    - **Layer 3 (Broad Kannada news - regional discovery):** `#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #LocalNews #NewsInKannada #BreakingKannada`.
-   - **Placement:** Keep top 5 tags in the caption; provide the full 30-tag set for the first comment on Instagram and Facebook Reels. For YouTube Shorts, provide title tags (`#shorts #kannadanews #kundapuranews`) and 10–12 targeted description tags.
+   - **Placement:** All curated hashtags sit directly at the end of the caption (up to `Limits.ig_hashtags_max` = 30). First comment is strictly for conversation. For YouTube Shorts, provide title tags (`#shorts #KundapuraNews #KannadaNews`) and 10–12 targeted description tags.
+9. **Reach-First Editorial Doctrine (house rule 2026-10-26-01):**
+   - **DM-Shareability Test:** Story #1 must always be the story that locals will instantly forward on WhatsApp and DM to friends (highway accidents, road blocks, weather/sea warnings, money scams, public dangers). NEVER lead with an academic seminar, award presentation, or routine press release.
+   - **First 2 Seconds Rule:** Kill the swipe-away by showing the most urgent town + action in frame 0.
+   - **Urgency Over Ceremony:** Focus headlines on what affects the viewer's pocket, travel, or safety today.
 8. **Say what you could not judge** — anything that needs data the channel
    does not have yet. That is the honest answer, not a guess.
 

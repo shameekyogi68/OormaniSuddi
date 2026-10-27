@@ -145,7 +145,7 @@ def _mark_spent(key: str, retry_seconds: float) -> None:
 # kn-IN-GaganNeural: Authoritative baritone male news anchor
 VOICE_SAPNA = 'kn-IN-SapnaNeural'
 VOICE_GAGAN = 'kn-IN-GaganNeural'
-DEFAULT_VOICE = VOICE_SAPNA
+DEFAULT_VOICE = VOICE_GAGAN
 
 # ── the anchor's delivery ────────────────────────────────────────────────────
 # edge-tts takes no SSML, so these three plus the punctuation written by
@@ -596,7 +596,7 @@ async def _edge_tts_synthesize(text: str, out_path: str,
     return out_path
 
 
-def _google_tts_synthesize(text: str, out_path: str, tempo: float = 1.15) -> str:
+def _google_tts_synthesize(text: str, out_path: str, tempo: float = 1.0) -> str:
     """Synthesize speech using Google's native Indic Kannada voice engine."""
     # Split on SENTENCE ends only — a stop followed by whitespace or the end
     # of the text. The old pattern split on every '.', including the one in
@@ -678,12 +678,61 @@ def _google_tts_synthesize(text: str, out_path: str, tempo: float = 1.15) -> str
         raw_concat = os.path.join(temp_dir, 'concat.mp3')
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list_path, '-c', 'copy', raw_concat], check=True)
 
-        # Apply news anchor broadcast tempo (tempo=1.15)
+        # Natural tempo without ffmpeg phase distortion, or adjusted tempo if specified
         os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw_concat, '-filter:a', f'atempo={tempo}', '-b:a', '192k', out_path], check=True)
+        if abs(tempo - 1.0) > 0.01:
+            subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw_concat, '-filter:a', f'atempo={tempo}', '-b:a', '192k', out_path], check=True)
+        else:
+            subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw_concat, '-c:a', 'libmp3lame', '-b:a', '192k', out_path], check=True)
+        _clean_internal_silence(out_path)
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
     return out_path
+
+
+def _clean_internal_silence(audio_path: str) -> None:
+    """Remove unnatural dead-silence pauses (e.g. 70-100ms gap in 'ಸೇ-ತುವೆ') inserted by TTS within speech."""
+    try:
+        import numpy as np
+        raw_pcm = audio_path + '.raw'
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', audio_path, '-ar', '48000', '-ac', '1', '-f', 'f32le', raw_pcm], check=True)
+        data = np.fromfile(raw_pcm, dtype=np.float32)
+        sr = 48000
+        lead = int(0.08 * sr)
+        tail = max(0, len(data) - int(0.15 * sr))
+        if tail <= lead:
+            if os.path.exists(raw_pcm):
+                os.remove(raw_pcm)
+            return
+        is_silent = np.abs(data) < 0.005
+        runs = []
+        start = None
+        for i in range(lead, tail):
+            if is_silent[i]:
+                if start is None:
+                    start = i
+            else:
+                if start is not None:
+                    if int(0.035 * sr) <= (i - start) <= int(0.300 * sr):
+                        runs.append((start, i))
+                    start = None
+        if runs:
+            cleaned = []
+            last = 0
+            for s, e in runs:
+                keep_s = s + int(0.002 * sr)
+                keep_e = e - int(0.002 * sr)
+                if keep_e > keep_s:
+                    cleaned.append(data[last:keep_s])
+                    last = keep_e
+            cleaned.append(data[last:])
+            new_data = np.concatenate(cleaned)
+            new_data.tofile(raw_pcm)
+            subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'f32le', '-ar', '48000', '-ac', '1', '-i', raw_pcm, '-c:a', 'libmp3lame', '-b:a', '192k', audio_path], check=True)
+        if os.path.exists(raw_pcm):
+            os.remove(raw_pcm)
+    except Exception:
+        pass
 
 
 # A network call that fails for a moment is retried before the beat falls
@@ -712,6 +761,15 @@ def _fetch(req: urllib.request.Request, timeout: float) -> bytes:
     raise AssertionError('unreachable')
 
 
+GEMINI_MODELS = ['gemini-2.5-flash-preview-tts', 'gemini-3.8-flash-tts', 'gemini-3.1-flash-tts-preview']
+
+
+def gemini_cache_voice(name: str) -> str:
+    """The voice name as the CACHE sees it: the voice AND the model that speaks it. A clip kept from one model must never be
+    handed back after the model order changes (D145: 27 Oct's audio came from the old order and was reused as 'new')."""
+    return f'{name}|{GEMINI_MODELS[0]}'
+
+
 def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_key: str | None = None) -> str:
     """Synthesize speech using Google Gemini Flash TTS.
 
@@ -721,42 +779,74 @@ def _gemini_tts_synthesize(text: str, out_path: str, voice: str = 'Puck', api_ke
     if not keys:
         raise RuntimeError('Gemini TTS needs GEMINI_API_KEY (or .gemini_key). '
                            'The key is not sent in the URL.')
-    url = ('https://generativelanguage.googleapis.com/v1beta/models/'
-           'gemini-2.5-flash-preview-tts:generateContent')
+    # Measured 2026-10-27 on a sentence full of aspirates (ಖ ಘ ಧ ಭ …), ottaksharas and long vowels, heard back sentence by
+    # sentence: gemini-2.5-flash-preview-tts kept 5 of 5 aspirates and 12 of 13 long vowels; gemini-3.8-flash-tts 4 of 5 and
+    # 11 of 13; Microsoft's Edge voices 1–2 of 5. Losing aspirates is the signature of a Tamil/Malayalam-influenced Kannada
+    # accent, so the model that keeps them goes first. NONE of these takes a spoken direction any more: 2.5 answers a long
+    # direction with "no audio" and 3.x reads it aloud — so the text is sent bare, and the voice/model is the only lever.
+    models = GEMINI_MODELS
     payload = {
         'contents': [{'parts': [{'text': text}]}],
         'generationConfig': {
             'responseModalities': ['AUDIO'],
             'speechConfig': {'voiceConfig': {'prebuiltVoiceConfig': {'voiceName': voice}}}
-        }
+        },
+        'safetySettings': [
+            {'category': 'HARM_CATEGORY_HARASSMENT', 'threshold': 'BLOCK_NONE'},
+            {'category': 'HARM_CATEGORY_HATE_SPEECH', 'threshold': 'BLOCK_NONE'},
+            {'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'threshold': 'BLOCK_NONE'},
+            {'category': 'HARM_CATEGORY_DANGEROUS_CONTENT', 'threshold': 'BLOCK_NONE'},
+            {'category': 'HARM_CATEGORY_CIVIC_INTEGRITY', 'threshold': 'BLOCK_NONE'},
+        ]
     }
     res, spent = None, 0
-    for key in keys:
-        if _key_spent(key):
-            spent += 1
-            continue
-        req = urllib.request.Request(
-            url, data=json.dumps(payload).encode('utf-8'),
-            headers={'Content-Type': 'application/json', 'x-goog-api-key': key})
-        try:
-            res = json.loads(_fetch(req, timeout=30).decode('utf-8'))
-            break
-        except urllib.error.HTTPError as e:
-            body = ''
-            try:
-                body = e.read().decode('utf-8', 'replace')
-            except Exception:                              # noqa: BLE001
-                pass
-            if e.code == 429 and 'per day' in body.lower():
-                m = re.search(r'retry in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s', body)
-                secs = (int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60 + float(m.group(3))) if m else 3600
-                _mark_spent(key, secs)
+    last_err: Exception | None = None
+    for model in models:
+        url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent'
+        for key in keys:
+            if _key_spent(f'{model}:{key}'):
                 spent += 1
-                continue                                   # the next key
-            raise
+                continue
+            req = urllib.request.Request(
+                url, data=json.dumps(payload).encode('utf-8'),
+                headers={'Content-Type': 'application/json', 'x-goog-api-key': key})
+            try:
+                raw_res = _fetch(req, timeout=30).decode('utf-8')
+                parsed = json.loads(raw_res)
+                cand = (parsed.get('candidates') or [{}])[0]
+                parts = cand.get('content', {}).get('parts', [])
+                if parts and 'inlineData' in parts[0] and 'data' in parts[0]['inlineData']:
+                    res = parsed
+                    break
+                reason = cand.get('finishReason') or parsed.get('promptFeedback', {}).get('blockReason') or 'no audio data'
+                last_err = RuntimeError(f'Gemini TTS response missing audio ({reason})')
+                continue
+            except urllib.error.HTTPError as e:
+                body = ''
+                try:
+                    body = e.read().decode('utf-8', 'replace')
+                except Exception:                              # noqa: BLE001
+                    pass
+                last_err = e
+                if e.code == 429:
+                    if 'per day' in body.lower():
+                        m = re.search(r'retry in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s', body)
+                        secs = (int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60 + float(m.group(3))) if m else 3600
+                        _mark_spent(f'{model}:{key}', secs)
+                        spent += 1
+                    else:
+                        _mark_spent(f'{model}:{key}', 15)      # burst/RPM limit — cool down briefly
+                    continue                                   # try the next key
+                if e.code in (400, 401, 403, 404):
+                    continue                                   # invalid key, or a model this key cannot see — try the next
+                raise
+            except Exception as e:                             # noqa: BLE001
+                last_err = e
+                continue
+        if res is not None:
+            break
     if res is None:
-        raise RuntimeError('Gemini daily quota exhausted on every key (free tier: 10 requests a day each) — '
-                           'enable billing, or add GEMINI_API_KEY_FALLBACK to .env')
+        raise RuntimeError(f'Gemini daily quota exhausted or request failed on all keys: {last_err}')
     part = res['candidates'][0]['content']['parts'][0]
     raw_pcm = base64.b64decode(part['inlineData']['data'])
 
@@ -851,9 +941,9 @@ def cache_enabled() -> bool:
 # because a reel narrated by the rejected voice is something the editor has to
 # know about before it goes out.
 FALLBACK_ORDER = {
+    'gemini': ('gemini', 'edge', 'google'),
+    'edge':   ('edge', 'gemini', 'google'),
     'google': ('google', 'edge', 'gemini'),
-    'edge':   ('edge', 'google', 'gemini'),
-    'gemini': ('gemini', 'google', 'edge'),
 }
 
 # Filled by _synth_one whenever a beat did not come from the chosen engine.
@@ -863,13 +953,15 @@ FALLBACKS_USED: list[tuple[str, str, str]] = []   # (from, to, why)
 def _synth_with(eng: str, text: str, out_path: str,
                 voice: str | None, api_key: str | None) -> None:
     if eng == 'gemini':
-        _gemini_tts_synthesize(text, out_path, voice=voice or 'Aoede',
+        gem_voice = (voice if (voice and not voice.startswith('kn-')) else 'Kore').split('|')[0]    # 'Kore|<model>' is the cache's name
+        _gemini_tts_synthesize(text, out_path, voice=gem_voice,
                                api_key=api_key)
     elif eng == 'google':
-        _google_tts_synthesize(text, out_path, tempo=1.15)
+        _google_tts_synthesize(text, out_path, tempo=1.0)
     else:
+        edge_voice = voice if (voice and voice.startswith('kn-')) else DEFAULT_VOICE
         asyncio.run(_edge_tts_synthesize(text, out_path,
-                                         voice=voice or DEFAULT_VOICE))
+                                         voice=edge_voice))
 
 
 def _synth_one(text: str, out_path: str, engine: str,

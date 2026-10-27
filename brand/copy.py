@@ -27,7 +27,7 @@ from .tokens import Brand, CATEGORIES, category, Limits
 # to earn the tap on its own.
 FOLD = 125
 IG_CAPTION_MAX = 2200
-IG_HASHTAG_MAX = Limits.ig_hashtags_max   # Instagram reads five since Dec 2025 (D86)
+IG_HASHTAG_MAX = Limits.ig_hashtags_max   # Instagram allows up to 30; must sit in caption (D142)
 X_MAX = 280
 YT_TITLE_MAX = 100            # hard limit; ~60 is what actually displays
 YT_DESC_MAX = 5000
@@ -67,7 +67,7 @@ CATEGORY_TAGS = {
 # put a new channel in a feed with millions of posts and a 0.2% chance of
 # being picked; they go last, and only if there is room.
 CORE_TAGS = ['oormanisuddi', 'ಕರಾವಳಿ', 'ಕರಾವಳಿಸುದ್ದಿ', 'KaravaliNews']
-WIDE_TAGS = ['CoastalKarnataka', 'ಕನ್ನಡಸುದ್ದಿ', 'KannadaNews', 'Karnataka']
+WIDE_TAGS = ['CoastalKarnataka', 'ಕನ್ನಡಸುದ್ದಿ', 'KannadaNews', 'KarnatakaNews', 'KannadaReels', 'UdupiDistrict', 'BreakingKannada']
 
 # Latin equivalents for places we cover, so a Kannada location also produces a
 # searchable English tag. Add to it as coverage grows; unknown places simply
@@ -1163,8 +1163,108 @@ def for_saara_reel(edition: Edition) -> PostCopy:
     post.instagram = caption
     post.alt_text = (f'{Brand.name} ಸುದ್ದಿ ಸಾರ ರೀಲ್ — {edition.date_kn}. '
                      f'{n} ಸುದ್ದಿಗಳು. {lead.headline}')
-    post.youtube_title = youtube_title(edition, 'short')
+    post.youtube_title = saara_reel_youtube_title(edition)
+    post.youtube_description = saara_reel_youtube_description(edition)
+    post.youtube_tags = saara_reel_youtube_tags(edition)
     return post
+
+
+def saara_reel_youtube_title(edition: Edition) -> str:
+    """A high-CTR YouTube Shorts title under 60 chars ending with priority hook tags.
+
+    House rule 2026-10-24-02 & D144: Mobile Shorts feed truncates past ~60 chars.
+    A title ending with a date bulletin kills reach; lead hook + #shorts + town tag
+    maximizes classification in YouTube's Shorts Feed and Browse features.
+    """
+    lead = edition.stories[0]
+    base = (getattr(lead, '_hook', '') or lead.reel_line or lead.headline).strip().rstrip('.! ')
+    if ':' in base and len(base.split(':', 1)[0]) < 15:
+        base = base.replace(':', '', 1)
+
+    places = _places(lead)
+    town = places[0][1] if places and places[0][1] else 'Kundapura'
+    tag2 = f'#{town}News' if len(town) <= 12 else '#KannadaNews'
+    tag1 = '#shorts'
+
+    cand = f'{base} {tag1} {tag2}'
+    if len(cand) <= 60:
+        return cand
+    cand = f'{base} {tag1}'
+    if len(cand) <= 60:
+        return cand
+    max_len = 60 - len(tag1) - 1
+    return f'{base[:max_len].rstrip()} {tag1}'
+
+
+def saara_reel_youtube_description(edition: Edition) -> str:
+    """YouTube Shorts description structured for semantic search and high retention.
+
+    House rule 2026-10-24-02 & D144: First 2-3 lines provide natural Kannada & English
+    search keywords for local and Gulf searchers. Followed by concise story highlights,
+    engagement CTA, and 10-12 targeted YouTube hashtags at the bottom.
+    """
+    lead = edition.stories[0]
+    n = len(edition.stories)
+    towns = [p for p in edition_places(edition) if p[1]][:4]
+    towns_kn = [p[0] for p in towns] or ['ಕುಂದಾಪುರ', 'ಉಡುಪಿ']
+    towns_en = [p[1] for p in towns] or ['Kundapura', 'Udupi']
+
+    lead_hook = (getattr(lead, '_hook', '') or lead.reel_line or lead.headline).strip()
+
+    blocks = [
+        f"{', '.join(towns_kn)} ಕರಾವಳಿಯ ಇಂದಿನ ಪ್ರಮುಖ ಸುದ್ದಿ ಸಾರ. {lead_hook}.\n\n"
+        f"Coastal Karnataka daily news update & breaking local headlines from {', '.join(towns_en)} "
+        f"and coastal belt by {Brand.name}.",
+        f"📌 ಇಂದಿನ {n} ಪ್ರಮುಖ ಸುದ್ದಿಗಳು:\n" + '\n'.join(
+            f"{i}. {st.headline.strip()}" for i, st in enumerate(edition.stories, 1)
+        ),
+        "💬 ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಾಮೆಂಟ್ ಮಾಡಿ!\n"
+        f"🌾 {Brand.name} · {Brand.tagline}\n"
+        f"📲 ಅಧಿಕೃತ ಕರಾವಳಿ ಸುದ್ದಿಗಾಗಿ ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ: {Brand.handle}",
+        Brand.grievance_line(),
+        "#Shorts #shorts #KannadaShorts #KundapuraNews #ByndoorNews #UdupiNews "
+        "#CoastalKarnataka #KarnatakaNews #oormanisuddi #KannadaNews #BreakingKannada #LocalNews"
+    ]
+    return _join(blocks)
+
+
+def saara_reel_youtube_tags(edition: Edition, limit_chars: int = Limits.yt_tags_chars) -> list[str]:
+    """Search phrases for the YouTube Studio Tags box (up to 500 characters).
+
+    House rule 2026-10-24-02 & D144: YouTube Studio backend tags prioritize phrases
+    people actually type into search: local town news, breaking Kannada news,
+    coastal weather/alerts, and Kannada shorts queries.
+    """
+    core = [
+        'kundapura news', 'byndoor news', 'udupi news', 'coastal karnataka news',
+        'oormani suddi', 'kannada news live', 'karnataka news', 'karnataka breaking news',
+        'udupi district news', 'karavali suddi', 'local news kannada', 'kannada shorts',
+        'shorts kannada', 'kannada breaking news', 'udupi rain alert', 'mangaluru news'
+    ]
+    out = []
+    def add(t: str):
+        t = (t or '').strip()
+        if t and t.lower() not in {x.lower() for x in out}:
+            out.append(t)
+
+    for t in core:
+        add(t)
+
+    for st in edition.stories:
+        for kn, en in _places(st)[:2]:
+            add(f'{en.lower()} news')
+            add(f'{kn} ಸುದ್ದಿ')
+        for t in CATEGORY_TAGS.get(st.category, []):
+            add(t)
+
+    kept, used = [], 0
+    for t in out:
+        cost = len(t) + (2 if kept else 0)
+        if used + cost > limit_chars:
+            break
+        kept.append(t)
+        used += cost
+    return kept
 
 
 def for_edition(edition: Edition) -> PostCopy:

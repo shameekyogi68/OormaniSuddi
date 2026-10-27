@@ -10,6 +10,7 @@ Then, depending on the job:
 | You are about to… | Read |
 |---|---|
 | take news the editor pasted and make the day | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) "Chat workflow", then [`docs/AI_BRIEF.md`](docs/AI_BRIEF.md) |
+| make or judge a ಸುದ್ದಿ ಸಾರ reel (any AI) | [`docs/REEL_STANDARD.md`](docs/REEL_STANDARD.md) — the quality contract; the gate enforces it |
 | the editor types `/daily-saara` (or "daily saara") + a paste | [`.claude/skills/daily-saara/SKILL.md`](.claude/skills/daily-saara/SKILL.md) — it is the whole command: the ಸುದ್ದಿ ಸಾರ **reel**, no question asked (D133) |
 | pick a format for a story | [`docs/DECISIONS.md`](docs/DECISIONS.md) D92, then `python3 render.py --describe` |
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |

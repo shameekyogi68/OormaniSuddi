@@ -2,21 +2,26 @@
 
 News captions are written by `brand/copy.py` into `*_caption.txt`; post those
 as they are. This file is for a caption written by hand (a promo, a footage
-reel) and must agree with DECISIONS D86 and house rule 2026-09-24-01. If it
+reel) and must agree with DECISIONS D142 and house rule 2026-10-26-04. If it
 ever disagrees with them, they are right.
 
-## Hashtags — five, at most
+## Hashtags — In Caption Only, Curated for Best Reach (D142)
 
-Instagram reads five hashtags per post or Reel and ignores the rest
-(`Limits.ig_hashtags_max`; the gate fails a news caption over it, `PUB-09`).
-Choose, in this order:
+**Critical:** The caption ITSELF must contain all hashtags. **Never** place
+hashtags in the comments — on Instagram, hashtags in comments do NOT work for
+search indexing, Explore, or Reels recommendation. The first comment is reserved
+strictly for a community question / conversation starter.
 
-1. the town, in Kannada;
-2. TownNews (e.g. the town in English + News);
-3. a trend **only if the post is genuinely about it** — an unrelated trend
-   costs reach on Instagram and is misleading metadata on YouTube;
-4. the subject;
-5. ಕರಾವಳಿಸುದ್ದಿ / the channel.
+Instagram caps captions at 30 hashtags (`Limits.ig_hashtags_max`; the gate fails
+a caption over it, `PUB-09`). Curate the hashtags across 3 layers for maximum
+local and regional reach:
+
+1. **Layer 1: Brand & Core Local Identity (Always Present):**
+   `#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ`
+2. **Layer 2: Story-Specific Hyper-Local Places & News Topics:**
+   Specific towns/taluks covered in Kannada and English (`#ಕುಂದಾಪುರ #Kundapura #ಬೈಂದೂರು #Byndoor #ಅರಾಟೆ #Arate`), plus relevant news topic/trend tags (`#ಹವಾಮಾನ #WeatherAlert #CrimeNews #Accident #Fisheries` etc.).
+3. **Layer 3: Broad Regional Kannada News Discovery:**
+   `#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #BreakingKannada #NewsInKannada`
 
 ## Towns — on the 📍 line
 
@@ -31,6 +36,6 @@ towns the post is actually about — not a list of the whole coast.
 3. **CTA** — `📲 ಕರಾವಳಿಯ ಅಧಿಕೃತ ಸುದ್ದಿಗಾಗಿ ಫಾಲೋ ಮಾಡಿ: @oormanisuddi | 🌾 ನಮ್ಮ ಊರು • ನಮ್ಮ ಧ್ವನಿ`
 4. **A question** — to invite comments.
 5. **Disclosure** — ಎಐ ರಚಿತ ಚಿತ್ರ / synthetic voice, where used.
-6. **📍 line, then the five hashtags.**
+6. **📍 line, then the curated hashtag block directly in the caption.**
 
 The handle is `@oormanisuddi`, exactly (`PUB-01`).

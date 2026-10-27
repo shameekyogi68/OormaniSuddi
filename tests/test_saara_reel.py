@@ -524,6 +524,20 @@ class OneRequestTwoClips(unittest.TestCase):
         self.assertGreater(b, 0.8)
 
 
+class TheSourceHasNoColour(unittest.TestCase):
+    """D145: a TV-style rewrite must not add words the paste does not use."""
+
+    def test_an_intensifier_the_paste_lacks_is_named(self):
+        from brand import kannada_check as K
+        with mock.patch.object(K, '_corpus', return_value=frozenset({'ಸಾವು', 'ಬಾಲಕಿಯರು', 'ಕೆರೆಗೆ'})):
+            self.assertEqual(K.colour_words('ಕೆರೆಗೆ ಬಿದ್ದು ಬಾಲಕಿಯರ ದಾರುಣ ಸಾವು'), ['ದಾರುಣ'])
+
+    def test_one_the_paste_does_use_is_fine(self):
+        from brand import kannada_check as K
+        with mock.patch.object(K, '_corpus', return_value=frozenset({'ದಾರುಣ', 'ಸಾವು'})):
+            self.assertEqual(K.colour_words('ದಾರುಣ ಸಾವು'), [])
+
+
 class TheDatelineAndTheLastSlide(unittest.TestCase):
     """D141: a full stop after the town, and the follow button pressed as the words are said."""
 
@@ -676,7 +690,6 @@ class TheKannadaSpellingWatch(unittest.TestCase):
 
     def test_the_gate_names_them_and_the_voice_is_told_to_keep_the_sounds_apart(self):
         from brand.tokens import Limits
-        self.assertIn('short and long vowels distinct', Limits.saara_reel_gemini_style)
         d = TheGate.folder(self_ := TheGate(), dict(seconds=8.0, issues=[], pronunciation={}, timing=['measured'],
                            watch=dict(pairs=[dict(word='ಕೊಲೆ', means='murder', vs='ಕೊಳೆ', vs_means='dirt', where='story 1 headline')],
                                       unseen=[dict(word='ಪ್ರಶಸ್ತೀ', where='story 3 card')]))) if False else None
@@ -918,6 +931,32 @@ class TheGate(unittest.TestCase):
         self.assertEqual(self.codes(self.folder(dict(seconds=62.0, issues=[]), seconds=62.0))['VID-01'].severity, 'fail')
         c = self.codes(self.folder(dict(seconds=59.6, issues=[]), seconds=59.6))
         self.assertEqual(c['VID-01'].severity, 'warn')
+
+
+class TheChampionBroadcastVoiceAndAudit(unittest.TestCase):
+    """D142: Gemini Kore as champion anchor, full-stop dateline, and audit that never slices compound words."""
+
+    def test_champion_voice_is_gemini_kore(self):
+        from brand import voice
+        self.assertEqual(Limits.saara_reel_voice, 'gemini')
+        self.assertEqual(Limits.saara_reel_gemini_voice, 'Kore')
+        # a spoken direction is not used: gemini-2.5 answers a long one with no audio and gemini-3.x reads it aloud (D145)
+        self.assertEqual(Limits.saara_reel_gemini_style, '')
+        self.assertEqual(Limits.saara_reel_gemini_style_cta, '')
+        self.assertEqual(voice.GEMINI_MODELS[0], 'gemini-2.5-flash-preview-tts')           # the model that keeps aspirates comes first
+        self.assertIn(voice.GEMINI_MODELS[0], voice.gemini_cache_voice('Kore'))            # and the cache knows which model spoke
+
+    def test_stutter_does_not_mutilate_compound_words(self):
+        from brand.reel_audit import stutters
+        # Whisper breaks ಮುಖಾಮುಖಿ into Muka, Muki - stutters must not slice it
+        words = [['Muka', 0.0, 0.48], ['Muki', 0.48, 0.82], ['Diki', 0.82, 1.24]]
+        self.assertEqual(stutters('ಮುಖಾಮುಖಿ ಡಿಕ್ಕಿ', words), [])
+
+    def test_sethuve_has_unbroken_phonetic_mapping(self):
+        import json
+        with open('assets/pronunciation.json') as f:
+            prons = json.load(f)
+        self.assertEqual(prons.get('ಸೇತುವೆ'), 'ಸೇದುವೆ')
 
 
 if __name__ == '__main__':

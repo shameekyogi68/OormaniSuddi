@@ -331,6 +331,9 @@ def _check_saara_reel(outdir: str, r: 'ReviewReport', edition: 'Edition | None' 
         r.add_warn('SND-08', f'reel_saara.mp4, {who}: {" ".join(toks)} may be misread by the voice — '
                    'respell it in assets/pronunciation.json', where='reel_saara.mp4')
     sync = rep.get('sync') or {}
+    if sync.get('effect_over_speech_ms', 0) > 120:
+        r.add_warn('SND-08', f'reel_saara.mp4: a sound effect runs {sync["effect_over_speech_ms"]} ms onto the voice — it should end before, or start after, a word',
+                   where='reel_saara.mp4')
     if sync.get('worst_ms', 0) > 120:
         r.add_fail('VID-08', f'reel_saara.mp4: a voice clip sits {sync["worst_ms"]} ms from where the picture expects it '
                    f'({sync.get("offsets_ms")}) — audio and picture are out of step', where='reel_saara.mp4')
@@ -341,6 +344,9 @@ def _check_saara_reel(outdir: str, r: 'ReviewReport', edition: 'Edition | None' 
         r.add_warn('SND-08', 'reel_saara.mp4: one sound from a different word — ' + '; '.join(
             f'{h["word"]} ({h["means"]}, not {h["vs"]} {h["vs_means"]}) [{h["where"]}]' for h in watch['pairs'][:8])
             + ' — confirm the spelling letter by letter and listen for it', where='reel_saara.mp4')
+    if watch.get('colour'):
+        r.add_warn('FACT-04', 'reel_saara.mp4: colour the source does not carry — ' + ' · '.join(
+            f'{c["word"]} [{c["where"]}]' for c in watch['colour'][:8]) + ' — report it in the paste\'s own words', where='reel_saara.mp4')
     if watch.get('unseen'):
         r.add_warn('SND-08', 'reel_saara.mp4: spelled in no kept source — ' + ' · '.join(
             f'{u["word"]} [{u["where"]}]' for u in watch['unseen'][:10])
@@ -765,10 +771,9 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
                 n = len(re.findall(r'(?:^|\s)#\w', fh.read()))
             if n > Limits.ig_hashtags_max:
                 r.add_fail('PUB-09',
-                    f'{f} carries {n} hashtags. Instagram reads '
-                    f'{Limits.ig_hashtags_max} since December 2025 and '
-                    f'ignores the rest — re-render so brand/copy.py picks '
-                    f'the five that reach people.', where=f)
+                    f'{f} carries {n} hashtags. Instagram limits captions to '
+                    f'{Limits.ig_hashtags_max} hashtags — re-render so '
+                    f'brand/copy.py trims to the platform ceiling (D142).', where=f)
 
         r.checked.append('grievance officer named')
         if not Brand.grievance_named():

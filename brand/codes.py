@@ -88,7 +88,7 @@ CODES: dict[str, str] = {
     'PUB-04': 'the edition is drifting toward being a crime channel',
     'PUB-05': 'the town name sits past the caption fold, where nobody sees it',
     'PUB-08': 'a story names no place, so nobody can tell it is about their town',
-    'PUB-09': 'a caption carries more hashtags than the platform reads (D86)',
+    'PUB-09': 'a caption carries more hashtags than the platform allows (D142)',
     'PUB-11': 'a story carries more points than a slide holds (D93)',
     'PUB-12': 'most of the edition is filed under one category — check each is true',
     # ── OPS ───────────────────────────────────────────────────────────────

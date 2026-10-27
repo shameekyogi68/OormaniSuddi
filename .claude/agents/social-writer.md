@@ -37,17 +37,16 @@ wrong because the copy is wrong, name the story and field and route it.
 ## Steps
 1. List `out/<stem>/*_caption.txt` and match each to its format
    (`roundup*`, `saara*`, `mukhya_N*`) and story.
-2. For each caption check: town in the first 125 characters · ≤ 5 hashtags,
-   all true to the story · CTA asks for a comment or a share · every
+2. For each caption check: town in the first 125 characters · ≤ 30 hashtags
+   (`Limits.ig_hashtags_max`), all true to the story sitting directly in the caption · CTA asks for a comment or a share · every
    ಸ್ಪೀಡ್ ನ್ಯೂಸ್ / ಸುದ್ದಿ ಸಾರ caption names the stories it carries, in order ·
    sources credited as the story credits them · the Grievance Officer line
    is present (IT Rules 2021).
    **Instagram checks** (`docs/INSTAGRAM.md` §4, read once): line one is a hook
    with the town, inside the first 125 characters · no link in the caption · no
-   engagement bait ("like if…", "tag 3 friends") · the first comment is an honest
-   question about the reader's own town followed by the full 3-layer 30-tag block (Layer 1 Brand+Local, Layer 2 Story-specific hyper-local spots & topics, Layer 3 Broad Kannada news; house rule 2026-10-24-01) · the alt text in `MASTER_COPY.md` is
+   engagement bait ("like if…", "tag 3 friends") · caption itself contains the full 3-layer curated hashtag block directly (Layer 1 Brand+Local, Layer 2 Story-specific hyper-local spots & topics, Layer 3 Broad Kannada news; D142, house rule 2026-10-26-04) · the first comment is strictly an honest conversation question (NEVER hashtags in comments) · the alt text in `MASTER_COPY.md` is
    present and describes the post · the search terms are plain words people type.
-   For YouTube Shorts: title tags (`#shorts #kannadanews #kundapuranews`) and 10–12 description tags.
+   For YouTube Shorts: title tags (`#shorts #KundapuraNews #KannadaNews`) and 10–12 description tags.
    Mark each as [Official]/[House] in your report so the editor knows which are
    platform rules and which are our hypotheses.
 3. **WhatsApp community posts** (`whatsapp_<group>.txt`, D94): only that

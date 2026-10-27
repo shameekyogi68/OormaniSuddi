@@ -155,6 +155,8 @@ for something that is not a missing desk or the person-only items: launch `gate-
 mechanical fixes, re-render or `regate.py` (max two loops), and report anything left. Never edit a check to
 make a code go away.
 
+**The standard is `docs/REEL_STANDARD.md`.** Read it before Step 2 whichever AI you are; the checklist below is its short form.
+
 ## Before you say "done" — the release checklist (D134–D141)
 The owner's standard is no mistakes, and nobody on the team can hear. So every one of these is checked, in this order, and reported:
 1. **Copy final BEFORE the render.** Every Gemini voice request is spent for good (free tier: 10 a day per key, three keys in `.env`);

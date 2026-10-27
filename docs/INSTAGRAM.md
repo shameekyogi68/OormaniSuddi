@@ -34,12 +34,14 @@ kept current by the editor: paste Instagram's own announcements into
    exactly what this rewards.
 6. **Words in the caption are search terms.** Place, topic and what happened,
    in plain Kannada and in English — hashtags matter less than they did. [Reported]
-7. **Five hashtags at most in the caption** (D86, `PUB-09`), only true to the story.
-   **The 3-layer 30-tag architecture for first comment** (house rule 2026-10-24-01):
+7. **Caption itself contains all hashtags (D142, house rule 2026-10-26-04).**
+   Hashtags in comments do NOT work on Instagram for search indexing, Explore, or Reels recommendation.
+   All hashtags sit directly in the caption up to Instagram's 30-hashtag limit (`Limits.ig_hashtags_max`, `PUB-09`).
+   **The 3-layer curated hashtag architecture directly in the caption:**
    - *Layer 1 (Brand + Local, always kept):* `#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ #ಕುಂದಾಪುರ #ಬೈಂದೂರು #ಹೆಬ್ರಿ #Kundapura #Byndoor #Hebri`
    - *Layer 2 (Story-specific, hyper-local spots & trending angles):* landmarks/spots (`#Moodlakatte #Nellikatte #KodiBeach`), trending topics (`#KarnatakaRains #ಮಳೆ #ಗುಡುಗುಮಳೆ #FishermenAlert #KarnatakaWeather #CyberFraud #MissingPerson`)
    - *Layer 3 (Broad Kannada news, regional discovery):* `#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #LocalNews #NewsInKannada #BreakingKannada`
-   Put the top 5 in the caption; put the full 30 in the first comment for maximum local discovery and reach. For YouTube Shorts, add title tags (`#shorts #kannadanews #kundapuranews`) and 10–12 targeted description tags. [House, D86, 2026-10-24-01]
+   Put the curated 3-layer tags directly in the caption; the first comment is reserved strictly for community conversation and questions. For YouTube Shorts, add title tags (`#shorts #KundapuraNews #KannadaNews`) and 10–12 targeted description tags. [D142, 2026-10-26-04]
 8. **No engagement bait.** "Like if…", "tag three friends" and giveaways-for-follows
    are demoted. A real question about the reader's own town is fine. [Official]
 9. **Trial reels** go only to non-followers first — a way to test a hook
@@ -95,7 +97,7 @@ headline within `Limits.headline_chars`, three points at most.
 1. Line one: the hook, with the town, inside the first 125 characters
    (`reach.place_before_fold`, `PUB-05`) — what is shown before "more".
 2. Then what it is (and how many stories), one honest question, the source,
-   the Grievance line, the 📍 towns, five hashtags (`brand/copy.py` does this).
+   the Grievance line, the 📍 towns, curated hashtags in the caption (`brand/copy.py` does this).
 3. No links in the caption (they are not clickable). The WhatsApp link lives on
    the slides and in the bio.
 4. **Alt text** is written for every post (`MASTER_COPY.md` lists it): it helps
