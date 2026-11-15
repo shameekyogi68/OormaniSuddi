@@ -51,7 +51,7 @@ Re-measure: `python3 -m unittest discover tests` · `python3 scripts/health.py` 
 | NFR-13 | Security | no key in the repository; private books and pasted sources stay off the public remote | pattern scan of tracked and untracked files: none; `.gitignore` covers `business/`, `inbox/`, `archive/` | Met |
 | NFR-14 | Security | nothing is written outside the workspace | `path_inside` (D106, D127) | Met |
 | NFR-15 | Recoverability | three copies of the work | local backup 0 days old; second copy on iCloud Drive | Met |
-| NFR-16 | Recoverability | the offsite copy is current | 0 files uncommitted; **15 commits not pushed** | **Open** — everything is committed (2026-11-15), but the push was refused by the app's permission guard. One command, the owner's: `git push origin master` |
+| NFR-16 | Recoverability | the offsite copy is current | 0 files uncommitted; **every commit since 2026-10-24 not pushed** (`git status -sb` gives the count) | **Open** — everything is committed (2026-11-15), but the push was refused by the app's permission guard. One command, the owner's: `git push origin master` |
 | NFR-17 | Learning | the guessed Instagram numbers are replaced by measured ones | `scripts/metrics.py report`: nothing logged; platform numbers 34 days old | **Open** — needs the owner's numbers; two minutes a week |
 | NFR-18 | Portability | the contract passes on a machine that is not the Mac | `.github/workflows/contract.yml`, Python 3.12 and 3.14 | Not re-measured today — CI runs on push, and nothing has been pushed (NFR-16) |
 
