@@ -302,7 +302,7 @@ def _greedy(words: list[str], f, max_w: float, tracking: float) -> list[str]:
     lines, cur = [], ''
     for w in words:
         trial = f'{cur} {w}'.strip()
-        if not cur or text_width(trial, f, tracking) <= max_w:
+        if not cur or text_width(trial.replace('\u00a0', ' '), f, tracking) <= max_w:
             cur = trial
         else:
             lines.append(cur)
@@ -323,12 +323,17 @@ def wrap(text: str, f, max_w: float, tracking: float = 0.0,
         if not para:
             out.append('')
             continue
-        words = para.split()
+        words = [w for w in re.split(r'[ \t]+', _TIED.sub('\\1\u00a0\\2', para)) if w]
         lines = _greedy(words, f, max_w, tracking)
         if balance and len(lines) > 1:
             lines = _balance(words, f, max_w, tracking, len(lines))
-        out.extend(lines)
+        out.extend(l.replace('\u00a0', ' ') for l in lines)
     return out
+
+
+# A clock time and its AM/PM are one thing to a reader: "(4:20" at the end of
+# a line and "PM)" at the start of the next was on a published slide (D152).
+_TIED = re.compile(r'(\d{1,2}[:.]\d{2}) (AM|PM|am|pm)\b')
 
 
 def _balance(words, f, max_w, tracking, target_n) -> list[str]:
@@ -340,7 +345,7 @@ def _balance(words, f, max_w, tracking, target_n) -> list[str]:
         cand = _greedy(words, f, w, tracking)
         if len(cand) != target_n:
             continue
-        widths = [text_width(l, f, tracking) for l in cand]
+        widths = [text_width(l.replace('\u00a0', ' '), f, tracking) for l in cand]
         longest = max(widths) or 1.0
         # penalise variance across lines, and punish a very short final line hard
         var = sum((longest - x) ** 2 for x in widths) / len(widths)

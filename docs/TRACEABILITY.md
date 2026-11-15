@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **114/151** decisions are named by at least one test
+- **115/152** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -258,7 +258,7 @@ those carry a reason rather than a test.
 ## D58 · A reel opens on the news
 
 - **Tested by:** `tests/test_contract.py`
-- Enforced in: `brand/voice.py`
+- Enforced in: `brand/copy.py`, `brand/voice.py`
 
 ## D59 · No human verification, no publication
 
@@ -692,4 +692,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_d151.py`, `tests/test_saara_reel_layout.py`
 - Enforced in: `brand/content.py`, `brand/copy.py`, `brand/kannada_check.py`, `brand/reel_speech.py`, `brand/review.py`, `scripts/regate.py`
+
+## D152 · The same look at ಮುಖ್ಯ ಸುದ್ದಿ and the reel's caption: six more faults, closed where they were made
+
+- **Tested by:** `tests/test_d152.py`
+- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/paper.py`, `brand/typo.py`
 

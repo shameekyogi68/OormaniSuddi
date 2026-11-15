@@ -90,11 +90,21 @@ def photo(sf: Surface, ph, box) -> bool:
         im = ImageEnhance.Contrast(im).enhance(P.ai_contrast)
     sf.img.alpha_composite(im.convert('RGBA'),
                            (int(box[0] * sf.ss), int(box[1] * sf.ss)))
-    credit(sf, ph.disclosure, box)
+    credit(sf, ph.disclosures, box)
     return True
 
 
-def credit(sf: Surface, text: str, box):
+def fit_disclosure(texts, f, max_w: float) -> str:
+    """The longest form of a picture's disclosure that fits `max_w` whole.
+    Only when even the bare label is too wide is anything cut (D152)."""
+    texts = [texts] if isinstance(texts, str) else list(texts)
+    for t in texts:
+        if typo.text_width(t, f) <= max_w:
+            return t
+    return typo.ellipsize(texts[-1], f, max_w, sep='  •  ') if texts else ''
+
+
+def credit(sf: Surface, text, box):
     """The disclosure, bottom-right INSIDE the picture it describes — the label
     has to travel with the image (IT Rules, D57) — on a solid ink pill, the
     same label the reels use. It sat on a soft fade before, and over a bright
@@ -102,8 +112,9 @@ def credit(sf: Surface, text: str, box):
     if not text:
         return
     x0, y0, x1, y1 = box
-    f = typo.font_for(text, 'kn_var', sf.s(P.credit), weight=600)
-    text = typo.ellipsize(text, f, sf.s(x1 - x0 - 2 * P.margin - 40), sep='  •  ')
+    f = typo.font_for(text if isinstance(text, str) else text[0], 'kn_var',
+                      sf.s(P.credit), weight=600)
+    text = fit_disclosure(text, f, sf.s(x1 - x0 - 2 * P.margin - 40))
     tw = typo.text_width(text, f) / sf.ss
     h, pad, inset = P.credit * 1.75, 18, 18
     bx1, by1 = x1 - inset, y1 - inset

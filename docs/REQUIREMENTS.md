@@ -34,6 +34,8 @@ Re-measure: `python3 -m unittest discover tests` · `python3 scripts/health.py` 
 | FR-17 | spell a borrowed word with its Kannada ending correctly on every screen and in every caption | `kannada_check.join_endings`, applied in `Story.from_dict` (D151); `tests/test_d151.py` | Met — 44 distinct words across 345 editions and source pastes, none native. ನ್ + ನಲ್ಲಿ is deliberately not joined |
 | FR-18 | show every headline whole on the reel's front page, or say which one could not be | `brand/saara_reel.html` rows' own scale, `cover.cut` (D151); `tests/test_saara_reel_layout.py` | Met — **today's film (`out/2026-11-15`) was made before the fix and is held by the gate (`VID-08`) until it is re-made** |
 | FR-19 | show a reviewer each card finished, and the follow card | `review._settled_times` (D151); `tests/test_d151.py` | Met from the next render; today's `_review/` frames are the old evenly spaced ones |
+| FR-20 | never cut a picture's honesty label to dots, nor split a clock time from its AM/PM | `Photo.disclosures`, `paper.fit_disclosure`, `typo.wrap` (D152); `tests/test_d152.py` | Met — seen on the 2026-11-13 slides drawn again |
+| FR-21 | say a post has a computer voice exactly when it has one; count the slides in the schedule; mark a takeaway as a pointer | `copy.instagram_caption(voiced=)`, `for_saara_reel`, `publishing_plan` (D152); `tests/test_d152.py` | Met. **Open: the reel promises the full report in a caption that holds only headlines (byte limit) — the owner's call, D152** |
 
 ## Non-functional requirements — how well it does it
 

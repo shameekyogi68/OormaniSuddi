@@ -496,6 +496,26 @@ class Photo:
         return '  •  '.join(bits)
 
     @property
+    def disclosures(self) -> list[str]:
+        """The disclosure, longest first, for a place too narrow for all of it.
+
+        What gives way is the description, then the credit — never the nature
+        label, and never to a row of dots: "ಎಐ ರಚಿತ ಚಿತ್ರ …" told the reader
+        something had been cut from an honesty label (D152).
+        """
+        label = (self.label or '').strip()
+        out = [self.disclosure]
+        if label and self.credit:
+            out.append(f'{label}  •  ಕೃಪೆ: {self.credit}')
+        if label:
+            out.append(label)
+        seen: list[str] = []
+        for o in out:
+            if o and o not in seen:
+                seen.append(o)
+        return seen
+
+    @property
     def is_synthetic(self) -> bool:
         """True when this image was generated rather than photographed."""
         return self.nature in ('ai', 'graphic')

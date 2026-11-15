@@ -110,6 +110,9 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
     # One soft panel holds the record; the rows are set apart by air (D128).
     pp.panel(sf, (m, y, W - m, y + 36 + 64 * len(rows)))
     y += 66
+    f30 = typo.font_for(story.photo.disclosure, 'kn_var', sf.s(30), weight=520)
+    shown = pp.fit_disclosure(story.photo.disclosures, f30, sf.s(cw - 264))
+    rows = [(k, shown if k == 'ಚಿತ್ರ' else v) for k, v in rows]
     for key, val in rows:
         pp.meta(sf, m + 32, y, key, pp.GOLD_TYPE, size=30, weight=720)
         pp.meta(sf, m + 232, y, val, pp.INK, size=30, max_w=cw - 264)

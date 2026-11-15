@@ -4319,3 +4319,32 @@ front page shows six whole headlines and the story-4 headline reads ಪಂಚಾ
 * **What the voice sounds like is still not something a test can pass.** The two ears disagreed on eight of fourteen lines today; a person listening is the check (D146).
 
 Enforced by: `tests/test_d151.py`, `tests/test_saara_reel_layout.py` (`test_the_front_page_shows_every_headline_whole`, `test_a_front_page_row_that_cannot_be_whole_is_said_so`).
+
+
+---
+
+## D152 · The same look at ಮುಖ್ಯ ಸುದ್ದಿ and the reel's caption: six more faults, closed where they were made
+
+**Decided (2026-11-15).** The owner: "for future it must be the best possible." D151 looked at one day's ಸುದ್ದಿ ಸಾರ reel. The same look at the last ಮುಖ್ಯ ಸುದ್ದಿ package
+(`archive/2026-11-13_vande_bharat`, approved by every desk and the gate) and at the reel's caption found six more.
+
+1. **The picture's honesty label was cut to "ಎಐ ರಚಿತ ಚಿತ್ರ …"** on the cover and again on the source slide, where half the row was empty. The label was one joined line — label, a long
+   description, credit — trimmed from the right with dots. `Photo.disclosures` now gives it longest first (all of it; label and credit; the label), and `paper.fit_disclosure` shows the longest
+   that fits whole. Dots only if the bare label itself does not fit.
+2. **A clock time was split from its AM/PM** — "(4:20" ending one line, "PM)" starting the next. `typo.wrap` ties a time to its AM/PM.
+3. **The schedule said "ONE carousel post of 1 separate videos"** for three: the count was read from the set's number in the file name, not the slide's.
+4. **A warning sign stood in front of every takeaway**, including "the fastest rail link". The mark is now a pointer (👉), the one the reel's caption already uses.
+5. **A silent carousel's caption said "this voice is computer-made".** `instagram_caption` says it only when told the post is voiced.
+6. **The reel, which is read by a computer voice, said so nowhere.** D58 put the line in the caption; it was lost when the reel's caption was rebuilt for size. It is back, before the hashtags.
+
+**Measured.** The three slides drawn again from the same edition: the cover and the source slide read "ಎಐ ರಚಿತ ಚಿತ್ರ • ಕೃಪೆ: ಊರ್ಮನಿ ಸುದ್ದಿ" whole, and no time is split on the facts slide. The
+mp4 slides of 2026-11-13 measure -91 dB: silent.
+
+**Found and not changed — the owner's call.**
+* **The reel says "ಪೂರ್ಣ ವರದಿ ಕ್ಯಾಪ್ಶನ್‌ನಲ್ಲಿ ↓" and the caption holds six headlines.** `Limits.ig_caption_max_bytes` counts bytes, a Kannada letter is three, and thirty hashtags take about 550, so
+  with four or more stories the caption always falls back to headlines only. Either the limit is really Instagram's 2,200 characters (then the full report fits and the number should change), or it is
+  bytes (then the line on the reel should promise less). No decision records where the byte figure came from; one pasted test caption settles it.
+* **The reel's cards are not tied the same way** (a time and its AM/PM): their words are timed to the voice one by one, and the spoken lines do not carry clock times.
+* **ಸ್ಪೀಡ್ ನ್ಯೂಸ್ and the ಸುದ್ದಿ ಸಾರ carousel** have not been made since D92 / D133, so there is no real output of theirs to look at.
+
+Enforced by: `tests/test_d152.py`.

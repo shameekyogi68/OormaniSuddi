@@ -34,7 +34,9 @@ YT_DESC_MAX = 5000
 
 # Structural markers. Deliberately few — a caption peppered with emoji reads as
 # a personal account, not a newsroom.
-M_PLACE, M_TIME, M_SOURCE, M_NOTE = '📍', '🕐', '📌', '⚠️'
+# The takeaway's mark is a pointer, not a warning sign: most takeaways are
+# what the news means for the reader, and "⚠️ fastest rail link" misread (D152).
+M_PLACE, M_TIME, M_SOURCE, M_NOTE = '📍', '🕐', '📌', '👉'
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -519,7 +521,10 @@ def _join(blocks: list[str]) -> str:
     return '\n\n'.join(b.strip() for b in blocks if b and b.strip())
 
 
-def instagram_caption(story: Story, tags: list[str] | None = None) -> str:
+def instagram_caption(story: Story, tags: list[str] | None = None,
+                      voiced: bool = False) -> str:
+    """`voiced` says the post has a generated voice. A ಮುಖ್ಯ ಸುದ್ದಿ carousel is
+    silent, and its caption said "this voice is computer-made" (D152)."""
     tags = tags if tags is not None else hashtags(story)
     blocks = [hook(story)]
 
@@ -549,7 +554,7 @@ def instagram_caption(story: Story, tags: list[str] | None = None) -> str:
     g = Brand.grievance_line()
     if g:
         blocks.append(g)
-    if Brand.voice_disclosure_kn:
+    if voiced and Brand.voice_disclosure_kn:
         blocks.append(Brand.voice_disclosure_kn)
 
     pl = place_line(story)
@@ -565,7 +570,7 @@ def instagram_caption(story: Story, tags: list[str] | None = None) -> str:
             cap = instagram_caption(
                 Story(**{**story.to_dict(), 'points': trimmed,
                          'published_at': story.published_at,
-                         'photo': story.photo}), tags)
+                         'photo': story.photo}), tags, voiced)
     return cap
 
 
@@ -946,7 +951,7 @@ def publishing_plan(has_saara: bool = False, saara_last: str = '',
         # slides joined into one video (D100). Instagram does the swipe.
         if not animated:
             return ''
-        m_ = re.search(r'_(\d+)_\w+\.(?:jpg|mp4)$', last_name)
+        m_ = re.search(r'_(\d+)_[a-z]+\.(?:jpg|mp4)$', last_name)
         n_ = f'{int(m_.group(1))} ' if m_ else ''
         from .tokens import Motion
         settled = math.ceil(Motion.anim_start + Motion.anim_reveal_max)
@@ -1178,6 +1183,10 @@ def for_saara_reel(edition: Edition) -> PostCopy:
         blocks.extend([cta_line, src_line])
         if contact:
             blocks.append(contact)
+        # The reel is read by a generated voice, and its caption says so (D58).
+        # The line was lost when this caption was rebuilt for size (D152).
+        if Brand.voice_disclosure_kn:
+            blocks.append(Brand.voice_disclosure_kn)
         blocks.append(tag_str)
         return _join(blocks)
 
