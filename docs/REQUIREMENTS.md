@@ -27,7 +27,7 @@ Re-measure: `python3 -m unittest discover tests` · `python3 scripts/health.py` 
 | FR-10 | gate every package and record what a machine established | `brand/review.py` → `APPROVAL.md` (D52) | Met |
 | FR-11 | leave taste, dignity and news judgement to a signed person | `scripts/sign_off.py` (D62) | Met, needs a person |
 | FR-12 | write captions, WhatsApp and Facebook copy to platform rules | `brand/copy.py`; `PUB-*`; `tests/test_reach_copy.py` | Met |
-| FR-13 | track corrections against the IT Rules clocks | `scripts/correction.py status` | **Open** — the dispatcher lists unsupported claims published 2026-09-23 and 2026-09-24 with no correction logged. Owner: a person, with the corrections desk |
+| FR-13 | track corrections against the IT Rules clocks | `scripts/correction.py status` | **Open — prepared, waiting on a person.** 23 Sept: five of six published stories carried lines not in their kept sources (one the opposite of its source). 24 Sept morning: clean. 24 Sept evening: five stories have no kept source. The evidence, the two `correction.py new` commands and a draft ತಿದ್ದುಪಡಿ are in `inbox/correction_brief_2026-09-23.md` (private, not in git). Logging starts the statutory clocks and `ack`/`close` are the Grievance Officer's by name, so no machine ran them |
 | FR-14 | keep money away from news: labelled products only, every deal cleared by a person | `brand/business.py` (D118); `tests/test_business.py` | Met, needs a person |
 | FR-15 | turn a standing instruction into a recorded rule, and refuse one that waives a check | `scripts/house_rule.py` (D73); `tests/test_house.py` | Met |
 | FR-16 | tell an AI tool exactly what is wrong with the JSON it wrote | `brand/content.py` shape checks (D150); `tests/test_shape.py` | Met — was Open until today |
@@ -51,13 +51,13 @@ Re-measure: `python3 -m unittest discover tests` · `python3 scripts/health.py` 
 | NFR-13 | Security | no key in the repository; private books and pasted sources stay off the public remote | pattern scan of tracked and untracked files: none; `.gitignore` covers `business/`, `inbox/`, `archive/` | Met |
 | NFR-14 | Security | nothing is written outside the workspace | `path_inside` (D106, D127) | Met |
 | NFR-15 | Recoverability | three copies of the work | local backup 0 days old; second copy on iCloud Drive | Met |
-| NFR-16 | Recoverability | the offsite copy is current | **13 commits not pushed; 105 files uncommitted** | **Open** — owner's decision; `health.py` shows it red every day until then |
+| NFR-16 | Recoverability | the offsite copy is current | 0 files uncommitted; **15 commits not pushed** | **Open** — everything is committed (2026-11-15), but the push was refused by the app's permission guard. One command, the owner's: `git push origin master` |
 | NFR-17 | Learning | the guessed Instagram numbers are replaced by measured ones | `scripts/metrics.py report`: nothing logged; platform numbers 34 days old | **Open** — needs the owner's numbers; two minutes a week |
 | NFR-18 | Portability | the contract passes on a machine that is not the Mac | `.github/workflows/contract.yml`, Python 3.12 and 3.14 | Not re-measured today — CI runs on push, and nothing has been pushed (NFR-16) |
 
 ## What "perfect" does not mean here
 
-Three things are open and no code closes them: a correction a person must send (FR-13), a push the owner must say yes to (NFR-16), and numbers
+Three things are open and no code closes them: a correction a person must send (FR-13 — prepared), a push only the owner can make (NFR-16 — everything else is committed), and numbers
 only the owner can read off the apps (NFR-17). A file that called those done would be the kind of claim this project exists to refuse.
 
 Not measured in this pass, so not claimed: a full render of today's reel (there is no edition for 2026-11-15 yet), and how the voice sounds —
