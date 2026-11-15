@@ -4,7 +4,53 @@
     "why": "Measured 2026-10-30 on Gemini Kore (gemini-2.5-flash-preview-tts): about 23 takes in 3 spellings, in lists, in phrases and in carrier phrases — heard right 3 times, and wrong again on each repeat. Heard as \"ಒನ್ ಸೇ\" / \"ವನ್ಸೆ\" / \"ಒಂದು ಸೆ\"; in the reel of 2026-10-30 the headline's town was not said at all. A recording of the name by a person is the cure.",
     "clip": null,
     "approved_by": "",
-    "approved_on": ""
+    "approved_on": "",
+    "takes": [
+      {
+        "spelling": "ವಂಡ್ಸೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ವಣ್ಸೇ ಪೇಟೆಯಲ್ಲಿ ಪಾದಿ ಯತ್ರಿ ನಡಿಯತೋ.",
+          "gemini-3-flash-preview": "ವಂಸೆಪೇಟೆಯಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು.",
+          "gemini-3.5-flash": "ವಣಸೇಪೇಟೆಯಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 card",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ವಂಡ್‌ಸೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ವಂಸೇ ಪೇಟೆ ಎಲ್ಲಿ ಪಾದ ಯಾತ್ರಿ ನಡೆಯಿತು.",
+          "gemini-3-flash-preview": "ವಣ್ಸೇಪೇಟೆಯಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು.",
+          "gemini-3.5-flash": "ವಣ್ಸೆ ಪೇಟೆಯಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 card",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ವನ್ಡ್ಸೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಒಂದ ಆಸೆ ಪೇಟೆಯಲ್ಲಿ ಪಾದ ಯಾತ್ರೆ ನಡೆಯಿತು.",
+          "gemini-3-flash-preview": "ಒಂದಾಸೆಪೇಟೆಯಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು",
+          "gemini-3.5-flash": "ಹುಣಸಪೇಟೆಯಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 card",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ವನ್ಡ್ಸೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧಾ. ವಂದಾಸೆ ಪೇಟೆಯಲ್ಲಿ ಪಾದ ಯಾತ್ರೆ ನಡೆಯಿತು.",
+          "gemini-3-flash-preview": "ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ. ಗಾಂಧಿನಗರದಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು.",
+          "gemini-3.5-flash": "ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ. ವಂದಾಸೇಪೇಟೆಯಲ್ಲಿ ಪಾದಯಾತ್ರೆ ನಡೆಯಿತು."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 card",
+        "on": "2026-11-15"
+      }
+    ]
   },
   "ಯಡ್ತರೆ": {
     "say_inline": false,
@@ -270,96 +316,6 @@
         "spelling": "ಬೈಂದೂರು",
         "right": true,
         "heard_by": {
-          "whisper": "ಬೈನ್ದೋರು ನಾರಾಯಣ ಗುರು ಸಮುದಾಯ ಭವನ ಶಿಲಾನ್ಯಾಸಾ.",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು ನಾರಾಯಣ ಗುರು ಸಮುದಾಯ ಭವನ ಶಿಲಾನ್ಯಾಸ."
-        },
-        "source": "reel 2026-11-06 story 5 headline",
-        "on": "2026-11-06"
-      },
-      {
-        "spelling": "ಬೈಂದೂರು",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಬೈನ್ದೂರು ಮಾರಣಕಟ್ಟೆ ಮೊಕ್ತೆ ಸರರ ಅಧಿಕಾರ ಸ್ವಿಕಾರ.",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು ಮಾರಣಕಟ್ಟೆ ಮೊಕ್ತೇಸರರ ಅಧಿಕಾರ ಸ್ವೀಕಾರ."
-        },
-        "source": "reel 2026-11-14 story 4 headline",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈಂದೂರು",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
-          "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
-        },
-        "source": "reel 2026-11-14 09:00:00+05:30 the hook",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈಂದೂರು",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಬೈಿಂದೂರು ವಂದೆ ಭಾರಚ್ಚಾಲನೆ ನಿಲ್ದಾಣ ಅಭಿವರುದ್ದಿ.",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು ವಂದೇ ಭಾರತ್ ಚಾಲನೆ ನಿಲ್ದಾಣ ಅಭಿವೃದ್ಧಿ"
-        },
-        "source": "reel 2026-11-14 09:00:00+05:30 story 2 headline",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈಂದೂರು",
-        "right": false,
-        "heard_by": {
-          "whisper": "ಬಈನ್ದೋರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟಾ ಆಲೂರು ಶಾಲೆಗೆ ಜೈಯಾ",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟ ಆಲೂರು ಶಾಲೆಗೆ ಜಯ."
-        },
-        "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈನ್ದೂರು",
-        "right": false,
-        "heard_by": {
-          "whisper": "ಬಈನ್ದುರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟಾ ಆಲೋರು ಶಾಲೆಗೆ ಜೈಯಾ.",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟ ಆಲೂರು ಶಾಲೆಗೆ ಜಯ"
-        },
-        "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈನ್ದೂರು",
-        "right": false,
-        "heard_by": {
-          "whisper": "ಬಈನ್ದುರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟಾ ಆಲೋರು ಶಾಲೆಗೆ ಜೈಯಾ.",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟ ಆಲೂರು ಶಾಲೆಗೆ ಜಯ"
-        },
-        "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈಂದೂರು",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಬೈಿಂದೂರು ಇಂದಿನ ಸುದ್ದಿ.",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು\nಇಂದಿನ ಸುದ್ದಿ"
-        },
-        "source": "reel 2026-11-14 09:00:00+05:30 probe",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈಂದೂರು",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಬೈಿಂದೂರು ಇಂದಿನ ಸುದ್ದಿ.",
-          "gemini-3-flash-preview": "ಬೈಂದೂರು\nಇಂದಿನ ಸುದ್ದಿ"
-        },
-        "source": "reel 2026-11-14 09:00:00+05:30 probe",
-        "on": "2026-11-14"
-      },
-      {
-        "spelling": "ಬೈಂದೂರು",
-        "right": true,
-        "heard_by": {
           "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
           "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
         },
@@ -385,6 +341,97 @@
         },
         "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
         "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ಕೋಟಾ, ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕೋಟ ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 the hook",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈನ್ದುರು ಮತ್ದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣಗೆ ವಿರೋಧಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬಯಿಂದುರು ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು. ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈನ್ದೂರು ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "بَإِن دُورُ",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು",
+          "gemini-3.5-flash": "ಬೈಂದೂರು"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಿಂದೂರು ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು\nಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 probe",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಿಂದೂರು ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು\nಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 probe",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ಕೋಟಾ, ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕೋಟ ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 the hook",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಿನ್ದೋರು ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-15"
       }
     ]
   },
@@ -672,6 +719,26 @@
         },
         "source": "reel 2026-11-06 09:00:00+05:30 story 2 headline",
         "on": "2026-11-06"
+      },
+      {
+        "spelling": "ಹೆಬ್ರಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹಿಬ್ರಿ ಪಂಚಾಯತ್ನಲ್ಲಿ ಹಣಾ ದುರ್ಬಳಕೆ ಆರೋಪಾ.",
+          "gemini-3-flash-preview": "ಹೆಬ್ರಿ ಪಂಚಾಯತ್ ನಲ್ಲಿ ಹಣ ದುರ್ಬಳಕೆ ಆರೋಪ."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 4 headline",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಹೆಬ್ರಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹಿಬ್ರಿ ಪಂಚಾಯತ್ನಲ್ಲಿ ಹಣಾ ದುರ್ಬಳಕೆ ಆರೋಪಾ.",
+          "gemini-3-flash-preview": "ಹೆಬ್ರಿ ಪಂಚಾಯತ್ ನಲ್ಲಿ ಹಣ ದುರ್ಬಳಕೆ ಆರೋಪ."
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 4 headline",
+        "on": "2026-11-15"
       }
     ]
   },
@@ -867,46 +934,6 @@
         "spelling": "ಕೋಟ",
         "right": true,
         "heard_by": {
-          "whisper": "ಕೋಟಮಾಬುಕಳ ಹೆದ್ದಾರಿ 30 ಬಲಿ.",
-          "gemini-3-flash-preview": "ಕೋಟ ಮಾಬುಗಳ ಹೆದ್ದಾರಿ ಮೂವತ್ತೈದು ಬಲಿ"
-        },
-        "source": "reel 2026-11-05 story 1 headline",
-        "on": "2026-11-05"
-      },
-      {
-        "spelling": "ಕೋಟ",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಇನ್ದಿನ ಸುದ್ದಿ ಕುಂದ ಪುರಾ ಮತ್ತು ಕೋಟ.",
-          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ಮತ್ತು ಕೋಟ."
-        },
-        "source": "reel 2026-11-08 the hook",
-        "on": "2026-11-08"
-      },
-      {
-        "spelling": "ಕೋಟ",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಕೋಟಾ ಜಿಶಂಕರವರಿಗೆ ರಾಜ್ಯೋತ್ಸವ ಪ್ರಶಸ್ತಿ.",
-          "gemini-3-flash-preview": "ಕೋಟ ಜಿ ಶಂಕರ್ ಅವರಿಗೆ ರಾಜ್ಯೋತ್ಸವ ಪ್ರಶಸ್ತಿ."
-        },
-        "source": "reel 2026-11-08 story 3 headline",
-        "on": "2026-11-08"
-      },
-      {
-        "spelling": "ಕೋಟ",
-        "right": true,
-        "heard_by": {
-          "whisper": "ಕೋಟಾ, ವಿಗ್ರಹ ಮಾರಾಟಾ ಆರೋಪಾ ಸತ್ಯಕ್ಕೆ ದೂರಾ.",
-          "gemini-3-flash-preview": "ಕೋಟ, ವಿಗ್ರಹ ಮಾರಾಟ ಆರೋಪ ಸತ್ಯಕ್ಕೆ ದೂರ."
-        },
-        "source": "reel 2026-11-08 story 4 headline",
-        "on": "2026-11-08"
-      },
-      {
-        "spelling": "ಕೋಟ",
-        "right": true,
-        "heard_by": {
           "whisper": "ಹೆದ್ದಾರಿ ದುರಸ್ತಗೆ ಸಮ್ಸದ ಕೋಟಾ ಗಡುವು.",
           "gemini-3-flash-preview": "ಹೆದ್ದಾರಿ ದುರಸ್ತಿಗೆ ಸಂಸದ ಕೋಟ ಗಡುವು"
         },
@@ -982,6 +1009,46 @@
         },
         "source": "reel 2026-11-10 story 5 headline",
         "on": "2026-11-10"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ಕೋಟಾ, ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕೋಟ ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 the hook",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ ಅಮ್ರುದೇಶ್ವರಿ ಕೆರೆಯಲ್ಲಿ ಮುಳುಗಿ ದುರ್ಮರಣಾ.",
+          "gemini-3-flash-preview": "ಕೋಟ ಅಮೃತೇಶ್ವರಿ ಕೆರೆಯಲ್ಲಿ ಮುಳುಗಿ ದುರ್ಮರಣ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ಕೋಟಾ, ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕೋಟ ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 the hook",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ ಅಮ್ರುದೇಶ್ವರಿ ಕೆರೆಯಲ್ಲಿ ಮುಳುಗಿ ದುರ್ಮರಣಾ.",
+          "gemini-3-flash-preview": "ಕೋಟ ಅಮೃತೇಶ್ವರಿ ಕೆರೆಯಲ್ಲಿ ಮುಳುಗಿ ದುರ್ಮರಣ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-15"
       }
     ]
   },
@@ -1445,7 +1512,49 @@
     "say_inline": true
   },
   "ಗಂಗೊಳ್ಳಿ": {
-    "say_inline": true
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಗಂಗೊಳ್ಳಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಗಂಗೊಳಳಿ ಇಂದಿನ ಸುಂದಿ",
+          "gemini-3-flash-preview": "ಗಂಗೊಳ್ಳಿ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "verify",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಗಂಗೊಳ್ಳಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಗಂಗೊಳಳಿ ಇಂದಿನ ಸುಂದಿ",
+          "gemini-3-flash-preview": "ಗಂಗೊಳ್ಳಿ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "verify",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಗಂಗೊಳ್ಳಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ಕೋಟಾ, ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕೋಟ ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 the hook",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಗಂಗೊಳ್ಳಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ಕೋಟಾ, ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕೋಟ ಗಂಗೊಳ್ಳಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 the hook",
+        "on": "2026-11-15"
+      }
+    ]
   },
   "ಹಟ್ಟಿಯಂಗಡಿ": {
     "say_inline": true
@@ -2111,6 +2220,51 @@
         },
         "source": "reel 2026-11-11 story 2 headline",
         "on": "2026-11-11"
+      }
+    ]
+  },
+  "ಕೊಲ್ಲೂರು": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಕೊಲ್ ಲೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೊಲ್ಲೋರು ಇಂದಿಲ ಸುದಿ",
+          "gemini-3-flash-preview": "ಕೊಲ್ಲೂರು ಇಂದಿಲ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಕೊಲ್ ಲೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೊಲ್ಲೋರು ಇಂದಿಲ ಸುದಿ",
+          "gemini-3-flash-preview": "ಕೊಲ್ಲೂರು ಇಂದಿಲ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಕೊಲ್ ಲೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೊಳ್ಳೂರು ಕೇಂದ್ರ ಸಚಿವ ಕುಮಾರಸ್ವಾಮಿ ಭೇಟಿ.",
+          "gemini-3-flash-preview": "ಕೊಲ್ಲೂರು ಕೇಂದ್ರ ಸಚಿವ ಕುಮಾರಸ್ವಾಮಿ ಭೇಟಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 6 headline",
+        "on": "2026-11-15"
+      },
+      {
+        "spelling": "ಕೊಲ್ ಲೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೊಳ್ಳೂರು ಕೇಂದ್ರ ಸಚಿವ ಕುಮಾರಸ್ವಾಮಿ ಭೇಟಿ.",
+          "gemini-3-flash-preview": "ಕೊಲ್ಲೂರು ಕೇಂದ್ರ ಸಚಿವ ಕುಮಾರಸ್ವಾಮಿ ಭೇಟಿ"
+        },
+        "source": "reel 2026-11-15 09:00:00+05:30 story 6 headline",
+        "on": "2026-11-15"
       }
     ]
   }
