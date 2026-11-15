@@ -250,6 +250,9 @@ FONTS = {
     # Primary Kannada. Noto shapes every conjunct correctly; it is the only
     # face allowed for headlines.
     'kn':        'fonts/NotoSansKannada-Bold.ttf',
+    # The headline face of every format (D149): the heavy serif the reel has used since D132. One voice for news,
+    # whether it is read on paper or watched on ink. Static Black — no weight axis.
+    'kn_head':   'fonts/NotoSerifKannada-Black.ttf',
     # Variable Kannada. Weight 100-800, Width 75-125. Used for anything that
     # needs a weight other than bold — decks, body, meta.
     'kn_var':    'fonts/AnekKannada-Variable.ttf',
@@ -399,6 +402,9 @@ class Limits:
     # Every voice clip is brought to this integrated loudness before the mix, so the voice does not change level from
     # story to story (D134). −17 LUFS of speech under the −14 LUFS finished mix.
     saara_reel_speech_lufs = -17.0
+    # The AAC encode lifts peaks above what the mix was limited to: at 192k the 12 Nov 2026 reel left at −0.2 dBTP
+    # against true_peak_dbtp; 256k held it. The finished file is measured, and turned down if it is still over (D148).
+    saara_reel_aac_kbps = 256
     # After the town a newsreader stops — "ಬೈಂದೂರು. …" — before the line (owner, 2026-10-25: the voice ran the town into the
     # headline). Whatever pause the voice made there is lengthened to at least this, in the audio itself.
     saara_reel_town_pause = 0.36
@@ -416,6 +422,23 @@ class Limits:
     # 0.96-1.00 on the phonetic skeleton and wrong audio 0.13-0.26, so these are not close calls.
     saara_reel_voice_warn = 0.80
     saara_reel_voice_fail = 0.50
+    # The voice, heard back by a Kannada-capable listener, word by word (brand/ear.py, D146). Whisper cannot read
+    # Kannada, so it could not tell a missing town from its own mistakes and the gate only said "listen for it".
+    # A clip is asked for again (a new take, with the next respelling of the failing word) up to ear_takes times
+    # before it is held. A name (a town, a person) must be heard this whole; any other word this whole; the first and
+    # last word of a clip — where a cut can eat a sound — this whole.
+    ear_takes = 3
+    ear_name_coverage = 0.85
+    ear_word_coverage = 0.50
+    ear_edge_coverage = 0.60
+    # No silence inside a clip's speech may be longer than this (seconds). The voice made 0.65 s of silence inside a
+    # man's name and over a second between sentences (2026-10-30); a newsreader's longest breath is shorter.
+    ear_pause_max = 0.55
+    # A town is left to the voice only once its spelling has been heard right — by a Kannada-capable ear AND Whisper,
+    # on its shape (no vowel inside a cluster) — on each of its last this-many takes, and never since heard wrong
+    # (D147). Measured: Kore is stochastic on a name it finds hard (ಬ್ರಹ್ಮಾವರ, 2026-11-01: right, then wrong), so one
+    # right take proves nothing. A town without that is asked for that many probe takes in the render, or held.
+    town_verify_takes = 2
     hook_words = 7
     deck_chars = 190
     # The carousel slide shows headline + deck, nothing else. The deck gets
@@ -505,6 +528,10 @@ class Limits:
     # comments are NOT indexed by Instagram's search or Explore algorithm (D142).
     # All curated high-reach hashtags sit directly in the caption.
     ig_hashtags_max = 30
+    # Instagram's web composer and initial Reel upload API truncates captions at 2,200 BYTES.
+    # For Indic scripts (Kannada UTF-8, 3 bytes/char), captions must stay <= 2100 bytes
+    # so that the first paste never truncates or loses hashtags / stories.
+    ig_caption_max_bytes = 2100
     # YouTube shows the first three description hashtags above the title.
     yt_hashtags_max = 3
     # The YouTube tags field holds 500 characters in total.
@@ -552,7 +579,7 @@ class Paper:
     credit      = 26      # the in-photo disclosure; above T.nano (D60)
     footer_h    = 88      # hairline + handle + page
     sunline     = 8       # gold line under a photograph (10 on a reel)
-    photo_4x5   = 720     # photograph height on a 4:5 cover
+    photo_4x5   = 800     # photograph height on a 4:5 cover (D149: the picture leads; was 720)
     reel_photo  = 1000    # photograph height on a 9:16 speed-news frame
     # Taking the gloss off a GENERATED picture: less colour, less contrast.
     # A real photograph is left as it was shot, beyond the house grade.

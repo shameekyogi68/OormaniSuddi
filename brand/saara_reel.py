@@ -46,7 +46,9 @@ import time
 import urllib.request
 from pathlib import Path
 
+from . import reel_listen
 from . import reel_speech as RS
+from . import town_clips
 from .content import Edition, Story
 from .reel_speech import ReelError                     # noqa: F401  (the pipeline catches it)
 
@@ -197,10 +199,16 @@ def _est(text: str) -> float:
 
 def _hook_text(copies: list[dict]) -> str:
     allt = list(dict.fromkeys(c.get('place_short', '') for c in copies if c.get('place_short')))
-    towns = allt[:3]
+    # A town the voice cannot say (brand/town_clips.py) is not left to it in the opening: ವಂಡ್ಸೆ came out "ಒನ್ ಸೇ" there on
+    # 2026-10-30. Its own story still names it, as a recorded clip once a person has approved one.
+    cannot = town_clips.unsayable()
+    said = [t for t in allt if t not in cannot]
+    if not said:
+        return INTRO_SAY.format(towns=Brand.coverage)
+    towns = said[:3]
     # A bare run of names ("ಕೊಲ್ಲೂರು ಕುಂದಾಪುರ ಬೈಂದೂರು") is not a Kannada sentence. Two towns are joined by ಮತ್ತು,
     # three are "A, B ಮತ್ತು C", and when more were left out, "A, B, C ಸೇರಿದಂತೆ" says they are only some.
-    if len(allt) > 3:
+    if len(allt) > 3 or len(said) < len(allt):
         return ', '.join(towns) + ' ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.'          # "today's news, these towns among them"
     elif len(towns) > 1:
         named = ', '.join(towns[:-1]) + ' ಮತ್ತು ' + towns[-1]
@@ -267,7 +275,8 @@ def spelling_watch(copies: list[dict]) -> dict:
 
 
 def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[str]:
-    """Copy that will crowd the frame or the clock — said, never silently cut (D132)."""
+    """Copy that will crowd the frame, the clock or the editorial standard — never silently cut."""
+    from . import kannada_check as K
     out, info = [], info or {}
     n = len(copies)
     b = budget(n)
@@ -280,6 +289,15 @@ def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[
             out.append(f'story {i + 1} ({c["place_short"]}): the card sentence is {len(c["body"])} chars '
                        f'(~{len(c["body"].split())} words); for {n} stories keep it under ~{b["support_chars"]} '
                        f'chars (~{b["support_words"]} words)')
+        if len(K.words(c['body'])) > b['support_words'] and not re.search(r'[,;]', c['body']):
+            out.append(f'story {i + 1} ({c["place_short"]}): the card runs past ~{b["support_words"]} words without '
+                       'a comma or semicolon — give the listener a breath or split the thought')
+        for field, label, complete in (('head', 'headline', False), ('body', 'card', True)):
+            for note in K.style_notes(c.get(field, ''), complete=complete):
+                out.append(f'story {i + 1} ({c["place_short"]}), {label}: {note}')
+            for word in K.colour_words(c.get(field, '')):
+                out.append(f'story {i + 1} ({c["place_short"]}), {label}: "{word}" is colour the kept sources do not '
+                           'support — use the source\'s wording')
         rep = _repeats(c.get('head', ''), c.get('body', ''))
         if rep:
             out.append(f'story {i + 1} ({c["place_short"]}): the card repeats the headline ({" ".join(rep)}) — it must tell '
@@ -438,7 +456,7 @@ async def _drive(page: Path, profile: Path, work, gate=None):
                 await asyncio.sleep(0.1)
         if not target:
             raise ReelError('Chrome did not start for the ಸುದ್ದಿ ಸಾರ reel')
-        async with websockets.connect(target['webSocketDebuggerUrl'], max_size=2 ** 30) as ws:
+        async with websockets.connect(target['webSocketDebuggerUrl'], max_size=2 ** 30, open_timeout=30) as ws:
             msg_id = 0
             pending = {}
             events = []
@@ -582,6 +600,8 @@ def _sync_check(tl: dict, clips: Path, mix: Path) -> dict:
 
 
 def _mix(tl: dict, clips: Path, out: Path) -> dict:
+    for p in clips.glob('*.wav'):
+        RS.declick(p)
     T = tl['T']
     args, chains, vo, fx = [], [], [], []
 
@@ -679,9 +699,15 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
     stories = edition.stories
     copies = _copies(stories)
     hook = _hook_text(copies)
+    for c in copies:
+        # a town the voice cannot say is a recorded clip, spliced in front of the headline; the voice reads the rest (D146)
+        c['voice_town'] = town_clips.status(c['place_short']) if c.get('place_short') else 'say'
+        # a town not yet proved is still said — that is how it is heard, and proved or held (D147)
+        c['voice_head'] = (c['say_head'] if c['voice_town'] in ('say', 'unverified')
+                           else town_clips.without_town(c['say_head'], c['place_short']))
     plan = [('intro', hook, 'the hook'), ('outro', OUTRO_SAY, 'the follow card')]
     for i, c in enumerate(copies):
-        plan += [(f'h{i}', c['say_head'], f'story {i + 1} headline'), (f'b{i}', c['body'], f'story {i + 1} card')]
+        plan += [(f'h{i}', c['voice_head'], f'story {i + 1} headline'), (f'b{i}', c['body'], f'story {i + 1} card')]
     from concurrent.futures import ThreadPoolExecutor, as_completed
     durs = {}
     with RS._one_engine(engine):
@@ -689,7 +715,7 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
             # one request per story (its headline and card together, cut at the pause): 8 requests, not 14 (D134)
             jobs = [pool_job for pool_job in (
                 [('single', 'intro', hook), ('single', 'outro', OUTRO_SAY)] +
-                [('pair', i, (c['say_head'], c['body'])) for i, c in enumerate(copies)])]
+                [('pair', i, (c['voice_head'], c['body'])) for i, c in enumerate(copies)])]
             with ThreadPoolExecutor(max_workers=Limits.saara_reel_gemini_workers) as pool:
                 futs = {}
                 for kind, k, text in jobs:
@@ -709,11 +735,43 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
                 futures = {pool.submit(RS.clip, text, tmp / f'{k}.wav', engine): k for k, text, _ in plan}
                 durs = {futures[fut]: fut.result() for fut in as_completed(futures)}
 
+    # Listen to every clip with a Kannada-capable ear, word by word, and put right what fails — BEFORE the town pause is
+    # placed, which assumes the town was spoken (2026-10-30: it was not, and the pause went inside the headline) (D146).
+    ear_report = {}
+    if engine == 'gemini':
+        def ask_pair(i, trial):
+            c = copies[i]
+            RS.forget_pair(c['voice_head'], c['body'], engine)
+            with RS.voice.trial_respelling(trial), RS._one_engine(engine):
+                return RS.clip_pair(c['voice_head'], c['body'], tmp / f'h{i}.wav', tmp / f'b{i}.wav', engine)
+
+        def ask_single(key, trial):
+            text = hook if key == 'intro' else OUTRO_SAY
+            RS.forget(text, engine)
+            with RS.voice.trial_respelling(trial):
+                return RS.clip(text, tmp / f'{key}.wav', engine, 3, Limits.saara_reel_gemini_style_cta if key == 'outro' else None)
+        heard_log: list = []
+        ear_report = reel_listen.run(tmp, copies, hook, OUTRO_KN, durs, ask_pair, ask_single, log=lambda m: print(m, flush=True),
+                                     heard_log=heard_log)
+
+        def ask_probe(text, key):
+            RS.forget(text, engine)
+            return RS.clip(text, tmp / f'{key}.wav', engine)
+        # every town is proved — heard right on its last takes — or the package is held (D147)
+        reel_listen.vet_towns(tmp, copies, hook, ear_report, heard_log, ask_probe, source=f'reel {edition.date}',
+                              log=lambda m: print(m, flush=True))
+    for i, c in enumerate(copies):
+        if c['voice_town'] == 'clip':
+            durs[f'h{i}'] = town_clips.splice(town_clips.clip_for(c['place_short']), tmp / f'h{i}.wav')
+        elif c['voice_town'] == 'missing':
+            ear_report[f'h{i}'] = dict(ear_report.get(f'h{i}') or {}, ok=False, town_missing=c['place_short'], takes=0,
+                                       lost=[], changed=[], weak=[], extra=False, heard='')
+
     # After the town the newsreader stops. The voice ran it into the headline, so the pause is made at least
     # Limits.saara_reel_town_pause long, in the clip itself (D138).
     for i, c in enumerate(copies):
         n = len((c.get('place_short') or '').split())
-        if n and c['say_head'].startswith(c['place_short']):
+        if n and c['voice_town'] in ('say', 'unverified') and c['say_head'].startswith(c['place_short']):
             times, how = RS.word_times(tmp / f'h{i}.wav', c['say_head'])
             if how == 'measured' and len(times) >= n:
                 durs[f'h{i}'] = RS.pause_at(tmp / f'h{i}.wav', times[n - 1][1], Limits.saara_reel_town_pause)
@@ -744,6 +802,13 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
         for k, text, label in bad:
             RS.forget(text, engine)
             durs[k] = RS.clip(text, tmp / f'{k}.wav', engine)
+        if bad and ear_report:
+            # a new take is a new recording: the Kannada ear hears it too, or it would ship unheard (D147)
+            by_key = {r['key']: r for r in reel_listen.rows(copies, hook, OUTRO_KN)}
+            heard = reel_listen.hear_rows(tmp, [by_key[k] for k, _t, _l in bad if k in by_key])
+            for k, v in heard.items():
+                ear_report[k] = dict(reel_listen._summary(v, (ear_report.get(k) or {}).get('takes', 1) + 1, 0),
+                                     **{x: ear_report[k][x] for x in ('town_unverified',) if x in (ear_report.get(k) or {})})
         if bad:
             again = RS.audit(items(bad))
             if 'unavailable' not in again:
@@ -775,7 +840,7 @@ def _build(edition: Edition, tmp: Path, engine: str) -> dict:
                            f'or move a story out of ಸುದ್ದಿ ಸಾರ')
     pron = {f'story {i + 1}': sorted(set(RS.lint(c['say_head']) + RS.lint(c['body'])))
             for i, c in enumerate(copies)}
-    return dict(copies=copies, tl=tl, durs=durs, timing=timing, hook=hook, voice=voice,
+    return dict(copies=copies, tl=tl, durs=durs, timing=timing, hook=hook, voice=voice, ear=ear_report,
                 pron={k: v for k, v in pron.items() if v},
                 page=_page(edition, copies, tl, tmp / 'reel.html'))
 
@@ -817,7 +882,33 @@ def check(edition: Edition, shots: str | None = None) -> dict:
     return dict(stories=n, estimated_seconds=tl['T'], budget=budget(n), lines=laid.get('lines'), cover=laid.get('cover'),
                 questions=editor_questions(edition), script=spoken_script(copies), watch=spelling_watch(copies),
                 issues=laid.get('issues', []), warnings=_warnings(copies, laid, info),
-                pronunciation={k: v for k, v in pron.items() if v}, copies=copies)
+                pronunciation={k: v for k, v in pron.items() if v}, copies=copies,
+                towns={c['place_short']: town_clips.status(c['place_short']) for c in copies if c.get('place_short')})
+
+
+def _true_peak(path: Path) -> float | None:
+    """The true peak of a file's sound, in dBTP, as a phone will play it — measured on the encoded file, not the mix."""
+    err = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', str(path), '-af', 'ebur128=peak=true', '-f', 'null', '-'],
+                         capture_output=True, text=True).stderr
+    m = re.findall(r'Peak:\s+(-?[\d.]+)\s+dBFS', err)
+    return float(m[-1]) if m else None
+
+
+def _mux(video: Path, mix: Path, out: Path) -> float | None:
+    """Join the picture and the sound, then MEASURE the finished file. An AAC encode raises peaks the mix never had
+    (the 12 Nov 2026 reel: limited to −1.5, published at −0.2), so a file still over the house ceiling is joined once
+    more with the sound turned down by exactly the excess — a plain gain, nothing squeezed (D148)."""
+    def join(gain_db: float = 0.0):
+        af = ['-af', f'volume={gain_db:.2f}dB'] if gain_db else []
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-i', str(mix), '-map', '0:v', '-map', '1:a',
+                        '-c:v', 'copy', *af, '-c:a', 'aac', '-b:a', f'{Limits.saara_reel_aac_kbps}k', '-shortest',
+                        '-movflags', '+faststart', str(out)], check=True)
+    join()
+    peak = _true_peak(out)
+    if peak is not None and peak > Limits.true_peak_dbtp:
+        join(Limits.true_peak_dbtp - peak - 0.2)
+        peak = _true_peak(out)
+    return peak
 
 
 # ── the film ─────────────────────────────────────────────────────────────
@@ -926,9 +1017,9 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
 
         def summary(laid, **extra):
             return dict(seconds=tl['T'], timeline=tl, copies_hash=copies_hash(copies), watch=spelling_watch(copies),
-                        sync=info.get('sync'), lines=laid.get('lines'), issues=laid.get('issues', []),
+                        sync=info.get('sync'), true_peak=info.get('true_peak'), lines=laid.get('lines'), issues=laid.get('issues', []),
                         warnings=_warnings(copies, laid, info), pronunciation=b['pron'],
-                        timing=b['timing'], clips={k: v for k, v in b['durs'].items()}, voice_audit=b.get('voice') or {}, **extra)
+                        timing=b['timing'], clips={k: v for k, v in b['durs'].items()}, voice_audit=b.get('voice') or {}, ear=b.get('ear') or {}, **extra)
 
         if stills:
             async def shoot(frame):
@@ -950,9 +1041,7 @@ def render(edition: Edition, out_path: str, stills: list[float] | None = None,
             info['sync'] = {}
         n = int(round(tl['T'] * fps))
         laid = _film(b['page'], tmp, n, fps, gate, video)
-        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-i', str(mix), '-map', '0:v', '-map', '1:a',
-                        '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart',
-                        str(out)], check=True)
+        info['true_peak'] = _mux(video, mix, out)
         subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(out), '-frames:v', '1', '-q:v', '2',
                         str(out.with_name(COVER))], check=False)
     return summary(laid, path=str(out), frames=n, render_seconds=round(time.time() - t0, 1),

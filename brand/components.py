@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw
 
 from . import typo, surface as sfx
 from .tokens import (C, Role, T, Grid, category, alpha, mix, Ease, Brand)
-from .content import Story, Edition
+from .content import Story
 
 
 # ─────────────────────────────────────────────────────────────────────────────

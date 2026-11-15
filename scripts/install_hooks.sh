@@ -27,6 +27,6 @@ for h in "$SRC"/*; do
   echo "✓ $name"
 done
 echo
-echo "  The contract and the fast suites now run before every commit (~4s)."
-echo "  The golden design test does not — it takes two minutes and belongs in"
-echo "  a deliberate run. CI covers the rest."
+echo "  The contract and the quick suites now run before every commit (a few"
+echo "  seconds). The suites in tests/slow_suites.txt do not — they take two"
+echo "  minutes and belong in a deliberate run. CI covers the rest."

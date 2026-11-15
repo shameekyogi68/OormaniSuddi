@@ -49,12 +49,15 @@ editor — never look it up.
    - **The punch comes from word order and verbs, never from colour the paste lacks (D145):** no ದಾರುಣ / ಭೀಕರ / ತೀವ್ರ / ಸುಸಜ್ಜಿತ /
      ಭಾರಿ / ಯಶಸ್ವಿ … unless the paste says that very word; a death is reported in the paste's own words, with dignity. The examples above
      show structure only — every word in your line must still be in the paste.
+   - **Premium is precise and restrained:** prefer the shortest complete wording that preserves the fact and its scope. Cut stock praise,
+     promotional filler, predicted impact and gratuitous physical detail from the spoken reel even when the source uses them. A takeaway
+     is written only when the paste gives a concrete action, deadline, route or contact.
    - **category is what happened, never civic by default** (house rule 2026-09-27-02): a fatal fall or crash → `accident`; sea life,
      a shoal, pollution, a tree fall → `environment`; boats, catch, harbours, fishermen's schemes → `fisheries`; offices, roads, notices → `civic`.
    - Crime copy carries ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in the headline AND the reel_line; set `involves_minor` / `sexual_offence` honestly.
    **For every `saara` story write the two reel fields** (the daily product, D132/D133 — the editor never asks for them):
    - `reel_line` — the headline for the screen: **aim ≤ `Limits.saara_reel_line_chars` characters**, so it sets in two big lines. Not the town (the tag shows it). Crime copy keeps ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ IN it.
-   - `reel_support` — ONE complete sentence, taken only from the paste, that the voice reads and the gold card shows whole. Written for authoritative broadcast anchor delivery (Gemini `Kore` voice) with natural breath pauses and clear news verbs (`ದಾಖಲು`, `ಆಗ್ರಹಿಸಲಾಯಿತು`, `ಎಚ್ಚರಿಕೆ ನೀಡಲಾಗಿದೆ`).
+   - `reel_support` — ONE complete sentence, taken only from the paste, that the voice reads and the paper card shows whole. Written for authoritative broadcast anchor delivery (Gemini `Kore` voice) with natural breath pauses and clear news verbs (`ದಾಖಲು`, `ಆಗ್ರಹಿಸಲಾಯಿತು`, `ಎಚ್ಚರಿಕೆ ನೀಡಲಾಗಿದೆ`).
      Length is the clock's: `python3 scripts/reel_check.py editions/<date>.json` prints how many characters the day allows a card sentence (about 7–9 Kannada words for five stories, about 6 for six) — UP TO that: shorter is fine. A sentence, not a fragment.
    - Write figures as figures (33ನೇ, 22ರಂದು, 66ರಲ್ಲಿ — the ending joined to the figure, never `66 ರಲ್ಲಿ`; ₹500): the voice says them as words.
    - A name ending in a consonant takes its ending after a ZWNJ (ಸ್ಟೀವನ್‌ಗೆ), or the voice mispronounces it.

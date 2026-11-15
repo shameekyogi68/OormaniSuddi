@@ -4121,3 +4121,160 @@ Enforced by: `tests/test_saara_reel.py :: TheChampionBroadcastVoiceAndAudit, The
 * **The owner's ear, 2026-10-27:** of six samples of the same three sentences (Kore on gemini-2.5, Kore on gemini-3.8, Orus, Charon, Leda, Edge Gagan) the owner
   chose **Kore on `gemini-2.5-flash-preview-tts`** as the most native Kannada. It is what the code uses; the choice is closed unless the owner reopens it.
 
+
+
+## D146 · The voice is heard back by an ear that can read Kannada, word by word; a town it cannot say is a recorded clip or the reel is held
+
+**Asked by the owner (2026-10-30), after the 01:26 reel had been up for hours and passed 5 000 views:** pronunciation, pauses and tone were wrong, after a week of
+fixes by two AIs, and "from tomorrow there must be nothing wrong". The posted reel was NOT re-made. Its original Gemini recordings were still in
+`build/tts_cache`, so they were listened to — blind, by three listeners (Gemini 3.5-flash, 3-flash-preview, the reel's own Whisper) — and measured (pauses, pitch).
+Full findings: `docs/VOICE_AUDIT_2026-10-30.md`.
+
+**What was wrong in the posted reel (each confirmed by at least two listeners):** story 2's headline had **no town** (the recording starts at "ಹಸಿ ಕಸ …"; the screen showed ವಂಡ್ಸೆ);
+story 2's card lost its first word (ಕಪ್ಪು → "ಹೂ"/"ಪು") because the headline/card cut was placed on the assumption that the town had been said; the opening said ವಂಡ್ಸೆ as
+"ಒನ್ ಸೇ" and ಹೆಮ್ಮಾಡಿ without its double ಮ್ಮ; "ಮಹೇಶ್ ಪಿ.ಎಸ್:" kept its dot and the voice read the name as three sentences (0.65 s and 1.07 s of silence inside the headline);
+story 5's headline was cut in three at its colon; ನೀಡುವುದಾಗಿ was heard as ನೀಡುವಾಗಿ. Silences of 0.65–1.07 s ran inside clips.
+
+**Why every check had passed.** The only check that listens was Whisper (`brand/reel_audit.py`). It cannot read Kannada: it writes a clean clip as noise ("ಹಸಿಕಿಕಸ", "ಪು ಸೈಯನಿಕ") and
+scores a clip with a missing town 0.87, so the gate could only say "listen for ವಂಡ್ಸೆ" (SND-06, a warning) and the editor, who cannot know which of five warnings is real, published.
+
+**Decided:**
+* `brand/ear.py` — a listener that reads Kannada (Gemini audio models), **blind** (never shown the script), judged **word by word** against what was MEANT (the screen's spelling, not
+  the respelling the voice was handed). A name is held to `Limits.ear_name_coverage`, any other word to `ear_word_coverage`, the first and last word of a clip (where a cut eats a sound) to
+  `ear_edge_coverage`. A name any ear fails is failed; an ordinary word must fail on every ear. Whisper stays as the ear that is always there (a weaker one). A quiet ear is reported, never passed.
+* `brand/reel_listen.py` — a clip that fails is put right, cheapest first: **re-cut** the headline/card boundary at the recording's other silences (no voice request spent);
+  then a **new take** spelling the failing word another way (`brand/lexicon.py`), at most `Limits.ear_takes`, keeping the best; then **held** — gate code **SND-09 (fail)**.
+* `voice._speech_normalise`: initials lose their dots even when the last is followed by `:` or a name (`ಪಿ.ಎಸ್:`); `voice._spoken`: a headline's colon is a comma (a breath), not a sentence end.
+  `RS.tighten`: no silence inside a clip's speech is longer than `Limits.ear_pause_max`. The older cut (`_pair_boundary`) is kept; the ear checks what it did.
+* **A town the voice cannot say** (`assets/voice/towns.json`, `brand/town_clips.py`): measured, not assumed. ವಂಡ್ಸೆ (about 23 takes, heard right 3 times and wrong again on each repeat) and ಯಡ್ತರೆ (every take) could not be got out of Kore in several spellings and positions
+  (a spelling heard right once was wrong on the next take: the voice is stochastic on a word it cannot say, so respelling is not a cure). Such a town is **never in the opening line**, and its dateline is
+  a **recorded clip a person has approved** (`scripts/town_clips.py add / approve --by`), spliced in front of the headline; with no approved clip the story is **not** spoken wrongly — the package is held.
+  Never approve in a name the editor has not given (the rule of `verified_by`).
+* **Listening has a budget** (measured 2026-10-30): Gemini's free tier gives each audio model 20 requests a day per key and each voice model 10; both reset at **12:30 IST**. A reel listens ≈13 times. When the
+  Gemini listeners are spent the gate says so (SND-09 warn) and only Whisper has heard the voice: run the reel after 12:30 IST, or add keys.
+
+**Said plainly.** The listeners hear whether the right WORDS were said, whole, in order. They cannot judge accent, warmth, or whether a name sounds like the valley says it; the lenient ones "correct"
+what they hear (3.5-flash wrote ವಂದ್ಸೆ where 3.8, 3-flash-preview and Whisper heard "ಒನ್ ಸೇ"), which is why the strictest goes first and a name is failed by any ear. The voice model takes no direction (D145), so tone
+between clips (median pitch 187–216 Hz on 30 Oct; the follow card ≈2 semitones above the rest) is measured, not controlled. The owner's ear remains the last word.
+
+Enforced by: `tests/test_ear.py` (replays the real transcripts of the posted reel), `tests/test_town_clips.py`.
+
+## D147 · A name is heard by its shape; every town is proved before the voice is left to say it, or the reel is held
+
+**Asked (2026-11-01):** two reels went out after D146 with a word heard wrong — 1 Nov said ಬ್ರಹ್ಮಾವರ wrong, 31 Oct had what the owner heard as "Gayadugadu". Both are posted and were NOT re-made.
+"Make it future-proof." Diagnosed from the kept reports (`archive/2026-10-31/_review`, `out/2026-11-01/_review`), `build/ear_cache` and `build/tts_cache` (re-heard by Whisper, locally).
+
+**1 Nov, story 5 — ಬ್ರಹ್ಮಾವರ.** It took three takes. Take 1 was heard by Whisper as "ಬ್ರಮ್ಹಾವರ" — how the name is said — but the ear compared consonants in order and the swapped ಹ/ಮ scored 0.83, under
+`ear_name_coverage`, so the name "failed". Take 3 was handed `lexicon.candidates`' third spelling, **ಬರಹಮಾವರ** (the virama dropped): the voice said exactly that, Whisper wrote "ಬರಹ ಮಾವರ",
+and the consonant skeleton of that IS the skeleton of ಬ್ರಹ್ಮಾವರ (vowels are not in it) — 1.0, kept, shipped. The Gemini ear wrote "ಬ್ರಹ್ಮಾವರ" on all three takes: on a name it knows it writes the name.
+Three faults: a respelling that is another word; a comparison that cannot see a vowel put inside a cluster; and a retake loop that optimised toward that comparison.
+
+**31 Oct, story 1 — "Gayadugadu".** No town in the spoken script sounds like it (ಕುಂದಾಪುರ, ಮಂದಾರ್ತಿ, ಕೋಡಿ, ಕಾಪು; the reel itself was not kept). What the report does show: the headline/card cut fell inside
+the headline's last word — gemini-3.1-flash-lite heard the headline end "…ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ" without ಗಾಯ, and heard the card begin "**ಗಾಯ ಗಾಯಗೊಂಡ** ಇಬ್ಬರು…" (Whisper timed its first "word" at 1.24 s). That
+doubled "gaaya gaaya-gonda" at the start of a card, where a dateline would be, is the likeliest thing the owner heard. It passed because (a) only flash-lite was left — the strict ears were spent by the
+afternoon's audit, which counts against the next 1 a.m. run — and (b) Whisper had looped ("…ಗೇವಿದ್ಯಾರ್ತಿಗಳಿಗೆ" ×5), its noise "found" ಗಾಯ, and an ordinary word failed only if EVERY ear failed it.
+The same lenient ear wrote ಮಂದಾರ್ತಿ as "ಮಂದಾರತಿ" twice and passed it (vowel inside ರ್ತ). Said plainly: "Gayadugadu" is an inference from the transcripts, not a measurement of the posted audio.
+
+**Decided:**
+* `ear.shape` — a name is compared by its shape: a JOIN mark wherever two consonants are said together, so ಬ್ರ ≠ ಬರ. What people write two ways for one sound is one shape (ಬ್ರಮ್ಹ = ಬ್ರಹ್ಮ, ಂದ = ನ್ದ).
+  A name with a join heard broken fails on any ear; a doubled consonant must be heard doubled by a Kannada-capable ear (Whisper may write it single). `ear.name_said` judges a name against the heard words most like it.
+* `lexicon.candidates` never drops a virama. Every candidate has the word's own shape (tested for every town in `PLACE_TAGS`).
+* `ear.combine`: Whisper may fail a name, never rescue a word a Kannada-capable ear heard missing; `ear.looping` — a runaway transcript is not a hearing. A clip with a name that no Kannada-capable
+  ear heard carries `names_unheard` → **SND-09 fail**. A name heard "not cleanly" → **fail**, never "listen for".
+* **The gazetteer** (`assets/voice/towns.json`, `brand/town_clips.py`): every town in `copy.PLACE_TAGS` and every dateline, with every hearing of it kept (spelling, verdict, what each ear wrote).
+  A town is **proved** when its current spelling was heard right — Kannada-capable ear AND Whisper, on its shape — on each of its last `Limits.town_verify_takes` takes. Every reel records its own hearings
+  (failed takes too); an unproved town gets at most that many probe takes in the render (`reel_listen.vet_towns`); still unproved → `town_unverified` → **SND-09 fail**. `reel_check.py` lists unproved towns
+  before the render. `scripts/town_clips.py status | verify TOWN [--spelling S] | seed`. A respelling reaches `assets/pronunciation.json` only through `verify` when heard right on every take.
+* `saara_reel`: a clip re-made by the later Whisper check is heard again by the ear (it used to ship unheard).
+
+**Measured today (2026-11-01, after the 12:30 IST reset):** `seed` read 15 kept hearings: ಮಂದಾರ್ತಿ (31 Oct, ×2) and ಬ್ರಹ್ಮಾವರ (1 Nov) wrong, the rest right. ಬ್ರಹ್ಮಾವರ as written: 0 of 2 probe takes right
+(Whisper "ಬ್ರಮ್ಮಾವರ" both times — no ಹ; Gemini wrote the name). Respelled **ಬ್ರಮ್ಹಾವರ**: 2 of 2 right on both ears → written to `assets/pronunciation.json`. ಮಂದಾರ್ತಿ: 2 of 2 right. Cost: 6 voice requests, 6 listens.
+
+**Said plainly.** The ears hear consonants, clusters and doubling; they do not hear vowel colour (ಕೋಡಿ heard "ಕೂಡಿ" passes), accent or stress. A person's name is held to the name standard only when it is a
+known place or a dateline — there is no list of people's names yet. Proof is statistical, not a guarantee: Kore is stochastic, which is why one wrong take undoes it. The owner's ear stays the last word.
+
+Enforced by: `tests/test_name_ear.py` (replays the transcripts of both posted reels), `tests/test_town_clips.py`, `tests/test_ear.py`.
+
+---
+
+## D148 · The reel reads on paper; gold is the brand's alone; the peak is measured on the finished file
+
+**Date:** 2026-11-13. **Asked:** the owner — the whole channel at a premium, international standard, picture and sound; "over to you".
+
+**What was wrong, measured or seen (12 Nov 2026 reel).**
+* The fact card was a saturated yellow slab with a black pill and white word inside it: gold was carrying the *news*, which STANDARDS §1 gives to the brand. The masthead's "ಸುದ್ದಿ ಸಾರ" was news red, though it is the
+  format's name. The front page's row numerals were red for the same non-reason. A 600 px ghost numeral sat behind every story and added nothing a viewer reads.
+* The file left at **−0.2 dBTP** against `Limits.true_peak_dbtp` (−1.5). The mix itself was inside the ceiling (−1.7): the AAC encode at 192k raised the peaks. Tested on that reel's own sound: 192k → +0.7 dBTP,
+  256k → −1.6. Nothing in the pipeline measured the encoded file, so nothing noticed.
+
+**Decided:**
+* **Ink, paper and gold.** The card is paper (`paper_50`) with ink type — the newspaper inside the reel. The word being said sits on a gold fill and stays ink. Gold is otherwise the brand's: the count, the
+  counter, the town, and the follow button (the same card turning gold as it becomes the button, `#cardGold`). "ಸುದ್ದಿ ಸಾರ" in the masthead is gold. The ghost numeral is gone.
+* **One numeral face with the greetings:** Bodoni 72 (the face the owner chose by specimen for the Rajyotsava reel) sets the front-page count, the counter, the row numbers and the handle; Didot, then any
+  serif, if a machine lacks it. The town is set in the headline's heavy serif, gold, without a pill.
+* **`_mux` measures the finished file** (`_true_peak`, ebur128 on the encoded .mp4). Audio is encoded at `Limits.saara_reel_aac_kbps`; a file still over the ceiling is joined once more with the sound turned
+  down by exactly the excess — a plain gain. The measured peak is in the reel's report (`true_peak`).
+
+**Not changed, on purpose.** The layout, the clock, the scan, the card's re-shaping, the voice and every word-sync measurement; the music bed, its level and the effects — those were chosen by the owner's ear
+(D135, D137, D145) and no machine here can hear. The loudness range of the 12 Nov reel was 1.7 LU (very even); whether that should breathe more is a question for an ear, and is left open.
+
+**Said plainly.** Proved on stills (`reel_check.py --shots`) and on the 12 Nov reel's own audio. No full reel has been rendered with this look yet: the first one is the next `/daily-saara`.
+The earlier state is kept at `refs/backup/pre-upgrade-2026-11-12`.
+
+Enforced by: `tests/test_saara_reel.py` (`InkPaperAndGold`, `ThePeakIsMeasuredOnTheFinishedFile`).
+
+---
+
+## D149 · One headline face for every format; the cover photograph leads
+
+**Date:** 2026-11-13. **Asked:** the owner, after D148 — carry the reel's look into ಸ್ಪೀಡ್ ನ್ಯೂಸ್ and the carousels.
+
+**Decided:**
+* `FONTS['kn_head']` — Noto Serif Kannada Black, the reel's headline face since D132 — now sets every news headline: `paper.headline` (ಮುಖ್ಯ ಸುದ್ದಿ, the ಸುದ್ದಿ ಸಾರ carousel, ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frames, footage
+  reels), the ಏನಾಗಿದೆ? and closing titles, the ಸ್ಪೀಡ್ ನ್ಯೂಸ್ title and its town plate. `kn` (Noto Sans Bold) stays for the masthead name, tags and small bold labels. Checked on the fixture renders:
+  every conjunct in them shapes correctly under raqm.
+* `P.photo_4x5` 720 → 800: on a ಮುಖ್ಯ ಸುದ್ದಿ cover the photograph takes about three-fifths of the slide. The headline still fits by `paper.headline`'s own sizing.
+
+**Considered and not done.**
+* Bodoni numerals on the carousels: the chips are ~30 px; a didone's hairlines do not survive that at phone width. Bodoni stays a display face on ink (D148).
+* A new ಸ್ಪೀಡ್ ನ್ಯೂಸ್ layout: its text already runs to the measured caption line (D96); the empty band under it is Instagram's, not ours.
+* Motion and sound of these formats: unchanged.
+
+**Said plainly.** The fixture's picture is a test graphic, so the larger cover photograph has not been judged on a real photograph yet. The earlier renders are kept in `build/blessed.pre-D149/`.
+
+Enforced by: `tests/test_luxury.py` (`OneHeadlineFace`), and pinned by `tests/test_golden.py` (re-blessed 2026-11-13 after looking at `out/_blessed/`).
+
+---
+
+## D150 · A wrong-shaped edition is refused in words; the quick check is quick again, from one list
+
+**Date:** 2026-11-15. **Asked:** the owner — write the system's requirements down, measure each, and close what falls short ([`REQUIREMENTS.md`](REQUIREMENTS.md)).
+
+**Found by measuring, not by reading.** 833 tests passed and no decision was unenforced, so the gaps were looked for from outside:
+
+* **Thirty-odd wrong shapes crashed the daily commands.** The JSON is written by whichever AI tool the editor uses that day. A number where a headline goes, one string where `points` wants a list, `null` for a
+  `deck`, a date that is not a date, a file cut off half-way, a file that is not there — each gave a Python traceback from `render.py --check`, `reel_check.py`, `fact_check.py`, `intake.py seen` or
+  `regate.py`. A traceback tells the tool nothing it can act on, and on a deadline it reads as "the system is broken".
+* **The "few seconds" health check took 41.** The list of suites too slow for it was written out twice — in `scripts/health.py` and in the pre-commit hook — and three reel suites added since D132 were in
+  neither. The hook's own comment says why that matters: a hook people wait on is a hook that gets skipped.
+
+**Decided:**
+* `brand/content.py` checks the *shape* of an edition at the door (`_shape`, `_need`, `read_json`): every plainly-typed field against its own annotation, pairs and lists by hand, the file itself for being
+  there, non-empty and whole. Every fault is a `ContentError` that names the story by number and the field, and says what belongs there. Shape only — truth is still `validate()`'s job, and nothing here is
+  an override.
+* `parse_dt` raises `ContentError` for a date it cannot read. `ContentError` is a `ValueError`, so every caller that caught the old one still does.
+* The five commands print that one line and exit 2. `pick_formats.py`, which runs while the copy is unfinished, refuses a file that is not an edition and still accepts an unfinished story.
+* `tests/slow_suites.txt` is the one list of slow suites. `scripts/health.py` reads it, runs every other suite side by side, and **names any suite that outgrows its budget** — so the list is told when it
+  is out of date instead of drifting again. The hook calls `health.py --tests` and no longer has a list of its own. `health.py --help` is now help, not a full run.
+* Twenty imports that nothing used were removed, each checked against every file in the repository first.
+
+**Measured (this Mac, 2026-11-15):** broken-edition runs ending in a traceback 44 of 76 → 0 of 240; `health.py` 41 s → about 9 s; the pre-commit suites about 40 s → about 8 s; the 54 editions on disk load
+exactly as before.
+
+**Considered and not done.**
+* A JSON-Schema validator at the door: `schemas/` is generated *from* the dataclasses, so checking against it would be checking the code against itself with a dependency in between.
+* Moving the reel suites into the quick check by making them faster: they drive Chrome; their time is the browser's.
+* Committing and pushing the 84 changed files and 13 unpushed commits `health.py` reports: that is the owner's to say.
+
+Enforced by: `tests/test_shape.py`, `tests/test_health.py` (`test_every_suite_on_the_slow_list_exists`, `test_the_hook_asks_health_which_suites_are_quick`,
+`test_a_suite_that_outgrows_the_quick_check_is_named`).

@@ -84,3 +84,8 @@ logs/
 
 # YouTube motion pieces: 40+ MB, rebuilt exactly by scripts/youtube_kit.py
 assets/youtube/*.mp4
+
+# A drafted day set aside by hand, with its render. Like out/, it is made from
+# an edition and is not the record; and stray editor backups.
+deleted_editions/
+*.bak-*

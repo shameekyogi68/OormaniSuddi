@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from PIL import Image
 
-from .tokens import fmt, T, Brand, Limits
+from .tokens import fmt, Brand, Limits
 from .content import Story, BREAKING_WINDOW_H
 
 KN_DIGITS = re.compile(r'[೦-೯]')

@@ -21,7 +21,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 
-from brand.content import Edition, edition_day            # noqa: E402
+from brand.content import ContentError, Edition, edition_day            # noqa: E402
 from brand.review import approve, is_signed, review       # noqa: E402
 
 
@@ -31,8 +31,14 @@ def main() -> int:
     ap.add_argument('--out', help='the render folder (default out/<date>)')
     a = ap.parse_args()
 
-    path = a.edition if os.path.exists(a.edition) else os.path.join(ROOT, 'editions', f'{edition_day(a.edition)}.json')
-    ed = Edition.load(path)
+    path = a.edition
+    try:
+        if not os.path.exists(path):
+            path = os.path.join(ROOT, 'editions', f'{edition_day(a.edition)}.json')
+        ed = Edition.load(path)
+    except ContentError as e:
+        print(f'✗ {path}: {e}', file=sys.stderr)
+        return 2
     outdir = a.out or os.path.join(ROOT, 'out', ed.date.strftime('%Y-%m-%d'))
     if not os.path.isdir(outdir):
         print(f'✗ {outdir} does not exist — render first: python3 render.py {a.edition} --only saara', file=sys.stderr)

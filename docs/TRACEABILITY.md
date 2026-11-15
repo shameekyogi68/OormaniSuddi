@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **108/145** decisions are named by at least one test
+- **113/150** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -662,4 +662,29 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_reel_standard.py`, `tests/test_saara_reel.py`
 - Enforced in: `brand/kannada_check.py`, `brand/voice.py`
+
+## D146 · The voice is heard back by an ear that can read Kannada, word by word; a town it cannot say is a recorded clip or the reel is held
+
+- **Tested by:** `tests/test_ear.py`, `tests/test_name_ear.py`, `tests/test_town_clips.py`
+- Enforced in: `brand/codes.py`, `brand/ear.py`, `brand/lexicon.py`, `brand/reel_listen.py`, `brand/review.py`, `brand/saara_reel.py`, `brand/tokens.py`, `brand/town_clips.py`, `scripts/town_clips.py`
+
+## D147 · A name is heard by its shape; every town is proved before the voice is left to say it, or the reel is held
+
+- **Tested by:** `tests/test_name_ear.py`, `tests/test_town_clips.py`
+- Enforced in: `brand/codes.py`, `brand/ear.py`, `brand/lexicon.py`, `brand/reel_listen.py`, `brand/review.py`, `brand/saara_reel.py`, `brand/tokens.py`, `brand/town_clips.py`, `scripts/reel_check.py`, `scripts/town_clips.py`
+
+## D148 · The reel reads on paper; gold is the brand's alone; the peak is measured on the finished file
+
+- **Tested by:** `tests/test_saara_reel.py`
+- Enforced in: `brand/saara_reel.py`, `brand/tokens.py`
+
+## D149 · One headline face for every format; the cover photograph leads
+
+- **Tested by:** `tests/test_luxury.py`
+- Enforced in: `brand/tokens.py`
+
+## D150 · A wrong-shaped edition is refused in words; the quick check is quick again, from one list
+
+- **Tested by:** `tests/test_health.py`, `tests/test_shape.py`
+- Enforced in: `brand/content.py`, `scripts/intake.py`, `scripts/pick_formats.py`
 

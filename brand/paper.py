@@ -307,7 +307,7 @@ def headline(sf: Surface, x: float, y: float, w: float, text: str,
     lead = P.head_lead
 
     def set_at(size):
-        f = typo.font('kn', sf.s(size), weight=HEAD_WEIGHT)
+        f = typo.font('kn_head', sf.s(size))
         ba = typo.layout(a, f, sf.s(w), lead, align=align)
         bb = typo.layout(b, f, sf.s(w), lead, align=align) if b else None
         gap = ba.lh - ba.first_rise - ba.last_drop if bb else 0

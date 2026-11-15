@@ -123,10 +123,11 @@ Kannada is the hard case and the engine exists to serve it. `brand/typo.py`
 
 | Key | File | Use |
 |---|---|---|
-| `kn` | `NotoSansKannada-Bold` | **every news headline** — the one heavy weight; shapes every conjunct correctly |
+| `kn_head` | `NotoSerifKannada-Black` (SIL OFL) | **every news headline**, in every format (D149) — the one heavy weight on a slide |
+| `kn` | `NotoSansKannada-Bold` | the masthead name, tags and small bold labels |
 | `kn_var` | `AnekKannada-Variable` | decks, points, body, meta |
 | `kn_serif` | `NotoSerifKannada-Bold` | festival greetings |
-| — | `NotoSerifKannada-Black` (SIL OFL) | ಸುದ್ದಿ ಸಾರ reel headlines and front page (D132) |
+| — | Bodoni 72 (macOS) | display numerals on ink only — the reel's count and counter (D148). Never small, never on paper: its hairlines do not survive a phone |
 | `latin` | SF (`SFNS.ttf`) | numerals, ALL-CAPS eyebrows, `@oormanisuddi` |
 
 One heavy weight on a slide: the headline. Everything else is lighter.

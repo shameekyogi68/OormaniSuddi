@@ -24,12 +24,12 @@ from __future__ import annotations
 import os
 import re
 import unicodedata
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import lru_cache
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-from .tokens import FONTS, Grid
+from .tokens import FONTS
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

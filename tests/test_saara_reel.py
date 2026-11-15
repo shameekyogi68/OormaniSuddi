@@ -85,8 +85,8 @@ class TheBudget(unittest.TestCase):
         self.assertGreaterEqual(R.budget(6)['support_words'], 5)
 
     def test_a_third_headline_line_is_warned_never_cut(self):
-        copies = [dict(place_short='ಬೈಂದೂರು', head='x' * 40, body='ಒಂದು', notes=[]),
-                  dict(place_short='ಕಳವಾಡಿ', head='y' * 20, body='ಒಂದು', notes=[])]
+        copies = [dict(place_short='ಬೈಂದೂರು', head='x' * 40, body='ಒಂದು ವಾಕ್ಯ.', notes=[]),
+                  dict(place_short='ಕಳವಾಡಿ', head='y' * 20, body='ಒಂದು ವಾಕ್ಯ.', notes=[])]
         w = R._warnings(copies, {'lines': [3, 2]})
         self.assertEqual(len(w), 1)
         self.assertIn('ಬೈಂದೂರು', w[0])
@@ -317,6 +317,42 @@ class NoLines(unittest.TestCase):
             self.assertNotIn(bad, css + PAGE.split('</style>')[1].split('<script>')[0])
 
 
+class InkPaperAndGold(unittest.TestCase):                              # D148
+    def test_the_news_sits_on_paper_and_gold_is_kept_for_the_brand(self):
+        css = PAGE.split('<style>')[1].split('</style>')[0]
+        card = css.split('#card {')[1].split('}')[0]
+        self.assertIn('background:#F7F5F1', card)                        # the fact is read on paper
+        self.assertIn('#cardGold', css)                                  # gold only when the card becomes the follow button
+        self.assertIn("$('#cardGold').style.opacity = btn", PAGE)
+        self.assertIn('#mast .s b { font-weight:800; color:#FFC93C; }', css)   # the format's name is the brand's, not news red
+        self.assertIn('.num { display:none;', css)                       # no ghost numeral behind the story
+
+    def test_the_spoken_word_is_ink_on_gold_never_white_on_paper(self):
+        self.assertIn("INK = '#0B0F1A', WHITE = '#0B0F1A'", PAGE)
+        self.assertIn('.hl { position:absolute; z-index:0; background:#FFD34D;', PAGE)
+
+
+class ThePeakIsMeasuredOnTheFinishedFile(unittest.TestCase):           # D148
+    def test_a_file_over_the_ceiling_is_joined_again_turned_down_by_the_excess(self):
+        calls, peaks = [], iter([-0.2, -1.7])
+        with mock.patch('brand.saara_reel.subprocess.run', side_effect=lambda a, **k: calls.append(a)), \
+                mock.patch('brand.saara_reel._true_peak', side_effect=lambda p: next(peaks)):
+            got = R._mux(Path('v.mp4'), Path('m.wav'), Path('o.mp4'))
+        self.assertEqual(got, -1.7)
+        self.assertEqual(len(calls), 2)
+        self.assertNotIn('-af', calls[0])
+        gain = float(calls[1][calls[1].index('-af') + 1].split('=')[1].replace('dB', ''))
+        self.assertAlmostEqual(gain, Limits.true_peak_dbtp - (-0.2) - 0.2, places=2)
+        self.assertIn(f'{Limits.saara_reel_aac_kbps}k', calls[0])
+
+    def test_a_file_inside_the_ceiling_is_joined_once(self):
+        calls = []
+        with mock.patch('brand.saara_reel.subprocess.run', side_effect=lambda a, **k: calls.append(a)), \
+                mock.patch('brand.saara_reel._true_peak', return_value=-1.6):
+            self.assertEqual(R._mux(Path('v.mp4'), Path('m.wav'), Path('o.mp4')), -1.6)
+        self.assertEqual(len(calls), 1)
+
+
 class TheSounds(unittest.TestCase):
     def test_every_effect_the_reel_plays_is_registered_and_the_house_set_is_always_there(self):
         # the house set is the fallback (D135): it must exist and be allowed; a licensed slot must be allowed too
@@ -336,6 +372,17 @@ class TheSounds(unittest.TestCase):
         left, right = sfx.pop()
         again, _ = sfx.pop()
         self.assertTrue(np.array_equal(left, again))
+
+    def test_declick_ensures_zero_ending_waveform_discontinuity(self):
+        import tempfile, soundfile as sf
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / 'test.wav'
+            x = np.ones(4800, dtype=np.float32) * 0.5
+            sf.write(str(p), x, 48000)
+            RS.declick(p, fade_s=0.015)
+            y, _ = sf.read(str(p))
+            self.assertAlmostEqual(float(y[0]), 0.0, places=4)
+            self.assertAlmostEqual(float(y[-1]), 0.0, places=4)
 
 
 class Wired(unittest.TestCase):
@@ -536,6 +583,43 @@ class TheSourceHasNoColour(unittest.TestCase):
         from brand import kannada_check as K
         with mock.patch.object(K, '_corpus', return_value=frozenset({'ದಾರುಣ', 'ಸಾವು'})):
             self.assertEqual(K.colour_words('ದಾರುಣ ಸಾವು'), [])
+
+    def test_an_unfinished_support_sentence_is_named(self):
+        from brand import kannada_check as K
+        self.assertIn('terminal punctuation', K.style_notes('ಅಧಿಕಾರಿಗಳು ಮಾಹಿತಿ ನೀಡಿದ್ದಾರೆ', complete=True)[0])
+        self.assertEqual(K.style_notes('ಅಧಿಕಾರಿಗಳು ಮಾಹಿತಿ ನೀಡಿದ್ದಾರೆ.', complete=True), [])
+
+    def test_filler_and_gratuitous_detail_are_named_without_a_rewrite(self):
+        from brand import kannada_check as K
+        self.assertIn('promotional filler', K.style_notes('ಕಾರ್ಯಕ್ರಮಕ್ಕೆ ಹೊಸ ಚೈತನ್ಯ ದೊರೆತಿತು.')[0])
+        self.assertIn('graphic detail', K.style_notes('ವ್ಯಕ್ತಿ ರಕ್ತದ ಮಡುವಿನಲ್ಲಿ ಪತ್ತೆಯಾದರು.')[0])
+        self.assertIn('graphic detail', K.style_notes('ಇಬ್ಬರು ಕೂದಲೆಳೆಯ ಅಂತರದಲ್ಲಿ ಪಾರಾದರು.')[0])
+
+    def test_a_long_card_without_a_breath_is_named(self):
+        body = ' '.join(f'ಮಾಹಿತಿ{i}' for i in range(R.budget(1)['support_words'] + 1)) + '.'
+        copies = [dict(place_short='ಉಡುಪಿ', head='ಸಭೆ ನಡೆಯಿತು', body=body, notes=[])]
+        self.assertTrue(any('without a comma or semicolon' in w for w in R._warnings(copies, {'lines': [2]})))
+
+    def test_precise_complete_copy_raises_no_editorial_warning(self):
+        from brand import kannada_check as K
+        copies = [dict(place_short='ಉಡುಪಿ', head='ಬಂದರು ಕಾಮಗಾರಿ',
+                       body='ಅಧಿಕಾರಿಗಳು ಮುಗಿಯುವ ದಿನಾಂಕ ತಿಳಿಸಿದ್ದಾರೆ.', notes=[])]
+        with mock.patch.object(K, '_corpus', return_value=frozenset()):
+            self.assertEqual(R._warnings(copies, {'lines': [2]}), [])
+
+    def test_unsupported_colour_reaches_the_strict_warning_path(self):
+        from brand import kannada_check as K
+        copies = [dict(place_short='ಉಡುಪಿ', head='ಘಟನೆ ನಡೆಯಿತು', body='ಈ ದಾರುಣ ಘಟನೆಯಲ್ಲಿ ಒಬ್ಬರು ಸಾವನ್ನಪ್ಪಿದ್ದಾರೆ.', notes=[])]
+        with mock.patch.object(K, '_corpus', return_value=frozenset({'ಘಟನೆ', 'ಸಾವು'})):
+            warnings = R._warnings(copies, {'lines': [2]})
+        self.assertTrue(any('"ದಾರುಣ" is colour the kept sources do not support' in w for w in warnings))
+
+    def test_sourced_colour_does_not_raise_a_strict_warning(self):
+        from brand import kannada_check as K
+        copies = [dict(place_short='ಉಡುಪಿ', head='ಘಟನೆ ನಡೆಯಿತು', body='ಈ ದಾರುಣ ಘಟನೆಯಲ್ಲಿ ಒಬ್ಬರು ಸಾವನ್ನಪ್ಪಿದ್ದಾರೆ.', notes=[])]
+        with mock.patch.object(K, '_corpus', return_value=frozenset({'ದಾರುಣ', 'ಘಟನೆ', 'ಸಾವು'})):
+            warnings = R._warnings(copies, {'lines': [2]})
+        self.assertFalse(any('colour the kept sources' in w for w in warnings))
 
 
 class TheDatelineAndTheLastSlide(unittest.TestCase):
@@ -956,7 +1040,8 @@ class TheChampionBroadcastVoiceAndAudit(unittest.TestCase):
         import json
         with open('assets/pronunciation.json') as f:
             prons = json.load(f)
-        self.assertEqual(prons.get('ಸೇತುವೆ'), 'ಸೇದುವೆ')
+        # Native Kannada retains unvoiced 'ತ' in 'ಸೇತುವೆ' without Tamilizing to 'ಸೇದುವೆ'
+        self.assertNotIn('ಸೇದುವೆ', prons.values())
 
 
 if __name__ == '__main__':

@@ -112,9 +112,11 @@ def join_endings(text: str) -> str:
     return _FINAL_CONSONANT_ENDING.sub('\\1\u200c\\2', text)
 
 
-def spoken(text: str) -> str:
-    """Exactly what the voice is given: the house normaliser, then figures as words."""
-    t = numbers_to_words(join_endings(voice._spoken(text)))
+def spoken(text: str, respell: bool = True) -> str:
+    """Exactly what the voice is given: the house normaliser, then figures as words.
+
+    `respell=False` is what the reel MEANS to say (the editor's own spelling), for the ear to compare against."""
+    t = numbers_to_words(join_endings(voice._spoken(text, respell)))
     return re.sub(r'\s+', ' ', t).strip()
 
 
@@ -168,6 +170,26 @@ TRIM = ('silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.08,
         f'atempo={M.saara_reel_tempo}')
 
 
+def declick(wav: Path, fade_s: float = 0.015) -> None:
+    """Ensure a clip begins and ends seamlessly at zero with a smooth micro-fade, preventing electrical click/pop glitches."""
+    import numpy as np
+    import soundfile as sf
+    if not wav.exists():
+        return
+    x, sr = sf.read(str(wav))
+    n = int(fade_s * sr)
+    if len(x) > 2 * n and n > 0:
+        ramp_in = np.linspace(0.0, 1.0, n)
+        ramp_out = np.linspace(1.0, 0.0, n)
+        if x.ndim == 1:
+            x[:n] *= ramp_in
+            x[-n:] *= ramp_out
+        else:
+            x[:n] *= ramp_in[:, None]
+            x[-n:] *= ramp_out[:, None]
+        sf.write(str(wav), x, sr)
+
+
 def level(wav: Path, target: float | None = None) -> float:
     """Bring a clip to the house speech loudness (integrated, gated) in place; returns the gain applied, in dB.
 
@@ -183,6 +205,7 @@ def level(wav: Path, target: float | None = None) -> float:
     tmp = wav.with_suffix('.lvl.wav')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(wav), '-af', f'volume={gain:.2f}dB,alimiter=limit=0.95',
                     '-ar', '48000', '-ac', '1', str(tmp)], check=True)
+    declick(tmp)
     tmp.replace(wav)
     return round(gain, 2)
 
@@ -211,6 +234,17 @@ def forget(text: str, engine: str = 'google') -> None:
             os.remove(cached)
 
 
+def forget_pair(first: str, second: str, engine: str = 'gemini') -> None:
+    """Drop the cached recording of a headline-and-card request, so asking again really gives a new take."""
+    import os
+    with contextlib.suppress(Exception):
+        sent = (Limits.saara_reel_gemini_style if engine == 'gemini' else '') + spoken(first) + '\n' + spoken(second)
+        name = voice.gemini_cache_voice(Limits.saara_reel_gemini_voice) if engine == 'gemini' else None
+        cached = os.path.join(voice.TTS_CACHE, f'{voice._cache_key(sent, engine, name)}.mp3')
+        if os.path.exists(cached):
+            os.remove(cached)
+
+
 def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3, style: str | None = None) -> float:
     """Synthesise `text` as `wav` (trimmed, 48k mono). Returns its seconds."""
     raw = wav.with_suffix('.mp3')
@@ -226,6 +260,8 @@ def clip(text: str, wav: Path, engine: str = 'google', tries: int = 3, style: st
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-af', TRIM,
                             '-ar', '48000', '-ac', '1', str(wav)], check=True)
             level(wav)
+            tighten(wav)
+            declick(wav)
             d = voice.get_audio_duration(str(wav))
             floor = 0.35 + 0.03 * len(said)
             if d < min(floor, 1.2):
@@ -277,7 +313,22 @@ def pause_at(wav: Path, near: float, seconds: float, window: float = 0.07) -> fl
     if need <= 0.01:
         return round(len(x) / sr, 3)
     gap = np.zeros((int(need * sr),) + x.shape[1:])
-    sf.write(str(wav), np.concatenate([x[:centre], gap, x[centre:]]), sr)
+    fade_len = min(int(0.005 * sr), centre, len(x) - centre)
+    if fade_len > 0:
+        ramp_down = np.linspace(1.0, 0.0, fade_len)
+        ramp_up = np.linspace(0.0, 1.0, fade_len)
+        x_left = x[:centre].copy()
+        x_right = x[centre:].copy()
+        if x.ndim == 1:
+            x_left[-fade_len:] *= ramp_down
+            x_right[:fade_len] *= ramp_up
+        else:
+            x_left[-fade_len:] *= ramp_down[:, None]
+            x_right[:fade_len] *= ramp_up[:, None]
+        out = np.concatenate([x_left, gap, x_right])
+    else:
+        out = np.concatenate([x[:centre], gap, x[centre:]])
+    sf.write(str(wav), out, sr)
     return round((len(x) + len(gap)) / sr, 3)
 
 
@@ -301,6 +352,49 @@ def cut_out(wav: Path, spans: list[list[float]], fade: float = 0.012) -> float:
         out = np.concatenate([out[:len(out) - k], out[len(out) - k:] * (1 - ramp) + seg[:k] * ramp, seg[k:]])
     sf.write(str(wav), out, sr)
     return round(len(out) / sr, 3)
+
+
+def silences(wav: Path, below_db: float = 36.0) -> list[tuple[float, float]]:
+    """Every stretch of silence INSIDE a clip's speech, as (start, end) seconds. Silence is "more than `below_db` under the
+    loudest instant", so a quiet voice and a loud one are judged alike; the lead-in and tail are not inside the speech."""
+    import numpy as np
+    import soundfile as sf
+    x, sr = sf.read(str(wav))
+    if x.ndim > 1:
+        x = x.mean(axis=1)
+    hop = int(sr * 0.01)
+    fr = len(x) // hop
+    if fr < 3:
+        return []
+    db = 20 * np.log10(np.sqrt(np.mean(x[:fr * hop].reshape(fr, hop) ** 2, axis=1)) + 1e-12)
+    quiet = db < db.max() - below_db
+    loud = np.flatnonzero(~quiet)
+    if loud.size == 0:
+        return []
+    first, last = int(loud[0]), int(loud[-1])
+    out, i = [], first
+    while i <= last:
+        if quiet[i]:
+            j = i
+            while j <= last and quiet[j]:
+                j += 1
+            out.append((round(i * 0.01, 3), round(j * 0.01, 3)))
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def tighten(wav: Path, cap: float | None = None) -> float:
+    """No silence inside the speech longer than `cap` (Limits.ear_pause_max): longer ones are shortened to it, in the
+    middle, with a short crossfade. Returns the clip's seconds. The voice made 0.65 s of silence inside a man's name and
+    1 s between sentences on 2026-10-30; a newsreader's longest breath is shorter, and dead air is what a listener hears
+    as a voice that has lost its place."""
+    cap = Limits.ear_pause_max if cap is None else cap
+    spans = [[a + cap / 2, b - cap / 2] for a, b in silences(wav) if b - a > cap + 0.05]
+    if not spans:
+        return round(voice.get_audio_duration(str(wav)), 3)
+    return cut_out(wav, spans)
 
 
 _WHISPER_LOCK = __import__('threading').Lock()      # the speech model is ~1.6 GB: one at a time, never three
@@ -347,6 +441,31 @@ def _pair_boundary(full: Path, a: str, b: str, total: float) -> float:
     return (lo + int(np.argmin(env[lo:hi])) + 0.5) * 0.01
 
 
+def cut_pair(full: Path, wav_a: Path, wav_b: Path, mid: float) -> tuple[float, float]:
+    """Cut a pair read in one go into its two clips at `mid` seconds: each trimmed to its sound, brought to the house
+    loudness, and any silence inside it kept to a newsreader's breath. Returns (headline seconds, card seconds)."""
+    total = voice.get_audio_duration(str(full))
+    full.with_suffix('.cut').write_text(f'{mid:.3f}')            # where it was cut, for the ear to move if it ate a word
+    for path, (t0, t1) in ((wav_a, (0.0, mid)), (wav_b, (mid, total))):
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{t0:.3f}', '-to', f'{t1:.3f}', '-i', str(full),
+                        '-af', TRIM, '-ar', '48000', '-ac', '1', str(path)], check=True)
+        level(path)
+        tighten(path)
+        declick(path)
+    da, db = (voice.get_audio_duration(str(wav_a)), voice.get_audio_duration(str(wav_b)))
+    if da < 0.8 or db < 0.8:
+        raise ReelError(f'a clip cut from the pair is only {min(da, db):.2f}s')
+    return round(da, 3), round(db, 3)
+
+
+def other_cuts(full: Path, mid: float, near: float = 0.2) -> list[float]:
+    """Every other place a pair could be cut — the middle of each silence of at least 0.12 s that falls between a sixth
+    and nine-tenths of the way through — nearest to `mid` first. The ear tries them in turn when a cut has eaten a word."""
+    total = voice.get_audio_duration(str(full))
+    cuts = [(a + b) / 2 for a, b in silences(full) if b - a >= 0.12 and total / 6 <= (a + b) / 2 <= total * 0.9]
+    return sorted((c for c in cuts if abs(c - mid) > near), key=lambda c: abs(c - mid))
+
+
 def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = 'gemini', tries: int = 3) -> tuple[float, float]:
     """Two clips from ONE request: both sentences are asked for together and cut apart at the pause between them.
 
@@ -369,14 +488,7 @@ def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = '
             subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(raw), '-ar', '48000', '-ac', '1', str(full)], check=True)
             total = voice.get_audio_duration(str(full))
             mid = _pair_boundary(full, a, b, total)
-            for path, (t0, t1) in ((wav_a, (0.0, mid)), (wav_b, (mid, total))):
-                subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{t0:.3f}', '-to', f'{t1:.3f}', '-i', str(full),
-                                '-af', TRIM, '-ar', '48000', '-ac', '1', str(path)], check=True)
-                level(path)
-            da, db = (voice.get_audio_duration(str(wav_a)), voice.get_audio_duration(str(wav_b)))
-            if da < 0.8 or db < 0.8:
-                raise ReelError(f'a clip cut from the pair is only {min(da, db):.2f}s')
-            return round(da, 3), round(db, 3)
+            return cut_pair(full, wav_a, wav_b, mid)
         except Exception as e:      # noqa: BLE001
             last = e
             if '429' in str(e) and 'daily quota' not in str(e) and attempt < tries:
@@ -386,8 +498,7 @@ def clip_pair(first: str, second: str, wav_a: Path, wav_b: Path, engine: str = '
                     import os
                     os.remove(os.path.join(voice.TTS_CACHE, f'{voice._cache_key(sent, engine, name)}.mp3'))
         finally:
-            raw.unlink(missing_ok=True)
-            full.unlink(missing_ok=True)
+            raw.unlink(missing_ok=True)       # `full` stays: if the ear finds the cut ate a word, it is cut again, for free
         if last is not None and 'daily quota' in str(last):
             break
     raise ReelError(f'the {engine} voice failed for {a[:30]!r}: {last}')

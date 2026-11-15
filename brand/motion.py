@@ -25,10 +25,9 @@ back sounding squashed.
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import numpy as np
-from dataclasses import dataclass, replace, field
+from dataclasses import dataclass, replace
 from types import SimpleNamespace
 from PIL import Image, ImageDraw
 

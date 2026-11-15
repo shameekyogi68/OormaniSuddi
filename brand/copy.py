@@ -18,10 +18,10 @@ from __future__ import annotations
 
 import math
 import re
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 from .content import Story, Edition, IMAGE_NATURE, STATUS
-from .tokens import Brand, CATEGORIES, category, Limits
+from .tokens import Brand, category, Limits
 
 # Instagram shows roughly this much before the "… more" fold. The first line has
 # to earn the tap on its own.
@@ -46,7 +46,7 @@ M_PLACE, M_TIME, M_SOURCE, M_NOTE = '📍', '🕐', '📌', '⚠️'
 # #BreakingNews is invisible. The people who will actually watch live in
 # the tagged place.
 CATEGORY_TAGS = {
-    'breaking':  ['ಬ್ರೇಕಿಂಗ್‌ನ್ಯೂಸ್', 'UdupiNews'],
+    'breaking':  ['ಬ್ರೇಕಿಂಗ್‌ನ್ಯೂಸ್'],
     'crime':     ['ಅಪರಾಧಸುದ್ದಿ', 'CrimeNews'],
     'weather':   ['ಹವಾಮಾನ', 'WeatherAlert', 'KarnatakaRains'],
     'civic':     ['ಆಡಳಿತ', 'CivicNews'],
@@ -92,6 +92,8 @@ PLACE_TAGS = {
     'ತಲ್ಲೂರು': 'Tallur', 'ತ್ರಾಸಿ': 'Trasi', 'ಯಡ್ತರೆ': 'Yadthare',
     'ಅರಾಟೆ': 'Arate', 'ಕೋಟೇಶ್ವರ': 'Koteshwara', 'ಗಂಗೊಳ್ಳಿ': 'Gangolli',
     'ವಂಡ್ಸೆ': 'Vandse', 'ಹಟ್ಟಿಯಂಗಡಿ': 'Hattiangadi',
+    'ತೆಕ್ಕಟ್ಟೆ': 'Tekkatte', 'ಹಂಗಾರಕಟ್ಟೆ': 'Hangarakatte',
+    'ಸಾಸ್ತಾನ': 'Sastana',
 }
 
 # How the English press spells the same towns. Search reads these too.
@@ -101,7 +103,8 @@ PLACE_ALIASES = ('kundapur', 'brahmavar', 'mangalore', 'mangaluru', 'karkal',
                  'surathkal', 'ullal', 'padubidri', 'bhatkal', 'kumta',
                  'honnavar', 'karwar', 'dakshina kannada', 'uttara kannada',
                  'd.k.', 'coastal', 'tulunadu', 'tallur', 'trasi', 'yadthare',
-                 'arate', 'koteshwara', 'gangolli', 'vandse', 'hattiangadi')
+                 'arate', 'koteshwara', 'gangolli', 'vandse', 'hattiangadi',
+                 'tekkatte', 'hangarakatte')
 
 # Places that are ours. Bengaluru is in PLACE_TAGS for hashtags on state
 # stories; it is not the coast.
@@ -417,22 +420,20 @@ def cta(story: Story) -> str:
 
 
 def first_comment(story: Story) -> str:
-    """Paste this as the FIRST comment the moment the post goes up.
-
-    Instagram treats an early comment as a conversation starter; the post
-    then gets shown to more of the same audience. A question beats a
-    restatement of the headline.
-    """
+    """A useful opening comment, without speculation or engagement at a family's expense."""
     loc = _place_token(story.location or '') or Brand.coverage
+    where = locative(loc)
     if story.category == 'weather':
-        where = locative(loc)
-        return (f'{where} ಈಗ ಹೇಗಿದೆ? ರಿಪ್ಲೈ ಮಾಡಿ.' if where
-                else f'{loc} — ಈಗ ಅಲ್ಲಿ ಹೇಗಿದೆ? ರಿಪ್ಲೈ ಮಾಡಿ.')
-    if story.category == 'crime':
-        return f'{loc} — ಮೂಲ: ಸತ್ಯಾಧಾರಿತ ವರದಿ. ಇನ್ನಷ್ಟು ಕರಾವಳಿ ಸುದ್ದಿಗೆ ಫಾಲೋ ಮಾಡಿ.'
-    whose = belonging(loc)
-    return (f'ನೀವು {whose}? ರಿಪ್ಲೈ ಮಾಡಿ — {Brand.handle}' if whose
-            else f'{loc} — ನಿಮ್ಮ ಊರಾ? ರಿಪ್ಲೈ ಮಾಡಿ — {Brand.handle}')
+        return (f'{where} ಈಗ ಹೇಗಿದೆ? ನಿಮ್ಮ ಊರಿನ ಪರಿಸ್ಥಿತಿ ತಿಳಿಸಿ.' if where
+                else f'{loc} — ಈಗ ಅಲ್ಲಿ ಹೇಗಿದೆ? ನಿಮ್ಮ ಊರಿನ ಪರಿಸ್ಥಿತಿ ತಿಳಿಸಿ.')
+    if story.category in ('crime', 'accident'):
+        return (f'{loc} — ಈ ಘಟನೆಯ ಬಗ್ಗೆ ದೃಢೀಕೃತ ಮಾಹಿತಿ ಹೊಂದಿದ್ದರೆ ಸಂಬಂಧಪಟ್ಟ ಅಧಿಕಾರಿಗಳಿಗೆ ತಿಳಿಸಿ. '
+                'ಇಲ್ಲಿ ಊಹೆ, ಆರೋಪ ಅಥವಾ ವೈಯಕ್ತಿಕ ವಿವರ ಹಂಚಿಕೊಳ್ಳಬೇಡಿ.')
+    if story.category == 'obituary':
+        return f'{loc} — ನಿಧನರಿಗೆ ಶ್ರದ್ಧಾಂಜಲಿ. ಕುಟುಂಬದ ಖಾಸಗಿತೆಗೆ ಗೌರವ ನೀಡಿ.'
+    if where:
+        return f'{where} ಈ ವಿಚಾರದ ಕುರಿತು ನಿಮ್ಮ ಅನುಭವ ಏನು? ಪ್ರಸ್ತುತ ಮಾಹಿತಿ ಹಂಚಿಕೊಳ್ಳಿ.'
+    return f'{loc} — ಈ ವಿಚಾರದ ಕುರಿತು ನಿಮ್ಮ ಅನುಭವ ಏನು? ಪ್ರಸ್ತುತ ಮಾಹಿತಿ ಹಂಚಿಕೊಳ್ಳಿ.'
 
 
 def dateline(story: Story) -> str:
@@ -1130,36 +1131,57 @@ def for_saara_reel(edition: Edition) -> PostCopy:
             if src not in seen:
                 seen.append(src)
 
-    def build(takeaways: bool, first_sentence_only: bool) -> str:
+    max_bytes = getattr(Limits, 'ig_caption_max_bytes', 2100)
+    tag_list = tags[:Limits.ig_hashtags_max]
+    tag_str = ' '.join(f'#{t}' for t in tag_list)
+
+    def build_candidate(mode: str) -> str:
         reports = []
         for i, st in enumerate(edition.stories, 1):
+            h = st.headline.strip()
             deck = (st.deck or (st.points[0] if st.points else '')).strip()
-            if first_sentence_only and deck:
-                deck = re.split(r'(?<=[.!?।])\s+', deck)[0]
-            lines = [f'{i}. {st.headline.strip()}']
-            if deck:
-                lines.append(deck)
-            if takeaways and st.takeaway.strip():
-                lines.append(f'👉 {st.takeaway.strip()}')
-            reports.append('\n'.join(lines))
-        blocks = [hook(lead),
-                  f'ಸುದ್ದಿ ಸಾರ — ಇಂದಿನ {n} ಸುದ್ದಿ, ಒಂದೇ ರೀಲ್‌ನಲ್ಲಿ. ಪೂರ್ಣ ವರದಿ ಕೆಳಗಿದೆ 👇',
-                  '\n\n'.join(reports), cta(lead),
-                  f'{M_SOURCE} ಮೂಲ: ' + ' · '.join(seen)]
+            if mode == 'full':
+                rep = f'{i}. {h}\n{deck}' if deck else f'{i}. {h}'
+                if st.takeaway.strip():
+                    rep += f'\n👉 {st.takeaway.strip()}'
+            elif mode == 'first_sentence':
+                first_s = re.split(r'(?<=[.!?।])\s+', deck)[0] if deck else ''
+                rep = f'{i}. {h}\n{first_s}' if first_s else f'{i}. {h}'
+            elif mode == 'concise':
+                first_s = re.split(r'(?<=[.!?।])\s+', deck)[0] if deck else ''
+                if first_s and not first_s.startswith(h):
+                    snip = (first_s[:55].rsplit(' ', 1)[0] + '...') if len(first_s) > 55 else first_s
+                    rep = f'{i}. {h}: {snip}'
+                else:
+                    rep = f'{i}. {h}'
+            else:  # headline_only
+                rep = f'{i}. {h}'
+            reports.append(rep)
+
+        intro = f'ಸುದ್ದಿ ಸಾರ — ಇಂದಿನ {n} ಪ್ರಮುಖ ಸುದ್ದಿ 👇'
+        cta_line = 'ನಿಮ್ಮ ಅನಿಸಿಕೆ ತಿಳಿಸಿ · ಊರಿಗೆ ತಲುಪಲಿ ಎಂದು ಶೇರ್ ಮಾಡಿ ↗️'
+        src_line = f'{M_SOURCE} ಮೂಲ: ' + ' · '.join(seen)
         g = Brand.grievance_line()
-        if g:
-            blocks.append(g)
-        pl = place_line(edition)
-        if pl:
-            blocks.append(pl)
-        blocks.append(' '.join(f'#{t}' for t in tags))
+        contact = f'ತಿದ್ದುಪಡಿ/ಮಾಹಿತಿಗೆ: {Brand.grievance_officer} · {Brand.grievance_phone}' if g else ''
+
+        blocks = [hook(lead), intro]
+        if mode == 'headline_only':
+            blocks.append('\n'.join(reports))
+        else:
+            blocks.append('\n\n'.join(reports))
+        blocks.extend([cta_line, src_line])
+        if contact:
+            blocks.append(contact)
+        blocks.append(tag_str)
         return _join(blocks)
 
-    caption = build(True, False)
-    if len(caption) > IG_CAPTION_MAX:
-        caption = build(False, False)
-    if len(caption) > IG_CAPTION_MAX:
-        caption = build(False, True)
+    caption = build_candidate('full')
+    if len(caption.encode('utf-8')) > max_bytes or len(caption) > IG_CAPTION_MAX:
+        caption = build_candidate('first_sentence')
+    if len(caption.encode('utf-8')) > max_bytes or len(caption) > IG_CAPTION_MAX:
+        caption = build_candidate('concise')
+    if len(caption.encode('utf-8')) > max_bytes or len(caption) > IG_CAPTION_MAX:
+        caption = build_candidate('headline_only')
     post.instagram = caption
     post.alt_text = (f'{Brand.name} ಸುದ್ದಿ ಸಾರ ರೀಲ್ — {edition.date_kn}. '
                      f'{n} ಸುದ್ದಿಗಳು. {lead.headline}')
@@ -1197,51 +1219,42 @@ def saara_reel_youtube_title(edition: Edition) -> str:
 
 
 def saara_reel_youtube_description(edition: Edition) -> str:
-    """YouTube Shorts description structured for semantic search and high retention.
-
-    House rule 2026-10-24-02 & D144: First 2-3 lines provide natural Kannada & English
-    search keywords for local and Gulf searchers. Followed by concise story highlights,
-    engagement CTA, and 10-12 targeted YouTube hashtags at the bottom.
-    """
+    """A factual Kannada digest: the lead, the day's stories, sources and one useful question."""
     lead = edition.stories[0]
     n = len(edition.stories)
-    towns = [p for p in edition_places(edition) if p[1]][:4]
-    towns_kn = [p[0] for p in towns] or ['ಕುಂದಾಪುರ', 'ಉಡುಪಿ']
-    towns_en = [p[1] for p in towns] or ['Kundapura', 'Udupi']
-
+    towns = [kn for kn, _ in edition_places(edition)[:4]] or [Brand.coverage]
     lead_hook = (getattr(lead, '_hook', '') or lead.reel_line or lead.headline).strip()
+    sources = list(dict.fromkeys(src for st in edition.stories for src in st.sources))
+    tags = ['Shorts', 'oormanisuddi', 'ಕರಾವಳಿಸುದ್ದಿ']
+
+    def add_tag(tag: str):
+        if tag and tag.lower() not in {t.lower() for t in tags}:
+            tags.append(tag)
+
+    for kn, en in edition_places(edition)[:2]:
+        add_tag(en + 'News' if en else kn)
+    for st in edition.stories:
+        subjects = CATEGORY_TAGS.get(st.category, [])
+        if subjects:
+            add_tag(subjects[0])
 
     blocks = [
-        f"{', '.join(towns_kn)} ಕರಾವಳಿಯ ಇಂದಿನ ಪ್ರಮುಖ ಸುದ್ದಿ ಸಾರ. {lead_hook}.\n\n"
-        f"Coastal Karnataka daily news update & breaking local headlines from {', '.join(towns_en)} "
-        f"and coastal belt by {Brand.name}.",
-        f"📌 ಇಂದಿನ {n} ಪ್ರಮುಖ ಸುದ್ದಿಗಳು:\n" + '\n'.join(
-            f"{i}. {st.headline.strip()}" for i, st in enumerate(edition.stories, 1)
-        ),
-        "💬 ನಿಮ್ಮ ಅಭಿಪ್ರಾಯ ಏನು? ಕಾಮೆಂಟ್ ಮಾಡಿ!\n"
-        f"🌾 {Brand.name} · {Brand.tagline}\n"
-        f"📲 ಅಧಿಕೃತ ಕರಾವಳಿ ಸುದ್ದಿಗಾಗಿ ಸಬ್‌ಸ್ಕ್ರೈಬ್ ಮಾಡಿ: {Brand.handle}",
+        f'{lead_hook}\n{edition.date_kn} · {", ".join(towns)} ಸೇರಿದಂತೆ ಇಂದಿನ {n} ಸುದ್ದಿಗಳ ಸುದ್ದಿ ಸಾರ.',
+        '\n'.join(f'{i}. {st.headline.strip()}' for i, st in enumerate(edition.stories, 1)),
+        'ಈ ವರದಿಗಳಲ್ಲಿ ನಿಮಗೆ ಹೆಚ್ಚು ವಿವರ ಬೇಕಾದ ಸುದ್ದಿ ಯಾವುದು? ಕಮೆಂಟ್ ಮಾಡಿ.',
+        'ಮೂಲ: ' + ' · '.join(sources),
         Brand.grievance_line(),
-        "#Shorts #shorts #KannadaShorts #KundapuraNews #ByndoorNews #UdupiNews "
-        "#CoastalKarnataka #KarnatakaNews #oormanisuddi #KannadaNews #BreakingKannada #LocalNews"
+        ' '.join(f'#{tag}' for tag in tags),
     ]
     return _join(blocks)
 
 
 def saara_reel_youtube_tags(edition: Edition, limit_chars: int = Limits.yt_tags_chars) -> list[str]:
-    """Search phrases for the YouTube Studio Tags box (up to 500 characters).
-
-    House rule 2026-10-24-02 & D144: YouTube Studio backend tags prioritize phrases
-    people actually type into search: local town news, breaking Kannada news,
-    coastal weather/alerts, and Kannada shorts queries.
-    """
-    core = [
-        'kundapura news', 'byndoor news', 'udupi news', 'coastal karnataka news',
-        'oormani suddi', 'kannada news live', 'karnataka news', 'karnataka breaking news',
-        'udupi district news', 'karavali suddi', 'local news kannada', 'kannada shorts',
-        'shorts kannada', 'kannada breaking news', 'udupi rain alert', 'mangaluru news'
-    ]
+    """Relevant search phrases for YouTube Studio, with places and subjects taken from this edition."""
+    core = ['oormani suddi', 'karavali suddi', 'coastal karnataka news',
+            'kannada news', 'kannada shorts']
     out = []
+
     def add(t: str):
         t = (t or '').strip()
         if t and t.lower() not in {x.lower() for x in out}:
@@ -1249,10 +1262,10 @@ def saara_reel_youtube_tags(edition: Edition, limit_chars: int = Limits.yt_tags_
 
     for t in core:
         add(t)
-
     for st in edition.stories:
         for kn, en in _places(st)[:2]:
-            add(f'{en.lower()} news')
+            if en:
+                add(f'{en.lower()} news')
             add(f'{kn} ಸುದ್ದಿ')
         for t in CATEGORY_TAGS.get(st.category, []):
             add(t)

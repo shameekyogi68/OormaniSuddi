@@ -16,6 +16,7 @@ Then, depending on the job:
 | change a design value | [`STANDARDS.md`](STANDARDS.md), then [`docs/DECISIONS.md`](docs/DECISIONS.md) |
 | write or judge anything for Instagram (formats, hooks, captions, timing) | [`docs/INSTAGRAM.md`](docs/INSTAGRAM.md) — labelled by how reliable each line is |
 | run the company — money, sponsors, YouTube/Facebook growth, goals | [`docs/BUSINESS.md`](docs/BUSINESS.md), then [`docs/ADVERTISING.md`](docs/ADVERTISING.md); `python3 scripts/business.py status` |
+| know what the system must do and whether it does | [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) — every requirement with the command that proves it (D150) |
 | know which agents to run | `python3 scripts/dispatch.py` — agents in `.claude/agents/`, in waves (D87, D89) |
 | look after the machine — updates, disk, backups, a new Mac | [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) |
 | edit raw clips into a long-format YouTube video | [`.claude/skills/youtube-longform-edit/SKILL.md`](.claude/skills/youtube-longform-edit/SKILL.md) |

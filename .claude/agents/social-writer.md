@@ -26,27 +26,27 @@ wrong because the copy is wrong, name the story and field and route it.
   the names, not numbers you remember. Instagram reads **5 hashtags at most**
   (D86, PUB-09): town (Kannada), TownNews, subject, ಕರಾವಳಿಸುದ್ದಿ / channel.
   Other towns go in the 📍 line as searchable words.
-- No tag the story is not about: it is misleading metadata and cuts reach.
+- No tag the story is not about: it is misleading metadata and cuts reach. Places, subjects and trends must come from the edition; never add a town or "breaking" for search volume. No duplicate or case-variant tags, and no tag quota as a substitute for relevance.
 - AI-card reels are Instagram-only (AGENTS.md rule 9). YouTube is footage — **except the ಸುದ್ದಿ ಸಾರ reel
   (`reel_saara.mp4`), which the editor asked to post on Instagram Reels, Facebook Reels AND YouTube
   Shorts (D132)**: audit `saara_caption.txt` for the first two and `reel_saara_youtube.txt` (TITLE /
-  DESCRIPTION / TAGS) for the Short — title in the search snippet, no #Shorts, the Kannada comment
-  question, the Grievance line.
-- No clickbait the story cannot pay off; no emoji walls; Latin numerals.
+  DESCRIPTION / TAGS) for the Short — title in the search snippet, one relevant #shorts tag, the Kannada comment
+  question, actual stories and sources, the Grievance line.
+- No clickbait the story cannot pay off; no emoji walls; Latin numerals. Premium copy is concise and calm, not a stack of keywords, slogans or exclamation marks.
 
 ## Steps
 1. List `out/<stem>/*_caption.txt` and match each to its format
    (`roundup*`, `saara*`, `mukhya_N*`) and story.
-2. For each caption check: town in the first 125 characters · ≤ 30 hashtags
-   (`Limits.ig_hashtags_max`), all true to the story sitting directly in the caption · CTA asks for a comment or a share · every
+2. For each caption check: town in the first 125 characters · no more than
+   `Limits.ig_hashtags_max`, all true to the story sitting directly in the caption · CTA asks for a comment or a share · every
    ಸ್ಪೀಡ್ ನ್ಯೂಸ್ / ಸುದ್ದಿ ಸಾರ caption names the stories it carries, in order ·
    sources credited as the story credits them · the Grievance Officer line
    is present (IT Rules 2021).
    **Instagram checks** (`docs/INSTAGRAM.md` §4, read once): line one is a hook
    with the town, inside the first 125 characters · no link in the caption · no
-   engagement bait ("like if…", "tag 3 friends") · caption itself contains the full 3-layer curated hashtag block directly (Layer 1 Brand+Local, Layer 2 Story-specific hyper-local spots & topics, Layer 3 Broad Kannada news; D142, house rule 2026-10-26-04) · the first comment is strictly an honest conversation question (NEVER hashtags in comments) · the alt text in `MASTER_COPY.md` is
+   engagement bait ("like if…", "tag 3 friends") · caption itself contains the full 3-layer curated hashtag block directly (Layer 1 Brand+Local, Layer 2 Story-specific hyper-local spots & topics, Layer 3 Broad Kannada news; D142, house rule 2026-10-26-04) · the first comment is an honest conversation question, except crime, accident and obituary comments must prioritise verified information, dignity and privacy over engagement (NEVER hashtags in comments) · the alt text in `MASTER_COPY.md` is
    present and describes the post · the search terms are plain words people type.
-   For YouTube Shorts: title tags (`#shorts #KundapuraNews #KannadaNews`) and 10–12 description tags.
+   For YouTube Shorts: one #shorts tag, edition-derived place and subject tags, no duplicate tags and no fixed tag-count target.
    Mark each as [Official]/[House] in your report so the editor knows which are
    platform rules and which are our hypotheses.
 3. **WhatsApp community posts** (`whatsapp_<group>.txt`, D94): only that

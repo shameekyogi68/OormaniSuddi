@@ -5,8 +5,9 @@
 # it is version-controlled — a hook that lives only in .git/ is a hook that
 # exists on one machine, which is the problem this whole release was about.
 #
-# It runs the INSTANT suites only (about three seconds). The golden design test
-# takes two minutes and belongs in a deliberate run, not in the path of every
+# It runs the QUICK suites only (a few seconds, side by side). The suites that
+# render video or drive Chrome are listed in tests/slow_suites.txt; they take
+# two minutes and belong in a deliberate run, not in the path of every
 # commit: a hook people are tempted to skip is a hook that gets skipped with
 # --no-verify, and then it protects nothing.
 #
@@ -23,16 +24,12 @@ fi
 
 fail() { echo "✗ $1" >&2; echo "  commit refused. Fix it, or 'git commit --no-verify' if you truly mean to." >&2; exit 1; }
 
-echo "  pre-commit: the contract…"
-python3 -m unittest tests.test_contract -q 2>&1 | tail -3 | grep -q '^OK' || fail "tests.test_contract"
-
-# Every other suite except the four that render video (about five seconds in
-# all). By exclusion, so a new test file is checked from the day it is added.
-echo "  pre-commit: every fast suite…"
-FAST=$(ls tests/test_*.py | grep -vE 'test_(contract|golden|animate|formats|speednews)\.py' \
-       | sed 's|/|.|; s|\.py$||')
-# shellcheck disable=SC2086
-python3 -m unittest $FAST -q 2>&1 | tail -3 | grep -q '^OK' || fail "one of the fast suites"
+# The contract and every other quick suite — by exclusion, so a new test file
+# is checked from the day it is added. The list of what is NOT quick lives in
+# tests/slow_suites.txt and is read by scripts/health.py, which this calls, so
+# the hook and the health check can never disagree about it (D150).
+echo "  pre-commit: the contract and every quick suite…"
+python3 scripts/health.py --tests || fail "a quick suite (named above)"
 
 echo "  pre-commit: every decision enforced by something…"
 python3 docs/_build_traceability.py --check >/dev/null 2>&1 \

@@ -18,22 +18,23 @@ Read `.claude/agents/_CONVENTIONS.md` first. You edit ONE story.
 ## 📺 Kannada TV News Channel Broadcast Standards (ಸುದ್ದಿವಾಹಿನಿ ವರದಿಗಾರಿಕೆ ಸೂತ್ರಗಳು)
 
 ### 1. The Television Headline Hook (`headline` & `reel_line`)
-News channel headlines are punchy, active, and immediate. Never write flat, passive bookish sentences.
+News channel headlines are active, specific and immediate. Premium copy is not louder copy: use the shortest complete wording that preserves the fact and its scope.
 - **Formula:** `[ಸ್ಥಳ]. [ಮುಖ್ಯಾಂಶ / ಕ್ರಿಯಾಶೀಲ ಬೆಳವಣಿಗೆ]`
 - **Examples (Amateur vs. Professional TV Newsroom):**
   * ❌ *Amateur/Stiff:* `ಅರಾಟೆ ಸೇತುವೆ ಬಳಿ ಬಸ್‌ಗಳು ಡಿಕ್ಕಿ, 28 ಪ್ರಯಾಣಿಕರಿಗೆ ಗಾಯ`
   *  *TV News Professional:* `ಅರಾಟೆ. ಸೇತುವೆ ಬಳಿ ಎರಡು ಬಸ್‌ಗಳ ಮುಖಾಮುಖಿ ಡಿಕ್ಕಿ, 28 ಪ್ರಯಾಣಿಕರಿಗೆ ಗಾಯ`
   * ❌ *Amateur/Stiff:* `ಹೊಸಾಡು. ಕೆರೆಗೆ ಬಿದ್ದು ಬಾಲಕಿಯರು ಸಾವು`
   *  *TV News Professional:* `ಹೊಸಾಡು. ಕೆರೆಗೆ ಬಿದ್ದು ಇಬ್ಬರು ಬಾಲಕಿಯರ ಸಾವು`
-  * ❌ *Amateur/Stiff:* `ಇಎಸ್ಐ ಆಸ್ಪತ್ರೆ ಕಟ್ಟಡಕ್ಕೆ ಆಗ್ರಹ`
-  *  *TV News Professional:* `ಕುಂದಾಪುರ. ಸುಸಜ್ಜಿತ ಇಎಸ್ಐ ಆಸ್ಪತ್ರೆಗೆ ಹಂಚು ಕಾರ್ಮಿಕರ ತೀವ್ರ ಆಗ್ರಹ`
+  * ❌ *Inflated:* `ಕುಂದಾಪುರ. ಸುಸಜ್ಜಿತ ಇಎಸ್ಐ ಆಸ್ಪತ್ರೆಗೆ ಹಂಚು ಕಾರ್ಮಿಕರ ತೀವ್ರ ಆಗ್ರಹ`
+  *  *Premium:* `ಕುಂದಾಪುರ. ಇಎಸ್ಐ ಆಸ್ಪತ್ರೆಗೆ ಹಂಚು ಕಾರ್ಮಿಕರ ಆಗ್ರಹ`
 
 ### 2. Spoken Anchor Card (`reel_support`) — Designed for Gemini `Kore` Voice
-The gold card and the spoken voice read this sentence. It must sound like an authoritative television anchor delivering breaking news live from the studio.
-- **Pacing:** One crisp, self-contained sentence that delivers the emotional or factual core.
+The paper card and the spoken voice read this sentence. It must sound like an authoritative television anchor, not an advertisement.
+- **Pacing:** One crisp, self-contained, properly terminated sentence that adds a fact the headline does not carry.
 - **Natural Broadcast Phrasing:**
-  * Use impactful news verbs: `ದಾಖಲು`, `ಆಗ್ರಹ`, `ಮುಂಜಾಗ್ರತಾ ಕ್ರಮ`, `ಸ್ಥಗಿತ`, `ತೆರವು` (only the ones the paste supports).
+  * Use exact news verbs: `ದಾಖಲು`, `ಆಗ್ರಹ`, `ಮುಂಜಾಗ್ರತಾ ಕ್ರಮ`, `ಸ್ಥಗಿತ`, `ತೆರವು` (only the ones the paste supports).
   * Ensure natural breath pauses marked by commas so the voice reads with rhythm and weight.
+  * Cut stock praise, promotional filler, predicted impact and gratuitous physical detail, even when the source uses them.
   * Figures must be joined with case markers (`66ರಲ್ಲಿ`, `28 ಮಂದಿ`, `₹10 ಲಕ್ಷ`).
 
 ### 3. Coastal Karnataka Authenticity & Dignity (ಕರಾವಳಿ ಸೊಗಡು)

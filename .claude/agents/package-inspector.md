@@ -54,15 +54,18 @@ files in `out/<stem>/` whose names start with the prefix you were given
 - clear a cultural question alone — surface it for the person
 
 ## The ಸುದ್ದಿ ಸಾರ reel — `reel_saara` (D132, D133)
-Its own standard, not Paper & Red: **Ink & Gold** — deep navy, white serif headlines, a cream-gold
-town tag, a gold card, rounded shapes, gold light as the only effect, never a line. Read
+Its own standard, not Paper & Red: **Ink, Paper & Gold** (D132, D148) — deep navy, white serif headlines, the town in
+gold serif type (no pill), the fact on a PAPER card in ink, gold Bodoni numerals, rounded shapes, gold light as the only
+effect, never a line. Gold is the brand's: the count, the counter, the town and the follow button — a gold slab under a
+news sentence, or red on the words ಸುದ್ದಿ ಸಾರ, is a FIX. Read
 `_review/reel_saara_report.json` first (what the engine measured and found), then the eight frames
 `_review/reel_saara_t*.jpg` and `reel_saara_cover.jpg`, at feed size. Each is a BLOCK/FIX if:
 - frame 0 / the cover is not the WHOLE front page (the count, ಇಂದಿನ ಪ್ರಮುಖ ಸುದ್ದಿ, every town and teaser)
 - a headline needs three lines, or a line is cut, or a letter is boxed (tofu)
 - anything readable sits in the top 250px, the bottom 420px, or right of x=920 below y=860 (Reels chrome)
-- the card does not read as ONE sentence, or its text is faint (one ink on the gold; only the spoken
-  word sits on a black pill)
+- the card does not read as ONE sentence, or its text is faint (ink on paper; the spoken word sits on a
+  gold fill and stays ink — never white)
+- `true_peak` in the report is above `Limits.true_peak_dbtp` (D148: the finished file is measured)
 - a crime story's frame asserts guilt on its own (headline or card) — surface it, never clear it alone
 - the follow card is missing, or the button / @oormanisuddi / YouTube line is unreadable
 - **no picture on any frame** (ಸುದ್ದಿ ಸಾರ never carries one)

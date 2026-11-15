@@ -20,8 +20,7 @@ from pathlib import Path
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from brand import content, saara_reel, reel_speech as RS
-from brand.tokens import Limits
+from brand import content, saara_reel
 
 # Passive/translated patterns that make Kannada sound like an English speaker translated it
 AWKWARD_PATTERNS = [

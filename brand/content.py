@@ -22,7 +22,7 @@ from __future__ import annotations
 import contextlib
 import os
 import re
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, MISSING
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
@@ -124,7 +124,14 @@ def parse_dt(v) -> datetime:
     """Accept an ISO-8601 string or a datetime; always return tz-aware IST."""
     if isinstance(v, datetime):
         return v if v.tzinfo else v.replace(tzinfo=IST)
-    d = datetime.fromisoformat(str(v).replace('Z', '+00:00'))
+    try:
+        d = datetime.fromisoformat(str(v).replace('Z', '+00:00'))
+    except ValueError:
+        # ContentError is a ValueError, so every caller that caught the old
+        # one still does; the difference is that this one says what to type.
+        raise ContentError(
+            f'{v!r} is not a date. Write it as 2026-11-15 or '
+            '2026-11-15T09:30:00+05:30.') from None
     return d if d.tzinfo else d.replace(tzinfo=IST)
 
 
@@ -272,6 +279,75 @@ class ContentError(ValueError):
     convenience — fix the story, not the exception."""
 
 
+# ── the shape of the JSON (D150) ─────────────────────────────────────────────
+# The JSON is written by whichever AI tool the editor is using that day. A
+# wrong *shape* — a number where a sentence goes, one string where a list goes,
+# a file cut off half-way — used to surface as a Python traceback from deep in
+# a renderer, which tells the tool nothing it can act on. These turn every such
+# fault into a ContentError that names the field and says what belongs there.
+# They check shape only; truth is still validate()'s job.
+_JSON_NAMES = {str: 'text in quotes', list: 'a list [...]', dict: 'an object {...}',
+               bool: 'true or false', int: 'a whole number'}
+
+
+def _is(v, kind) -> bool:
+    if kind is int:
+        return isinstance(v, int) and not isinstance(v, bool)
+    if kind is list:
+        # JSON has only lists; Python callers (and to_dict round trips) hand
+        # over tuples for pairs. Both are the same shape.
+        return isinstance(v, (list, tuple))
+    return isinstance(v, kind)
+
+
+def _need(v, kind, name: str):
+    if not _is(v, kind):
+        got = 'null' if v is None else f'{v!r}'
+        if len(got) > 40:
+            got = got[:37] + '...'
+        raise ContentError(f'`{name}` must be {_JSON_NAMES[kind]}; it is {got}')
+
+
+def _shape(cls, d: dict, what: str):
+    """Check the plainly-typed fields of a dataclass against its annotations."""
+    plain = {'str': str, 'bool': bool, 'int': int}
+    for name, f in cls.__dataclass_fields__.items():
+        if name not in d:
+            continue
+        t, v = str(f.type), d[name]
+        if t in plain:
+            _need(v, plain[t], name)
+        elif t == 'list[str]':
+            _need(v, list, name)
+            for i, item in enumerate(v, 1):
+                _need(item, str, f'{name}[{i}]')
+    missing = [n for n, f in cls.__dataclass_fields__.items()
+               if f.default is MISSING and f.default_factory is MISSING and n not in d]
+    if missing:
+        raise ContentError(f'{what} has no `{missing[0]}` — it is required')
+
+
+def read_json(path: str):
+    """Read a JSON file; a missing, empty or cut-off file is said in words."""
+    import json
+    try:
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+    except FileNotFoundError:
+        raise ContentError('there is no such file') from None
+    except (IsADirectoryError, PermissionError, UnicodeDecodeError) as e:
+        raise ContentError(f'the file cannot be read ({type(e).__name__})') from None
+    if not text.strip():
+        raise ContentError('the file is empty')
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        raise ContentError(
+            f'not valid JSON at line {e.lineno}, column {e.colno} '
+            f'({e.msg}). The file may have been cut off, or a comma or quote '
+            'is missing just before that point.') from None
+
+
 # Own reporting is the only source that does not need a URL. Everything else
 # must point at a page, a notice, or a document the editor can reopen.
 OWN_REPORTING = 'ಊರ್ಮನಿ ಸುದ್ದಿ ಸ್ಥಳ ವರದಿ'
@@ -322,11 +398,17 @@ class Photo:
 
     @classmethod
     def from_dict(cls, d: dict) -> 'Photo':
+        _need(d, dict, 'photo')
         d = dict(d)
         extra = set(d) - set(cls.__dataclass_fields__)
         if extra:
             raise ContentError(f'unknown photo field(s) {sorted(extra)}')
+        _shape(cls, d, 'a photo')
         if d.get('focal'):
+            f = d['focal']
+            if not (_is(f, list) and len(f) == 2
+                    and all(isinstance(n, (int, float)) and not isinstance(n, bool) for n in f)):
+                raise ContentError('`focal` must be two numbers, like [0.5, 0.42]')
             d['focal'] = tuple(d['focal'])
         if d.get('taken_at'):
             d['taken_at'] = parse_dt(d['taken_at'])
@@ -711,6 +793,7 @@ class Story:
         unknown keys are rejected loudly rather than silently ignored, because
         a typo'd `source` that leaves `sources` empty would otherwise render a
         card with no attribution."""
+        _need(d, dict, 'story')
         d = dict(d)
         if 'reel' in d and 'is_reel' not in d:
             d['is_reel'] = d.pop('reel')
@@ -720,11 +803,16 @@ class Story:
             raise ContentError(
                 f'unknown field(s) {sorted(extra)}. Valid fields: '
                 f'{sorted(known)}. Did you mean one of those?')
+        _shape(cls, d, 'a story')
         tpl = d.pop('template', None)
         hook = d.pop('hook', '')
+        if tpl is not None:
+            _need(tpl, str, 'template')
+        _need(hook, str, 'hook')
         if d.get('photo'):
             d['photo'] = Photo.from_dict(d['photo'])
         if d.get('gallery'):
+            _need(d['gallery'], list, 'gallery')
             d['gallery'] = [Photo.from_dict(p) for p in d['gallery']]
         if 'published_at' in d and d['published_at'] is not None:
             d['published_at'] = parse_dt(d['published_at'])
@@ -732,10 +820,15 @@ class Story:
             d['verified_at'] = parse_dt(d['verified_at'])
         if d.get('quote') is not None:
             q = d['quote']
-            if len(q) != 2:
+            if not (_is(q, list) and len(q) == 2 and all(_is(x, str) for x in q)):
                 raise ContentError('quote must be [text, attribution]')
             d['quote'] = (q[0], q[1])
         if d.get('numbers'):
+            ns = d['numbers']
+            if not (_is(ns, list) and all(
+                    _is(n, list) and len(n) == 2 and all(_is(x, str) for x in n) for n in ns)):
+                raise ContentError('`numbers` must be a list of [value, label] pairs, '
+                                   'both in quotes, like [["12", "ಮಂದಿ"]]')
             d['numbers'] = [tuple(n) for n in d['numbers']]
         obj = cls(**d)
         # Carried alongside rather than inside the dataclass: they are
@@ -899,6 +992,7 @@ class Edition:
 
     @classmethod
     def from_dict(cls, d: dict) -> 'Edition':
+        _need(d, dict, 'edition')
         d = dict(d)
         extra = set(d) - set(cls.__dataclass_fields__)
         if extra:
@@ -906,7 +1000,17 @@ class Edition:
                 f'unknown edition field(s) {sorted(extra)}. Valid: '
                 f'{sorted(cls.__dataclass_fields__)}')
         d.setdefault('schema_version', LEGACY_SCHEMA)
-        d['stories'] = [Story.from_dict(s) for s in d.get('stories', [])]
+        _need(d.get('stories', []), list, 'stories')
+        _shape(cls, d, 'an edition')
+        stories = []
+        for i, raw in enumerate(d.get('stories', []), 1):
+            try:
+                stories.append(Story.from_dict(raw))
+            except ContentError as e:
+                # Name the story: a day has up to a dozen, and "headline must
+                # be text" with no number sends the reader hunting.
+                raise ContentError(f'story {i}: {e}') from None
+        d['stories'] = stories
         if not d['stories']:
             raise ContentError('an edition needs at least one story')
         if 'date' in d and d['date'] is not None:
@@ -916,9 +1020,7 @@ class Edition:
     @classmethod
     def load(cls, path: str) -> 'Edition':
         """Read an edition from a JSON file and validate it."""
-        import json
-        with open(path, encoding='utf-8') as f:
-            return cls.from_dict(json.load(f)).validate()
+        return cls.from_dict(read_json(path)).validate()
 
     def to_dict(self) -> dict:
         return {'schema_version': self.schema_version,

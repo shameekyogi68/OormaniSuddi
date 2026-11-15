@@ -339,9 +339,9 @@
       "id": "2026-10-24-02",
       "said": "YouTube Shorts high-reach tag strategy: 1) Title under 60 chars ending with #shorts #KundapuraNews (the 3 player hook hashtags: #shorts #KundapuraNews #KannadaNews), 2) Description strictly under 15 hashtags (10-12 targeted tags at very bottom below a natural 2-sentence keyword summary), 3) Backend comma-separated video tags for YouTube Studio box (hyper-local coastal search phrases), 4) Visual hook in first 2 seconds for >80% retention.",
       "scope": "desk",
-      "why": "Editor standing instruction (2026-10-24) optimizing for YouTube Shorts Browse Features, Shorts Feed, and Search distribution.",
+      "why": "Editor standing instruction (2026-10-24) optimizing for YouTube Shorts Browse Features, Shorts Feed, and Search distribution.  · retired: Replaced by the 2026-11-11 factual, edition-relevant Shorts packaging standard; fixed tag volume and hard-coded places conflict with premium editorial restraint.",
       "added": "2026-10-24",
-      "retired": "",
+      "retired": "2026-11-11",
       "by": ""
     },
     {
@@ -379,6 +379,69 @@
       "added": "2026-10-26",
       "retired": "",
       "by": "editor"
+    },
+    {
+      "id": "2026-10-28-01",
+      "said": "Reel captions (saara_caption.txt) must strictly fit under 2,100 UTF-8 bytes (Limits.ig_caption_max_bytes) while retaining all curated hashtags (up to 30) without truncation on the first paste.",
+      "scope": "always",
+      "why": "Instagram Web composer and API hard-cut captions at 2,200 bytes on first paste. To guarantee zero truncation and retain all 30 hashtags, saara reel captions must stay <= 2,100 UTF-8 bytes with concise story bullets.",
+      "added": "2026-10-28",
+      "retired": "",
+      "by": "Editor"
+    },
+    {
+      "id": "2026-11-11-01",
+      "said": "Premium news copy is precise, concise, calm, locally useful and natural when spoken. Broadcast energy comes from specific facts, active verbs and rhythm — never embellishment, promotional filler, gratuitous graphic detail or a sentence that merely repeats the headline.",
+      "scope": "desk",
+      "why": "Owner's 2026-11-11 directive: raise content to premium professional international luxury standards through editorial restraint and precision, without changing facts or the established design.",
+      "added": "2026-11-11",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-11-11-02",
+      "said": "Shorts packaging is factual and restrained: a display-safe title with #shorts and an actual place when it fits; a Kannada description with the lead, stories, sources and one useful question; only unique edition-relevant place and subject tags. Never hard-code towns or breaking labels, stuff bilingual keywords, or chase a fixed tag count.",
+      "scope": "desk",
+      "why": "Owner's 2026-11-11 premium editorial directive: metadata must describe the edition accurately and calmly rather than inflate reach with irrelevant keywords.",
+      "added": "2026-11-11",
+      "retired": "",
+      "by": ""
+    },
+    {
+      "id": "2026-11-12-01",
+      "said": "Every daily news reel must undergo a Voice & Pronunciation Reviewer pass before completion. The reviewer audits audio pronunciation, conjunct pauses (e.g. Swagata), suffix distortions (e.g. Kamagarige vs Kamagari), and rhythm, requiring a minimum score of 9 out of 10 to approve.",
+      "scope": "desk",
+      "why": "Editor standing instruction: reputed company cannot publish imperfect pronunciation",
+      "added": "2026-11-12",
+      "retired": "",
+      "by": "Editor"
+    },
+    {
+      "id": "2026-11-12-02",
+      "said": "All transition sound effects (whoosh and pop) between news stories in ಸುದ್ದಿ ಸಾರ reels are permanently disabled to prevent transition glitch and pop artifacts; transitions between stories are clean, silent pauses over the background news music bed.",
+      "scope": "desk",
+      "why": "Editor standing instruction: remove glitch sound when voiceover transitions between each news, now and in future  · retired: Editor clarification: keep transition SFX between news; the glitch sound was an audio edge waveform discontinuity at the end of voiceover clips, not the transition SFX.",
+      "added": "2026-11-12",
+      "retired": "2026-11-12",
+      "by": "Editor"
+    },
+    {
+      "id": "2026-11-12-03",
+      "said": "The Voice & Pronunciation Reviewer (Expert Review) must evaluate every news reel on every run automatically without prompting, auditing conjuncts, pauses, endings, and scoring at least 9/10 before sign-off.",
+      "scope": "desk",
+      "why": "Editor standing instruction: expert review must be there in future also without being told",
+      "added": "2026-11-12",
+      "retired": "",
+      "by": "Editor"
+    },
+    {
+      "id": "2026-11-12-04",
+      "said": "All speech and voiceover clips must have seamless micro-fades at both edges so that clips never end at non-zero amplitudes, completely eliminating electrical spark/glitch clicks at voiceover boundaries now and in all future renders. Transition SFX (whoosh and pop) between news stories are kept.",
+      "scope": "desk",
+      "why": "Editor standing instruction: keep transition SFX between news, and permanently eliminate the electrical wire contact / glitch sound when voiceover ends.",
+      "added": "2026-11-12",
+      "retired": "",
+      "by": ""
     }
   ]
 }

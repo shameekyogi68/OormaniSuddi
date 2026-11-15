@@ -20,6 +20,7 @@ green, nothing below applies to you today.
 | Line | Means | Do |
 |---|---|---|
 | `disk` ! or ✗ | under `Limits.disk_warn_gb` / `disk_min_gb` free | `python3 scripts/archive_edition.py <date>` for finished days; empty the Trash; `du -sh out build .backups` |
+| `contract` ! | a test suite has outgrown the quick check | add its name to `tests/slow_suites.txt` — it still runs in the full suite and in CI (D150) |
 | `tools` ✗ | ffmpeg, Kannada shaping (raqm) or the fallback voice is gone | the line names the command |
 | `backups` ✗ | the nightly copy has not run, or there is no second copy | `bash scripts/backup.sh --status` |
 | `git` ✗ unpushed | GitHub — the offsite copy — is behind | `git push` |

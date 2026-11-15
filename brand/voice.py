@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import os
 import re
+import contextlib
 import json
 import base64
 import shutil
@@ -267,6 +268,24 @@ def _say_scaled(whole: str, frac: str, scale: str) -> str:
     return f'{whole} {linker} {sub} {below}'
 
 
+_INIT = r'[A-Za-zಀ-೿]{1,2}್?'
+_NOT_LETTER = r'[A-Za-zಀ-೿]'
+# an initial, its dot, and another initial that is itself dotted, or ends its word ("ಪಿ.ಎಸ್:", "ಪಿ.ಎಸ್ ಅಧಿಕಾರ")
+_INITIALS_RUN = re.compile(r'(?<!' + _NOT_LETTER + r')(' + _INIT + r')\.\s*(?=' + _INIT + r'(?:\.|(?!' + _NOT_LETTER + r')))')
+
+
+def _join_initials(text: str) -> str:
+    """"ಮಹೇಶ್ ಪಿ.ಎಸ್:" → "ಮಹೇಶ್ ಪಿ ಎಸ್:" — the letters of a man's name run together, with no stop between them.
+
+    Measured on the reel of 2026-10-30: the older rules above needed the LAST initial to carry its own dot or to be
+    followed by a space, so "ಪಿ.ಎಸ್:" kept its dot, was handed to the voice as "ಪಿ. ಎಸ್:", and the voice made two
+    sentences of a name (a 0.65 s silence between the letters, the headline in three pieces)."""
+    prev = None
+    while prev != text:
+        prev, text = text, _INITIALS_RUN.sub(r'\1 ', text)
+    return text
+
+
 def _speech_normalise(text: str) -> str:
     """Turn written Kannada news copy into what an anchor would say aloud."""
     t = text
@@ -286,6 +305,7 @@ def _speech_normalise(text: str) -> str:
                r' \1 ', t)
     t = re.sub(r'(?:^|\s)([A-Za-z\u0C80-\u0CFF]{1,2}\u0CCD?)\.\s+(?=[A-Za-z\u0C80-\u0CFF])',
                r' \1 ', t)
+    t = _join_initials(t)
 
     # Money with a scale word is spoken in whole units of the scale below.
     # The ₹ is consumed here, so ರೂಪಾಯಿ has to be re-attached — it is what
@@ -352,17 +372,12 @@ def _speech_normalise(text: str) -> str:
 def _anchor_cadence(text: str) -> str:
     """Punctuate for the ear rather than the eye.
 
-    edge-tts accepts no SSML, so every pause an anchor makes has to be written
-    into the text as punctuation. This is where delivery stops sounding like a
-    document being read aloud and starts sounding like someone presenting it:
-    a beat after the dateline, a beat around an attribution, and a full stop
-    that genuinely lands at the end of every sentence — which is what produces
-    the falling final intonation. Without it the engine trails off flat.
+    Every pause an anchor makes has to be written into the text cleanly without
+    inserting artificial commas on locatives (which causes modern neural TTS like
+    Gemini to spike upward in pitch). A full stop genuinely lands at the end of
+    every sentence — producing the natural falling final intonation.
     """
     t = text
-    # A dateline is announced, then held for a beat.
-    t = re.sub(r'^(\S{3,24}(?:ದಲ್ಲಿ|ನಲ್ಲಿ|ಯಲ್ಲಿ|ಬಳಿ|ಸಮೀಪ))\s+(?![,.])',
-               r'\1, ', t)
     # Attributions take a breath either side, the way a newsreader separates
     # the claim from whoever made it.
     for cue in ('ಪೊಲೀಸರ ಪ್ರಕಾರ', 'ಮೂಲಗಳ ಪ್ರಕಾರ', 'ವರದಿಗಳ ಪ್ರಕಾರ',
@@ -385,21 +400,47 @@ def _pronunciation_map() -> dict[str, str]:
     try:
         with open(path, encoding='utf-8') as fh:
             data = json.load(fh)
-        return {str(k): str(v) for k, v in data.items() if k and v}
+        out = {str(k): str(v) for k, v in data.items() if k and v}
     except Exception:
-        return {}
+        out = {}
+    out.update(_TRIAL_RESPELLINGS)
+    return out
 
 
-def _spoken(text: str) -> str:
-    """Normalise one beat into something a TTS engine reads like an anchor."""
+# A respelling tried for ONE take of a clip that the ear heard wrong (brand/saara_reel.py asks again with the next
+# spelling of the failing word). Held only for the duration of that request — assets/pronunciation.json is changed
+# only when a spelling has been heard right (brand/lexicon.py), never on a guess.
+_TRIAL_RESPELLINGS: dict[str, str] = {}
+
+
+@contextlib.contextmanager
+def trial_respelling(mapping: dict[str, str]):
+    old = dict(_TRIAL_RESPELLINGS)
+    _TRIAL_RESPELLINGS.update(mapping)
+    try:
+        yield
+    finally:
+        _TRIAL_RESPELLINGS.clear()
+        _TRIAL_RESPELLINGS.update(old)
+
+
+def _spoken(text: str, respell: bool = True) -> str:
+    """Normalise one beat into something a TTS engine reads like an anchor.
+
+    `respell=False` keeps the spelling the editor wrote — what the reel MEANT to say, which is what the ear compares
+    against (brand/ear.py): a deliberate respelling such as ಉಪ್ಪುನ್ದ for ಉಪ್ಪುಂದ must not be judged as a mistake."""
     t = re.sub(r'[\r\n\t]+', ' ', text)
-    for src, dst in _pronunciation_map().items():
+    for src, dst in (_pronunciation_map().items() if respell else ()):
         t = t.replace(src, dst)
     # Bullets and dashes are typography, not speech. Left in, the engine either
     # pronounces them or stalls on them.
     t = t.replace('▪', '').replace('•', '').replace('·', ',')
     t = t.replace('—', ', ').replace('–', ', ')
     t = _speech_normalise(t)
+    # A headline's colon ("ಸುಜಿತ್ ಹತ್ಯೆ: ಆರೋಪಿಗಳು ಜೈಲಿಗೆ") is a breath, not the end of a sentence. Handed over as ":",
+    # the voice closed the first half like a sentence (falling pitch, 0.4–0.7 s of silence) and read the headline in
+    # pieces (measured on the reel of 2026-10-30, stories 3 and 4). Clock times were already turned into words above.
+    t = re.sub(r'\s*:\s*', ', ', t)
     t = re.sub(r'\s+', ' ', t)
     t = re.sub(r'\s*,\s*', ', ', t)
     t = re.sub(r'\s*\.\s*', '. ', t)

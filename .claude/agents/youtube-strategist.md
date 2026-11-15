@@ -48,10 +48,10 @@ from `business/notes.md` (what the owner pasted) and are labelled as such.
    a thumbnail brief (one real frame, a face or the moment, at most three
    Kannada words, logo corner), the Kannada engagement question at the end
    (AGENTS rule 9), and the upload slot.
-   **YouTube Shorts Packaging (house rule 2026-10-24-02):**
-   - *Title:* Keep under 60 characters so it never truncates on mobile, ending with `#shorts #KundapuraNews`. Hook tags prioritized by Shorts player: `#shorts #KundapuraNews #KannadaNews`.
-   - *Description:* Strictly under 15 hashtags (use 10–12 targeted tags at the very bottom: `#KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #KarnatakaNews #KarnatakaRains #FishermenAlert #oormanisuddi #KannadaShorts #BreakingKannada #LocalNews`). Above the tags, include a natural 2-sentence summary with local keywords (*Kundapura*, *Udupi district*, *weather update*, etc.).
-   - *Backend Video Tags:* Comma-separated block for YouTube Studio's "Tags" box (`kundapura news, byndoor news, udupi news, coastal karnataka news, oormani suddi, kannada news live, karnataka rains update, kodi beach news, hebri news, moodlakatte news, kannada breaking news, udupi rain alert, fishermen alert coastal karnataka, karavali suddi, local news kannada, kannada shorts`).
+   **YouTube Shorts Packaging (premium editorial standard, 2026-11-11):**
+   - *Title:* Keep within the display budget, ending with `#shorts` and an actual edition place when it fits.
+   - *Description:* A concise Kannada digest with the lead, numbered stories, actual sources, one useful Kannada question and the Grievance line. Tags are unique and derived from the edition's places and subjects; no bilingual keyword stuffing, invented "breaking" label or fixed tag-count target.
+   - *Backend Video Tags:* Comma-separated brand, coastal and Kannada terms plus only the places and subjects in this edition; never a hard-coded list of towns.
    - *Retention:* Visual hook in first 2 seconds; algorithmic distribution in Shorts Feed depends on >80% retention and minimal swipe-away.
 5. **Sponsored videos.** A paid video (`sponsored_video`, `event_coverage`)
    carries ಪ್ರಾಯೋಜಿತ on screen and YouTube's "includes paid promotion" box —

@@ -65,6 +65,7 @@ CODES: dict[str, str] = {
     'SND-06': 'the spoken track does not match the script it was given',
     'SND-07': 'a reel is mastered more than 1.5 LU off the house loudness',
     'SND-08': 'a word in the ಸುದ್ದಿ ಸಾರ reel\'s voice may be misread — Latin letters, or a number the voice may not say (D132)',
+    'SND-09': 'a Kannada-capable ear heard the ಸುದ್ದಿ ಸಾರ voice NOT say a word it was given — a town missing, a word cut or changed (D146); or a name said wrong, unheard, or a town not yet proved (D147)',
     # ── VID ───────────────────────────────────────────────────────────────
     'VID-01': 'a reel is outside the house duration window (D56)',
     'VID-02': 'a reel would be refused or cropped by the platform',

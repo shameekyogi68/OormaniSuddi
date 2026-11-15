@@ -27,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from brand import saara_reel as R                      # noqa: E402
-from brand.content import Edition, edition_day        # noqa: E402
+from brand.content import ContentError, Edition, edition_day, read_json        # noqa: E402
 from brand.tokens import Limits                        # noqa: E402
 
 
@@ -40,10 +40,13 @@ def main() -> int:
     a = ap.parse_args()
 
     path = a.edition
-    if not os.path.exists(path):
-        path = os.path.join(ROOT, 'editions', f'{edition_day(a.edition)}.json')
-    with open(path, encoding='utf-8') as fh:
-        ed = Edition.from_dict(json.load(fh))
+    try:
+        if not os.path.exists(path):
+            path = os.path.join(ROOT, 'editions', f'{edition_day(a.edition)}.json')
+        ed = Edition.from_dict(read_json(path))
+    except ContentError as e:
+        print(f'✗ {path}: {e}', file=sys.stderr)
+        return 2
     saara = ed.segment('saara')
     if not saara:
         print('No ಸುದ್ದಿ ಸಾರ stories in this edition — nothing for the reel.')
@@ -87,6 +90,16 @@ def main() -> int:
             print(f'\n ? FOR THE EDITOR  {msg}')
         for who, toks in res['pronunciation'].items():
             print(f'\n ⚠ voice, {who}: {" ".join(toks)} — may be misread; respell it in assets/pronunciation.json')
+        towns = res.get('towns') or {}
+        unproved = [t for t, st in towns.items() if st == 'unverified']
+        held = [t for t, st in towns.items() if st == 'missing']
+        if unproved:
+            print(f'\n ⚠ TOWNS NOT YET PROVED (D147): {" · ".join(unproved)} — the render spends up to '
+                  f'{Limits.town_verify_takes} probe takes on each and HOLDS the reel if one is still not heard right. '
+                  f'To prove one now: python3 scripts/town_clips.py verify <town>')
+        if held:
+            print(f'\n ✗ TOWN THE VOICE CANNOT SAY, NO APPROVED CLIP: {" · ".join(held)} — the reel will be held '
+                  '(scripts/town_clips.py add / approve)')
         clean = not res['issues'] and not res['warnings'] and not res['pronunciation']
         print('\n' + ('CLEAN — the reel will come out as designed.' if clean else
                       'NOT CLEAN — rewrite the copy named above (reel_line / reel_support), then run this again.'))

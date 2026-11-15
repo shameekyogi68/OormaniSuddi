@@ -41,7 +41,7 @@ kept current by the editor: paste Instagram's own announcements into
    - *Layer 1 (Brand + Local, always kept):* `#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ #ಕುಂದಾಪುರ #ಬೈಂದೂರು #ಹೆಬ್ರಿ #Kundapura #Byndoor #Hebri`
    - *Layer 2 (Story-specific, hyper-local spots & trending angles):* landmarks/spots (`#Moodlakatte #Nellikatte #KodiBeach`), trending topics (`#KarnatakaRains #ಮಳೆ #ಗುಡುಗುಮಳೆ #FishermenAlert #KarnatakaWeather #CyberFraud #MissingPerson`)
    - *Layer 3 (Broad Kannada news, regional discovery):* `#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #LocalNews #NewsInKannada #BreakingKannada`
-   Put the curated 3-layer tags directly in the caption; the first comment is reserved strictly for community conversation and questions. For YouTube Shorts, add title tags (`#shorts #KundapuraNews #KannadaNews`) and 10–12 targeted description tags. [D142, 2026-10-26-04]
+   Put the curated 3-layer tags directly in the caption. The first comment is for honest community conversation; crime, accident and obituary comments instead prioritise verified information, dignity and privacy. For YouTube Shorts, use `#shorts` and an actual edition place in the title when it fits; description tags are unique, edition-relevant places and subjects, with no fixed count target. [D142, 2026-10-26-04, 2026-11-11-02]
 8. **No engagement bait.** "Like if…", "tag three friends" and giveaways-for-follows
    are demoted. A real question about the reader's own town is fine. [Official]
 9. **Trial reels** go only to non-followers first — a way to test a hook

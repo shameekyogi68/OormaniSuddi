@@ -40,6 +40,9 @@ top to bottom, first.
    the middle (more than about nine words with no comma).
 6. **Two stories that sound alike** back to back (same opening word, same verb ending) — reorder or
    reword.
+7. **Flourish instead of news:** stock praise, promotional filler, a prediction presented as impact, or gratuitous
+   physical detail. Premium broadcast copy is calm and exact. The card must also end as a complete sentence; a voice
+   normaliser adding a full stop does not make a fragment acceptable.
 
 ## What you return
 ```

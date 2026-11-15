@@ -78,8 +78,17 @@ def _edition_day(data: dict, path: str) -> dt.date:
 
 
 def cmd_seen(a) -> int:
-    with open(a.edition, encoding='utf-8') as fh:
-        data = json.load(fh)
+    from brand.content import ContentError, Edition, read_json
+    try:
+        data = read_json(a.edition)
+        if isinstance(data, list):
+            data = {'stories': data}
+        # Shape only (D150): `seen` runs before the copy is finished, so the
+        # truth rules in validate() are not asked of it yet.
+        Edition.from_dict(data)
+    except ContentError as e:
+        print(f'✗ {a.edition}: {e}', file=sys.stderr)
+        return 2
     day = _edition_day(data, a.edition)
     root = a.root or ROOT
     refused = 0

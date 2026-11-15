@@ -112,5 +112,25 @@ def colour_words(text: str) -> list[str]:
     return [w for w in dict.fromkeys(words(text)) if any(w.startswith(c) for c in _COLOUR) and not any(c.startswith(w[:5]) for c in corpus)]
 
 
+_PROMOTIONAL = ('ಹೊಸ ಚೈತನ್ಯ', 'ವಿಜೃಂಭಣೆಯಿಂದ')
+_GRAPHIC = ('ರಕ್ತದ ಮಡುವಿನಲ್ಲಿ', 'ರಕ್ತಸಿಕ್ತ', 'ಕೂದಲೆಳೆಯ ಅಂತರದಲ್ಲಿ')
+_TERMINAL = re.compile(r'[.!?।][\"\'’”)]*$')
+
+
+def style_notes(text: str, complete: bool = False) -> list[str]:
+    """Editorial faults a rewrite must fix by hand, never by automatic substitution."""
+    out = []
+    stripped = (text or '').strip()
+    if complete and stripped and not _TERMINAL.search(stripped):
+        out.append('the support sentence has no terminal punctuation — finish the sentence')
+    for phrase in _PROMOTIONAL:
+        if phrase in stripped:
+            out.append(f'"{phrase}" is promotional filler — replace it with a sourced fact')
+    for phrase in _GRAPHIC:
+        if phrase in stripped:
+            out.append(f'"{phrase}" adds gratuitous graphic detail — keep only the fact needed to understand the news')
+    return out
+
+
 def reset() -> None:
     _corpus.cache_clear()

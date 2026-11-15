@@ -1,0 +1,2117 @@
+{
+  "ವಂಡ್ಸೆ": {
+    "say_inline": false,
+    "why": "Measured 2026-10-30 on Gemini Kore (gemini-2.5-flash-preview-tts): about 23 takes in 3 spellings, in lists, in phrases and in carrier phrases — heard right 3 times, and wrong again on each repeat. Heard as \"ಒನ್ ಸೇ\" / \"ವನ್ಸೆ\" / \"ಒಂದು ಸೆ\"; in the reel of 2026-10-30 the headline's town was not said at all. A recording of the name by a person is the cure.",
+    "clip": null,
+    "approved_by": "",
+    "approved_on": ""
+  },
+  "ಯಡ್ತರೆ": {
+    "say_inline": false,
+    "why": "Measured 2026-10-30 on Gemini Kore: every take in 7 spellings and phrases — the ಯ is lost, heard as \"ಎಡ್ತರೆ\" / \"ಎಟ್ರೆ\".",
+    "clip": null,
+    "approved_by": "",
+    "approved_on": ""
+  },
+  "ಉಡುಪಿ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ, ಕುಂದಾಪುರ, ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ."
+        },
+        "source": "reel 2026-11-03 the hook",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಉಡುಪಿ ಹಿರಿಯೆಟ್ಕ ವ್ಯಾಪ್ತಿಯಲಿ ನಿಶೇದಾಗನೆ.",
+          "gemini-3-flash-preview": "ಉಡುಪಿ ಹಿರಿಯಡ್ಕ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ನಿಷೇಧಾಜ್ಞೆ."
+        },
+        "source": "reel 2026-11-03 story 5 headline",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ, ಕುಂದಾಪುರ, ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ."
+        },
+        "source": "reel 2026-11-03 the hook",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಉಡುಪಿ ಹಿರಿಯೆಟ್ಕ ವ್ಯಾಪ್ತಿಯಲಿ ನಿಶೇದಾಗನೆ.",
+          "gemini-3-flash-preview": "ಉಡುಪಿ ಹಿರಿಯಡ್ಕ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ನಿಷೇಧಾಜ್ಞೆ."
+        },
+        "source": "reel 2026-11-03 story 5 headline",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ, ಕುಂದಾಪುರ, ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ."
+        },
+        "source": "reel 2026-11-03 the hook",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಉಡುಪಿ ಹಿರಿಯೆಟ್ಕ ವ್ಯಾಪ್ತಿಯಲಿ ನಿಶೇದಾಗನೆ.",
+          "gemini-3-flash-preview": "ಉಡುಪಿ ಹಿರಿಯಡ್ಕ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ನಿಷೇಧಾಜ್ಞೆ."
+        },
+        "source": "reel 2026-11-03 story 5 headline",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ, ಕುಂದಾಪುರ, ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ಬೈಂದೂರು ಮತ್ತು ಉಡುಪಿ."
+        },
+        "source": "reel 2026-11-03 the hook",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಉಡುಪಿ ಹಿರಿಯೆಟ್ಕ ವ್ಯಾಪ್ತಿಯಲಿ ನಿಶೇದಾಗನೆ.",
+          "gemini-3-flash-preview": "ಉಡುಪಿ ಹಿರಿಯಡ್ಕ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ನಿಷೇಧಾಜ್ಞೆ."
+        },
+        "source": "reel 2026-11-03 story 5 headline",
+        "on": "2026-11-03"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 the hook",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಉಡುಪಿ ಸ್ವಾಮಿಜಿ ವಿರುದ್ಧಾ ದೂರು ಕಳವು ಶಂಖೆ.",
+          "gemini-3-flash-preview": "ಉಡುಪಿ ಸ್ವಾಮೀಜಿ ವಿರುದ್ಧ ದೂರು ಕಳವು ಶಂಕೆ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 the hook",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಉಡುಪಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಉಡುಪಿ ಸ್ವಾಮಿಜಿ ವಿರುದ್ಧಾ ದೂರು ಕಳವು ಶಂಖೆ.",
+          "gemini-3-flash-preview": "ಉಡುಪಿ ಸ್ವಾಮೀಜಿ ವಿರುದ್ಧ ದೂರು ಕಳವು ಶಂಕೆ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-14"
+      }
+    ]
+  },
+  "ಕುಂದಾಪುರ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಹಟ್ಟಮ್ಬತ್ತು ಕೋಟಿಯ ಎಂಬತ್ತು ಲಕ್ಷರುಪಾಯಿ ರಿಂಗ್ರಸ್ತೇ ದಾರಿದಿಪಾ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ಹತ್ತೊಂಬತ್ತು ಕೋಟಿಯ ಎಂಬತ್ತು ಲಕ್ಷ ರೂಪಾಯಿ ರಿಂಗ್ ರಸ್ತೆ ದಾರಿದೀಪ."
+        },
+        "source": "reel 2026-11-10 story 1 headline",
+        "on": "2026-11-10"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ದೀಪಾವಳಿ ಸಡಗರ ಖರಿದಿ ಭರಾಟೆ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ದೀಪಾವಳಿ ಸಡಗರ ಖರೀದಿ ಭರಾಟೆ."
+        },
+        "source": "reel 2026-11-10 story 3 headline",
+        "on": "2026-11-10"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ರಾಜಮಟ್ಟದ ಮುಕ್ತ ಮಾಟ್ಕಬಡಿ ಕೂಟ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ರಾಜ್ಯಮಟ್ಟದ ಮುಕ್ತ ಮ್ಯಾಟ್ ಕಬಡ್ಡಿ ಕೂಟ."
+        },
+        "source": "reel 2026-11-10 story 4 headline",
+        "on": "2026-11-10"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರಾ ವಂದೆ ಭಾರತ ರೈಲಿಗೆ ಪ್ರಧಾನಿ ಚಾಲನೆ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ವಂದೇ ಭಾರತ್ ರೈಲಿಗೆ ಪ್ರಧಾನಿ ಚಾಲನೆ."
+        },
+        "source": "reel 2026-11-11 story 1 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಹಳ್ಳಿಗಳಲ್ಲಿ ಬಲೇಂದ್ರ ಪೂಜಸಡಗರ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ಹಳ್ಳಿಗಳಲ್ಲಿ ಬಲೀಂದ್ರ ಪೂಜೆ ಸಡಗರ"
+        },
+        "source": "reel 2026-11-11 story 5 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಹಳೆಯ ವಂದೆ ಭಾರತ್ರದ್ದು ನೂತನ ರೈಲು.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ. ಹಳೆಯ ವಂದೇ ಭಾರತ್ ರದ್ದು, ನೂತನ ರೈಲು."
+        },
+        "source": "reel 2026-11-13 story 1 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ನಾಳೆ ಹೋಬಳಿ ಮಟ್ಟದ ಪ್ರಜಾಸೇವೆ ಸಭೆ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ನಾಳೆ ಹೋಬಳಿ ಮಟ್ಟದ ಪ್ರಜಾಸೇವೆ ಸಭೆ."
+        },
+        "source": "reel 2026-11-13 story 2 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕರ್ಣಾಟಕ ವೈಭವ ನಿತ್ಯ ರೂಪಕ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ಕರ್ನಾಟಕ ವೈಭವ ನೃತ್ಯ ರೂಪಕ"
+        },
+        "source": "reel 2026-11-13 story 5 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಎಮ್ಮಯಿಟಿಕೆ ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ಎಂಐಟಿಕೆ ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 6 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಕುಂದಾಪುರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಎಮ್ಮಯಿಟಿಕೆ ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ಎಂಐಟಿಕೆ ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 6 headline",
+        "on": "2026-11-14"
+      }
+    ]
+  },
+  "ಬೈಂದೂರು": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈನ್ದೋರು ನಾರಾಯಣ ಗುರು ಸಮುದಾಯ ಭವನ ಶಿಲಾನ್ಯಾಸಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ನಾರಾಯಣ ಗುರು ಸಮುದಾಯ ಭವನ ಶಿಲಾನ್ಯಾಸ."
+        },
+        "source": "reel 2026-11-06 story 5 headline",
+        "on": "2026-11-06"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈನ್ದೂರು ಮಾರಣಕಟ್ಟೆ ಮೊಕ್ತೆ ಸರರ ಅಧಿಕಾರ ಸ್ವಿಕಾರ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಮಾರಣಕಟ್ಟೆ ಮೊಕ್ತೇಸರರ ಅಧಿಕಾರ ಸ್ವೀಕಾರ."
+        },
+        "source": "reel 2026-11-14 story 4 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 the hook",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಿಂದೂರು ವಂದೆ ಭಾರಚ್ಚಾಲನೆ ನಿಲ್ದಾಣ ಅಭಿವರುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ವಂದೇ ಭಾರತ್ ಚಾಲನೆ ನಿಲ್ದಾಣ ಅಭಿವೃದ್ಧಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಈನ್ದೋರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟಾ ಆಲೂರು ಶಾಲೆಗೆ ಜೈಯಾ",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟ ಆಲೂರು ಶಾಲೆಗೆ ಜಯ."
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈನ್ದೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಈನ್ದುರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟಾ ಆಲೋರು ಶಾಲೆಗೆ ಜೈಯಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟ ಆಲೂರು ಶಾಲೆಗೆ ಜಯ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈನ್ದೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಈನ್ದುರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟಾ ಆಲೋರು ಶಾಲೆಗೆ ಜೈಯಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟ ಆಲೂರು ಶಾಲೆಗೆ ಜಯ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಿಂದೂರು ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು\nಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 probe",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಿಂದೂರು ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು\nಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 probe",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 the hook",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಿಂದೂರು ವಂದೆ ಭಾರಚ್ಚಾಲನೆ ನಿಲ್ದಾಣ ಅಭಿವರುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ವಂದೇ ಭಾರತ್ ಚಾಲನೆ ನಿಲ್ದಾಣ ಅಭಿವೃದ್ಧಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬೈಂದೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈನ್ದುರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟಾ ಆಲುರು ಶಾಲೆಗೆ ಜಯಾ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ತ್ರೋಬಾಲ್ ಪಂದ್ಯಾಟ ಆಲೂರು ಶಾಲೆಗೆ ಜಯ."
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-14"
+      }
+    ]
+  },
+  "ಒತ್ತಿನೆನೆ": {
+    "say_inline": true
+  },
+  "ಬ್ರಹ್ಮಾವರ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಂಹವರ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಹ್ಮಾವರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-02 the hook",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಹಾವರ ಸೂರಾಲು ಅರಮನಗೆ ಪಾರಮ್ಪರಿಕ ಸ್ಥಾನಮಾನ.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ. ಸೂರಾಲ ಅರಮನೆಗೆ ಪಾರಂಪರಿಕ ಸ್ಥಾನಮಾನ."
+        },
+        "source": "reel 2026-11-02 story 3 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಹಾವರ ಬಡವಿದ್ಯಾರ್ಥಿಗೆ ನೂತನಮನೆ",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ, ಬಡ ವಿದ್ಯಾರ್ಥಿಗೆ ನೂತನ ಮನೆ."
+        },
+        "source": "reel 2026-11-04 story 3 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಹಾವರ ಕಾಡು ಮತ್ತು ನಾಡು ಕ್ರುಷಿಕರ ಆಗ್ರಹ.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ. ಕಾಡು ಮತ್ತು ನಾಡು ಕೃಷಿಕರ ಆಗ್ರಹ."
+        },
+        "source": "reel 2026-11-06 story 4 headline",
+        "on": "2026-11-06"
+      },
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಭಾವರ ಗುಂಡು ಹಾರಿಸಿ ಹಲ್ಲೆ ಪ್ರಕರಣ ದಾಕಲು.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ, ಗುಂಡು ಹಾರಿಸಿ ಹಲ್ಲೆ. ಪ್ರಕರಣ ದಾಖಲು."
+        },
+        "source": "reel 2026-11-09 story 2 headline",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬ್ರಹಹವರ ವಿದ್ಯು ತಂತಿ ತಗುಲಿ ವ್ಯಕ್ತಿ ಸಾವು.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ. ವಿದ್ಯುತ್ ತಂತಿ ತಗುಲಿ ವ್ಯಕ್ತಿ ಸಾವು."
+        },
+        "source": "reel 2026-11-11 story 4 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬ್ರಹ್ಮಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬ್ರಮ್ಹಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಹವರ ಇಂದಿನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬ್ರಮ್ಹಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಹವರ ಇಂದಿನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬ್‌ರಹ್‌ಮಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬರಹಮಾವರಾ ಇಂದಿನ ಸುದ್ಧಿ",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಬ್‌ರಹ್‌ಮಾವರ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬರಹಮಾವರಾ ಇಂದಿನ ಸುದ್ಧಿ",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      }
+    ]
+  },
+  "ಕಾರ್ಕಳ": {
+    "say_inline": true
+  },
+  "ಮಣಿಪಾಲ": {
+    "say_inline": true
+  },
+  "ಮಲ್ಪೆ": {
+    "say_inline": true
+  },
+  "ಕಾಪು": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕಾಪು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ದ್ವಜಮರಾ.",
+          "gemini-3.1-flash-lite": "ಕಾಪು ಮಹಾಲಿಂಗೇಶ್ವರ ಸನ್ನಿಧಿಗೆ ನೂತನ ಧ್ವಜಮರ"
+        },
+        "source": "reel 2026-10-31 story 5 headline",
+        "on": "2026-10-31"
+      }
+    ]
+  },
+  "ಹೆಬ್ರಿ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಹೆಬ್ರಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಮಾವರ ಹೆಬ್ರಿ ಕುಂದಾಪುರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ, ಹೆಬ್ರಿ, ಕುಂದಾಪುರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-06 09:00:00+05:30 the hook",
+        "on": "2026-11-06"
+      },
+      {
+        "spelling": "ಹೆಬ್ರಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಹೆಬ್ಬರಿ ಹದಿನೇಡು ಬೇಡಿಕೆಗಳ ಇಡೇರಿಕೆಗೆ ಧರಣಿ.",
+          "gemini-3-flash-preview": "ಹೆಬ್ರಿ ಹದಿನೇಳು ಬೇಡಿಕೆಗಳ ಈಡೇರಿಕೆಗೆ ಧರಣಿ"
+        },
+        "source": "reel 2026-11-06 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-06"
+      },
+      {
+        "spelling": "ಹೆಬ್ರಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಮಹವರ ಹೆಬ್ರಿ ಕುಂದಾಪುರಾ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಹೆಬ್ರಿ ಕುಂದಾಪುರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-06 09:00:00+05:30 the hook",
+        "on": "2026-11-06"
+      },
+      {
+        "spelling": "ಹೆಬ್ರಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬ್ರಮ್ಮಹವರ ಹೆಬ್ರಿ ಕುಂದಾಪುರಾ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬ್ರಹ್ಮಾವರ ಹೆಬ್ರಿ ಕುಂದಾಪುರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-06 09:00:00+05:30 the hook",
+        "on": "2026-11-06"
+      },
+      {
+        "spelling": "ಹೆಬ್‌ರಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಬ್ರೆ ಹಾದಿನೆಯಳು ಬೇಡಿಕೆಗಳ ಇಡೇರಿಕೆಗೆ ಧರಣಿ.",
+          "gemini-3-flash-preview": "ಹೆಬ್ರಿ. ಹದಿನೇಳು ಬೇಡಿಕೆಗಳ ಈಡೇರಿಕೆಗೆ ಧರಣಿ."
+        },
+        "source": "reel 2026-11-06 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-06"
+      }
+    ]
+  },
+  "ಹೆಮ್ಮಾಡಿ": {
+    "say_inline": true
+  },
+  "ಗಂಗೊಲ್ಲಿ": {
+    "say_inline": true
+  },
+  "ಕೋಡಿ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಡಿ ಸ್ವಚ್ಚ ಕಡಲತಿರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು.",
+          "gemini-3.1-flash-lite": "ಕೋಡಿ ಸ್ವಚ್ಛ ಕಡಲ ತೀರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು"
+        },
+        "source": "reel 2026-10-31 story 4 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಡಿ ಸ್ವಚ್ಚ ಕಡಲತಿರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು.",
+          "gemini-3.1-flash-lite": "ಕೋಡಿ ಸ್ವಚ್ಛ ಕಡಲ ತೀರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು"
+        },
+        "source": "reel 2026-10-31 story 4 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಡಿ ಸ್ವಚ್ಚ ಕಡಲತಿರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು.",
+          "gemini-3.1-flash-lite": "ಕೋಡಿ ಸ್ವಚ್ಛ ಕಡಲ ತೀರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು"
+        },
+        "source": "reel 2026-10-31 story 4 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಡಿ ಸ್ವಚ್ಚ ಕಡಲತಿರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು.",
+          "gemini-3.1-flash-lite": "ಕೋಡಿ ಸ್ವಚ್ಛ ಕಡಲ ತೀರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು"
+        },
+        "source": "reel 2026-10-31 story 4 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಡಿ ಸ್ವಚ್ಚ ಕಡಲತಿರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು.",
+          "gemini-3.1-flash-lite": "ಕೋಡಿ ಸ್ವಚ್ಛ ಕಡಲ ತೀರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು"
+        },
+        "source": "reel 2026-10-31 story 4 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಕೋಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಡಿ ಸ್ವಚ್ಚ ಕಡಲತಿರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು.",
+          "gemini-3.1-flash-lite": "ಕೋಡಿ ಸ್ವಚ್ಛ ಕಡಲ ತೀರ ಅಭಿಯಾನದ ಮೈಲಿಗಲ್ಲು"
+        },
+        "source": "reel 2026-10-31 story 4 headline",
+        "on": "2026-10-31"
+      }
+    ]
+  },
+  "ಮಂಗಳೂರು": {
+    "say_inline": true
+  },
+  "ದಕ್ಷಿಣ ಕನ್ನಡ": {
+    "say_inline": true
+  },
+  "ಉತ್ತರ ಕನ್ನಡ": {
+    "say_inline": true
+  },
+  "ಶಿರಸಿ": {
+    "say_inline": true
+  },
+  "ಭಟ್ಕಳ": {
+    "say_inline": true
+  },
+  "ಕುಮಟಾ": {
+    "say_inline": true
+  },
+  "ಹೊನ್ನಾವರ": {
+    "say_inline": true
+  },
+  "ಬೆಂಗಳೂರು": {
+    "say_inline": true
+  },
+  "ಉಡುಪಿ ಜಿಲ್ಲೆ": {
+    "say_inline": true
+  },
+  "ಉಳ್ಳಾಲ": {
+    "say_inline": true
+  },
+  "ಪುತ್ತೂರು": {
+    "say_inline": true
+  },
+  "ಬಂಟ್ವಾಳ": {
+    "say_inline": true
+  },
+  "ಬೆಳ್ತಂಗಡಿ": {
+    "say_inline": true
+  },
+  "ಸುಳ್ಯ": {
+    "say_inline": true
+  },
+  "ಮೂಡುಬಿದಿರೆ": {
+    "say_inline": true
+  },
+  "ಸುರತ್ಕಲ್": {
+    "say_inline": true
+  },
+  "ಪಡುಬಿದ್ರಿ": {
+    "say_inline": true
+  },
+  "ಶಿರ್ವ": {
+    "say_inline": true
+  },
+  "ಕೋಟ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಮಾಬುಕಳ ಹೆದ್ದಾರಿ 30 ಬಲಿ.",
+          "gemini-3-flash-preview": "ಕೋಟ ಮಾಬುಗಳ ಹೆದ್ದಾರಿ ಮೂವತ್ತೈದು ಬಲಿ"
+        },
+        "source": "reel 2026-11-05 story 1 headline",
+        "on": "2026-11-05"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇನ್ದಿನ ಸುದ್ದಿ ಕುಂದ ಪುರಾ ಮತ್ತು ಕೋಟ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ಮತ್ತು ಕೋಟ."
+        },
+        "source": "reel 2026-11-08 the hook",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ ಜಿಶಂಕರವರಿಗೆ ರಾಜ್ಯೋತ್ಸವ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3-flash-preview": "ಕೋಟ ಜಿ ಶಂಕರ್ ಅವರಿಗೆ ರಾಜ್ಯೋತ್ಸವ ಪ್ರಶಸ್ತಿ."
+        },
+        "source": "reel 2026-11-08 story 3 headline",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ, ವಿಗ್ರಹ ಮಾರಾಟಾ ಆರೋಪಾ ಸತ್ಯಕ್ಕೆ ದೂರಾ.",
+          "gemini-3-flash-preview": "ಕೋಟ, ವಿಗ್ರಹ ಮಾರಾಟ ಆರೋಪ ಸತ್ಯಕ್ಕೆ ದೂರ."
+        },
+        "source": "reel 2026-11-08 story 4 headline",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆದ್ದಾರಿ ದುರಸ್ತಗೆ ಸಮ್ಸದ ಕೋಟಾ ಗಡುವು.",
+          "gemini-3-flash-preview": "ಹೆದ್ದಾರಿ ದುರಸ್ತಿಗೆ ಸಂಸದ ಕೋಟ ಗಡುವು"
+        },
+        "source": "reel 2026-11-09 story 1 headline",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ, ದಿಪಾವಳಿ ಪ್ರಯುಕ್ತ ಸಾಮುಹಿಕ ಗೋಪುಜೆ.",
+          "gemini-3-flash-preview": "ಕೋಟ ದೀಪಾವಳಿ ಪ್ರಯುಕ್ತ ಸಾಮೂಹಿಕ ಗೋ ಪೂಜೆ."
+        },
+        "source": "reel 2026-11-10 story 5 headline",
+        "on": "2026-11-10"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಮಾಬುಕಳ ಹೆದ್ದಾರಿ 30 ಬಲಿ.",
+          "gemini-3-flash-preview": "ಕೋಟ ಮಾಬುಗಳ ಹೆದ್ದಾರಿ ಮೂವತ್ತೈದು ಬಲಿ"
+        },
+        "source": "reel 2026-11-05 story 1 headline",
+        "on": "2026-11-05"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇನ್ದಿನ ಸುದ್ದಿ ಕುಂದ ಪುರಾ ಮತ್ತು ಕೋಟ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ಮತ್ತು ಕೋಟ."
+        },
+        "source": "reel 2026-11-08 the hook",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ ಜಿಶಂಕರವರಿಗೆ ರಾಜ್ಯೋತ್ಸವ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3-flash-preview": "ಕೋಟ ಜಿ ಶಂಕರ್ ಅವರಿಗೆ ರಾಜ್ಯೋತ್ಸವ ಪ್ರಶಸ್ತಿ."
+        },
+        "source": "reel 2026-11-08 story 3 headline",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ, ವಿಗ್ರಹ ಮಾರಾಟಾ ಆರೋಪಾ ಸತ್ಯಕ್ಕೆ ದೂರಾ.",
+          "gemini-3-flash-preview": "ಕೋಟ, ವಿಗ್ರಹ ಮಾರಾಟ ಆರೋಪ ಸತ್ಯಕ್ಕೆ ದೂರ."
+        },
+        "source": "reel 2026-11-08 story 4 headline",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆದ್ದಾರಿ ದುರಸ್ತಗೆ ಸಮ್ಸದ ಕೋಟಾ ಗಡುವು.",
+          "gemini-3-flash-preview": "ಹೆದ್ದಾರಿ ದುರಸ್ತಿಗೆ ಸಂಸದ ಕೋಟ ಗಡುವು"
+        },
+        "source": "reel 2026-11-09 story 1 headline",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಕೋಟ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕೋಟಾ, ದಿಪಾವಳಿ ಪ್ರಯುಕ್ತ ಸಾಮುಹಿಕ ಗೋಪುಜೆ.",
+          "gemini-3-flash-preview": "ಕೋಟ ದೀಪಾವಳಿ ಪ್ರಯುಕ್ತ ಸಾಮೂಹಿಕ ಗೋ ಪೂಜೆ."
+        },
+        "source": "reel 2026-11-10 story 5 headline",
+        "on": "2026-11-10"
+      }
+    ]
+  },
+  "ಸಾಲಿಗ್ರಾಮ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಸಾಲಿಗ್ರಾಮ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಲಿಗ್ರಾಮ ಸಾಂಪ್ರದಾಯಿಕ ಗುಡುದಿಪ ತಯಾರಿಕೆ.",
+          "gemini-3-flash-preview": "ಸಾಲಿಗ್ರಾಮ. ಸಾಂಪ್ರದಾಯಿಕ ಗೂಡುದೀಪ ತಯಾರಿಕೆ."
+        },
+        "source": "reel 2026-11-09 09:00:00+05:30 story 4 headline",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಸಾಲಿಗ್ರಾಮ",
+        "right": false,
+        "heard_by": {
+          "whisper": "Sali Grama, Indina Sattbil",
+          "gemini-3-flash-preview": "ಸಾಲಿಗ್ರಾಮ. ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-09 09:00:00+05:30 probe",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಸಾಲಿಗ್ರಾಮ",
+        "right": false,
+        "heard_by": {
+          "whisper": "Sali Grama, Indina Sattbil",
+          "gemini-3-flash-preview": "ಸಾಲಿಗ್ರಾಮ. ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-09 09:00:00+05:30 probe",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಸಾಲಿಗ್ರಾಮ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಲಿಗ್ರಾಮ ಸಾಂಪ್ರದಾಯಿಕ ಗುಡುದಿಪ ತಯಾರಿಕೆ.",
+          "gemini-3-flash-preview": "ಸಾಲಿಗ್ರಾಮ. ಸಾಂಪ್ರದಾಯಿಕ ಗೂಡುದೀಪ ತಯಾರಿಕೆ."
+        },
+        "source": "reel 2026-11-09 story 4 headline",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಸಾಲಿಗ್ರಾಮ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಲಿಗ್ರಾಮ ಸಾಂಪ್ರದಾಯಿಕ ಗುಡುದಿಪ ತಯಾರಿಕೆ.",
+          "gemini-3-flash-preview": "ಸಾಲಿಗ್ರಾಮ. ಸಾಂಪ್ರದಾಯಿಕ ಗೂಡುದೀಪ ತಯಾರಿಕೆ."
+        },
+        "source": "reel 2026-11-09 story 4 headline",
+        "on": "2026-11-09"
+      },
+      {
+        "spelling": "ಸಾಲಿಗ್ರಾಮ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಲಿಗ್ರಾಮ ಸಾಂಪ್ರದಾಯಿಕ ಗುಡುದಿಪ ತಯಾರಿಕೆ.",
+          "gemini-3-flash-preview": "ಸಾಲಿಗ್ರಾಮ. ಸಾಂಪ್ರದಾಯಿಕ ಗೂಡುದೀಪ ತಯಾರಿಕೆ."
+        },
+        "source": "reel 2026-11-09 story 4 headline",
+        "on": "2026-11-09"
+      }
+    ]
+  },
+  "ಶಿರೂರು": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಶಿರೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಶರೂರು ಇಂದಿನ ಸದ್ದಿ",
+          "gemini-3-flash-preview": "ಶಿರೂರು. ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 probe",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶಿರೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಶರೂರು ಇಂದಿನ ಸದ್ದಿ",
+          "gemini-3-flash-preview": "ಶಿರೂರು. ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 probe",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶಿರೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಶರೂರು ಇಂದಿನ ಸದ್ದಿ",
+          "gemini-3-flash-preview": "ಶಿರೂರು. ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶಿರೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಶರೂರು ಇಂದಿನ ಸದ್ದಿ",
+          "gemini-3-flash-preview": "ಶಿರೂರು. ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶೀರೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು ಇನ್ದಿನ ಸದ್ದೆ",
+          "gemini-3-flash-preview": "ಶಿರೂರು ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶೀರೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು ಇನ್ದಿನ ಸದ್ದೆ",
+          "gemini-3-flash-preview": "ಶಿರೂರು ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶೀರೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 the hook",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶೀರೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು ಪಟಾಕಿ ಅಂಗಡಿಯಲ್ಲಿ ಹಲ್ಲೆ ಆರೋಪ.",
+          "gemini-3-flash-preview": "ಶಿರೂರು ಪಟಾಕಿ ಅಂಗಡಿಯಲ್ಲಿ ಹಲ್ಲೆ ಆರೋಪ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 1 headline",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶೀರೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು, ಬೈಂದೂರು, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಶೀರೂರು ಬೈಂದೂರು ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 the hook",
+        "on": "2026-11-14"
+      },
+      {
+        "spelling": "ಶೀರೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಶಿರೂರು ಪಟಾಕಿ ಅಂಗಡಿಯಲ್ಲಿ ಹಲ್ಲೆ ಆರೋಪ.",
+          "gemini-3-flash-preview": "ಶಿರೂರು ಪಟಾಕಿ ಅಂಗಡಿಯಲ್ಲಿ ಹಲ್ಲೆ ಆರೋಪ"
+        },
+        "source": "reel 2026-11-14 09:00:00+05:30 story 1 headline",
+        "on": "2026-11-14"
+      }
+    ]
+  },
+  "ಉಪ್ಪುಂದ": {
+    "say_inline": true
+  },
+  "ಕಾರವಾರ": {
+    "say_inline": true
+  },
+  "ಉದ್ಯಾವರ": {
+    "say_inline": true
+  },
+  "ಹೆಜಮಾಡಿ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ ಮಾಡಿ ಇಂದನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಹೆಜ್ಮಾಡಿ ಇಂದುನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ ಮಾಡಿ ಇಂದನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಹೆಜ್ಮಾಡಿ ಇಂದುನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನಾ",
+          "gemini-3-flash-preview": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನ."
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 4 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ಮಾಡಿ ಟೋಲ್ಬಳಿ ಎರಡು ಸಾವಿರದ ಅಯಂಬತ್ ಮೂರು ಲಿಟರ್ ಮದ್ಯ ಜಪ್ತಿ ಮಾಡಲಾಗಿದೆ.",
+          "gemini-3-flash-preview": "ಹೆಜಮಾಡಿ ಟೋಲ್ ಬಳಿ ಎರಡು ಸಾವಿರದ ಐನೂರ ಎಂಬತ್ತಮೂರು ಲೀಟರ್ ಮದ್ಯ ಜಪ್ತಿ ಮಾಡಲಾಗಿದೆ."
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 4 card",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನಾ",
+          "gemini-3-flash-preview": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನ."
+        },
+        "source": "reel 2026-11-13 story 4 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನಾ",
+          "gemini-3-flash-preview": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನ."
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 4 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ಮಾಡಿ ಟೋಲ್ಬಳಿ ಎರಡು ಸಾವಿರದ ಅಯಂಬತ್ ಮೂರು ಲಿಟರ್ ಮದ್ಯ ಜಪ್ತಿ ಮಾಡಲಾಗಿದೆ.",
+          "gemini-3-flash-preview": "ಹೆಜಮಾಡಿ ಟೋಲ್ ಬಳಿ ಎರಡು ಸಾವಿರದ ಐನೂರ ಎಂಬತ್ತಮೂರು ಲೀಟರ್ ಮದ್ಯ ಜಪ್ತಿ ಮಾಡಲಾಗಿದೆ."
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 4 card",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ಹೆಜಮಾಡಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನಾ",
+          "gemini-3-flash-preview": "ಹೆಜ್ಮಾಡಿ ಅಕ್ರಮ ಮದ್ಯ ಸಾಗಾಟ ಆರೋಪ ಬಂಧನ."
+        },
+        "source": "reel 2026-11-13 story 4 headline",
+        "on": "2026-11-13"
+      }
+    ]
+  },
+  "ಕಟಪಾಡಿ": {
+    "say_inline": true
+  },
+  "ಬೆಳ್ಮಣ್": {
+    "say_inline": true
+  },
+  "ಹಿರಿಯಡ್ಕ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಹಿರಿಯಡ್ಕ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಉಡುಪಿ ಹಿರಿಯೆಟ್ಕ ವ್ಯಾಪ್ತಿಯಲಿ ನಿಶೇದಾಗನೆ.",
+          "gemini-3-flash-preview": "ಉಡುಪಿ ಹಿರಿಯಡ್ಕ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ನಿಷೇಧಾಜ್ಞೆ."
+        },
+        "source": "reel 2026-11-03 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-03"
+      }
+    ]
+  },
+  "ತಲ್ಲೂರು": {
+    "say_inline": true
+  },
+  "ತ್ರಾಸಿ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ತ್ರಾಸಿ ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ತ್ರಾಸಿ, ಉಡುಪಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-08 09:00:00+05:30 the hook",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತ್ರಾಸಿ ಫ್ಲಾಯೋವರ ಮೇಲೆ ಮೀನು ವಾಹನ ಪಲ್ಟಿ.",
+          "gemini-3-flash-preview": "ತ್ರಾಸಿ, ಫ್ಲೈ ಓವರ್ ಮೇಲೆ ಮೀನು ವಾಹನ ಪಲ್ಟಿ."
+        },
+        "source": "reel 2026-11-08 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ತ್ರಾಸಿ ಕೋಟೆ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ ತ್ರಾಸಿ ಕೋಟೆ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-08 09:00:00+05:30 the hook",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತ್ರಾಸಿ ಫ್ಲಾಯೋವರ ಮೇಲೆ ಮೀನು ವಾಹನ ಪಲ್ಟಿ.",
+          "gemini-3-flash-preview": "ತ್ರಾಸಿ, ಫ್ಲೈ ಓವರ್ ಮೇಲೆ ಮೀನು ವಾಹನ ಪಲ್ಟಿ."
+        },
+        "source": "reel 2026-11-08 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-08"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಂಹವರ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಹ್ಮಾವರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-02 the hook",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತ್ರಾಸಿ, ನಲವತ್ತೆಂಟು ಕೋಟಿ ರುಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣಾ.",
+          "gemini-3-flash-preview": "ತ್ರಾಸಿ ನಲವತ್ತೆಂಟು ಕೋಟಿ ರೂಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣ"
+        },
+        "source": "reel 2026-11-02 story 2 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಂಹವರ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಹ್ಮಾವರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-02 the hook",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತ್ರಾಸಿ, ನಲವತ್ತೆಂಟು ಕೋಟಿ ರುಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣಾ.",
+          "gemini-3-flash-preview": "ತ್ರಾಸಿ ನಲವತ್ತೆಂಟು ಕೋಟಿ ರೂಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣ"
+        },
+        "source": "reel 2026-11-02 story 2 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಂಹವರ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಹ್ಮಾವರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-02 the hook",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತ್ರಾಸಿ, ನಲವತ್ತೆಂಟು ಕೋಟಿ ರುಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣಾ.",
+          "gemini-3-flash-preview": "ತ್ರಾಸಿ ನಲವತ್ತೆಂಟು ಕೋಟಿ ರೂಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣ"
+        },
+        "source": "reel 2026-11-02 story 2 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಂಹವರ ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ಧಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು, ತ್ರಾಸಿ, ಬ್ರಹ್ಮಾವರ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-02 the hook",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ತ್ರಾಸಿ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತ್ರಾಸಿ, ನಲವತ್ತೆಂಟು ಕೋಟಿ ರುಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣಾ.",
+          "gemini-3-flash-preview": "ತ್ರಾಸಿ ನಲವತ್ತೆಂಟು ಕೋಟಿ ರೂಪಾಯಿ ವೆಚ್ಚದಲ್ಲಿ ಪ್ರವಾಸಿ ತಾಣ"
+        },
+        "source": "reel 2026-11-02 story 2 headline",
+        "on": "2026-11-02"
+      }
+    ]
+  },
+  "ಅರಾಟೆ": {
+    "say_inline": true
+  },
+  "ಕೋಟೇಶ್ವರ": {
+    "say_inline": true
+  },
+  "ಗಂಗೊಳ್ಳಿ": {
+    "say_inline": true
+  },
+  "ಹಟ್ಟಿಯಂಗಡಿ": {
+    "say_inline": true
+  },
+  "ತೆಕ್ಕಟ್ಟೆ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತೆಕಟ್ಟೆ ಅರೆಬರೆ ಕಾಮಗಾರಿ ವಿರುದ್ಧ ಕೋರ್ಟಗೆ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಅರೆಬರೆ ಕಾಮಗಾರಿ ವಿರುದ್ಧ ಕೋರ್ಟ್‌ಗೆ"
+        },
+        "source": "reel 2026-11-12 09:00:00+05:30 story 1 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ತಿಕಟೆ ಸರ್ವಿಸ್ರಸ್ತೆ ನಿರ್ಲಕ್ಷಾ ಜನಾಕ್ರುಶಾ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಸರ್ವಿಸ್ ರಸ್ತೆ ನಿರ್ಲಕ್ಷ್ಯ ಜನಾಕ್ರೋಶ"
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ತೆಕಟೆ ಸರ್ವಿಸ್ರಸ್ತೆ ನಿರ್ಲಕ್ಷ ಜನಾಕ್ರೋಶಾ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಸರ್ವಿಸ್ ರಸ್ತೆ ನಿರ್ಲಕ್ಷ್ಯ ಜನಾಕ್ರೋಶ."
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತೆಕಟ್ಟೆ ಸರ್ವಿಸ್ರಸ್ತೆ ನಿರ್ಲಕ್ಷಿಯ ಜನಾಕ್ರೋಶಾ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಸರ್ವಿಸ್ ರಸ್ತೆ ನಿರ್ಲಕ್ಷ್ಯ ಜನಾಕ್ರೋಶ"
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತೆಕ್ಕಟ್ಟೆ ಇಂದಿನ ಸುದ್ದೆ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 probe",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತೆಕಟ್ಟೆ ಸರ್ವಿಸ್ರಸ್ತೆ ನಿರ್ಲಕ್ಷಿಯ ಜನಾಕ್ರೋಶಾ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಸರ್ವಿಸ್ ರಸ್ತೆ ನಿರ್ಲಕ್ಷ್ಯ ಜನಾಕ್ರೋಶ"
+        },
+        "source": "reel 2026-11-13 story 3 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತೆಕಟ್ಟೆ ಸರ್ವಿಸ್ರಸ್ತೆ ನಿರ್ಲಕ್ಷಿಯ ಜನಾಕ್ರೋಶಾ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಸರ್ವಿಸ್ ರಸ್ತೆ ನಿರ್ಲಕ್ಷ್ಯ ಜನಾಕ್ರೋಶ"
+        },
+        "source": "reel 2026-11-13 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ.",
+          "gemini-3-flash-preview": "ಇಂದಿನ ಸುದ್ದಿ ಕುಂದಾಪುರ ತೆಕ್ಕಟ್ಟೆ ಮತ್ತು ಹೆಜಮಾಡಿ"
+        },
+        "source": "reel 2026-11-13 the hook",
+        "on": "2026-11-13"
+      },
+      {
+        "spelling": "ತೆಕ್ಕಟ್ಟೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ತೆಕಟ್ಟೆ ಸರ್ವಿಸ್ರಸ್ತೆ ನಿರ್ಲಕ್ಷಿಯ ಜನಾಕ್ರೋಶಾ.",
+          "gemini-3-flash-preview": "ತೆಕ್ಕಟ್ಟೆ ಸರ್ವಿಸ್ ರಸ್ತೆ ನಿರ್ಲಕ್ಷ್ಯ ಜನಾಕ್ರೋಶ"
+        },
+        "source": "reel 2026-11-13 story 3 headline",
+        "on": "2026-11-13"
+      }
+    ]
+  },
+  "ಹಂಗಾರಕಟ್ಟೆ": {
+    "say_inline": true
+  },
+  "ಸಾಸ್ತಾನ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ಥಾನ ಟೋಲ ಬಹಿಷ್ಕಾರದ ಯೇಚರಿಕೆ ಬೇಂಬಲಾ.",
+          "gemini-3-flash-preview": "ಸಾಸ್ಥಾನ ಟೋಲ್ ಬಹಿಷ್ಕಾರದ ಎಚ್ಚರಿಕೆ ಬೆಂಬಲ"
+        },
+        "source": "reel 2026-11-02 story 5 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 09:00:00+05:30 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ತಾನ ರಸ್ತೆದಾಟು ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು.",
+          "gemini-3-flash-preview": "ಸಾಸ್ತಾನ ರಸ್ತೆ ದಾಟುತ್ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು"
+        },
+        "source": "reel 2026-11-11 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ಥಾನ ಟೋಲ ಬಹಿಷ್ಕಾರದ ಯೇಚರಿಕೆ ಬೇಂಬಲಾ.",
+          "gemini-3-flash-preview": "ಸಾಸ್ಥಾನ ಟೋಲ್ ಬಹಿಷ್ಕಾರದ ಎಚ್ಚರಿಕೆ ಬೆಂಬಲ"
+        },
+        "source": "reel 2026-11-02 story 5 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ತಾನ ರಸ್ತೆದಾಟು ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು.",
+          "gemini-3-flash-preview": "ಸಾಸ್ತಾನ ರಸ್ತೆ ದಾಟುತ್ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು"
+        },
+        "source": "reel 2026-11-11 story 3 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ಥಾನ ಟೋಲ ಬಹಿಷ್ಕಾರದ ಯೇಚರಿಕೆ ಬೇಂಬಲಾ.",
+          "gemini-3-flash-preview": "ಸಾಸ್ಥಾನ ಟೋಲ್ ಬಹಿಷ್ಕಾರದ ಎಚ್ಚರಿಕೆ ಬೆಂಬಲ"
+        },
+        "source": "reel 2026-11-02 story 5 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ತಾನ ರಸ್ತೆದಾಟು ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು.",
+          "gemini-3-flash-preview": "ಸಾಸ್ತಾನ ರಸ್ತೆ ದಾಟುತ್ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು"
+        },
+        "source": "reel 2026-11-11 story 3 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ಥಾನ ಟೋಲ ಬಹಿಷ್ಕಾರದ ಯೇಚರಿಕೆ ಬೇಂಬಲಾ.",
+          "gemini-3-flash-preview": "ಸಾಸ್ಥಾನ ಟೋಲ್ ಬಹಿಷ್ಕಾರದ ಎಚ್ಚರಿಕೆ ಬೆಂಬಲ"
+        },
+        "source": "reel 2026-11-02 story 5 headline",
+        "on": "2026-11-02"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಸಾಸ್ತಾನ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಸಾಸ್ತಾನ ರಸ್ತೆದಾಟು ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು.",
+          "gemini-3-flash-preview": "ಸಾಸ್ತಾನ ರಸ್ತೆ ದಾಟುತ್ತಿದ್ದ ಪಾದಚಾರಿ ಸಾವು"
+        },
+        "source": "reel 2026-11-11 story 3 headline",
+        "on": "2026-11-11"
+      }
+    ]
+  },
+  "ಮಂದಾರ್ತಿ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಮಂದಾರ್ತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3.1-flash-lite": "ಮಂದಾರತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-10-31 story 2 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಮಂದಾರ್ತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3.1-flash-lite": "ಮಂದಾರತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-10-31 story 2 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಮಂದಾರ್ತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3.1-flash-lite": "ಮಂದಾರತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-10-31 story 2 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಮಂದಾರ್ತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3.1-flash-lite": "ಮಂದಾರತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-10-31 story 2 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಮಂದಾರ್ತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3.1-flash-lite": "ಮಂದಾರತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-10-31 story 2 headline",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಮಂದಾರ್ತಿ ಕೋಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3.1-flash-lite": "ಕುಂದಾಪುರ ಮಂದಾರತಿ ಕೂಡಿ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-10-31 the hook",
+        "on": "2026-10-31"
+      },
+      {
+        "spelling": "ಮಂದಾರ್ತಿ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಮಂದಾರ್ತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ.",
+          "gemini-3.1-flash-lite": "ಮಂದಾರತಿ ಗೋಪಾಲ ಗಾಣಿಗರಿಗೆ ರಾಜ್ಯ ಪ್ರಶಸ್ತಿ"
+        },
+        "source": "reel 2026-10-31 story 2 headline",
+        "on": "2026-10-31"
+      }
+    ]
+  },
+  "ಕೊಕ್ಕರ್ಣೆ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಕೊಕ್ಕರ್ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬೈಂದೂರು, ಕುಂದಾಪುರ, ಕೋಕರಣೆ, ಸೇರಿದಂಟೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು, ಕುಂದಾಪುರ, ಕೊಕ್ಕರ್ಣೆ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 the hook",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕೊಕ್ಕರಣೆ ಬಡವಿದ್ಯಾರ್ತಿಗೆ ನೂತನ ಮನೆ.",
+          "gemini-3-flash-preview": "ಕೊಕ್ಕರೆಣೆ ಬಡ ವಿದ್ಯಾರ್ಥಿಗೆ ನೂತನ ಮನೆ",
+          "gemini-3.5-flash": "ಕೊಕ್ಕರಣೆ: ಬಡ ವಿದ್ಯಾರ್ಥಿಗೆ ನೂತನ ಮನೆ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್‌ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಯಿಂದೂರು ಕುಂದಾಪುರ ಕೊಕರಣೆ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕುಂದಾಪುರ ಕೊಕ್ಕರ್ಣೆ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 the hook",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್‌ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಯಿಂದೂರು ಕುಂದಾಪುರ ಕೊಕರಣೆ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬೈಂದೂರು ಕುಂದಾಪುರ ಕೊಕ್ಕರ್ಣೆ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 the hook",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್‌ಣೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಕರ್ಣೆ ಬಡವಿದ್ಯಾರ್ಥಿಗೆ ನೂತನಾ ಮನೆ.",
+          "gemini-3-flash-preview": "ಕುಕ್ಕರ್ನೆ ಬಡ ವಿದ್ಯಾರ್ಥಿಗೆ ನೂತನ ಮನೆ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 3 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕೋಕ್ಕರಣೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕೊಕ್ಕರ್ಣೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 probe",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕೋಕ್ಕರಣೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕೊಕ್ಕರ್ಣೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 probe",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕೋಕ್ಕರಣೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕೊಕ್ಕರ್ಣೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಕೊಕ್ಕರ್ಣೆ",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಕೋಕ್ಕರಣೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕೊಕ್ಕರ್ಣೆ ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "verify",
+        "on": "2026-11-04"
+      }
+    ]
+  },
+  "ಬಾರ್ಕೂರು": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಬಾರ್ಕೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಾರ್ ಗೋರು ಗೋವಿಂದ ಪಾಯಿ ಪ್ರಶಸ್ತಿಗೆ ಕ್ರಿಷ್ಣ ಮೂರ್ತಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಗೋವಿಂದ ಪೈ ಪ್ರಶಸ್ತಿಗೆ ಕೃಷ್ಣಮೂರ್ತಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್‌ಕೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಾರ್ ಕೋರು ಗೋವಿಂದ ಪಯಿ ಪ್ರಶಸ್ತಿಗೆ ಕ್ರಿಷ್ಣ ಮೂರ್ತಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಗೋವಿಂದ ಪೈ ಪ್ರಶಸ್ತಿಗೆ ಕೃಷ್ಣಮೂರ್ತಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್‌ಕೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಾರ್ ಕೋರು ಗೋವಿಂದ ಪಯಿ ಪ್ರಶಸ್ತಿಗೆ ಕ್ರಿಷ್ಣ ಮೂರ್ತಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಗೋವಿಂದ ಪೈ ಪ್ರಶಸ್ತಿಗೆ ಕೃಷ್ಣಮೂರ್ತಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್ಕೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬಾರ್ಕೂರು. ಇಂದಿನಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 probe",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್ಕೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬಾರ್ಕೂರು. ಇಂದಿನಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 probe",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್ಕೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಾರ್ಗುರು. ಗೋವಿಂದ ಪಯಿ ಪ್ರಶಸ್ತಿಗೆ ಕ್ರಿಷ್ಣ ಮೂರ್ತಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಗೋವಿಂದ ಪೈ ಪ್ರಶಸ್ತಿಗೆ ಕೃಷ್ಣಮೂರ್ತಿ."
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್‌ಕೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಾರ್ ಕೋರು ಗೋವಿಂದ ಪಯಿ ಪ್ರಶಸ್ತಿಗೆ ಕ್ರಿಷ್ಣ ಮೂರ್ತಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಗೋವಿಂದ ಪೈ ಪ್ರಶಸ್ತಿಗೆ ಕೃಷ್ಣಮೂರ್ತಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್‌ಕೂರು",
+        "right": false,
+        "heard_by": {
+          "whisper": "ಬಾರ್ ಕೋರು ಗೋವಿಂದ ಪಯಿ ಪ್ರಶಸ್ತಿಗೆ ಕ್ರಿಷ್ಣ ಮೂರ್ತಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಗೋವಿಂದ ಪೈ ಪ್ರಶಸ್ತಿಗೆ ಕೃಷ್ಣಮೂರ್ತಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 story 5 headline",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್ಕೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬಾರ್ಕೂರು. ಇಂದಿನಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 probe",
+        "on": "2026-11-04"
+      },
+      {
+        "spelling": "ಬಾರ್ಕೂರು",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಬಾರ್ಕೂರು. ಇಂದಿನಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಬಾರ್ಕೂರು ಇಂದಿನ ಸುದ್ದಿ"
+        },
+        "source": "reel 2026-11-04 09:00:00+05:30 probe",
+        "on": "2026-11-04"
+      }
+    ]
+  },
+  "ಕಮಲಶಿಲೆ": {
+    "say_inline": true,
+    "takes": [
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 09:00:00+05:30 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಮಲಶಿಲೆ ದುರ್ಗಾ ಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟಾ ಆರಂಭಾ.",
+          "gemini-3-flash-preview": "ಕಮಲಶಿಲೆ ದುರ್ಗಾಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟ ಆರಂಭ."
+        },
+        "source": "reel 2026-11-11 09:00:00+05:30 story 2 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಮಲಶಿಲೆ ದುರ್ಗಾ ಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟಾ ಆರಂಭಾ.",
+          "gemini-3-flash-preview": "ಕಮಲಶಿಲೆ ದುರ್ಗಾಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟ ಆರಂಭ."
+        },
+        "source": "reel 2026-11-11 story 2 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಮಲಶಿಲೆ ದುರ್ಗಾ ಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟಾ ಆರಂಭಾ.",
+          "gemini-3-flash-preview": "ಕಮಲಶಿಲೆ ದುರ್ಗಾಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟ ಆರಂಭ."
+        },
+        "source": "reel 2026-11-11 story 2 headline",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕುಂದಾಪುರ ಕಮಲಶಿಲೆ ಸಾಸ್ತಾನ ಸೇರಿದಂಡೆ ಇಂದಿನ ಸುದ್ದಿ.",
+          "gemini-3-flash-preview": "ಕುಂದಾಪುರ, ಕಮಲಶಿಲೆ, ಸಾಸ್ತಾನ ಸೇರಿದಂತೆ ಇಂದಿನ ಸುದ್ದಿ."
+        },
+        "source": "reel 2026-11-11 the hook",
+        "on": "2026-11-11"
+      },
+      {
+        "spelling": "ಕಮಲಶಿಲೆ",
+        "right": true,
+        "heard_by": {
+          "whisper": "ಕಮಲಶಿಲೆ ದುರ್ಗಾ ಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟಾ ಆರಂಭಾ.",
+          "gemini-3-flash-preview": "ಕಮಲಶಿಲೆ ದುರ್ಗಾಪರಮೇಶ್ವರಿ ಮೇಳದ ತಿರುಗಾಟ ಆರಂಭ."
+        },
+        "source": "reel 2026-11-11 story 2 headline",
+        "on": "2026-11-11"
+      }
+    ]
+  }
+}

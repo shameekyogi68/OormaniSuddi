@@ -1,0 +1,16 @@
+# The suites that render video or drive Chrome — seconds each, not milliseconds.
+#
+# `python3 scripts/health.py` and the pre-commit hook run every suite EXCEPT
+# these, so both stay quick enough that nobody is tempted to skip them. The
+# full run (`python3 -m unittest discover tests`) and CI still run everything.
+#
+# One list, read by scripts/health.py (D150). It used to be restated in
+# health.py and in the hook, and three reel suites added later were in neither:
+# the "few seconds" check had quietly grown to 41. health.py now names any
+# suite that outgrows its budget, so this file is told when it is out of date.
+test_animate
+test_formats
+test_golden
+test_saara_reel
+test_saara_reel_layout
+test_speednews

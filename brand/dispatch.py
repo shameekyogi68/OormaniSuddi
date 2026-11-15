@@ -72,6 +72,7 @@ ROSTER: dict[str, dict] = {
     'legal-standards':     {'kind': 'reactive', 'stage': 'desk'},
     'kannada-editor':      {'kind': 'reactive', 'stage': 'desk'},
     'newsreader':          {'kind': 'reactive', 'stage': 'desk'},     # D138: the whole spoken script, as sound
+    'voice-reviewer':      {'kind': 'reactive', 'stage': 'desk'},     # Pronunciation and voiceover audit (>=9/10)
     'picture-editor':      {'kind': 'reactive', 'stage': 'picture'},
     'instagram-strategist': {'kind': 'reactive', 'stage': 'reach'},
     'package-inspector':   {'kind': 'reactive', 'stage': 'package'},
@@ -266,7 +267,8 @@ def picture_hash(story: dict) -> str:
 # Which hash stamps which desk's receipt.
 HASH_OF = {'fact-checker': fact_hash, 'legal-standards': fact_hash,
            'kannada-editor': copy_hash, 'picture-editor': picture_hash,
-           'instagram-strategist': strategy_hash, 'newsreader': voice_hash}
+           'instagram-strategist': strategy_hash, 'newsreader': voice_hash,
+           'voice-reviewer': voice_hash}
 
 
 def hash_for(agent: str, story: dict) -> str:
@@ -479,6 +481,9 @@ def _edition_tasks(plan: Plan, path: str) -> None:
         if read_receipt('newsreader', stem, 0).get('hash') != vh:
             plan.add('newsreader', 'reactive', 1,
                      'the whole spoken script, read as a newsreader: labels, repeated cards, breath', rel)
+        if read_receipt('voice-reviewer', stem, 0).get('hash') != vh:
+            plan.add('voice-reviewer', 'reactive', 1,
+                     'voiceover pronunciation & cadence audit (minimum score 9/10 required)', rel)
 
     for i, (st, sd) in enumerate(zip(objs, stories), 1):
         fh_ = fact_hash(sd)

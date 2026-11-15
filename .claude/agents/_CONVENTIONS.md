@@ -45,7 +45,7 @@ fetches, scrapes or searches the web for news, trends or pictures.
   hook, deck, points, reel_points, takeaway, narration_script, photo caption.
   A field the story does not have is skipped, not reported as a finding.
   For a `saara` story the reel shows **`reel_line`** (the headline, two lines) and
-  **`reel_support`** (ONE complete sentence on the gold card, read aloud) — each
+  **`reel_support`** (ONE complete sentence on the paper card, read aloud) — each
   is read ON ITS OWN, so each is checked on its own (facts, guilt, glyphs).
 - A render folder is only this edition's if `out/<stem>/.edition` names it
   (D90). If it names another edition, say so before anything else.

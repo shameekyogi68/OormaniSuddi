@@ -193,7 +193,7 @@ def saara(edition: Edition, outdir: str, prefix: str = 'saara') -> list[str]:
     sf = pp.page(W, H)
     _header(sf, edition.date_kn)
     pp.roundlogo(sf, (W - 200) / 2, 200, 200)
-    t = typo.layout('ಇಂದಿನ ಸುದ್ದಿ ಸಾರ ಇಷ್ಟೇ', typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(64)),
+    t = typo.layout('ಇಂದಿನ ಸುದ್ದಿ ಸಾರ ಇಷ್ಟೇ', typo.font('kn_head', size=sf.s(64)),
                     sf.s(cw), 1.2, align='center')
     yb = typo.draw_block(sf.img, t, sf.s(m), sf.s(446), pp.INK,
                          box_w=sf.s(cw)) / sf.ss

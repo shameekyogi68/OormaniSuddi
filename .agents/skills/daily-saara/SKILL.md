@@ -51,14 +51,16 @@ For each news item in the paste:
      sets in two big lines; what is enforced is the two lines (`reel_check` says). No town (the tag shows
      it; an event's own name, "ಮೈಸೂರು ಕಂಬಳ", is fine). Crime copy keeps ಆರೋಪ / ಆರೋಪಿ / ಶಂಕಿತ in it
    - **`reel_support`** — **ONE complete sentence** from the paste, read aloud and shown whole on the
-     gold card. Short — UP TO about 9 Kannada words for five stories, 6 for six; a shorter sentence is
+     paper card. Short — UP TO about 9 Kannada words for five stories, 6 for six; a shorter sentence is
      fine (`python3 scripts/reel_check.py` prints the day's allowance, in characters). It must stand alone beside the
      headline and, for crime, must not assert guilt. **It keeps its own scope:** it is read alone, so
      if the paste limits who or where a thing applies ("ಕುಂದಾಪುರ, ಗಂಗೊಳ್ಳಿ ಠಾಣಾ ವ್ಯಾಪ್ತಿ"), the sentence says it
      too — and never turns the paste's promise into a stronger claim ("ಸೂಕ್ತ ಕ್ರಮದ ಭರವಸೆ" stays a promise).
-     Use the paste's own spelling (ಪೂಜಾ, not ಪೂಜೆ) — the fact desk compares words with the kept paste
+     Use the paste's own spelling (ಪೂಜಾ, not ಪೂಜೆ) — the fact desk compares words with the kept paste.
+     Premium copy is precise and calm: no stock praise, promotional filler, prediction dressed as impact, or gratuitous
+     physical detail in the spoken reel. End the sentence properly and give a long sentence a comma for breath.
    - `deck` (1–2 sentence lead), `points` (exactly 3), `takeaway` (1, if there is one) — full-length;
-     the captions use them
+     the captions use them. A takeaway is a concrete action, deadline, route or contact from the paste, never invented usefulness
    - `category` (what happened — never `civic` by default), `location` (coastal town, e.g.
      `ಕುಂದಾಪುರ`; two towns as `ಕುಂದಾಪುರ, ಗಂಗೊಳ್ಳಿ`), `sources`, `source_urls`, `status: "confirmed"`,
      `published_at`
@@ -120,8 +122,9 @@ answers to start. So send **ONE message** that holds all of these:
 - `Bash` with `run_in_background: true`: `python3 render.py editions/<today>.json --only saara`
 - `Agent` calls, in parallel, one per line of `python3 scripts/dispatch.py` wave 1: `fact-checker`,
   `kannada-editor` (ಸುದ್ದಿ ಸಾರ copy, including the two reel fields — they are spoken), `newsreader` (the whole spoken
-  script read as a bulletin: labels, cards that repeat the headline, breath — one run for the edition), `legal-standards`
-  (crime / death / minor stories), `instagram-strategist`
+  script read as a bulletin: labels, cards that repeat the headline, breath — one run for the edition), `voice-reviewer`
+  (expert review: audits audio pronunciation, conjunct pauses, word endings, and requires minimum 9/10 score to clear, house rule 2026-11-12-03),
+  `legal-standards` (crime / death / minor stories), `instagram-strategist`
 
 You are told when the render ends. Then apply every FIX the desks return:
 - **a desk changed `reel_line` / `reel_support` / `headline` / `location`** (anything the film shows or says):
@@ -169,6 +172,17 @@ The owner's standard is no mistakes, and nobody on the team can hear. So every o
    the follow line, the one place a model's delivery could be flat. They listen once; you cannot.
 5. **A story that repeats an earlier day** (`render --check` prints "same source URL as …") is the owner's call: ask, never drop or keep silently.
 6. `scripts/regate.py editions/<d>.json` ends "mechanical checks clean"; the sign-off is the owner's.
+7. **The ear (D146).** `reel_saara_report.json → ear` holds, per clip, whether a listener that reads Kannada heard every word (`ok`), what was lost or changed, and how many takes it took.
+   * **`SND-09` fail** = a word the voice was heard NOT to say. Say it to the owner in one line each (which story, which word, what was heard). Do not re-render to "make it pass": the clip was
+     already asked for again `Limits.ear_takes` times. Re-running the render asks again for the failing clips only (the rest come from the cache). A town in `assets/voice/towns.json`
+     with no approved clip holds the reel by design — tell the owner to record the name (`scripts/town_clips.py add`), listen, and give you the name to `approve --by`; never approve in a name you were not given.
+   * **`SND-09` warn "only Whisper heard"** = the Gemini listeners' allowance is spent (it resets at 12:30 IST). Say so plainly: the reel was NOT checked by the strong ear.
+     A clip with a NAME in it that no Kannada-capable ear heard is a **fail**, not a warning (D147).
+   * **Names (D147).** `reel_check.py` prints "TOWNS NOT YET PROVED". Each is probed in the render (`Limits.town_verify_takes` voice requests at most) and the reel is
+     **held** (`SND-09` "has no proved way of being said") if one is still not heard right. Tell the owner the town, what each ear heard, and the two ways out: try a same-sound
+     spelling (`python3 scripts/town_clips.py verify TOWN --spelling …`, after 12:30 IST) or record the name (`add` / `approve --by` the name they give). Never ship it on one lucky take.
+     `python3 scripts/town_clips.py status` shows every town.
+   * Prefer the full title to bare letters in a headline (`ಉಪವಿಭಾಗಾಧಿಕಾರಿ`, not `ಎಸಿ`): letters written as a word are read as a word.
 
 ## Step 6 · Report — short, plain, in Kannada-friendly English
 

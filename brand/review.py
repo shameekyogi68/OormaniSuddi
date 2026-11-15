@@ -35,7 +35,7 @@ import subprocess
 from dataclasses import dataclass, field
 
 from .content import Edition, Story
-from .tokens import Brand, fmt, Limits, Grid, T, C
+from .tokens import Brand, Limits, T, C
 from . import typo
 from .atomic import write_json
 
@@ -290,6 +290,59 @@ def _motion(path: str) -> float:
 MOTION_FLOOR = 0.03        # below this a "video" is a still picture (VID-06)
 
 
+def _ear_label(key: str) -> str:
+    if key == 'intro':
+        return 'the hook'
+    if key == 'outro':
+        return 'the follow card'
+    return f'story {int(key[1:]) + 1} {"headline" if key[0] == "h" else "card"}'
+
+
+def _check_ear(rep: dict, r: 'ReviewReport') -> None:
+    """The voice, heard back word by word by a Kannada-capable ear (D146). A word it was heard NOT to say holds the package:
+    on 2026-10-30 a reel went out in which story 2's town was never spoken, and the old check — Whisper, which writes clean
+    Kannada as noise — had scored it 0.87 and asked the editor to "listen for" it."""
+    ear = rep.get('ear')
+    if ear is None:
+        if rep.get('voice_engine') == 'gemini':
+            r.add_warn('SND-09', 'reel_saara.mp4 has no record of being heard back by a Kannada-capable ear — it was made '
+                       'before D146, or the listening step did not run', where='reel_saara.mp4')
+        return
+    quiet = {v.get('unavailable') for v in ear.values() if v.get('unavailable')}
+    for key, v in ear.items():
+        who = _ear_label(key)
+        bad = list(dict.fromkeys((v.get('lost') or []) + (v.get('changed') or [])))
+        if v.get('town_unverified'):
+            r.add_fail('SND-09', f'reel_saara.mp4, {who}: the town {v["town_unverified"]} has no proved way of being said — it '
+                       f'was not heard right on each of its last {Limits.town_verify_takes} takes (D147). Run '
+                       f'python3 scripts/town_clips.py verify {v["town_unverified"]} (after 12:30 IST if the ears are spent), '
+                       'or record the name and approve it (scripts/town_clips.py add / approve)', where='reel_saara.mp4')
+        if v.get('names_unheard'):
+            r.add_fail('SND-09', f'reel_saara.mp4, {who}: no Kannada-capable ear heard {" ".join(v["names_unheard"])} — Whisper '
+                       'alone cannot tell a name said wrong (D147). Re-render after 12:30 IST, when the Gemini listeners reset, '
+                       'or add a key', where='reel_saara.mp4')
+        weak_names = [w for w in (v.get('weak') or []) if w in (v.get('names') or [])]
+        if v.get('town_missing'):
+            r.add_fail('SND-09', f'reel_saara.mp4, {who}: the town {v["town_missing"]} is not spoken — the voice cannot say it '
+                       '(measured) and no recorded clip of it has been approved. Record it and approve it: '
+                       'python3 scripts/town_clips.py add / approve (brand/town_clips.py)', where='reel_saara.mp4')
+        elif not v.get('ok', True):
+            what = ' '.join(bad) if bad else 'more words than it was given (the cut fell late)'
+            r.add_fail('SND-09', f'reel_saara.mp4, {who}: the voice did not say {what} — heard "{(v.get("heard") or "")[:70]}" '
+                       f'after {v.get("takes", 1)} take(s). Re-render asks again for this clip only; or reword it, or record the '
+                       f'name (scripts/town_clips.py)', where='reel_saara.mp4')
+        elif weak_names:                                    # a name is right or it is wrong; never "listen for it" (D147)
+            r.add_fail('SND-09', f'reel_saara.mp4, {who}: the name {" ".join(weak_names)} was heard, but not cleanly — '
+                       'a name is held to being heard whole', where='reel_saara.mp4')
+        elif v.get('weak'):
+            r.add_warn('SND-09', f'reel_saara.mp4, {who}: listen for {" ".join(v["weak"])} — heard, but not cleanly',
+                       where='reel_saara.mp4')
+    if quiet:
+        r.add_warn('SND-09', 'reel_saara.mp4: the Gemini listeners were not available (' + '; '.join(sorted(quiet))[:120] + ') — '
+                   'only Whisper heard the voice back, and it cannot hear a subtle fault; their daily allowance resets at 12:30 IST',
+                   where='reel_saara.mp4')
+
+
 def _check_saara_reel(outdir: str, r: 'ReviewReport', edition: 'Edition | None' = None) -> None:
     """The reel's own report (written when it was made) against the film itself.
 
@@ -351,6 +404,7 @@ def _check_saara_reel(outdir: str, r: 'ReviewReport', edition: 'Edition | None' 
         r.add_warn('SND-08', 'reel_saara.mp4: spelled in no kept source — ' + ' · '.join(
             f'{u["word"]} [{u["where"]}]' for u in watch['unseen'][:10])
             + ' — check vowel length, ಲ/ಳ, ನ/ಣ and doubled consonants', where='reel_saara.mp4')
+    _check_ear(rep, r)
     audit = rep.get('voice_audit') or {}
     if 'unavailable' in audit:
         r.add_warn('SND-06', f'reel_saara.mp4: the voice was not heard back ({audit["unavailable"]}) — '

@@ -20,12 +20,15 @@ is simply whether today's edition exists and is verified.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timedelta
+import time
+from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -309,23 +312,66 @@ def check_tools() -> list[str]:
     return out or [f'{OK} tools — ffmpeg, Kannada shaping, glyph check, Latin faces, fallback voice']
 
 
+# A fast suite that takes longer than this has stopped being fast. Measured
+# while the others run beside it, where the longest quick suite (the contract)
+# takes about 8s; the reel suites take 18. A housekeeping number for this file,
+# not a design value.
+SUITE_BUDGET_S = 12.0
+SLOW_LIST = os.path.join(ROOT, 'tests', 'slow_suites.txt')
+
+
+def fast_suites() -> list[str]:
+    """Every suite except the ones listed in tests/slow_suites.txt.
+
+    By exclusion, so a new test file is checked from the day it is added."""
+    with open(SLOW_LIST, encoding='utf-8') as fh:
+        slow = {l.strip() for l in fh if l.strip() and not l.startswith('#')}
+    return sorted(f'tests.{f[:-3]}' for f in os.listdir(os.path.join(ROOT, 'tests'))
+                  if f.startswith('test_') and f.endswith('.py') and f[:-3] not in slow)
+
+
+def _run_suite(suite: str) -> tuple[str, int, float, str]:
+    t0 = time.monotonic()
+    r = subprocess.run([sys.executable, '-m', 'unittest', suite, '-q'],
+                       cwd=ROOT, capture_output=True, text=True)
+    return suite, r.returncode, time.monotonic() - t0, (r.stderr or r.stdout or '')
+
+
 def check_tests() -> list[str]:
-    # Every suite but the four that render video — the same set the
-    # pre-commit hook runs, a few seconds in all.
-    slow = {'test_golden', 'test_animate', 'test_formats', 'test_speednews'}
-    suites = sorted(f'tests.{f[:-3]}' for f in os.listdir(os.path.join(ROOT, 'tests'))
-                    if f.startswith('test_') and f.endswith('.py') and f[:-3] not in slow)
-    r = subprocess.run(
-        [sys.executable, '-m', 'unittest', *suites, '-q'],
-        cwd=ROOT, capture_output=True, text=True)
-    tail = (r.stderr or r.stdout).strip().split('\n')[-1]
-    if r.returncode == 0:
-        return [f'{OK} contract — {tail}']
-    return [f'{BAD} contract — FAILING. {tail}',
-            '      python3 -m unittest discover tests']
+    # One process per suite, side by side: the same tests the pre-commit hook
+    # runs (it calls `health.py --tests`), in a few seconds instead of fifteen.
+    from concurrent.futures import ThreadPoolExecutor
+    suites = fast_suites()
+    t0 = time.monotonic()
+    with ThreadPoolExecutor(max_workers=min(4, os.cpu_count() or 2)) as pool:
+        results = list(pool.map(_run_suite, suites))
+    took = time.monotonic() - t0
+    failed = [s for s, rc, _t, _o in results if rc != 0]
+    ran = sum(int(m.group(1)) for _s, _rc, _t, o in results
+              for m in re.finditer(r'^Ran (\d+) tests?', o, re.M))
+    out = []
+    if failed:
+        out.append(f'{BAD} contract — FAILING: {", ".join(failed)}')
+        out.append(f'      python3 -m unittest {failed[0]}')
+    else:
+        out.append(f'{OK} contract — OK ({ran} tests, {len(suites)} suites, {took:.0f}s)')
+    for s, _rc, t, _o in results:
+        if t > SUITE_BUDGET_S:
+            out.append(f'{WARN} contract — {s} took {t:.0f}s; it has outgrown the quick '
+                       f'check. Add it to tests/slow_suites.txt')
+    return out
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--tests', action='store_true',
+                    help='only the quick test suites (what the pre-commit hook runs)')
+    a = ap.parse_args()
+    if a.tests:
+        lines = check_tests()
+        print('\n'.join(lines))
+        return 1 if any(l.startswith(BAD) for l in lines) else 0
     print(f'\n  ಊರ್ಮನಿ ಸುದ್ದಿ — health   {datetime.now():%Y-%m-%d %H:%M}\n')
     lines: list[str] = []
     for fn in (check_edition, check_clocks, check_reviews,

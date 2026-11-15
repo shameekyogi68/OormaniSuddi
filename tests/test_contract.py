@@ -260,6 +260,19 @@ class Copy(unittest.TestCase):
                 for loose in (' ನಲ್ಲಿ', ' ನಿಂದ', ' ಯಲ್ಲಿ', ' ದಲ್ಲಿ', ' ವರಾ'):
                     self.assertNotIn(loose, fc, f'{place}/{cat}: {fc}')
 
+    def test_sensitive_first_comments_never_trade_in_identity_or_speculation(self):
+        for cat in ('crime', 'accident'):
+            fc = self.C.first_comment(base(category=cat, location='ಉಡುಪಿ'))
+            self.assertIn('ದೃಢೀಕೃತ ಮಾಹಿತಿ', fc)
+            self.assertIn('ಅಧಿಕಾರಿಗಳಿಗೆ', fc)
+            self.assertNotIn('ಸತ್ಯಾಧಾರಿತ', fc)
+        obituary = self.C.first_comment(base(category='obituary', location='ಉಡುಪಿ'))
+        self.assertIn('ಶ್ರದ್ಧಾಂಜಲಿ', obituary)
+        self.assertIn('ಖಾಸಗಿತೆ', obituary)
+        for fc in (obituary, self.C.first_comment(base(category='civic', location='ಉಡುಪಿ'))):
+            self.assertNotIn('ನಿಮ್ಮ ಊರಾ?', fc)
+            self.assertNotIn('ನೀವು ಉಡುಪಿಯವರಾ?', fc)
+
     # ── Publishing plan ─────────────────────────────────────────────────
 
     def test_plan_never_lists_an_asset_that_was_not_rendered(self):

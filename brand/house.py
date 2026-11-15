@@ -40,7 +40,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEDGER = os.path.join(ROOT, 'docs', 'HOUSE_RULES.json')

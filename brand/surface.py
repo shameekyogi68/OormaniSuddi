@@ -21,9 +21,9 @@ import zlib
 from functools import lru_cache
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageFilter
 
-from .tokens import Grade, Role, C, alpha, mix, Ease, clamp01
+from .tokens import Grade, Role, C, alpha, mix, clamp01
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

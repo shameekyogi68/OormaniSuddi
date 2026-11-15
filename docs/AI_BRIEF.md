@@ -124,7 +124,7 @@ than a ಸ್ಪೀಡ್ ನ್ಯೂಸ್ frame has.
 the ಸುದ್ದಿ ಸಾರ reel (D132). `reel_line` is the reel's headline: aim for
 `Limits.saara_reel_line_chars` so it sits in two big lines. `reel_support` is
 ONE complete sentence, taken only from the source, that the voice reads and the
-gold card shows whole — about 7–9 Kannada words for five stories, 6 for six
+paper card shows whole — about 7–9 Kannada words for five stories, 6 for six
 (`python3 scripts/reel_check.py editions/<date>.json --strict` prints the exact
 allowance and must say CLEAN before the render; the clock is 59 seconds). Without
 it the reel takes the story's own shortest fitting sentence, and says so.

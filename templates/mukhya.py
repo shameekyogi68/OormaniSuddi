@@ -63,7 +63,7 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
     pp.meta(sf, W - m, 82, category(story.category)['kn']
             if pp.leads_with_place(story)
             else f'{category(story.category)["kn"]}  /  {place}', anchor='r')
-    t = typo.layout('ಏನಾಗಿದೆ?', typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(80)), sf.s(cw), 1.2)
+    t = typo.layout('ಏನಾಗಿದೆ?', typo.font('kn_head', size=sf.s(80)), sf.s(cw), 1.2)
     yb = typo.draw_block(sf.img, t, sf.s(m), sf.s(176), pp.INK) / sf.ss
     y = yb + 26 + 8 + 56
     items = [p for p in story.points if p.strip()] or (
@@ -94,7 +94,7 @@ def mukhya(story: Story, outdir: str, k: int = 1, prefix: str = 'mukhya'
     sf = pp.page(W, H)
     pp.roundlogo(sf, (W - 240) / 2, 150, 240)
     tl = typo.layout(Brand.tagline.replace('  •  ', ' · '),
-                     typo.font('kn', weight=pp.HEAD_WEIGHT, size=sf.s(56)), sf.s(cw), 1.2, align='center')
+                     typo.font('kn_head', size=sf.s(56)), sf.s(cw), 1.2, align='center')
     yb = typo.draw_block(sf.img, tl, sf.s(m), sf.s(446), pp.INK,
                          box_w=sf.s(cw)) / sf.ss
     pp.meta(sf, W / 2, yb + 58, f'{Brand.follow_kn} — {Brand.handle}',

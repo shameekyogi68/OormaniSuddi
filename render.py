@@ -38,7 +38,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import templates as TP
 import brand.copy as copywriter
-from brand.content import Story, Edition, ContentError, freeze, path_inside
+from brand.content import Edition, ContentError, freeze, path_inside, read_json
 from brand.qa import preflight, inspect, compliance
 from brand.tokens import Limits
 
@@ -85,10 +85,11 @@ def show_schema(which: str) -> int:
 
 def load(path: str):
     """Read JSON and return ('edition', Edition) or ('story', Story)."""
-    with open(path, encoding='utf-8') as f:
-        raw = json.load(f)
+    raw = read_json(path)
     if isinstance(raw, list):
         raw = {'stories': raw}
+    if not isinstance(raw, dict):
+        raise ContentError('the file must hold an edition object {...} with `stories`')
     if isinstance(raw, dict) and raw.get('kind') == 'greeting':
         # A festival wish is not a Story: it has no sources, no status and no
         # headline, and Story.from_dict would rightly reject it. See D54.

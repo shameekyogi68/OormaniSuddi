@@ -66,21 +66,32 @@ class FiveTagsAndTheRestAsWords(unittest.TestCase):
         self.assertLessEqual(len(tags_in_cap), Limits.ig_hashtags_max)
         self.assertGreaterEqual(len(tags_in_cap), 5)
 
-    def test_saara_reel_youtube_package_optimised_for_shorts_reach(self):
-        """D144: YouTube Shorts packaging overhaul: title under 60 chars with #shorts,
-        semantic search description with comment question and 10-12 tags, and 500-char search tags."""
+    def test_saara_reel_youtube_package_is_a_restrained_factual_digest(self):
+        """D144's Shorts packaging remains, with relevance replacing keyword volume."""
         ed = Edition(stories=[story(location=l) for l in
                               ('ಉಡುಪಿ', 'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು')], edition_no=1)
         post = C.for_saara_reel(ed)
+        description = post.youtube_description
         self.assertLessEqual(len(post.youtube_title), 60)
         self.assertIn('#shorts', post.youtube_title.lower())
-        self.assertIn('Coastal Karnataka', post.youtube_description)
-        self.assertIn('ಕಾಮೆಂಟ್ ಮಾಡಿ', post.youtube_description)
-        tags_in_desc = [w for w in post.youtube_description.split() if w.startswith('#')]
-        self.assertGreaterEqual(len(tags_in_desc), 10)
-        self.assertLessEqual(len(tags_in_desc), 15)
+        self.assertNotIn('Coastal Karnataka daily news update', description)
+        self.assertEqual(description.count('?'), 1)
+        self.assertIn('ಕಮೆಂಟ್ ಮಾಡಿ', description)
+        for st in ed.stories:
+            self.assertIn(st.headline, description)
+        tags_in_desc = [w for w in description.split() if w.startswith('#')]
+        self.assertEqual(len(tags_in_desc), len({t.lower() for t in tags_in_desc}))
+        self.assertEqual(sum(t.lower() == '#shorts' for t in tags_in_desc), 1)
+        self.assertLessEqual(len(tags_in_desc), Limits.ig_hashtags_max + 1)
         self.assertLessEqual(len(', '.join(post.youtube_tags)), Limits.yt_tags_chars)
         self.assertIn('kundapura news', post.youtube_tags)
+
+    def test_youtube_metadata_never_invents_places_or_breaking_news(self):
+        ed = Edition(stories=[story(location='ಉಡುಪಿ', category='weather')], edition_no=1)
+        post = C.for_saara_reel(ed)
+        metadata = post.youtube_description + '\n' + ', '.join(post.youtube_tags)
+        for irrelevant in ('Byndoor', 'ಬೈಂದೂರು', 'Kundapura', 'ಕುಂದಾಪುರ', 'Mangaluru', 'BreakingKannada', 'breaking news'):
+            self.assertNotIn(irrelevant.lower(), metadata.lower())
 
     def test_towns_that_miss_the_tags_are_still_searchable(self):
         towns = ('ಉಡುಪಿ', 'ಕುಂದಾಪುರ', 'ಬೈಂದೂರು', 'ಕಾರ್ಕಳ', 'ಮಲ್ಪೆ', 'ಹೆಬ್ರಿ')

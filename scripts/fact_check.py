@@ -34,7 +34,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from brand.content import Edition                      # noqa: E402
+from brand.content import ContentError, Edition                      # noqa: E402
 from brand import factcheck as F                       # noqa: E402
 
 
@@ -61,7 +61,11 @@ def main(argv: list[str] | None = None) -> int:
                     help='accepted for old habits; the check is always offline')
     a = ap.parse_args(argv)
 
-    ed = Edition.load(a.edition)
+    try:
+        ed = Edition.load(a.edition)
+    except ContentError as e:
+        print(f'✗ {a.edition}: {e}', file=sys.stderr)
+        return 2
     wrong = kept_but_wrong(ed)
     for u in wrong:
         print(f'  BLOCK  {os.path.relpath(F.cache_path(u), ROOT)} ({u})\n'

@@ -317,7 +317,7 @@ def _type_band(st: Story, W: int, H: int) -> Image.Image:
     sf = Surface(W, H, S2, bg=(*C.ink_900, 255))
     radial_glow(sf, W * 0.72, H * 0.30, W * 0.75, C.gold_500, 0.20)
     radial_glow(sf, W * 0.10, H * 0.95, W * 0.60, C.sea_600, 0.35)
-    b = typo.fit(place, 'kn', sf.s(190), sf.s(110), sf.s(W - 2 * PP.margin),
+    b = typo.fit(place, 'kn_head', sf.s(190), sf.s(110), sf.s(W - 2 * PP.margin),
                  sf.s(H * 0.4), 1.1, max_lines=2)
     typo.draw_block(sf.img, b, sf.s(PP.margin), sf.s(H - 150) - b.height, C.paper_50)
     cat = category(st.category)['kn']
@@ -712,7 +712,7 @@ def render_cover(items: list[Item], date_kn: str, seconds: float, path: str,
     pp.meta(sf, m, y + 30, f'{date_kn}  ·  ಇಂದಿನ {len(items)} ಸುದ್ದಿ  ·  '
             f'{int(round(seconds))} ಸೆಕೆಂಡ್', C.paper_300, size=36, weight=620)
     y += 60
-    title = typo.fit('ಸ್ಪೀಡ್ ನ್ಯೂಸ್', 'kn', sf.s(170), sf.s(120), sf.s(W - 2 * m),
+    title = typo.fit('ಸ್ಪೀಡ್ ನ್ಯೂಸ್', 'kn_head', sf.s(170), sf.s(120), sf.s(W - 2 * m),
                      sf.s(210), 1.1, max_lines=1)
     th = title.height / sf.ss
     typo.draw_block(sf.img, title, sf.s(m), sf.s(y), C.paper_50)

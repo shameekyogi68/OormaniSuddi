@@ -7,6 +7,7 @@ and every Kannada conjunct renders broken. `scripts/health.py` names each.
 """
 from __future__ import annotations
 
+import os
 import shutil
 import unittest
 from collections import namedtuple
@@ -82,10 +83,43 @@ class TheRenderToolsAreWatched(unittest.TestCase):
             return mock.Mock(returncode=0, stdout='', stderr='OK')
         with mock.patch.object(health.subprocess, 'run', fake):
             health.check_tests()
-        suites = calls[0]
+        suites = [arg for cmd in calls for arg in cmd]
         self.assertIn('tests.test_contract', suites)
         self.assertIn('tests.test_legal_corpus', suites)
         self.assertNotIn('tests.test_golden', suites)
+        # the reel suites drive Chrome: 25 seconds that were in the quick
+        # check by accident until D150
+        self.assertNotIn('tests.test_saara_reel', suites)
+
+    def test_every_suite_on_the_slow_list_exists(self):
+        # a renamed suite would otherwise drop off the list and back into the
+        # quick check without anybody deciding it should
+        with open(health.SLOW_LIST, encoding='utf-8') as fh:
+            slow = [l.strip() for l in fh if l.strip() and not l.startswith('#')]
+        self.assertTrue(slow)
+        for name in slow:
+            self.assertTrue(os.path.exists(os.path.join(health.ROOT, 'tests', name + '.py')), name)
+
+    def test_the_hook_asks_health_which_suites_are_quick(self):
+        with open(os.path.join(health.ROOT, 'scripts', 'hooks', 'pre-commit'), encoding='utf-8') as fh:
+            hook = fh.read()
+        self.assertIn('scripts/health.py --tests', hook)
+        self.assertNotIn('grep -vE', hook)
+
+    def test_a_suite_that_outgrows_the_quick_check_is_named(self):
+        def fake(suite):
+            return suite, 0, (health.SUITE_BUDGET_S + 5 if suite.endswith('test_house') else 0.1), 'Ran 3 tests in 0.1s\n\nOK'
+        with mock.patch.object(health, '_run_suite', fake):
+            lines = health.check_tests()
+        self.assertTrue(lines[0].startswith(health.OK))
+        self.assertTrue(any(l.startswith(health.WARN) and 'test_house' in l and 'slow_suites.txt' in l for l in lines))
+
+    def test_a_failing_suite_is_named(self):
+        def fake(suite):
+            return suite, (1 if suite.endswith('test_house') else 0), 0.1, 'FAILED'
+        with mock.patch.object(health, '_run_suite', fake):
+            lines = health.check_tests()
+        self.assertTrue(lines[0].startswith(health.BAD) and 'tests.test_house' in lines[0])
 
 
 if __name__ == '__main__':

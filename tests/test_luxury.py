@@ -193,5 +193,25 @@ class InkPairsPass(unittest.TestCase):
                         'if red_500 passes on ink now, D128 can use it again')
 
 
+
+class OneHeadlineFace(unittest.TestCase):                              # D149
+    """Every format's headline is the reel's heavy serif; the cover photograph leads."""
+
+    def test_the_headline_face_is_the_reels(self):
+        import inspect
+        from brand import saara_reel, speednews
+        from brand.tokens import FONTS
+        self.assertTrue(FONTS['kn_head'].endswith('NotoSerifKannada-Black.ttf'))
+        self.assertIn(os.path.basename(FONTS['kn_head']), inspect.getsource(saara_reel._page))
+        self.assertIn("typo.font('kn_head'", inspect.getsource(pp.headline))
+        src = inspect.getsource(speednews)
+        self.assertIn("typo.fit('ಸ್ಪೀಡ್ ನ್ಯೂಸ್', 'kn_head'", src)
+        self.assertIn("typo.fit(place, 'kn_head'", src)
+
+    def test_the_cover_photograph_takes_most_of_the_slide(self):
+        from brand.tokens import Paper, fmt
+        self.assertGreaterEqual(Paper.photo_4x5 / fmt('post').h, 0.58)
+
+
 if __name__ == '__main__':
     unittest.main()

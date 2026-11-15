@@ -41,8 +41,6 @@ the things that are genuinely house style rather than contract.
 - **2026-10-23-01** — ಸುದ್ದಿ ಸಾರ (/daily-saara) is made as the 9:16 reel (reel_saara.mp4, Ink & Gold, D132) by default — no step is asked of the editor. The carousel code is kept, switched off (Limits.saara_carousel_default, render.py --carousel), and is made only when the editor asks or the reel cannot be made. The reel is posted to Instagram Reels, Facebook Reels and YouTube Shorts. Intake writes reel_line (aim 34 chars) and reel_support (one sentence, about 7-9 words) on every saara story, and runs scripts/reel_check.py until it says CLEAN before rendering.
   - _why:_ The owner wants /daily-saara to bring followers and subscribers through Reels and Shorts, with no human step each day (2026-10-23).
   - _asked by:_ the owner, in chat
-- **2026-10-24-02** — YouTube Shorts high-reach tag strategy: 1) Title under 60 chars ending with #shorts #KundapuraNews (the 3 player hook hashtags: #shorts #KundapuraNews #KannadaNews), 2) Description strictly under 15 hashtags (10-12 targeted tags at very bottom below a natural 2-sentence keyword summary), 3) Backend comma-separated video tags for YouTube Studio box (hyper-local coastal search phrases), 4) Visual hook in first 2 seconds for >80% retention.
-  - _why:_ Editor standing instruction (2026-10-24) optimizing for YouTube Shorts Browse Features, Shorts Feed, and Search distribution.
 - **2026-10-26-02** — News copy must strictly follow professional Kannada TV news channel broadcast style (TV9/Suvarna/Udayavani): punchy active headlines ([ಸ್ಥಳ]: [ಮುಖ್ಯಾಂಶ]), dignified broadcast verbs (ಭೀಕರ, ದಾರುಣ, ದಾಖಲು, ತೀವ್ರ ಆಗ್ರಹ), and anchor-ready rhythm, never dry or amateur translation
   - _why:_ channel credibility demands professional Kannada television newsroom presentation
   - _asked by:_ Gautam
@@ -52,6 +50,18 @@ the things that are genuinely house style rather than contract.
 - **2026-10-26-04** — For all reels, the caption itself must contain all the hashtags directly; never put hashtags in the comments (on Instagram comments do not work for search indexing or reach). Perfectly curate the 3 layers directly into the caption for maximum discovery: Layer 1 Brand + Local (#oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews #ByndoorNews #UdupiNews #CoastalKarnataka #ಕರಾವಳಿಸುದ್ದಿ), Layer 2 Story-specific hyper-local towns, spots and news trends, and Layer 3 Broad Kannada news discovery (#KarnatakaNews #KannadaNews #KannadaReels #UdupiDistrict #BreakingKannada). First comment is strictly for community conversation and questions.
   - _why:_ Editor standing instruction (2026-10-26): hashtags in comments do not work; caption itself must carry all hashtags for best reach.
   - _asked by:_ editor
+- **2026-11-11-01** — Premium news copy is precise, concise, calm, locally useful and natural when spoken. Broadcast energy comes from specific facts, active verbs and rhythm — never embellishment, promotional filler, gratuitous graphic detail or a sentence that merely repeats the headline.
+  - _why:_ Owner's 2026-11-11 directive: raise content to premium professional international luxury standards through editorial restraint and precision, without changing facts or the established design.
+- **2026-11-11-02** — Shorts packaging is factual and restrained: a display-safe title with #shorts and an actual place when it fits; a Kannada description with the lead, stories, sources and one useful question; only unique edition-relevant place and subject tags. Never hard-code towns or breaking labels, stuff bilingual keywords, or chase a fixed tag count.
+  - _why:_ Owner's 2026-11-11 premium editorial directive: metadata must describe the edition accurately and calmly rather than inflate reach with irrelevant keywords.
+- **2026-11-12-01** — Every daily news reel must undergo a Voice & Pronunciation Reviewer pass before completion. The reviewer audits audio pronunciation, conjunct pauses (e.g. Swagata), suffix distortions (e.g. Kamagarige vs Kamagari), and rhythm, requiring a minimum score of 9 out of 10 to approve.
+  - _why:_ Editor standing instruction: reputed company cannot publish imperfect pronunciation
+  - _asked by:_ Editor
+- **2026-11-12-03** — The Voice & Pronunciation Reviewer (Expert Review) must evaluate every news reel on every run automatically without prompting, auditing conjuncts, pauses, endings, and scoring at least 9/10 before sign-off.
+  - _why:_ Editor standing instruction: expert review must be there in future also without being told
+  - _asked by:_ Editor
+- **2026-11-12-04** — All speech and voiceover clips must have seamless micro-fades at both edges so that clips never end at non-zero amplitudes, completely eliminating electrical spark/glitch clicks at voiceover boundaries now and in all future renders. Transition SFX (whoosh and pop) between news stories are kept.
+  - _why:_ Editor standing instruction: keep transition SFX between news, and permanently eliminate the electrical wire contact / glitch sound when voiceover ends.
 
 ## picture
 
@@ -93,6 +103,9 @@ the things that are genuinely house style rather than contract.
   - _why:_ Co-authoring news with a business blurs who is speaking; coverage is never currency (decisions_2026-10.md A4).
 - **2026-10-26-01** — REACH-FIRST EDITORIAL DOCTRINE: 1) Story #1 must always pass the DM-Shareability Test (urgent safety, highway disruption, big accident, major civic alert — NEVER an institutional seminar or award press release). 2) Primary high-intent hashtags must sit directly in the CAPTION for immediate AI crawler indexing. 3) Frame 0-2s must deliver the strongest visual/text hook to kill swipe-away. 4) Titles and hooks must use conversational street Kannada that triggers curiosity and urgency, not formal press release jargon.
   - _why:_ Editor mandate (2026-10-26): Pivot entire newsroom intelligence to prioritize maximum audience reach, non-follower distribution, and viral shareability.
+- **2026-10-28-01** — Reel captions (saara_caption.txt) must strictly fit under 2,100 UTF-8 bytes (Limits.ig_caption_max_bytes) while retaining all curated hashtags (up to 30) without truncation on the first paste.
+  - _why:_ Instagram Web composer and API hard-cut captions at 2,200 bytes on first paste. To guarantee zero truncation and retain all 30 hashtags, saara reel captions must stay <= 2,100 UTF-8 bytes with concise story bullets.
+  - _asked by:_ Editor
 
 ## Retired
 
@@ -130,3 +143,7 @@ Kept, because knowing a rule was dropped and when is worth more than a tidy file
   - Owner instruction on 2026-10-09: Slide 1 cover must not be static; full dynamic scan-wipe and photo animation is mandatory for all future editions.  · retired: Replaced by the rule added 2026-10-13: same animated cover, without the gold sunline (D128: no decorative lines).
 - ~~2026-10-24-01~~ (2026-10-24 → 2026-10-26) — For news reels (Instagram/Facebook Reels and YouTube Shorts), provide 3 layers of tags: Layer 1 Brand + Local (always kept: #oormanisuddi #ಊರ್ಮನಿಸುದ್ದಿ #KundapuraNews etc.), Layer 2 Story-specific (hyper-local spots like #Moodlakatte #Nellikatte #KodiBeach and story topics like #FishermenAlert #KarnatakaWeather for local virality), and Layer 3 Broad Kannada news (regional discovery: #KarnatakaNews #KannadaReels etc.). Keep top 5 in the caption and provide the full 30-tag set for the first comment on Instagram/Facebook. For YouTube Shorts, provide title tags (#shorts #kannadanews #kundapuranews) and 10-12 description tags.
   - Editor standing instruction (2026-10-24) for local virality and reach optimization.  · retired: superseded: on comments hashtags do not work for search/reach on Instagram; caption itself must contain all hashtags
+- ~~2026-10-24-02~~ (2026-10-24 → 2026-11-11) — YouTube Shorts high-reach tag strategy: 1) Title under 60 chars ending with #shorts #KundapuraNews (the 3 player hook hashtags: #shorts #KundapuraNews #KannadaNews), 2) Description strictly under 15 hashtags (10-12 targeted tags at very bottom below a natural 2-sentence keyword summary), 3) Backend comma-separated video tags for YouTube Studio box (hyper-local coastal search phrases), 4) Visual hook in first 2 seconds for >80% retention.
+  - Editor standing instruction (2026-10-24) optimizing for YouTube Shorts Browse Features, Shorts Feed, and Search distribution.  · retired: Replaced by the 2026-11-11 factual, edition-relevant Shorts packaging standard; fixed tag volume and hard-coded places conflict with premium editorial restraint.
+- ~~2026-11-12-02~~ (2026-11-12 → 2026-11-12) — All transition sound effects (whoosh and pop) between news stories in ಸುದ್ದಿ ಸಾರ reels are permanently disabled to prevent transition glitch and pop artifacts; transitions between stories are clean, silent pauses over the background news music bed.
+  - Editor standing instruction: remove glitch sound when voiceover transitions between each news, now and in future  · retired: Editor clarification: keep transition SFX between news; the glitch sound was an audio edge waveform discontinuity at the end of voiceover clips, not the transition SFX.

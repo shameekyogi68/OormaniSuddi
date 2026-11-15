@@ -33,9 +33,18 @@ ORDER = ('saara', 'mukhya', 'speed')
 
 def formats_for_edition(path: str) -> tuple[list[str], str]:
     """(formats to render, why)."""
-    with open(path, encoding='utf-8') as fh:
-        data = json.load(fh)
-    stories = data.get('stories', [])
+    # Shape only (D150): this runs while the copy is still being written, so
+    # an unfinished story is fine here — a file that is not an edition is not.
+    from brand.content import ContentError, read_json
+    try:
+        data = read_json(path)
+    except ContentError as e:
+        return [], f'{path}: {e}'
+    if isinstance(data, list):
+        data = {'stories': data}
+    stories = data.get('stories') if isinstance(data, dict) else None
+    if not isinstance(stories, list) or not all(isinstance(st, dict) for st in stories):
+        return [], f'{path}: not an edition — it needs `stories`, a list of story objects'
     if not stories:
         return [], 'no stories in this edition'
     count = {k: 0 for k in ORDER}
