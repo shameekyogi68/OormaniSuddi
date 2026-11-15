@@ -280,6 +280,11 @@ def _warnings(copies: list[dict], laid: dict, info: dict | None = None) -> list[
     out, info = [], info or {}
     n = len(copies)
     b = budget(n)
+    cov = (laid or {}).get('cover') or {}
+    for i in cov.get('cut') or []:
+        if 0 < i <= n:
+            out.append(f'story {i} ({copies[i - 1]["place_short"]}): the front page shows only part of its headline '
+                       f'("{(cov.get("rows") or [""] * n)[i - 1]}") — it does not fit one row at any size; shorten reel_line')
     for i, c in enumerate(copies):
         lines = (laid.get('lines') or [0] * n)[i] if i < len(laid.get('lines') or []) else 0
         if lines > 2:

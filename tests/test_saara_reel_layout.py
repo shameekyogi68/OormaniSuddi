@@ -42,6 +42,7 @@ class ThePageFitsItself(unittest.TestCase):
             top, bottom = r['cover']['top'], r['cover']['bottom']
             self.assertLessEqual(bottom, 1480, n)                       # clear of the Reels caption
             self.assertGreaterEqual(top, 800, n)                       # below the count and the title
+            self.assertEqual(r['cover']['cut'], [], n)                 # every row its whole headline (D151)
 
     def test_a_long_headline_takes_a_third_line_and_is_warned_not_cut(self):
         r = check([S('ಉಡುಪಿ ಜಿಲ್ಲೆಯ ಎಲ್ಲ ಸರ್ಕಾರಿ ಶಾಲೆಗಳಲ್ಲಿ ಮಧ್ಯಾಹ್ನದ ಬಿಸಿಯೂಟಕ್ಕೆ ಹೊಸ ವ್ಯವಸ್ಥೆ ಜಾರಿ',
@@ -60,6 +61,27 @@ class ThePageFitsItself(unittest.TestCase):
         r = check([S('ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ ವಂಚನೆ: ದೂರು ದಾಖಲು', 'ಖಾತೆಯಿಂದ ಹಣ ವರ್ಗಾವಣೆ ಆರೋಪ ಕೇಳಿಬಂದಿದೆ.', 'ಕುಂದಾಪುರ'), FIVE[1]])
         self.assertIn('ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ ವಂಚನೆ', r['cover']['rows'][0])
         self.assertEqual(r['issues'], [])
+
+    def test_the_front_page_shows_every_headline_whole(self):
+        # D151: the reel of 2026-11-15 showed "ಭಾರತ್ ರೈಲಿಗೆ ಅದ್ಧೂರಿ ಸ್ವಾಗತ" for ವಂದೇ ಭಾರತ್ and "ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ
+        # ವಿರೋಧ" for ಮತದಾರರ ಪಟ್ಟಿ: a row cut to its tail was counted as whole whenever it had no colon
+        heads = ['ವಂದೇ ಭಾರತ್ ರೈಲಿಗೆ ಅದ್ಧೂರಿ ಸ್ವಾಗತ', 'ಅಮೃತೇಶ್ವರಿ ಕೆರೆಯಲ್ಲಿ ಮುಳುಗಿ ದುರ್ಮರಣ', 'ಸಮುದ್ರದಲ್ಲಿ ಅಪರಿಚಿತ ಶವ ಪತ್ತೆ',
+                 'ಪಂಚಾಯತ್ನಲ್ಲಿ ಹಣ ದುರ್ಬಳಕೆ ಆರೋಪ', 'ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ', 'ಕೇಂದ್ರ ಸಚಿವ ಕುಮಾರಸ್ವಾಮಿ ಭೇಟಿ']
+        towns = ['ಬೈಂದೂರು', 'ಕೋಟ', 'ಗಂಗೊಳ್ಳಿ', 'ಹೆಬ್ರಿ', 'ಬೈಂದೂರು', 'ಕೊಲ್ಲೂರು']
+        r = check([S(h, 'ನೂರಾರು ನಾಗರಿಕರು ಸಂಭ್ರಮದಿಂದ ಬರಮಾಡಿಕೊಂಡರು.', t) for h, t in zip(heads, towns)])
+        self.assertEqual(r['issues'], [])
+        self.assertEqual(r['cover']['cut'], [])
+        for row, c in zip(r['cover']['rows'], r['copies']):
+            self.assertEqual(row, c['head'])
+        self.assertLessEqual(r['cover']['bottom'], 1480)
+        self.assertGreaterEqual(r['cover']['k'], 0.8)          # the count keeps its size; only the rows give way
+        self.assertLess(r['cover']['kr'], r['cover']['k'])
+
+    def test_a_front_page_row_that_cannot_be_whole_is_said_so(self):
+        long_ = 'ಕರಾವಳಿಯ ಎಲ್ಲ ಗ್ರಾಮ ಪಂಚಾಯತ್ ವ್ಯಾಪ್ತಿಯ ಮೀನುಗಾರಿಕಾ ರಸ್ತೆಗಳ ದುರಸ್ತಿಗೆ ಆಗ್ರಹ'
+        r = check([S(long_, 'ಹೊಸ ಮೆನು ಸೋಮವಾರದಿಂದ ಜಾರಿಗೆ ಬರಲಿದೆ.', 'ಉಡುಪಿ'), FIVE[1]])
+        self.assertEqual(r['cover']['cut'], [1])
+        self.assertTrue(any('front page shows only part' in w for w in r['warnings']), r['warnings'])
 
     def test_markup_in_the_copy_is_text(self):
         r = check([S('ಕಂಪನಿ A&B <ಹೊಸ> ಯೋಜನೆ</script>', 'ಎ&ಬಿ ಕಂಪನಿ <b>ಹೊಸ</b> ಯೋಜನೆ ಆರಂಭ.', 'ಉಡುಪಿ & ಮಣಿಪಾಲ'), FIVE[1]])

@@ -501,6 +501,10 @@ class Photo:
         return self.nature in ('ai', 'graphic')
 
 
+# The lines a reader sees or the voice says: where a borrowed word's ending is joined on loading (D151).
+_JOINED_TEXT = ('headline', 'deck', 'points', 'takeaway', 'reel_line', 'reel_support', 'reel_points',
+                'narration_script', 'quote', 'correction', 'dateline')
+
 @dataclass
 class Story:
     headline: str
@@ -830,6 +834,18 @@ class Story:
                 raise ContentError('`numbers` must be a list of [value, label] pairs, '
                                    'both in quotes, like [["12", "ಮಂದಿ"]]')
             d['numbers'] = [tuple(n) for n in d['numbers']]
+        # A borrowed word's Kannada ending takes its joiner (ಪಂಚಾಯತ್‌ನಲ್ಲಿ, not ಪಂಚಾಯತ್ನಲ್ಲಿ) in every
+        # line a reader sees or the voice says — once, here at the door, so no format can miss it (D151).
+        # Spelling only: the joiner is invisible to the fact check, the receipts and the legal guard.
+        from .kannada_check import join_endings
+        for k in _JOINED_TEXT:
+            v = d.get(k)
+            if isinstance(v, str):
+                d[k] = join_endings(v)
+            elif isinstance(v, (list, tuple)) and all(isinstance(x, str) for x in v):
+                d[k] = type(v)(join_endings(x) for x in v)
+        if d.get('numbers'):
+            d['numbers'] = [(a, join_endings(b)) for a, b in d['numbers']]
         obj = cls(**d)
         # Carried alongside rather than inside the dataclass: they are
         # instructions to the renderer, not facts about the story.

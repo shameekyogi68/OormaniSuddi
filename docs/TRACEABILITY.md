@@ -7,7 +7,7 @@ the list of which is which. Some entries are honestly untestable —
 those carry a reason rather than a test.
 ## Coverage
 
-- **113/150** decisions are named by at least one test
+- **114/151** decisions are named by at least one test
 - **17** are regression-guarded by the golden fingerprints — a change moves pixels and the hash fails, which catches a regression without asserting the rule
 - **2** are recorded as not mechanically testable, each with a reason
 - **18** were retired by a later decision; their text stays as the record
@@ -687,4 +687,9 @@ those carry a reason rather than a test.
 
 - **Tested by:** `tests/test_health.py`, `tests/test_shape.py`
 - Enforced in: `brand/content.py`, `scripts/intake.py`, `scripts/pick_formats.py`
+
+## D151 · Five faults every reviewer passed, each closed where it was made
+
+- **Tested by:** `tests/test_d151.py`, `tests/test_saara_reel_layout.py`
+- Enforced in: `brand/content.py`, `brand/copy.py`, `brand/kannada_check.py`, `brand/reel_speech.py`, `brand/review.py`, `scripts/regate.py`
 

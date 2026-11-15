@@ -4278,3 +4278,44 @@ exactly as before.
 
 Enforced by: `tests/test_shape.py`, `tests/test_health.py` (`test_every_suite_on_the_slow_list_exists`, `test_the_hook_asks_health_which_suites_are_quick`,
 `test_a_suite_that_outgrows_the_quick_check_is_named`).
+
+---
+
+## D151 · Five faults every reviewer passed, each closed where it was made
+
+**Date:** 2026-11-15. **Asked:** the owner — "there are no perfect reviewers… a lot of issues still exist. I need a crystal clear quality product every time."
+
+**Found by looking at the day's own reel** (`out/2026-11-15`, six stories, gate mechanically clean, every desk's receipt filed) the way a viewer would, not by asking the desks again:
+
+1. **A word that does not exist, on screen.** The story-4 headline read "ಪಂಚಾಯತ್ನಲ್ಲಿ": ಪಂಚಾಯತ್ and ನಲ್ಲಿ typed with no joiner, so ತ್ and ನ fused into one conjunct. It was in the reel, the caption, the
+   YouTube description and the WhatsApp post. The D134 rule joined only ನ್ / ಲ್ before ಗೆ.
+2. **The front page cut headlines to their tails.** "ವಂದೇ ಭಾರತ್ ರೈಲಿಗೆ ಅದ್ಧೂರಿ ಸ್ವಾಗತ" was shown as "ಭಾರತ್ ರೈಲಿಗೆ ಅದ್ಧೂರಿ ಸ್ವಾಗತ"; "ಮತದಾರರ ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ" as "ಪಟ್ಟಿ ಪರಿಷ್ಕರಣೆಗೆ ವಿರೋಧ"; four
+   rows of six. D134 had decided "a smaller card beats a row that has lost what the story is about", but the page counted a cut row as whole whenever its headline had no colon, so it never looked for the
+   smaller card.
+3. **The WhatsApp digest said the town twice** on four lines ("*ಬೈಂದೂರು*: ಬೈಂದೂರು. …") and gave the fifth no bold town.
+4. **The frames a reviewer is told to open were evenly spaced**, so they landed in transitions: the last was a blur, and nobody — desk or person — was ever shown the follow card.
+5. **`run_report.md` said "Failed … no APPROVAL.md written" beside an `APPROVAL.md`**, because `regate.py` re-checks the gate and the report was written only by the render.
+
+**Decided:**
+* `brand/kannada_check.py :: join_endings` is the one rule for a borrowed word and its Kannada ending — ಗೆ / ಗೂ / ಗಾಗಿ, the plural ಗಳು and its cases, ನಲ್ಲಿ / ನಿಂದ / ನನ್ನು, and the genitive ನ — each
+  only after a consonant no native word ends that way with (ರತ್ನ, ಪ್ರಯತ್ನ, ಬಗ್ಗೆ, ದುರ್ಗೆ, ತನ್ನಲ್ಲಿ are untouched; ತ್ನ / ಮ್ನ / ಪ್ನ only after a stem known to be borrowed). `Story.from_dict` applies it to
+  every line a reader sees or the voice says, so no format can miss it; the reel's speech uses the same function. It changes spelling only: the fact check, the legal guard and the grounding already
+  ignore joiners, and receipts are stamped on the file as written, so no desk's receipt is voided.
+* The front page calls a row whole only when it shows the whole headline or its subject before a colon. The count and the title keep the largest scale that fits; the rows take their own, the largest at
+  which every row is whole (first tried by shrinking the whole page: the count fell to 0.65 of its size over a half-empty frame, which is not the design). The report carries `cover.cut`; a row that
+  fits at no size is a warning that names the story.
+* The digest opens every line on its town in bold; a headline's own leading "town." or "town:" is dropped, and a town inside a word ("ಉಡುಪಿಯಲ್ಲಿ …") is the headline's wording and stays.
+* `brand/review.py :: _settled_times` takes the reel's own clock from its report: one frame per story just before it hands over, and the close after its button has pressed. Evenly spaced frames remain
+  the fallback for a reel with no report.
+* `regate.py` writes what is true now at the top of `run_report.md` and replaces its own earlier note.
+
+**Measured (2026-11-15):** `join_endings` over all 345 editions and kept source pastes changes 44 distinct words, every one a borrowed word with a Kannada ending, none native. Laid out again, today's
+front page shows six whole headlines and the story-4 headline reads ಪಂಚಾಯತ್‌ನಲ್ಲಿ.
+
+**Not done, and why.**
+* **Today's film was not re-made.** It still shows faults 1 and 2. A re-render asks the voice again (the free daily quota is shared with the 1 a.m. run) and a new take is a new thing to listen to; that is
+  the owner's call. `regate.py` now holds the folder until it is.
+* **ನ್ + ನಲ್ಲಿ is not joined** ("ಸ್ಟೇಷನ್ನಲ್ಲಿ"): ತನ್ನಲ್ಲಿ and ನನ್ನಲ್ಲಿ are native words with the same letters.
+* **What the voice sounds like is still not something a test can pass.** The two ears disagreed on eight of fourteen lines today; a person listening is the check (D146).
+
+Enforced by: `tests/test_d151.py`, `tests/test_saara_reel_layout.py` (`test_the_front_page_shows_every_headline_whole`, `test_a_front_page_row_that_cannot_be_whole_is_said_so`).

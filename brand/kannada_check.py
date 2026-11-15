@@ -33,6 +33,37 @@ _ENDINGS = ('', 'ಯ', 'ಯು', 'ಯನ್ನು', 'ಯಲ್ಲಿ', 'ಯಿ�
             'ಅನ್ನು', 'ದ', 'ನಲ್ಲಿ', 'ನಿಂದ', 'ಕ್ಕೂ', 'ಯೂ', 'ವೂ')
 
 
+# ── a borrowed word and its Kannada ending ───────────────────────────────────
+# ಪಂಚಾಯತ್ + ನಲ್ಲಿ is written ಪಂಚಾಯತ್‌ನಲ್ಲಿ — with a zero-width non-joiner. Typed without it the two letters fuse
+# into one conjunct (ತ್ನ) and the screen shows, and the voice may read, a word that does not exist. The reel of
+# 2026-11-15 showed "ಪಂಚಾಯತ್ನಲ್ಲಿ" in its headline and every desk passed it (D151). Each pattern below is one no
+# native Kannada word ends in, so nothing right is changed: ರತ್ನ, ಪ್ರಯತ್ನ, ಬಗ್ಗೆ, ದುರ್ಗೆ, ತನ್ನಲ್ಲಿ are left alone.
+ZWNJ = '\u200c'
+_AFTER = r'(?![ಀ-೿])'
+_JOIN = (
+    re.compile(r'([ಕಖಚಜಟಡತದಪಫಬಮನಲಸಶ]್)(ಗೆ|ಗೂ|ಗಾಗಿ)' + _AFTER),
+    re.compile(r'([ಕಖಚಜಟಡತದಪಫಬಮನಲಸಶರ]್)(ಗಳ(?:ು|ನ್ನು|ಲ್ಲಿ|ಿಗೆ|ಿಂದ|ೂ)?)' + _AFTER),
+    re.compile(r'([ಕಖಚಜಟಡತದಪಫಬಮಲಸಶರ]್)(ನಲ್ಲಿ|ನಲ್ಲೂ|ನಲ್ಲೇ|ನಿಂದ|ನನ್ನು)' + _AFTER),
+    re.compile(r'([ಕಚಜಟಡದಫಬಲಸರ]್)(ನ)' + _AFTER),
+    # ತ್ನ / ಮ್ನ / ಪ್ನ do end native words (ರತ್ನ, ನಿಮ್ನ, ಸ್ವಪ್ನ): only after a stem known to be borrowed
+    re.compile(r'((?:ಪಂಚಾಯತ|ಪಂಚಾಯಿತ|ಪರಿಷತ|ಸಂಸತ|ಭಾರತ|ಗುಜರಾತ|ಜಮಾತ|ಟೀಮ|ಗ್ರಾಮ|ಫಾರ್ಮ|ಆ್ಯಪ|ಆಪ|ಸಾಪ|ಶಾಪ|ಗ್ರೂಪ|ಕ್ಯಾಂಪ)್)(ನ)' + _AFTER),
+)
+
+
+def join_endings(text: str) -> str:
+    """A borrowed word's Kannada ending after its joiner — on the screen, in the caption and in the voice."""
+    if not text or '್' not in text:
+        return text
+    for rx in _JOIN:
+        text = rx.sub('\\1' + ZWNJ + '\\2', text)
+    return text
+
+
+def unjoined(text: str) -> list[str]:
+    """The words of `text` that `join_endings` would change — for a check that names them."""
+    return [w for w in re.findall(r'[ಀ-೿\u200c\u200d]+', text or '') if join_endings(w) != w]
+
+
 def words(text: str) -> list[str]:
     """The Kannada words of a line, joiners removed, punctuation gone."""
     t = text.replace('‌', '').replace('‍', '')

@@ -152,8 +152,9 @@ const ISSUES = [];
 const issue = msg => { if (!ISSUES.includes(msg)) ISSUES.push(msg); };
 const HEAD_TOP = 568, RAIL_Y = 856, MAX_CARD_BOTTOM = SAFE_BOTTOM - 74;   // the read-on line sits under the card
 
+const ROW_FLOOR = 0.6;   // a front-page row is never set smaller than this scale (28px of 1080)
 // the front page: the largest scale at which the count, the title and every row fit
-function layoutCover(k) {
+function layoutCover(k, kr) {
   const fc = five.getContext('2d');
   fiveFont = `700 ${Math.round(560 * k)}px "Bodoni 72", Didot, serif`;
   fc.font = fiveFont;
@@ -179,12 +180,13 @@ function layoutCover(k) {
   [[a, ba], [b, bb], [c, bc]].forEach(([l, y]) => { l.el.style.top = (y - l.bo) + 'px'; });
   cover.titleBottom = Math.max(inkTop + ink.a + ink.d, bc + c.desc);
   cover.card.style.setProperty('--k', k);
+  cover.rows.forEach(r => r.style.setProperty('--k', kr || k));   // the rows' own scale (D151)
   cover.rows.forEach(r => { r.querySelector('.t').style.width = ''; });
   const tw = Math.max(...cover.rows.map(r => r.querySelector('.t').offsetWidth));
   cover.rows.forEach(r => { r.querySelector('.t').style.width = tw + 'px'; });
   cover.h = cover.card.offsetHeight + 60;
   cover.top = Math.round(cover.titleBottom + 64);
-  cover.k = k;
+  cover.k = k; cover.kr = kr || k;
   cover.title = kids.map(el => { const r = el.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)]; });
 }
 
@@ -226,23 +228,29 @@ window.boot = async function () {
     for (const c of cands) {
       if (!c.length || (/[,;:]$/.test(c[0]) && c.length > 1)) continue;
       r._d.textContent = c.join(' ').replace(/[,;:]$/, '');
-      if (r.scrollWidth <= 768) { shown = true; r._whole = colon <= 0 || c.length === w.length || (c.length === colon + 1 && c[0] === w[0]); break; }
+      if (r.scrollWidth <= 768) { shown = true; r._whole = c.length === w.length || (colon > 0 && c.length === colon + 1 && c[0] === w[0]); break; }
     }
     if (!shown) { r._d.textContent = ''; }
     r._clipped = !shown;
   });
-  // the largest scale that fits: the title clears the card and the card clears the Reels caption
-  // and, first choice, one at which every row still shows its headline or its subject — a smaller card beats a
-  // row that has lost what the story is about (D134)
-  let chosen = false, fallback = null;
-  for (let k = Math.min(1.16, 1.28 - 0.03 * N); k >= 0.6; k -= 0.04) {
+  // The count and the title take the largest scale at which the card clears the Reels caption. The ROWS then take
+  // their own scale: the largest at which every row shows its whole headline (or its subject before a colon) — a
+  // smaller row beats a row that has lost what the story is about (D134), but the count stays the size it was
+  // designed at. Before D151 a row cut to its tail was counted as whole whenever its headline had no colon, so
+  // "ವಂದೇ ಭಾರತ್ ರೈಲಿಗೆ ಅದ್ಧೂರಿ ಸ್ವಾಗತ" went out as "ಭಾರತ್ ರೈಲಿಗೆ ಅದ್ಧೂರಿ ಸ್ವಾಗತ". When no scale shows them all
+  // whole: the one that cuts the fewest rows, the largest such, and the cut rows are reported.
+  let chosen = false;
+  for (let k = Math.min(1.16, 1.28 - 0.03 * N); k >= 0.6 && !chosen; k -= 0.04) {
     layoutCover(k); fitRows();
-    if (cover.top + cover.h <= SAFE_BOTTOM - 20) {
-      if (fallback === null) fallback = k;
-      if (cover.rows.every(r => r._whole)) { chosen = true; break; }
+    if (cover.top + cover.h > SAFE_BOTTOM - 20) continue;
+    let best = k, fewest = cover.rows.filter(r => !r._whole).length;
+    for (let kr = k - 0.03; fewest && kr >= ROW_FLOOR; kr -= 0.03) {
+      layoutCover(k, kr); fitRows();
+      const cut = cover.rows.filter(r => !r._whole).length;
+      if (cut < fewest) { fewest = cut; best = kr; }
     }
+    layoutCover(k, best); fitRows(); chosen = true;
   }
-  if (!chosen && fallback !== null) { layoutCover(fallback); fitRows(); chosen = true; }
   if (!chosen) issue('the front page does not fit its frame with ' + N + ' stories');
   if (cover.title.some(r => r[0] < 0 || r[2] > 1080 - X0 || r[1] < 380 || r[3] > cover.top - 20)) issue('the front page title is not inside its frame');
   cover.rows.forEach((r, i) => { if (r._clipped) issue(`front page: the town "${D.stories[i].place_short}" leaves no room for its teaser`); });
@@ -340,7 +348,7 @@ window.boot = async function () {
   outro.parts = ['#ofName', '#ofHandle', '#ofWhy', '#ofYt'].map(q => $(q));
   outro.parts.forEach(el => { if (el.scrollWidth > el.clientWidth + 2) issue('the follow card text is wider than its frame'); });
   return { stories: N, chunks: S.map(o => o.chunks.length), lines: S.map(o => o.lines.length), issues: ISSUES.slice(),
-           cover: { rows: cover.rows.map(r => r._d.textContent), k: cover.k, top: cover.top, bottom: cover.top + cover.h, title: cover.title, ink: [ink.l, ink.r, ink.a, ink.d] } };
+           cover: { rows: cover.rows.map(r => r._d.textContent), cut: cover.rows.map((r, i) => r._whole ? 0 : i + 1).filter(Boolean), k: cover.k, kr: cover.kr, top: cover.top, bottom: cover.top + cover.h, title: cover.title, ink: [ink.l, ink.r, ink.a, ink.d] } };
 };
 
 function camAt(t) {

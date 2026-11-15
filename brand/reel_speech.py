@@ -101,15 +101,11 @@ def numbers_to_words(text: str) -> str:
     return _PLAIN.sub(plain, text)
 
 
-# A name borrowed with a final consonant takes its ending after a joiner — ಸ್ಟೀವನ್‌ಗೆ, not ಸ್ಟೀವನ್ಗೆ. Typed
-# without it, the voice reads ನ್ಗ as one conjunct and says something else (a real day, D134). Only ನ್ and ಲ್
-# before ಗೆ / ಗೂ / ಗಾಗಿ: no native word has those conjuncts, so nothing is changed that should not be.
-_FINAL_CONSONANT_ENDING = re.compile(r'([ನಲ]್)(ಗೆ|ಗೂ|ಗಾಗಿ)(?![ಀ-೿])')
-
-
 def join_endings(text: str) -> str:
-    """A name's consonant ending gets its joiner — on the screen as well as in the voice (D134)."""
-    return _FINAL_CONSONANT_ENDING.sub('\\1\u200c\\2', text)
+    """A name's consonant ending gets its joiner — on the screen as well as in the voice (D134, widened in D151:
+    the rule itself is `kannada_check.join_endings`, the one list)."""
+    from .kannada_check import join_endings as _join
+    return _join(text)
 
 
 def spoken(text: str, respell: bool = True) -> str:

@@ -736,9 +736,15 @@ def edition_whatsapp(edition: Edition, instagram_url: str | None = None) -> str:
     items = []
     for i, s in enumerate(edition.stories):
         num = emojis[i] if i < len(emojis) else f'{i+1}️⃣'
-        from .paper import leads_with_place
-        head = s.headline.strip()
-        loc = '' if (not s.location or leads_with_place(s)) else f'*{s.location}*: '
+        # Every line opens on its town in bold. A headline written "ಬೈಂದೂರು. …" or "ಬೈಂದೂರು: …" gives up its own
+        # copy of it — before D151 four lines of six read "*ಬೈಂದೂರು*: ಬೈಂದೂರು. …" and a fifth, whose headline
+        # had a colon further on, got no bold town at all. A town inside a word ("ಉಡುಪಿಯಲ್ಲಿ …") is the
+        # headline's own wording and stays.
+        head, place = s.headline.strip(), (s.location or '').strip()
+        m = re.match(re.escape(place) + r'\s*[.:,|–—-]\s+', head) if place else None
+        if m and head[m.end():].strip():
+            head = head[m.end():].strip()
+        loc = f'*{place}*: ' if place else ''
         items.append(f'{num} {loc}{head}')
     headlines_block = '\n'.join(items)
 

@@ -31,6 +31,9 @@ Re-measure: `python3 -m unittest discover tests` · `python3 scripts/health.py` 
 | FR-14 | keep money away from news: labelled products only, every deal cleared by a person | `brand/business.py` (D118); `tests/test_business.py` | Met, needs a person |
 | FR-15 | turn a standing instruction into a recorded rule, and refuse one that waives a check | `scripts/house_rule.py` (D73); `tests/test_house.py` | Met |
 | FR-16 | tell an AI tool exactly what is wrong with the JSON it wrote | `brand/content.py` shape checks (D150); `tests/test_shape.py` | Met — was Open until today |
+| FR-17 | spell a borrowed word with its Kannada ending correctly on every screen and in every caption | `kannada_check.join_endings`, applied in `Story.from_dict` (D151); `tests/test_d151.py` | Met — 44 distinct words across 345 editions and source pastes, none native. ನ್ + ನಲ್ಲಿ is deliberately not joined |
+| FR-18 | show every headline whole on the reel's front page, or say which one could not be | `brand/saara_reel.html` rows' own scale, `cover.cut` (D151); `tests/test_saara_reel_layout.py` | Met — **today's film (`out/2026-11-15`) was made before the fix and is held by the gate (`VID-08`) until it is re-made** |
+| FR-19 | show a reviewer each card finished, and the follow card | `review._settled_times` (D151); `tests/test_d151.py` | Met from the next render; today's `_review/` frames are the old evenly spaced ones |
 
 ## Non-functional requirements — how well it does it
 

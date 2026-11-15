@@ -943,6 +943,23 @@ def review(outdir: str, edition: Edition | None = None, draft: bool = False
     return r
 
 
+def _settled_times(report: str, duration: float) -> list[float]:
+    """When each card of a ಸುದ್ದಿ ಸಾರ reel stands finished, from the reel's own report: just before each
+    story hands over to the next, and the close after its button has pressed. [] when there is no report."""
+    try:
+        with open(report, encoding='utf-8') as fh:
+            rep = json.load(fh)
+        beats = [float(b['B']) for b in rep['beats']]
+        outro, total = float(rep['outro']), float(rep.get('seconds') or duration)
+    except (OSError, ValueError, KeyError, TypeError):
+        return []
+    if not beats or not (0 < outro <= total <= duration + 1):
+        return []
+    ends = beats[1:] + [outro]
+    times = [max(b, e - 0.9) for b, e in zip(beats, ends)] + [max(outro, min(total, duration) - 0.35)]
+    return [t for t in times if 0 <= t < duration]
+
+
 def evidence(outdir: str, into: str | None = None) -> list[str]:
     """Extract what a judgement about craft has to be made against.
 
@@ -993,8 +1010,16 @@ def evidence(outdir: str, into: str | None = None) -> list[str]:
             # Eight evenly spaced frames: enough to see every card of a
             # narrated reel, and every transition between them.
             n = 8
-            for k in range(n):
-                t = d * (k + 0.5) / n
+            times = [d * (k + 0.5) / n for k in range(n)]
+            # The ಸುದ್ದಿ ಸಾರ reel knows when each card stands finished. Evenly spaced
+            # frames landed in a transition — on 2026-11-15 the last one was a blur
+            # and no reviewer ever saw the follow card — so use the reel's own clock:
+            # one frame per story with its card whole, and the close (D151).
+            times = _settled_times(os.path.join(into, f'{f[:-4]}_report.json'), d) or times
+            for old_frame in os.listdir(into):
+                if re.fullmatch(re.escape(f[:-4]) + r'_t\d{3}s\.jpg', old_frame):
+                    os.remove(os.path.join(into, old_frame))
+            for t in times:
                 dst = os.path.join(into, f'{f[:-4]}_t{int(t):03d}s.jpg')
                 subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-ss',
                                 f'{t:.2f}', '-i', src, '-frames:v', '1',
